@@ -20,7 +20,7 @@ and review the napari docs for plugin developers:
 https://napari.org/docs/plugins/index.html
 -->
 Trying out to add an image.
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/image.jpg?raw=true)
+![alt text](https://github.com/lazigu/napari-clusters-plotter/blob/main/images/test.PNG?raw=true)
 
 ## Installation
 
