@@ -317,8 +317,16 @@ class Widget(QWidget):
             warnings.warn("No labels image was selected!")
             return
 
-        reg_props = pd.read_csv(regpropsfile)
-        #layers = []
+        # depending on settings,...
+        if self.reg_props_choice_list.currentText() == 'Upload file':
+            # load regions region properties from file
+            reg_props = pd.read_csv(regpropsfile)
+        elif self.reg_props_choice_list.currentText() == 'Measure now':
+            # or determine it now using clEsperanto
+            reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
+        else:
+            warnings.warn("No measurements.")
+            return
 
         # check which GPU is used
         print('GPU used: {val}'.format(val=cle.get_device().name))
