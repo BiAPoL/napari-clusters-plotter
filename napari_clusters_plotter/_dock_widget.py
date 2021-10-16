@@ -33,11 +33,11 @@ def napari_experimental_provide_dock_widget():
 class MplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=7, height=4):
-        fig = Figure(figsize=(width, height))
+        self.fig = Figure(figsize=(width, height))
 
         # changing color of axis background to napari main window color
-        fig.patch.set_facecolor('#262930')
-        self.axes = fig.add_subplot(111)
+        self.fig.patch.set_facecolor('#262930')
+        self.axes = self.fig.add_subplot(111)
 
         # changing color of plot background to napari main window color
         self.axes.set_facecolor('#262930')
@@ -55,7 +55,16 @@ class MplCanvas(FigureCanvas):
 
         #self.axes.yaxis.label.set_color('white')
         #self.axes.xaxis.label.set_color('white')
-        super(MplCanvas, self).__init__(fig)
+        super(MplCanvas, self).__init__(self.fig)
+
+        # add an event when the user clicks somewhere in the plot
+        self.mpl_connect("button_press_event", self._on_left_click)
+
+    def _on_left_click(self, event):
+        print("clicked at",event.xdata, event.ydata)
+        self.axes.scatter(event.xdata, event.ydata)
+        self.fig.canvas.draw()
+
 
 
 
