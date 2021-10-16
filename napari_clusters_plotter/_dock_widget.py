@@ -131,7 +131,7 @@ class Widget(QWidget):
         reg_props_container.layout().addWidget(label_reg_props)
 
         self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now', 'Upload file'])
+        self.reg_props_choice_list.addItems(['   ', 'Measure now (intensity)', 'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # selection of the clustering methods
@@ -318,12 +318,24 @@ class Widget(QWidget):
             return
 
         # depending on settings,...
-        if self.reg_props_choice_list.currentText() == 'Upload file':
+        region_props_source = self.reg_props_choice_list.currentText()
+        if region_props_source == 'Upload file':
             # load regions region properties from file
             reg_props = pd.read_csv(regpropsfile)
-        elif self.reg_props_choice_list.currentText() == 'Measure now':
+        elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
             reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
+
+            # and select columns, depending on if intensities and/or shape were selected
+            columns = []
+            if 'intensity' in region_props_source:
+                columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
+                            'mean_intensity', 'standard_deviation_intensity']
+            if 'shape' in region_props_source:
+                columns = columns + ['area', 'mean_distance_to_centroid',
+                                     'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
+            reg_props = reg_props[columns]
+            print(list(reg_props.keys()))
         else:
             warnings.warn("No measurements.")
             return
