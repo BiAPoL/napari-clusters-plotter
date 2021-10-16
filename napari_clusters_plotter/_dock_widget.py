@@ -21,8 +21,7 @@ To do list:
 2) add PCA
 3) sparse PCA
 4) highlight regions of the image (approximated cells) corresponding to user-selected areas in the plot or vice versa??
-5) fix the spacing between widgets   (why the spacing is so big?)
-6) save plot with white background instead of napari background
+5) save plot with white background instead of napari background
 '''
 
 @napari_hook_implementation
@@ -215,8 +214,13 @@ class Widget(QWidget):
         self.layout().addWidget(self.kmeans_settings_container)
         self.layout().addWidget(self.kmeans_settings_container2)
         self.layout().addWidget(run_widget)
-        #self.layout().setSpacing(0) # <--- not working
-        #self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0) # <--- not working # it works indeed, it removes two pixels, Robert :-)
+        self.layout().setContentsMargins(0,0,0,0)
+        # go through all widgets again and make them stick to each other
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i).widget()
+            item.layout().setSpacing(0)
+            item.layout().setContentsMargins(0, 0, 0, 0)
 
         # hide widget for the selection of parameters for KMeans unless Kmeans clustering method is chosen
         self.clust_method_choice_list.currentIndexChanged.connect(self.change_kmeans_clustering)
