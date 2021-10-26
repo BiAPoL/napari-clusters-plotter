@@ -2,17 +2,18 @@ import pyclesperanto_prototype as cle
 import pandas as pd
 import numpy as np
 import warnings
-#import hdbscan
+# import hdbscan
 import napari
 from magicgui.widgets import FileEdit
 from magicgui.types import FileDialogMode
 from napari_plugin_engine import napari_hook_implementation
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QCheckBox, QHBoxLayout,QVBoxLayout, QComboBox
+from PyQt5 import QtWidgets
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib
+
 matplotlib.use('Qt5Agg')
 
 '''
@@ -21,14 +22,14 @@ To do list:
 2) add PCA
 3) sparse PCA
 4) highlight regions of the image (approximated cells) corresponding to user-selected areas in the plot or vice versa??
-5) save plot with white background instead of napari background
 '''
+
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
     return Widget, dict(name='Clustering and Plotting')
 
-# From tutorial: https://www.pythonguis.com/tutorials/plotting-matplotlib/
+
 class MplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=7, height=4):
@@ -46,23 +47,57 @@ class MplCanvas(FigureCanvas):
         self.axes.spines['top'].set_color('white')
         self.axes.spines['right'].set_color('white')
         self.axes.spines['left'].set_color('white')
-        #self.axes.title('UMAP projection')
+        # self.axes.title('UMAP projection')
 
         # changing colors of axis labels
         self.axes.tick_params(axis='x', colors='white')
         self.axes.tick_params(axis='y', colors='white')
 
-        #self.axes.yaxis.label.set_color('white')
-        #self.axes.xaxis.label.set_color('white')
         super(MplCanvas, self).__init__(self.fig)
 
         # add an event when the user clicks somewhere in the plot
         self.mpl_connect("button_press_event", self._on_left_click)
 
     def _on_left_click(self, event):
-        print("clicked at",event.xdata, event.ydata)
+        print("clicked at", event.xdata, event.ydata)
         self.axes.scatter(event.xdata, event.ydata)
         self.fig.canvas.draw()
+
+
+# overwriting NavigationToolbar class to change the colors of saved figure background and axes
+class MyNavigationToolbar(NavigationToolbar):
+    def __init__(self, canvas, parent):
+        super().__init__(canvas, parent)
+        self.canvas = canvas
+
+    def save_figure(self):
+        self.canvas.fig.set_facecolor("#00000000")
+        self.canvas.fig.axes[0].set_facecolor("#00000000")
+        self.canvas.axes.tick_params(color='black')
+
+        self.canvas.axes.spines['bottom'].set_color('black')
+        self.canvas.axes.spines['top'].set_color('black')
+        self.canvas.axes.spines['right'].set_color('black')
+        self.canvas.axes.spines['left'].set_color('black')
+
+        # changing colors of axis labels
+        self.canvas.axes.tick_params(axis='x', colors='black')
+        self.canvas.axes.tick_params(axis='y', colors='black')
+
+        super().save_figure()
+
+        self.canvas.axes.tick_params(color='white')
+
+        self.canvas.axes.spines['bottom'].set_color('white')
+        self.canvas.axes.spines['top'].set_color('white')
+        self.canvas.axes.spines['right'].set_color('white')
+        self.canvas.axes.spines['left'].set_color('white')
+
+        # changing colors of axis labels
+        self.canvas.axes.tick_params(axis='x', colors='white')
+        self.canvas.axes.tick_params(axis='y', colors='white')
+
+        self.canvas.draw()
 
 
 class Widget(QWidget):
@@ -82,7 +117,7 @@ class Widget(QWidget):
         self.graphics_widget = MplCanvas(self.figure)
 
         # Navigation widget
-        self.toolbar = NavigationToolbar(self.graphics_widget, self)
+        self.toolbar = MyNavigationToolbar(self.graphics_widget, self)
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
@@ -128,7 +163,9 @@ class Widget(QWidget):
         reg_props_container.layout().addWidget(label_reg_props)
 
         self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)', 'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
+        self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)',
+                                             'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
+
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # selection of the clustering methods
@@ -168,9 +205,8 @@ class Widget(QWidget):
         self.kmeans_nr_iter.setValue(3000)
         self.kmeans_settings_container2.layout().addWidget(self.kmeans_nr_iter)
         self.kmeans_settings_container2.setVisible(False)
-        #self.kmeans_settings_container2.layout().setContentsMargins(0, 0, 0, 0) #left, top, right, and bottom.
 
-        # clustering options for HDBSCAN
+        # Clustering options for HDBSCAN
 
         # Region properties file upload
         self.regpropsfile_widget = QWidget()
@@ -206,12 +242,12 @@ class Widget(QWidget):
                 self.kmeans_nr_iter.value(),
             )
 
-
         button.clicked.connect(run_clicked)
         run_widget.layout().addWidget(button)
 
         # adding all widgets to the layout
-        # side note: if widget is not added to the layout but set visible by connecting an event, it opens up as a pop-up
+        # side note: if widget is not added to the layout but set visible by connecting an event,
+        # it opens up as a pop-up
 
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
@@ -221,8 +257,9 @@ class Widget(QWidget):
         self.layout().addWidget(self.kmeans_settings_container)
         self.layout().addWidget(self.kmeans_settings_container2)
         self.layout().addWidget(run_widget)
-        self.layout().setSpacing(0) # <--- not working # it works indeed, it removes two pixels, Robert :-)
-        # go through all widgets again and make them stick to each other
+        self.layout().setSpacing(0)
+
+        # go through all widgets and change spacing
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i).widget()
             item.layout().setSpacing(0)
@@ -287,11 +324,9 @@ class Widget(QWidget):
         if num_labels_in_viewer != self.label_list.size():
             self.update_label_list()
 
-
         num_images_in_viewer = len([l for l in self.viewer.layers if isinstance(l, napari.layers.Image)])
         if num_images_in_viewer != self.image_list.size():
             self.update_image_list()
-
 
     # toggle widgets visibility according to what is selected
 
@@ -300,10 +335,12 @@ class Widget(QWidget):
             widget.setVisible(active)
 
     def change_kmeans_clustering(self):
-        self.widgets_inactive(self.kmeans_settings_container, self.kmeans_settings_container2, active = self.clust_method_choice_list.currentText() == 'KMeans')
+        self.widgets_inactive(self.kmeans_settings_container, self.kmeans_settings_container2,
+                              active=self.clust_method_choice_list.currentText() == 'KMeans')
 
     def change_reg_props_file(self):
-        self.widgets_inactive(self.regpropsfile_widget, active = self.reg_props_choice_list.currentText() == 'Upload file')
+        self.widgets_inactive(self.regpropsfile_widget,
+                              active=self.reg_props_choice_list.currentText() == 'Upload file')
 
     # this function runs after run button is clicked
     def run(self, image, labels, regpropsfile, cluster_method, nr_clusters, iterations):
@@ -330,7 +367,7 @@ class Widget(QWidget):
             if 'intensity' in region_props_source:
                 reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
                 columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
-                            'mean_intensity', 'standard_deviation_intensity']
+                                     'mean_intensity', 'standard_deviation_intensity']
             if 'shape' in region_props_source:
                 reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
                 columns = columns + ['area', 'mean_distance_to_centroid',
@@ -339,7 +376,8 @@ class Widget(QWidget):
                 reg_props = reg_props[columns]
 
             if 'neighborhood' in region_props_source:
-                reg_props = pd.DataFrame(regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4]))
+                reg_props = pd.DataFrame(
+                    regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4]))
 
             print(list(reg_props.keys()))
         else:
@@ -350,27 +388,27 @@ class Widget(QWidget):
         print('GPU used: {val}'.format(val=cle.get_device().name))
 
         if cluster_method == 'KMeans':
-
             kmeans_predictions = kmeansclustering(reg_props, nr_clusters, iterations)
             print('KMeans predictions done.')
             kmeans_cluster_labels = generate_parametric_cluster_image(labels, kmeans_predictions)
             self.viewer.add_labels(kmeans_cluster_labels)
 
-        print('Clustering finished.')
+            embedding = umap(reg_props)
 
-        embedding = umap(reg_props)
+            self.graphics_widget.axes.scatter(embedding[:, 0], embedding[:, 1], color='#BABABA', s=10)
+            self.graphics_widget.axes.set_aspect('equal', 'datalim')
+            color = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
+                     '#17becf']
+            self.graphics_widget.axes.scatter(
+                embedding[:, 0],
+                embedding[:, 1],
+                c=[color[int(x)] for x in kmeans_predictions],
+                cmap='Spectral',
+                s=10
+            )
+            self.graphics_widget.draw()
 
-        self.graphics_widget.axes.scatter(embedding[:, 0], embedding[:, 1], color = '#BABABA', s = 10)
-        self.graphics_widget.axes.set_aspect('equal', 'datalim')
-        color = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-        self.graphics_widget.axes.scatter(
-            embedding[:, 0],
-            embedding[:, 1],
-            c= [color[int(x)] for x in kmeans_predictions],
-            cmap='Spectral',
-            s=10
-        )
-        self.graphics_widget.draw()
+            print('Clustering finished.')
 
 
 def kmeansclustering(measurements, cluster_number, iterations):
@@ -379,17 +417,17 @@ def kmeansclustering(measurements, cluster_number, iterations):
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
-    Y_pred = km.fit_predict(measurements)
+    y_pred = km.fit_predict(measurements)
 
     # saving prediction as a list for generating clustering image
-    return Y_pred
+    return y_pred
 
 
 # function for generating image labelled by clusters given the label image and the cluster prediction list
 def generate_parametric_cluster_image(labelimage, predictionlist):
     print('Generation of parametric cluster image started...')
     # reforming the prediction list this is done to account for cluster labels that start at 0
-    # conviniently hdbscan labelling starts at -1 for noise, removing these from the labels
+    # conveniently hdbscan labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
 
     # this takes care of the background label that needs to be 0 as well as any other
@@ -406,6 +444,7 @@ def generate_parametric_cluster_image(labelimage, predictionlist):
     parametric_image = cle.pull(cle.replace_intensities(cle_labels, cle_list))
     print('Generation of parametric cluster image finished...')
     return np.array(parametric_image, dtype="int64")
+
 
 '''
 def HDBSCAN_predictionlist(dataframe, n_min_samples=10, n_min_cluster=50, n_dimension_umap=2):
@@ -430,11 +469,12 @@ def HDBSCAN_predictionlist(dataframe, n_min_samples=10, n_min_cluster=50, n_dime
     return hdbscan_labels
 '''
 
+
 def umap(reg_props):
     from sklearn.preprocessing import StandardScaler
     import umap.umap_ as umap
 
-    reducer = umap.UMAP(random_state = 133)
+    reducer = umap.UMAP(random_state=133)
     scaled_regionprops = StandardScaler().fit_transform(reg_props)
 
     embedding = reducer.fit_transform(scaled_regionprops)
@@ -442,7 +482,7 @@ def umap(reg_props):
     return embedding
 
 
-def regionprops_with_neighborhood_data(labelimage, originalimage, n_closest_points_list=[3, 4]):
+def regionprops_with_neighborhood_data(labelimage, originalimage, n_closest_points_list):
     from skimage.measure import regionprops_table
 
     # get lowest label index to adjust sizes of measurement arrays
