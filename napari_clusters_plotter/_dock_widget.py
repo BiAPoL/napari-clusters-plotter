@@ -220,7 +220,7 @@ class Widget(QWidget):
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i).widget()
             item.layout().setSpacing(0)
-            item.layout().setContentsMargins(0, 0, 0, 0)
+            item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widget for the selection of parameters for KMeans unless Kmeans clustering method is chosen
         self.clust_method_choice_list.currentIndexChanged.connect(self.change_kmeans_clustering)
