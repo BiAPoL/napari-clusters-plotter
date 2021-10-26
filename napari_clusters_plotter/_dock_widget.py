@@ -215,7 +215,6 @@ class Widget(QWidget):
         self.layout().addWidget(self.kmeans_settings_container2)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0) # <--- not working # it works indeed, it removes two pixels, Robert :-)
-        self.layout().setContentsMargins(0,0,0,0)
         # go through all widgets again and make them stick to each other
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i).widget()
