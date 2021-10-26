@@ -33,11 +33,11 @@ def napari_experimental_provide_dock_widget():
 class MplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=7, height=4):
-        fig = Figure(figsize=(width, height))
+        self.fig = Figure(figsize=(width, height))
 
         # changing color of axis background to napari main window color
-        fig.patch.set_facecolor('#262930')
-        self.axes = fig.add_subplot(111)
+        self.fig.patch.set_facecolor('#262930')
+        self.axes = self.fig.add_subplot(111)
 
         # changing color of plot background to napari main window color
         self.axes.set_facecolor('#262930')
@@ -55,7 +55,16 @@ class MplCanvas(FigureCanvas):
 
         #self.axes.yaxis.label.set_color('white')
         #self.axes.xaxis.label.set_color('white')
-        super(MplCanvas, self).__init__(fig)
+        super(MplCanvas, self).__init__(self.fig)
+
+        # add an event when the user clicks somewhere in the plot
+        self.mpl_connect("button_press_event", self._on_left_click)
+
+    def _on_left_click(self, event):
+        print("clicked at",event.xdata, event.ydata)
+        self.axes.scatter(event.xdata, event.ydata)
+        self.fig.canvas.draw()
+
 
 
 
@@ -122,7 +131,7 @@ class Widget(QWidget):
         reg_props_container.layout().addWidget(label_reg_props)
 
         self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now', 'Upload file'])
+        self.reg_props_choice_list.addItems(['   ', 'Measure now (intensity)', 'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # selection of the clustering methods
@@ -308,8 +317,28 @@ class Widget(QWidget):
             warnings.warn("No labels image was selected!")
             return
 
-        reg_props = pd.read_csv(regpropsfile)
-        #layers = []
+        # depending on settings,...
+        region_props_source = self.reg_props_choice_list.currentText()
+        if region_props_source == 'Upload file':
+            # load regions region properties from file
+            reg_props = pd.read_csv(regpropsfile)
+        elif 'Measure now' in region_props_source:
+            # or determine it now using clEsperanto
+            reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
+
+            # and select columns, depending on if intensities and/or shape were selected
+            columns = []
+            if 'intensity' in region_props_source:
+                columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
+                            'mean_intensity', 'standard_deviation_intensity']
+            if 'shape' in region_props_source:
+                columns = columns + ['area', 'mean_distance_to_centroid',
+                                     'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
+            reg_props = reg_props[columns]
+            print(list(reg_props.keys()))
+        else:
+            warnings.warn("No measurements.")
+            return
 
         # check which GPU is used
         print('GPU used: {val}'.format(val=cle.get_device().name))
