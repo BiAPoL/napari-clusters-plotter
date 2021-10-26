@@ -66,8 +66,6 @@ class MplCanvas(FigureCanvas):
         self.fig.canvas.draw()
 
 
-
-
 class Widget(QWidget):
 
     def __init__(self, napari_viewer):
@@ -131,7 +129,7 @@ class Widget(QWidget):
         reg_props_container.layout().addWidget(label_reg_props)
 
         self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now (intensity)', 'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
+        self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)', 'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # selection of the clustering methods
@@ -175,7 +173,7 @@ class Widget(QWidget):
 
         # clustering options for HDBSCAN
 
-        # Region properties file
+        # Region properties file upload
         self.regpropsfile_widget = QWidget()
         self.regpropsfile_widget.setLayout(QVBoxLayout())
         filename_edit = FileEdit(
@@ -307,7 +305,6 @@ class Widget(QWidget):
     # this function runs after run button is clicked
     def run(self, image, labels, regpropsfile, cluster_method, nr_clusters, iterations):
         print("running")
-        print(regpropsfile)
 
         if image is None:
             warnings.warn("No image was selected!")
@@ -324,17 +321,23 @@ class Widget(QWidget):
             reg_props = pd.read_csv(regpropsfile)
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
-            reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
 
             # and select columns, depending on if intensities and/or shape were selected
             columns = []
             if 'intensity' in region_props_source:
+                reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
                 columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
                             'mean_intensity', 'standard_deviation_intensity']
             if 'shape' in region_props_source:
+                reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
                 columns = columns + ['area', 'mean_distance_to_centroid',
                                      'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
-            reg_props = reg_props[columns]
+            if columns:
+                reg_props = reg_props[columns]
+
+            if 'neighborhood' in region_props_source:
+                reg_props = pd.DataFrame(regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4]))
+
             print(list(reg_props.keys()))
         else:
             warnings.warn("No measurements.")
@@ -348,7 +351,6 @@ class Widget(QWidget):
             kmeans_predictions = kmeansclustering(reg_props, nr_clusters, iterations)
             print('KMeans predictions done.')
             kmeans_cluster_labels = generate_parametric_cluster_image(labels, kmeans_predictions)
-            #layers.append(kmeans_cluster_labels, dict(name='clusters kmeans'), "Labels")
             self.viewer.add_labels(kmeans_cluster_labels)
 
         print('Clustering finished.')
@@ -435,3 +437,65 @@ def umap(reg_props):
     embedding = reducer.fit_transform(scaled_regionprops)
 
     return embedding
+
+
+def regionprops_with_neighborhood_data(labelimage, originalimage, n_closest_points_list=[3, 4]):
+    from skimage.measure import regionprops_table
+
+    # get lowest label index to adjust sizes of measurement arrays
+    min_label = int(np.min(labelimage[np.nonzero(labelimage)]))
+
+    # defining function for getting standarddev as extra property
+    # arguments must be in the specified order, matching regionprops
+    def image_stdev(region, intensities):
+        # note the ddof arg to get the sample var if you so desire!
+        return np.std(intensities[region], ddof=1)
+
+    # get region properties from labels
+    regionprops = regionprops_table(labelimage.astype(dtype='uint16'), intensity_image=originalimage,
+                                    properties=('area', 'centroid', 'feret_diameter_max',
+                                                'major_axis_length', 'minor_axis_length', 'solidity',
+                                                'mean_intensity',
+                                                'max_intensity', 'min_intensity'),
+                                    extra_properties=[image_stdev])
+    print('Scikit Regionprops Done')
+
+    # determine neighbors of cells
+    touch_matrix = cle.generate_touch_matrix(labelimage)
+
+    # ignore touching the background
+    cle.set_column(touch_matrix, 0, 0)
+    cle.set_row(touch_matrix, 0, 0)
+
+    # determine distances of all cells to all cells
+    pointlist = cle.centroids_of_labels(labelimage)
+
+    # generate a distance matrix
+    distance_matrix = cle.generate_distance_matrix(pointlist, pointlist)
+
+    # detect touching neighbor count
+    touching_neighbor_count = cle.count_touching_neighbors(touch_matrix)
+    cle.set_column(touching_neighbor_count, 0, 0)
+
+    # conversion and editing of the distance matrix, so that it doesn't break cle.average_distance.....
+    viewdist_mat = cle.pull(distance_matrix)
+    tempdist_mat = np.delete(viewdist_mat, range(min_label), axis=0)
+    edited_distmat = np.delete(tempdist_mat, range(min_label), axis=1)
+
+    # iterating over different neighbor numbers for avg neighbor dist calculation
+    for i in n_closest_points_list:
+        distance_of_n_closest_points = \
+            cle.pull(cle.average_distance_of_n_closest_points(cle.push(edited_distmat), n=i))[0]
+
+        # addition to the regionprops dictionary
+        regionprops['avg distance of {val} closest points'.format(val=i)] = distance_of_n_closest_points
+
+    # processing touching neighbor count for addition to regionprops (deletion of background & not used labels)
+    touching_neighbor_c = cle.pull(touching_neighbor_count)
+    touching_neighborcount_formated = np.delete(touching_neighbor_c, list(range(min_label)))
+
+    # addition to the regionprops dictionary
+    regionprops['touching neighbor count'] = touching_neighborcount_formated
+    print('Regionprops Completed')
+
+    return regionprops
