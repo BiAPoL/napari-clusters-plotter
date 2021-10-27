@@ -66,6 +66,7 @@ class MplCanvas(FigureCanvas):
 
         # add an event when the user clicks somewhere in the plot
         self.mpl_connect('button_press_event', self._on_press)
+        self.mpl_connect('motion_notify_event', self._on_motion)
         self.mpl_connect('button_release_event', self._on_release)
         # self.mpl_connect("button_press_event", self._on_left_click)
 
@@ -80,17 +81,36 @@ class MplCanvas(FigureCanvas):
         print('press')
         self.x0 = event.xdata
         self.y0 = event.ydata
+        self.x1 = event.xdata
+        self.y1 = event.ydata
+        self.is_pressed = True
+        self.rect.set_width(self.x1 - self.x0)
+        self.rect.set_height(self.y1 - self.y0)
+        self.rect.set_xy((self.x0, self.y0))
+        self.rect.set_linestyle('dashed')
+        self.fig.canvas.draw()
 
-    # draws a rectangle when user releases the mouse
-    def _on_release(self, event):
-        print('release')
+    def _on_motion(self, event):
         self.x1 = event.xdata
         self.y1 = event.ydata
         self.rect.set_width(self.x1 - self.x0)
         self.rect.set_height(self.y1 - self.y0)
         self.rect.set_xy((self.x0, self.y0))
-        self.fig.canvas.draw()
+        self.rect.set_linestyle('dashed')
+        if self.is_pressed:
+            self.fig.canvas.draw()
 
+    # draws a rectangle when user releases the mouse
+    def _on_release(self, event):
+        print('release')
+        self.is_pressed = False
+        self.x1 = event.xdata
+        self.y1 = event.ydata
+        self.rect.set_width(self.x1 - self.x0)
+        self.rect.set_height(self.y1 - self.y0)
+        self.rect.set_xy((self.x0, self.y0))
+        self.rect.set_linestyle('solid')
+        self.fig.canvas.draw()
 
 # overwriting NavigationToolbar class to change the background and axes colors of saved figure
 class MyNavigationToolbar(NavigationToolbar):
