@@ -13,6 +13,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib
+from matplotlib.patches import Rectangle
 
 matplotlib.use('Qt5Agg')
 
@@ -55,16 +56,43 @@ class MplCanvas(FigureCanvas):
 
         super(MplCanvas, self).__init__(self.fig)
 
-        # add an event when the user clicks somewhere in the plot
-        self.mpl_connect("button_press_event", self._on_left_click)
+        # a rectangle defined via an anchor point xy and its width and height.
+        self.rect = Rectangle((0, 0), 1, 1, edgecolor = 'white', fill = None)
+        self.x0 = None
+        self.y0 = None
+        self.x1 = None
+        self.y1 = None
+        self.axes.add_patch(self.rect)
 
+        # add an event when the user clicks somewhere in the plot
+        self.mpl_connect('button_press_event', self._on_press)
+        self.mpl_connect('button_release_event', self._on_release)
+        # self.mpl_connect("button_press_event", self._on_left_click)
+
+    # draws a dot where user clicks on the map
     def _on_left_click(self, event):
         print("clicked at", event.xdata, event.ydata)
         self.axes.scatter(event.xdata, event.ydata)
         self.fig.canvas.draw()
 
+    # initial coordinates x0, y0 (anchor point) for the rectangle
+    def _on_press(self, event):
+        print('press')
+        self.x0 = event.xdata
+        self.y0 = event.ydata
 
-# overwriting NavigationToolbar class to change the colors of saved figure background and axes
+    # draws a rectangle when user releases the mouse
+    def _on_release(self, event):
+        print('release')
+        self.x1 = event.xdata
+        self.y1 = event.ydata
+        self.rect.set_width(self.x1 - self.x0)
+        self.rect.set_height(self.y1 - self.y0)
+        self.rect.set_xy((self.x0, self.y0))
+        self.fig.canvas.draw()
+
+
+# overwriting NavigationToolbar class to change the background and axes colors of saved figure
 class MyNavigationToolbar(NavigationToolbar):
     def __init__(self, canvas, parent):
         super().__init__(canvas, parent)
@@ -329,7 +357,6 @@ class Widget(QWidget):
             self.update_image_list()
 
     # toggle widgets visibility according to what is selected
-
     def widgets_inactive(self, *widgets, active):
         for widget in widgets:
             widget.setVisible(active)
@@ -342,7 +369,7 @@ class Widget(QWidget):
         self.widgets_inactive(self.regpropsfile_widget,
                               active=self.reg_props_choice_list.currentText() == 'Upload file')
 
-    # this function runs after run button is clicked
+    # this function runs after the run button is clicked
     def run(self, image, labels, regpropsfile, cluster_method, nr_clusters, iterations):
         print("running")
 
@@ -448,7 +475,7 @@ def generate_parametric_cluster_image(labelimage, predictionlist):
 
 '''
 def HDBSCAN_predictionlist(dataframe, n_min_samples=10, n_min_cluster=50, n_dimension_umap=2):
-    # conversion to dataframe for handling by umap and hdbscan libraries
+
     # dataframe = pd.DataFrame(regionpropsdict)
 
     if umap_used:
