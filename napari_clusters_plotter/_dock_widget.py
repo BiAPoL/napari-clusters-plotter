@@ -8,7 +8,9 @@ from magicgui.widgets import FileEdit
 from magicgui.types import FileDialogMode
 from napari_plugin_engine import napari_hook_implementation
 from PyQt5 import QtWidgets
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox, QGridLayout, \
+    QFileDialog, QTableWidget, QTableWidgetItem
+from qtpy.QtCore import QTimer
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -57,7 +59,8 @@ class MplCanvas(FigureCanvas):
         super(MplCanvas, self).__init__(self.fig)
 
         # a rectangle defined via an anchor point xy and its width and height.
-        self.rect = Rectangle((0, 0), 1, 1, edgecolor = 'white', fill = None)
+        self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
+        self.is_pressed = None
         self.x0 = None
         self.y0 = None
         self.x1 = None
@@ -65,54 +68,49 @@ class MplCanvas(FigureCanvas):
         self.axes.add_patch(self.rect)
 
         # add an event when the user clicks somewhere in the plot
-        self.mpl_connect('button_press_event', self._on_press)
+        self.mpl_connect('button_press_event', self._on_left_click)
         self.mpl_connect('motion_notify_event', self._on_motion)
-        self.mpl_connect('button_release_event', self._on_release)
-        # self.mpl_connect("button_press_event", self._on_left_click)
+        self.mpl_connect('button_release_event', self.on_release)
 
     # draws a dot where user clicks on the map
-    def _on_left_click(self, event):
-        print("clicked at", event.xdata, event.ydata)
-        self.axes.scatter(event.xdata, event.ydata)
-        self.fig.canvas.draw()
+    # def _on_left_click(self, event):
+    #     print("clicked at", event.xdata, event.ydata)
+    #     self.axes.scatter(event.xdata, event.ydata)
+    #     self.fig.canvas.draw()
 
-    # initial coordinates x0, y0 (anchor point) for the rectangle
-    def _on_press(self, event):
-        print('press')
+    def _on_left_click(self, event):
+        self.is_pressed = True
         self.x0 = event.xdata
         self.y0 = event.ydata
         self.x1 = event.xdata
         self.y1 = event.ydata
-        self.is_pressed = True
         self.rect.set_width(self.x1 - self.x0)
         self.rect.set_height(self.y1 - self.y0)
         self.rect.set_xy((self.x0, self.y0))
-        self.rect.set_linestyle('dashed')
         self.fig.canvas.draw()
 
     def _on_motion(self, event):
-        self.x1 = event.xdata
-        self.y1 = event.ydata
-        self.rect.set_width(self.x1 - self.x0)
-        self.rect.set_height(self.y1 - self.y0)
-        self.rect.set_xy((self.x0, self.y0))
-        self.rect.set_linestyle('dashed')
         if self.is_pressed:
+            self.x1 = event.xdata
+            self.y1 = event.ydata
+            self.rect.set_width(self.x1 - self.x0)
+            self.rect.set_height(self.y1 - self.y0)
+            self.rect.set_xy((self.x0, self.y0))
             self.fig.canvas.draw()
 
     # draws a rectangle when user releases the mouse
-    def _on_release(self, event):
-        print('release')
+    def on_release(self, event):
         self.is_pressed = False
         self.x1 = event.xdata
         self.y1 = event.ydata
         self.rect.set_width(self.x1 - self.x0)
         self.rect.set_height(self.y1 - self.y0)
         self.rect.set_xy((self.x0, self.y0))
-        self.rect.set_linestyle('solid')
         self.fig.canvas.draw()
+        coordinates = [self.x0, self.y0, self.x1, self.y1]
 
-# overwriting NavigationToolbar class to change the background and axes colors of saved figure
+
+# overriding NavigationToolbar method to change the background and axes colors of saved figure
 class MyNavigationToolbar(NavigationToolbar):
     def __init__(self, canvas, parent):
         super().__init__(canvas, parent)
@@ -148,10 +146,16 @@ class MyNavigationToolbar(NavigationToolbar):
         self.canvas.draw()
 
 
+def widgets_inactive(*widgets, active):
+    for widget in widgets:
+        widget.setVisible(active)
+
+
 class Widget(QWidget):
 
     def __init__(self, napari_viewer):
         super().__init__()
+
         self.viewer = napari_viewer
 
         napari_viewer.layers.selection.events.changed.connect(self._on_selection)
@@ -271,7 +275,7 @@ class Widget(QWidget):
         run_widget.setLayout(QHBoxLayout())
         button = QPushButton("Run")
 
-        def run_clicked(*arg):
+        def run_clicked():
 
             if self.get_selected_label() is None:
                 warnings.warn("No labels image was selected!")
@@ -316,7 +320,7 @@ class Widget(QWidget):
         # hide widget for the selection of parameters for KMeans unless Kmeans clustering method is chosen
         self.clust_method_choice_list.currentIndexChanged.connect(self.change_kmeans_clustering)
 
-        # hide choose file widget unless Upload file is chosen
+        # hide choose file widget unless Upload file option is chosen
         self.reg_props_choice_list.currentIndexChanged.connect(self.change_reg_props_file)
 
     # following 5 functions for image layer or labels layer selection are from Robert Haase
@@ -341,12 +345,12 @@ class Widget(QWidget):
         self._available_labels = []
         self.label_list.clear()
         i = 0
-        for l in self.viewer.layers:
-            if isinstance(l, napari.layers.Labels):
-                self._available_labels.append(l)
-                if l == selected_layer:
+        for layer in self.viewer.layers:
+            if isinstance(layer, napari.layers.Labels):
+                self._available_labels.append(layer)
+                if layer == selected_layer:
                     selected_index = i
-                self.label_list.addItem(l.name)
+                self.label_list.addItem(layer.name)
                 i = i + 1
         self.label_list.setCurrentIndex(selected_index)
 
@@ -368,26 +372,23 @@ class Widget(QWidget):
 
     def _on_selection(self, event=None):
 
-        num_labels_in_viewer = len([l for l in self.viewer.layers if isinstance(l, napari.layers.Labels)])
+        num_labels_in_viewer = len([layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Labels)])
         if num_labels_in_viewer != self.label_list.size():
             self.update_label_list()
 
-        num_images_in_viewer = len([l for l in self.viewer.layers if isinstance(l, napari.layers.Image)])
+        num_images_in_viewer = len([layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Image)])
         if num_images_in_viewer != self.image_list.size():
             self.update_image_list()
 
     # toggle widgets visibility according to what is selected
-    def widgets_inactive(self, *widgets, active):
-        for widget in widgets:
-            widget.setVisible(active)
 
     def change_kmeans_clustering(self):
-        self.widgets_inactive(self.kmeans_settings_container, self.kmeans_settings_container2,
-                              active=self.clust_method_choice_list.currentText() == 'KMeans')
+        widgets_inactive(self.kmeans_settings_container, self.kmeans_settings_container2,
+                         active=self.clust_method_choice_list.currentText() == 'KMeans')
 
     def change_reg_props_file(self):
-        self.widgets_inactive(self.regpropsfile_widget,
-                              active=self.reg_props_choice_list.currentText() == 'Upload file')
+        widgets_inactive(self.regpropsfile_widget,
+                         active=self.reg_props_choice_list.currentText() == 'Upload file')
 
     # this function runs after the run button is clicked
     def run(self, image, labels, regpropsfile, cluster_method, nr_clusters, iterations):
@@ -401,30 +402,40 @@ class Widget(QWidget):
             warnings.warn("No labels image was selected!")
             return
 
+        labels_layer = self.get_selected_label()
+
         # depending on settings,...
         region_props_source = self.reg_props_choice_list.currentText()
+
         if region_props_source == 'Upload file':
             # load regions region properties from file
             reg_props = pd.read_csv(regpropsfile)
+
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
+            reg_props = cle.statistics_of_labelled_pixels(image, labels)
 
             # and select columns, depending on if intensities and/or shape were selected
-            columns = []
+            columns = ['label']
             if 'intensity' in region_props_source:
-                reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
                 columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
                                      'mean_intensity', 'standard_deviation_intensity']
+
             if 'shape' in region_props_source:
-                reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(image, labels))
                 columns = columns + ['area', 'mean_distance_to_centroid',
                                      'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
+
             if columns:
-                reg_props = reg_props[columns]
+                reg_props = {column: value for column, value in reg_props.items() if column in columns}
+
+                # add table widget to napari
+                labels_layer.properties = reg_props
+                dock_widget = table_to_widget(reg_props, labels_layer)
+                self.viewer.window.add_dock_widget(dock_widget, name='Region properties table', area='right')
 
             if 'neighborhood' in region_props_source:
-                reg_props = pd.DataFrame(
-                    regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4]))
+                reg_props = regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4])
+                labels_layer.properties = reg_props
 
             print(list(reg_props.keys()))
         else:
@@ -435,6 +446,7 @@ class Widget(QWidget):
         print('GPU used: {val}'.format(val=cle.get_device().name))
 
         if cluster_method == 'KMeans':
+            reg_props = pd.DataFrame(reg_props)
             kmeans_predictions = kmeansclustering(reg_props, nr_clusters, iterations)
             print('KMeans predictions done.')
             kmeans_cluster_labels = generate_parametric_cluster_image(labels, kmeans_predictions)
@@ -529,20 +541,20 @@ def umap(reg_props):
     return embedding
 
 
-def regionprops_with_neighborhood_data(labelimage, originalimage, n_closest_points_list):
+def regionprops_with_neighborhood_data(label_image, original_image, n_closest_points_list):
     from skimage.measure import regionprops_table
 
     # get lowest label index to adjust sizes of measurement arrays
-    min_label = int(np.min(labelimage[np.nonzero(labelimage)]))
+    min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
-    # defining function for getting standarddev as extra property
+    # defining function for getting standard deviation as an extra property
     # arguments must be in the specified order, matching regionprops
     def image_stdev(region, intensities):
         # note the ddof arg to get the sample var if you so desire!
         return np.std(intensities[region], ddof=1)
 
     # get region properties from labels
-    regionprops = regionprops_table(labelimage.astype(dtype='uint16'), intensity_image=originalimage,
+    regionprops = regionprops_table(label_image.astype(dtype='uint16'), intensity_image=original_image,
                                     properties=('area', 'centroid', 'feret_diameter_max',
                                                 'major_axis_length', 'minor_axis_length', 'solidity',
                                                 'mean_intensity',
@@ -551,14 +563,14 @@ def regionprops_with_neighborhood_data(labelimage, originalimage, n_closest_poin
     print('Scikit Regionprops Done')
 
     # determine neighbors of cells
-    touch_matrix = cle.generate_touch_matrix(labelimage)
+    touch_matrix = cle.generate_touch_matrix(label_image)
 
     # ignore touching the background
     cle.set_column(touch_matrix, 0, 0)
     cle.set_row(touch_matrix, 0, 0)
 
     # determine distances of all cells to all cells
-    pointlist = cle.centroids_of_labels(labelimage)
+    pointlist = cle.centroids_of_labels(label_image)
 
     # generate a distance matrix
     distance_matrix = cle.generate_distance_matrix(pointlist, pointlist)
@@ -582,10 +594,67 @@ def regionprops_with_neighborhood_data(labelimage, originalimage, n_closest_poin
 
     # processing touching neighbor count for addition to regionprops (deletion of background & not used labels)
     touching_neighbor_c = cle.pull(touching_neighbor_count)
-    touching_neighborcount_formated = np.delete(touching_neighbor_c, list(range(min_label)))
+    touching_neighbor_count_formatted = np.delete(touching_neighbor_c, list(range(min_label)))
 
     # addition to the regionprops dictionary
-    regionprops['touching neighbor count'] = touching_neighborcount_formated
+    regionprops['touching neighbor count'] = touching_neighbor_count_formatted
     print('Regionprops Completed')
 
     return regionprops
+
+
+# from Robert Haase napari-skimage-regionprops
+def table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget:
+    """
+    Takes a table given as dictionary with strings as keys and numeric arrays as values and returns a QWidget which
+    contains a QTableWidget with that data.
+    """
+    view = QTableWidget(len(next(iter(table.values()))), len(table))
+    for i, column in enumerate(table.keys()):
+        view.setItem(0, i, QTableWidgetItem(column))
+        for j, value in enumerate(table.get(column)):
+            view.setItem(j + 1, i, QTableWidgetItem(str(value)))
+
+    if labels_layer is not None:
+
+        @view.clicked.connect
+        def clicked_table():
+            row = view.currentRow()
+            label = table["label"][row]
+            labels_layer.selected_label = label
+
+        def after_labels_clicked():
+            row = view.currentRow()
+            label = table["label"][row]
+            if label != labels_layer.selected_label:
+                for r, layer in enumerate(table["label"]):
+                    if layer == labels_layer.selected_label:
+                        view.setCurrentCell(r, view.currentColumn())
+                        break
+
+        @labels_layer.mouse_drag_callbacks.append
+        def clicked_labels(event, event1):
+            # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
+            QTimer.singleShot(200, after_labels_clicked)
+
+    copy_button = QPushButton("Copy to clipboard")
+
+    @copy_button.clicked.connect
+    def copy_trigger():
+        view.to_dataframe().to_clipboard()
+
+    save_button = QPushButton("Save as csv...")
+
+    @save_button.clicked.connect
+    def save_trigger():
+        filename, _ = QFileDialog.getSaveFileName(save_button, "Save as csv...", ".", "*.csv")
+        view.to_dataframe().to_csv(filename)
+
+    widget_table = QWidget()
+    widget_table.setWindowTitle("region properties")
+    widget_table.setLayout(QGridLayout())
+    widget_table.layout().addWidget(copy_button)
+    widget_table.layout().addWidget(save_button)
+    widget_table.layout().addWidget(view)
+
+    return widget_table
