@@ -297,6 +297,10 @@ class PlotterWidget(QWidget):
     def update_axes_list(self):
         selected_layer = self.get_selected_label()
 
+        former_x_axis = self.plot_x_axis.currentIndex()
+        former_y_axis = self.plot_y_axis.currentIndex()
+        former_cluster_id = self.plot_cluster_id.currentIndex()
+
         print("Selected layer none?")
         if selected_layer is not None:
             print("Properties none?")
@@ -309,6 +313,9 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis.addItems(list(properties.keys()))
                 self.plot_cluster_id.clear()
                 self.plot_cluster_id.addItems([l for l in list(properties.keys()) if "CLUSTER" in l])
+        self.plot_x_axis.setCurrentIndex(former_x_axis)
+        self.plot_y_axis.setCurrentIndex(former_y_axis)
+        self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
     def _on_selection(self, event=None):
 
@@ -332,7 +339,7 @@ class PlotterWidget(QWidget):
         self.analysed_layer = self.get_selected_label()
 
         self.graphics_widget.reset()
-        if plot_cluster_name is not None and plot_cluster_name != "label":
+        if plot_cluster_name is not None and plot_cluster_name != "label" and plot_cluster_name in list(properties.keys()):
             self.cluster_ids = properties[plot_cluster_name]
 
             color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
