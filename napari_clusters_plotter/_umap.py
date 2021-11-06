@@ -158,7 +158,7 @@ class UmapWidget(QWidget):
         properties_to_reduce = reg_props[selected_measurements_list]
 
         # reduce dimensions
-        embedding = umap(reg_props, n_components)
+        embedding = umap(properties_to_reduce, n_components)
 
         # write result back to properties
         properties["UMAP_0"] = embedding[:,0]
