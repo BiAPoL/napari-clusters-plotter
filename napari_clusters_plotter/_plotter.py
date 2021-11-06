@@ -172,7 +172,7 @@ class PlotterWidget(QWidget):
             min_y = min(y0, y1)
             max_y = max(y0, y1)
 
-            clustering_ID = "MANUAL_CLUSTERING_ID"
+            clustering_ID = "MANUAL_CLUSTER_ID"
 
             # save manual clustering; for each point if it's inside the rectangle
             inside = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
@@ -244,7 +244,8 @@ class PlotterWidget(QWidget):
             self.run(
                 self.get_selected_label().properties,
                 self.plot_x_axis.currentText(),
-                self.plot_y_axis.currentText()
+                self.plot_y_axis.currentText(),
+                self.plot_cluster_id.currentText()
             )
 
         button.clicked.connect(run_clicked)
@@ -307,7 +308,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis.clear()
                 self.plot_y_axis.addItems(list(properties.keys()))
                 self.plot_cluster_id.clear()
-                self.plot_cluster_id.addItems([l for l in list(properties.keys()) if "CLUSTERING" in l])
+                self.plot_cluster_id.addItems([l for l in list(properties.keys()) if "CLUSTER" in l])
 
     def _on_selection(self, event=None):
 

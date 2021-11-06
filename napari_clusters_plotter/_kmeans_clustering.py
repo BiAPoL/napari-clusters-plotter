@@ -1,25 +1,12 @@
-import pyclesperanto_prototype as cle
 import pandas as pd
-import numpy as np
 import warnings
-# import hdbscan
 import napari
-from magicgui.widgets import FileEdit
-from magicgui.types import FileDialogMode
-from napari_plugin_engine import napari_hook_implementation
-from PyQt5 import QtWidgets
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox, QGridLayout, \
-    QFileDialog, QTableWidget, QTableWidgetItem
-from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QTabWidget, QComboBox, QPlainTextEdit
-from qtpy.QtCore import QTimer, QRect
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-import matplotlib
-from matplotlib.patches import Rectangle
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout
+from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
+from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive
 
-class KMeansClusteringWidget(QWidget):
+class ClusteringWidget(QWidget):
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -35,42 +22,33 @@ class KMeansClusteringWidget(QWidget):
 
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
-
-        label_measure = QLabel("<b>k-means clustering</b>")
-        label_container.layout().addWidget(label_measure)
-
-        choose_img_container = QWidget()
-        choose_img_container.setLayout(QHBoxLayout())
+        label_container.layout().addWidget(QLabel("<b>Clustering</b>"))
 
         # selection of labels layer
-        label_label_list = QLabel("Labels layer")
+        choose_img_container = QWidget()
+        choose_img_container.setLayout(QHBoxLayout())
+        choose_img_container.layout().addWidget(QLabel("Labels layer"))
         self.label_list = QComboBox()
         self.update_label_list()
-
+        choose_img_container.layout().addWidget(self.label_list)
         self.label_list.currentIndexChanged.connect(self.update_properties_list)
 
-        choose_img_container.layout().addWidget(label_label_list)
-        choose_img_container.layout().addWidget(self.label_list)
-
-        # select properties to make a umap from
+        # select properties to make a clustering from
         choose_properties_container = QWidget()
+        choose_properties_container.setLayout(QVBoxLayout())
+        choose_properties_container.layout().addWidget(QLabel("Measurements"))
         self.properties_list = QListWidget()
         self.properties_list.setSelectionMode(
             QAbstractItemView.ExtendedSelection
         )
         self.properties_list.setGeometry(QRect(10, 10, 101, 291))
         self.update_properties_list()
-
-        choose_properties_container.setLayout(QVBoxLayout())
-        choose_properties_container.layout().addWidget(QLabel("Measurements"))
         choose_properties_container.layout().addWidget(self.properties_list)
 
         # selection of the clustering methods
         self.clust_method_container = QWidget()
         self.clust_method_container.setLayout(QHBoxLayout())
-        label_clust_method = QLabel("Clustering Method")
-        self.clust_method_container.layout().addWidget(label_clust_method)
-
+        self.clust_method_container.layout().addWidget(QLabel("Clustering Method"))
         self.clust_method_choice_list = QComboBox()
         self.clust_method_choice_list.addItems(['   ', 'KMeans', 'HDBSCAN'])
         self.clust_method_container.layout().addWidget(self.clust_method_choice_list)
@@ -79,9 +57,7 @@ class KMeansClusteringWidget(QWidget):
         # selection of number of clusters
         self.kmeans_settings_container = QWidget()
         self.kmeans_settings_container.setLayout(QHBoxLayout())
-        label_kmeans_nr_clusters = QLabel("Number of Clusters")
-        self.kmeans_settings_container.layout().addWidget(label_kmeans_nr_clusters)
-
+        self.kmeans_settings_container.layout().addWidget(QLabel("Number of Clusters"))
         self.kmeans_nr_clusters = QSpinBox()
         self.kmeans_nr_clusters.setMinimumWidth(40)
         self.kmeans_nr_clusters.setMinimum(2)
@@ -92,8 +68,7 @@ class KMeansClusteringWidget(QWidget):
         # selection of number of iterations
         self.kmeans_settings_container2 = QWidget()
         self.kmeans_settings_container2.setLayout(QHBoxLayout())
-        label_iter_nr = QLabel("Number of Iterations")
-        self.kmeans_settings_container2.layout().addWidget(label_iter_nr)
+        self.kmeans_settings_container2.layout().addWidget(QLabel("Number of Iterations"))
 
         self.kmeans_nr_iter = QSpinBox()
         self.kmeans_nr_iter.setMinimumWidth(40)
@@ -177,9 +152,7 @@ class KMeansClusteringWidget(QWidget):
     def update_properties_list(self):
         selected_layer = self.get_selected_label()
 
-        print("Selected layer none?")
         if selected_layer is not None:
-            print("Properties none?")
             properties = selected_layer.properties
             if selected_layer.properties is not None:
                 self.properties_list.clear()
@@ -192,7 +165,6 @@ class KMeansClusteringWidget(QWidget):
 
 
     def _on_selection(self, event=None):
-
         num_labels_in_viewer = len([layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Labels)])
         if num_labels_in_viewer != self.label_list.size():
             self.update_label_list()
@@ -211,7 +183,7 @@ class KMeansClusteringWidget(QWidget):
         properties_to_reduce = reg_props[selected_measurements_list]
 
         # reduce dimensions
-        y_pred = kmeansclustering(reg_props, num_clusters, num_iterations)
+        y_pred = kmeansclustering(properties_to_reduce, num_clusters, num_iterations)
 
         # write result back to properties
         properties["KMEANS_CLUSTER_ID"] = y_pred
