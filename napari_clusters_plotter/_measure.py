@@ -2,26 +2,11 @@ import pyclesperanto_prototype as cle
 import pandas as pd
 import numpy as np
 import warnings
-# import hdbscan
 import napari
 from magicgui.widgets import FileEdit
 from magicgui.types import FileDialogMode
-from napari_plugin_engine import napari_hook_implementation
-from PyQt5 import QtWidgets
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox, QGridLayout, \
-    QFileDialog, QTableWidget, QTableWidgetItem
-from qtpy.QtCore import QTimer
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-import matplotlib
-from matplotlib.patches import Rectangle
-from ._utilities import show_table
-
-
-def widgets_inactive(*widgets, active):
-    for widget in widgets:
-        widget.setVisible(active)
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
+from ._utilities import show_table, widgets_inactive
 
 
 class MeasureWidget(QWidget):
@@ -37,42 +22,31 @@ class MeasureWidget(QWidget):
 
         # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
-
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
-
-        label_measure = QLabel("<b>Measurement</b>")
-        label_container.layout().addWidget(label_measure)
-
-        choose_img_container = QWidget()
-        choose_img_container.setLayout(QHBoxLayout())
+        label_container.layout().addWidget(QLabel("<b>Measurement</b>"))
 
         # selection of image layer
-        label_image_list = QLabel("Image layer")
+        choose_img_container = QWidget()
+        choose_img_container.setLayout(QHBoxLayout())
         self.image_list = QComboBox()
         self.update_image_list()
-
-        choose_img_container.layout().addWidget(label_image_list)
+        choose_img_container.layout().addWidget(QLabel("Image layer"))
         choose_img_container.layout().addWidget(self.image_list)
 
         # selection of labels layer
-        label_label_list = QLabel("Labels layer")
         self.label_list = QComboBox()
         self.update_label_list()
-
-        choose_img_container.layout().addWidget(label_label_list)
+        choose_img_container.layout().addWidget(QLabel("Labels layer"))
         choose_img_container.layout().addWidget(self.label_list)
 
         # selection if region properties should be calculated now or uploaded from file
         reg_props_container = QWidget()
         reg_props_container.setLayout(QHBoxLayout())
-        label_reg_props = QLabel("Region Properties")
-        reg_props_container.layout().addWidget(label_reg_props)
-
+        reg_props_container.layout().addWidget(QLabel("Region Properties"))
         self.reg_props_choice_list = QComboBox()
         self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)',
                                              'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
-
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # Region properties file upload
@@ -91,7 +65,6 @@ class MeasureWidget(QWidget):
         button = QPushButton("Run")
 
         def run_clicked():
-
             if self.get_selected_label() is None:
                 warnings.warn("No labels image was selected!")
                 return
@@ -110,9 +83,6 @@ class MeasureWidget(QWidget):
         run_widget.layout().addWidget(button)
 
         # adding all widgets to the layout
-        # side note: if widget is not added to the layout but set visible by connecting an event,
-        # it opens up as a pop-up
-
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
         self.layout().addWidget(reg_props_container)
@@ -128,9 +98,6 @@ class MeasureWidget(QWidget):
 
         # hide choose file widget unless Upload file option is chosen
         self.reg_props_choice_list.currentIndexChanged.connect(self.change_reg_props_file)
-
-    # following 5 functions for image layer or labels layer selection are from Robert Haase
-    # napari-accelerated-pixel-and-object-classification (APOC)
 
     def get_selected_image(self):
         index = self.image_list.currentIndex()
@@ -177,7 +144,6 @@ class MeasureWidget(QWidget):
         self.image_list.setCurrentIndex(selected_index)
 
     def _on_selection(self, event=None):
-
         num_labels_in_viewer = len([layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Labels)])
         if num_labels_in_viewer != self.label_list.size():
             self.update_label_list()
@@ -187,7 +153,6 @@ class MeasureWidget(QWidget):
             self.update_image_list()
 
     # toggle widgets visibility according to what is selected
-
     def change_reg_props_file(self):
         widgets_inactive(self.regpropsfile_widget,
                          active=self.reg_props_choice_list.currentText() == 'Upload file')
