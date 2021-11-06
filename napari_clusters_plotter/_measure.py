@@ -211,7 +211,7 @@ class MeasureWidget(QWidget):
             reg_props = cle.statistics_of_labelled_pixels(image, labels)
 
             # and select columns, depending on if intensities and/or shape were selected
-            columns = ['label']
+            columns = ['label', 'centroid_x', 'centroid_y', 'centroid_z']
             if 'intensity' in region_props_source:
                 columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
                                      'mean_intensity', 'standard_deviation_intensity']
