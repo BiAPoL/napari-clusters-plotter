@@ -22,8 +22,9 @@ matplotlib.use('Qt5Agg')
 
 class MplCanvas(FigureCanvas):
 
-    def __init__(self, parent=None, width=7, height=4):
+    def __init__(self, parent=None, width=7, height=4, manual_clustering_method=None):
         self.fig = Figure(figsize=(width, height))
+        self.manual_clustering_method = manual_clustering_method
 
         # changing color of axis background to napari main window color
         self.fig.patch.set_facecolor('#262930')
@@ -45,19 +46,26 @@ class MplCanvas(FigureCanvas):
 
         super(MplCanvas, self).__init__(self.fig)
 
-        # a rectangle defined via an anchor point xy and its width and height.
-        self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
-        self.is_pressed = None
         self.x0 = None
         self.y0 = None
         self.x1 = None
         self.y1 = None
-        self.axes.add_patch(self.rect)
+
+        self.reset()
 
         # add an event when the user clicks somewhere in the plot
         self.mpl_connect('button_press_event', self._on_left_click)
         self.mpl_connect('motion_notify_event', self._on_motion)
         self.mpl_connect('button_release_event', self.on_release)
+
+    def reset(self):
+        self.axes.clear()
+
+        # a rectangle defined via an anchor point xy and its width and height.
+        self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
+        self.is_pressed = None
+        self.axes.add_patch(self.rect)
+
 
     # draws a dot where user clicks on the map
     # def _on_left_click(self, event):
@@ -95,6 +103,11 @@ class MplCanvas(FigureCanvas):
         self.rect.set_xy((self.x0, self.y0))
         self.fig.canvas.draw()
         coordinates = [self.x0, self.y0, self.x1, self.y1]
+
+        # if a function is configured to do the manual clustering, call it
+        if self.manual_clustering_method is not None:
+            self.manual_clustering_method(*coordinates)
+
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
 class MyNavigationToolbar(NavigationToolbar):
@@ -145,8 +158,26 @@ class PlotterWidget(QWidget):
         # a figure instance to plot on
         self.figure = Figure()
 
+        self.analysed_layer = None
+
+        def manual_clustering_method(x0, y0, x1, y1):
+            print("Coords", x0, y0, x1, y1)
+            if self.analysed_layer is None:
+                return # if nothing was plotted yet, leave
+
+            min_x = min(x0, x1)
+            max_x = max(x0, x1)
+            min_y = min(y0, y1)
+            max_y = max(y0, y1)
+
+            clustering_ID = "MANUAL_CLUSTERING_ID"
+
+            self.analysed_layer.properties[clustering_ID] = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
+
+            self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name, plot_cluster_name=clustering_ID)
+
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance as a parameter to __init__
-        self.graphics_widget = MplCanvas(self.figure)
+        self.graphics_widget = MplCanvas(self.figure, manual_clustering_method=manual_clustering_method)
 
         # Navigation widget
         self.toolbar = MyNavigationToolbar(self.graphics_widget, self)
@@ -182,19 +213,24 @@ class PlotterWidget(QWidget):
         choose_img_container.layout().addWidget(label_label_list)
         choose_img_container.layout().addWidget(self.label_list)
 
-        self.plot_x_axis = QComboBox()
-        self.plot_y_axis = QComboBox()
-
-
         self.update_label_list()
 
         # selection if region properties should be calculated now or uploaded from file
-        reg_props_container = QWidget()
-        reg_props_container.setLayout(QHBoxLayout())
-        label_axes = QLabel("Axes")
-        reg_props_container.layout().addWidget(label_axes)
-        reg_props_container.layout().addWidget(self.plot_x_axis)
-        reg_props_container.layout().addWidget(self.plot_y_axis)
+        axes_container = QWidget()
+        axes_container.setLayout(QHBoxLayout())
+
+        axes_container.layout().addWidget(QLabel("Axes"))
+        self.plot_x_axis = QComboBox()
+        self.plot_y_axis = QComboBox()
+        axes_container.layout().addWidget(self.plot_x_axis)
+        axes_container.layout().addWidget(self.plot_y_axis)
+
+        cluster_container = QWidget()
+        cluster_container.setLayout(QHBoxLayout())
+        cluster_container.layout().addWidget(QLabel("Clustering"))
+        self.plot_cluster_id = QComboBox()
+        cluster_container.layout().addWidget(self.plot_cluster_id)
+
 
         # Run button
         run_widget = QWidget()
@@ -218,7 +254,8 @@ class PlotterWidget(QWidget):
 
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
-        self.layout().addWidget(reg_props_container)
+        self.layout().addWidget(axes_container)
+        self.layout().addWidget(cluster_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
 
@@ -263,6 +300,8 @@ class PlotterWidget(QWidget):
                 self.plot_x_axis.addItems(list(properties.keys()))
                 self.plot_y_axis.clear()
                 self.plot_y_axis.addItems(list(properties.keys()))
+                self.plot_cluster_id.clear()
+                self.plot_cluster_id.addItems([l for l in list(properties.keys()) if "CLUSTERING" in l])
 
     def _on_selection(self, event=None):
 
@@ -271,7 +310,7 @@ class PlotterWidget(QWidget):
             self.update_label_list()
 
     # this function runs after the run button is clicked
-    def run(self, properties, plot_x_axis_name, plot_y_axis_name):
+    def run(self, properties, plot_x_axis_name, plot_y_axis_name, plot_cluster_name=None):
         print("Plot running")
 
         if properties is None:
@@ -280,8 +319,26 @@ class PlotterWidget(QWidget):
 
         self.data_x = properties[plot_x_axis_name]
         self.data_y = properties[plot_y_axis_name]
+        self.plot_x_axis_name = plot_x_axis_name
+        self.plot_y_axis_name = plot_y_axis_name
+        self.plot_cluster_name = plot_cluster_name
+        self.analysed_layer = self.get_selected_label()
 
-        self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
+        self.graphics_widget.reset()
+        if plot_cluster_name is not None and plot_cluster_name != "label":
+            self.cluster_id = properties[plot_cluster_name]
+
+            color = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
+                     '#17becf']
+            self.graphics_widget.axes.scatter(
+                self.data_x,
+                self.data_y,
+                c=[color[int(x)] for x in self.cluster_id],
+                cmap='Spectral',
+                s=10
+            )
+        else:
+            self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
         self.graphics_widget.axes.set_aspect('equal', 'datalim')
         self.graphics_widget.draw()
 

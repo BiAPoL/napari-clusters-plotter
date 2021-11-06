@@ -16,6 +16,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import matplotlib
 from matplotlib.patches import Rectangle
+from ._utilities import show_table
 
 
 def widgets_inactive(*widgets, active):
@@ -203,6 +204,7 @@ class MeasureWidget(QWidget):
         if region_props_source == 'Upload file':
             # load regions region properties from file
             reg_props = pd.read_csv(regpropsfile)
+            labels_layer.properties = reg_props
 
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
@@ -223,22 +225,17 @@ class MeasureWidget(QWidget):
 
                 # add table widget to napari
                 labels_layer.properties = reg_props
-                dock_widget = table_to_widget(reg_props, labels_layer)
-                self.viewer.window.add_dock_widget(dock_widget, name='Region properties table', area='right')
 
             if 'neighborhood' in region_props_source:
                 reg_props = regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4])
                 labels_layer.properties = reg_props
 
-            print(list(reg_props.keys()))
+            print("Measured:", list(reg_props.keys()))
         else:
             warnings.warn("No measurements.")
             return
 
-        # check which GPU is used
-        print('GPU used: {val}'.format(val=cle.get_device().name))
-
-
+        show_table(self.viewer, labels_layer)
 
 
 def regionprops_with_neighborhood_data(label_image, original_image, n_closest_points_list):
@@ -303,58 +300,3 @@ def regionprops_with_neighborhood_data(label_image, original_image, n_closest_po
     return regionprops
 
 
-# from Robert Haase napari-skimage-regionprops
-def table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget:
-    """
-    Takes a table given as dictionary with strings as keys and numeric arrays as values and returns a QWidget which
-    contains a QTableWidget with that data.
-    """
-    view = QTableWidget(len(next(iter(table.values()))), len(table))
-    for i, column in enumerate(table.keys()):
-        view.setItem(0, i, QTableWidgetItem(column))
-        for j, value in enumerate(table.get(column)):
-            view.setItem(j + 1, i, QTableWidgetItem(str(value)))
-
-    if labels_layer is not None:
-
-        @view.clicked.connect
-        def clicked_table():
-            row = view.currentRow()
-            label = table["label"][row]
-            labels_layer.selected_label = label
-
-        def after_labels_clicked():
-            row = view.currentRow()
-            label = table["label"][row]
-            if label != labels_layer.selected_label:
-                for r, layer in enumerate(table["label"]):
-                    if layer == labels_layer.selected_label:
-                        view.setCurrentCell(r, view.currentColumn())
-                        break
-
-        @labels_layer.mouse_drag_callbacks.append
-        def clicked_labels(event, event1):
-            # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
-            QTimer.singleShot(200, after_labels_clicked)
-
-    copy_button = QPushButton("Copy to clipboard")
-
-    @copy_button.clicked.connect
-    def copy_trigger():
-        view.to_dataframe().to_clipboard()
-
-    save_button = QPushButton("Save as csv...")
-
-    @save_button.clicked.connect
-    def save_trigger():
-        filename, _ = QFileDialog.getSaveFileName(save_button, "Save as csv...", ".", "*.csv")
-        view.to_dataframe().to_csv(filename)
-
-    widget_table = QWidget()
-    widget_table.setWindowTitle("region properties")
-    widget_table.setLayout(QGridLayout())
-    widget_table.layout().addWidget(copy_button)
-    widget_table.layout().addWidget(save_button)
-    widget_table.layout().addWidget(view)
-
-    return widget_table

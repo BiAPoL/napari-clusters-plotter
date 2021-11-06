@@ -164,6 +164,9 @@ class UmapWidget(QWidget):
         properties["UMAP_0"] = embedding[:,0]
         properties["UMAP_1"] = embedding[:,1]
 
+        from ._utilities import show_table
+        show_table(self.viewer, labels_layer)
+
 
 def umap(reg_props, n_components=2):
     from sklearn.preprocessing import StandardScaler

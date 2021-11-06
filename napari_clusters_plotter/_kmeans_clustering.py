@@ -216,6 +216,10 @@ class KMeansClusteringWidget(QWidget):
         # write result back to properties
         properties["KMEANS_CLUSTER_ID"] = y_pred
 
+        from ._utilities import show_table
+        show_table(self.viewer, labels_layer)
+
+
 
 def kmeansclustering(measurements, cluster_number, iterations):
     from sklearn.cluster import KMeans
