@@ -17,6 +17,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import matplotlib
 from matplotlib.patches import Rectangle
+from ._utilities import generate_parametric_cluster_image
 
 matplotlib.use('Qt5Agg')
 
@@ -50,6 +51,7 @@ class MplCanvas(FigureCanvas):
         self.y0 = None
         self.x1 = None
         self.y1 = None
+        self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
 
         self.reset()
 
@@ -62,7 +64,6 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
 
         # a rectangle defined via an anchor point xy and its width and height.
-        self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
         self.is_pressed = None
         self.axes.add_patch(self.rect)
 
@@ -159,6 +160,7 @@ class PlotterWidget(QWidget):
         self.figure = Figure()
 
         self.analysed_layer = None
+        self.visualized_labels_layer = None
 
         def manual_clustering_method(x0, y0, x1, y1):
             print("Coords", x0, y0, x1, y1)
@@ -172,8 +174,11 @@ class PlotterWidget(QWidget):
 
             clustering_ID = "MANUAL_CLUSTERING_ID"
 
-            self.analysed_layer.properties[clustering_ID] = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
+            # save manual clustering; for each point if it's inside the rectangle
+            inside = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
+            self.analysed_layer.properties[clustering_ID] = inside
 
+            # redraw the whole plot
             self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name, plot_cluster_name=clustering_ID)
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance as a parameter to __init__
@@ -326,17 +331,23 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         if plot_cluster_name is not None and plot_cluster_name != "label":
-            self.cluster_id = properties[plot_cluster_name]
+            self.cluster_ids = properties[plot_cluster_name]
 
-            color = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
+            color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
                      '#17becf']
             self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[color[int(x)] for x in self.cluster_id],
+                c=[color[int(x)] for x in self.cluster_ids],
                 cmap='Spectral',
                 s=10
             )
+
+            cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
+            if self.visualized_labels_layer is None:
+                self.visualized_labels_layer = self.viewer.add_labels(cluster_ids_in_space)
+            else:
+                self.visualized_labels_layer.data = cluster_ids_in_space
         else:
             self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
         self.graphics_widget.axes.set_aspect('equal', 'datalim')
