@@ -29,10 +29,11 @@ To do list:
 
 from ._measure import MeasureWidget
 from ._plotter import PlotterWidget
+from ._umap import UmapWidget
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [Widget, MeasureWidget, PlotterWidget]
+    return [Widget, MeasureWidget, PlotterWidget, UmapWidget]
 
 
 class MplCanvas(FigureCanvas):
