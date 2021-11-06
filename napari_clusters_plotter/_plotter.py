@@ -334,6 +334,8 @@ class PlotterWidget(QWidget):
                 self.visualized_labels_layer = self.viewer.add_labels(cluster_ids_in_space)
             else:
                 self.visualized_labels_layer.data = cluster_ids_in_space
+            if self.visualized_labels_layer not in self.viewer.layers:
+                self.visualized_labels_layer = self.viewer.add_labels(self.visualized_labels_layer.data)
         else:
             self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
