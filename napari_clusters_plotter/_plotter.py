@@ -149,6 +149,7 @@ class PlotterWidget(QWidget):
         napari_viewer.layers.selection.events.changed.connect(self._on_selection)
 
         self.current_annotation = None
+        self._available_labels = []
 
         # a figure instance to plot on
         self.figure = Figure()
@@ -194,37 +195,31 @@ class PlotterWidget(QWidget):
 
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
-        label_plotting = QLabel("<b>Plotting</b>")
-        label_container.layout().addWidget(label_plotting)
-
-        choose_img_container = QWidget()
-        choose_img_container.setLayout(QHBoxLayout())
+        label_container.layout().addWidget(QLabel("<b>Plotting</b>"))
 
         # selection of labels layer
-        label_label_list = QLabel("Labels layer")
+        choose_img_container = QWidget()
+        choose_img_container.setLayout(QHBoxLayout())
         self.label_list = QComboBox()
-
-        choose_img_container.layout().addWidget(label_label_list)
+        choose_img_container.layout().addWidget(QLabel("Labels layer"))
         choose_img_container.layout().addWidget(self.label_list)
-
         self.update_label_list()
 
         # selection if region properties should be calculated now or uploaded from file
         axes_container = QWidget()
         axes_container.setLayout(QHBoxLayout())
-
         axes_container.layout().addWidget(QLabel("Axes"))
         self.plot_x_axis = QComboBox()
         self.plot_y_axis = QComboBox()
         axes_container.layout().addWidget(self.plot_x_axis)
         axes_container.layout().addWidget(self.plot_y_axis)
 
+        # select from existing clustering-results
         cluster_container = QWidget()
         cluster_container.setLayout(QHBoxLayout())
         cluster_container.layout().addWidget(QLabel("Clustering"))
         self.plot_cluster_id = QComboBox()
         cluster_container.layout().addWidget(self.plot_cluster_id)
-
 
         # Run button
         run_widget = QWidget()
@@ -232,7 +227,6 @@ class PlotterWidget(QWidget):
         button = QPushButton("Run")
 
         def run_clicked():
-
             self.run(
                 self.get_selected_label().properties,
                 self.plot_x_axis.currentText(),
@@ -244,9 +238,6 @@ class PlotterWidget(QWidget):
         run_widget.layout().addWidget(button)
 
         # adding all widgets to the layout
-        # side note: if widget is not added to the layout but set visible by connecting an event,
-        # it opens up as a pop-up
-
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
         self.layout().addWidget(axes_container)
@@ -262,7 +253,6 @@ class PlotterWidget(QWidget):
 
         # update axes combo boxes once a label is selected
         self.label_list.currentIndexChanged.connect(self.update_axes_list)
-
 
     def get_selected_label(self):
         index = self.label_list.currentIndex()
@@ -293,12 +283,9 @@ class PlotterWidget(QWidget):
         former_y_axis = self.plot_y_axis.currentIndex()
         former_cluster_id = self.plot_cluster_id.currentIndex()
 
-        print("Selected layer none?")
         if selected_layer is not None:
-            print("Properties none?")
             properties = selected_layer.properties
             if selected_layer.properties is not None:
-                print("Add measurements")
                 self.plot_x_axis.clear()
                 self.plot_x_axis.addItems(list(properties.keys()))
                 self.plot_y_axis.clear()
@@ -317,8 +304,6 @@ class PlotterWidget(QWidget):
 
     # this function runs after the run button is clicked
     def run(self, properties, plot_x_axis_name, plot_y_axis_name, plot_cluster_name=None):
-        print("Plot running")
-
         if properties is None:
             warnings.warn("No labels image with properties was selected! Consider doing measurements first.")
             return
@@ -351,10 +336,7 @@ class PlotterWidget(QWidget):
                 self.visualized_labels_layer.data = cluster_ids_in_space
         else:
             self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
-        #self.graphics_widget.axes.set_aspect('equal', 'datalim')
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
         self.graphics_widget.draw()
-
-        print('Plotting finished.')
