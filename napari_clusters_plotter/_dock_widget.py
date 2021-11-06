@@ -30,10 +30,11 @@ To do list:
 from ._measure import MeasureWidget
 from ._plotter import PlotterWidget
 from ._umap import UmapWidget
+from ._kmeans_clustering import KMeansClusteringWidget
 
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [Widget, MeasureWidget, PlotterWidget, UmapWidget]
+    return [Widget, MeasureWidget, PlotterWidget, UmapWidget, KMeansClusteringWidget]
 
 
 class MplCanvas(FigureCanvas):
