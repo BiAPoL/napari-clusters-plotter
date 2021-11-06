@@ -212,9 +212,6 @@ class PlotterWidget(QWidget):
         label_label_list = QLabel("Labels layer")
         self.label_list = QComboBox()
 
-        # update axes combo boxes once a label is selected
-        self.label_list.currentIndexChanged.connect(self.update_axes_list)
-
         choose_img_container.layout().addWidget(label_label_list)
         choose_img_container.layout().addWidget(self.label_list)
 
@@ -269,6 +266,10 @@ class PlotterWidget(QWidget):
             item = self.layout().itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
+
+        # update axes combo boxes once a label is selected
+        self.label_list.currentIndexChanged.connect(self.update_axes_list)
+
 
     def get_selected_label(self):
         index = self.label_list.currentIndex()
