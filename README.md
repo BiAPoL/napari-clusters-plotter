@@ -82,6 +82,7 @@ Afterwards, you can again save and/or close the table. Also close the clustering
 Return to the Plotter widget using the menu `Plugins > napari-clusters-plotter > Plotter widget`.
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `KMEANS_CLUSTERING_ID` as `Cluster`
 
+![](images/plot_umap.png)
 
 ## Installation
 
