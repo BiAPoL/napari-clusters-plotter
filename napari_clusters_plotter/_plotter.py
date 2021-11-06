@@ -39,7 +39,8 @@ class MplCanvas(FigureCanvas):
         self.axes.spines['top'].set_color('white')
         self.axes.spines['right'].set_color('white')
         self.axes.spines['left'].set_color('white')
-        # self.axes.title('UMAP projection')
+        self.axes.xaxis.label.set_color('white')
+        self.axes.yaxis.label.set_color('white')
 
         # changing colors of axis labels
         self.axes.tick_params(axis='x', colors='white')
@@ -47,6 +48,7 @@ class MplCanvas(FigureCanvas):
 
         super(MplCanvas, self).__init__(self.fig)
 
+        # init rectangle defined via an anchor point xy and its width and height.
         self.x0 = None
         self.y0 = None
         self.x1 = None
@@ -63,16 +65,8 @@ class MplCanvas(FigureCanvas):
     def reset(self):
         self.axes.clear()
 
-        # a rectangle defined via an anchor point xy and its width and height.
         self.is_pressed = None
         self.axes.add_patch(self.rect)
-
-
-    # draws a dot where user clicks on the map
-    # def _on_left_click(self, event):
-    #     print("clicked at", event.xdata, event.ydata)
-    #     self.axes.scatter(event.xdata, event.ydata)
-    #     self.fig.canvas.draw()
 
     def _on_left_click(self, event):
         self.is_pressed = True
@@ -196,12 +190,10 @@ class PlotterWidget(QWidget):
 
         # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
-
         self.layout().addWidget(graph_container)
 
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
-
         label_plotting = QLabel("<b>Plotting</b>")
         label_container.layout().addWidget(label_plotting)
 
@@ -359,7 +351,10 @@ class PlotterWidget(QWidget):
                 self.visualized_labels_layer.data = cluster_ids_in_space
         else:
             self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
-        self.graphics_widget.axes.set_aspect('equal', 'datalim')
+        #self.graphics_widget.axes.set_aspect('equal', 'datalim')
+        self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+        self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+
         self.graphics_widget.draw()
 
         print('Plotting finished.')
