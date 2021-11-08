@@ -12,15 +12,77 @@ A simple plugin to use with napari
 
 This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [cookiecutter-napari-plugin] template.
 
-<!--
-Don't miss the full getting started guide to set up your new package:
-https://github.com/napari/cookiecutter-napari-plugin#getting-started
+![](images/screencast.gif)
 
-and review the napari docs for plugin developers:
-https://napari.org/docs/plugins/index.html
--->
-Trying out to add an image.
-![alt text](https://github.com/lazigu/napari-clusters-plotter/blob/main/images/test.PNG?raw=true)
+## Usage
+
+### Starting point
+For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and a label image
+representing a segmentation of objects. For segmenting objects, you can for example use the 
+[Voronoi-Otsu-labeling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labeling)
+in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://www.napari-hub.org/plugins/napari-segment-blobs-and-things-with-membranes).
+
+![](images/starting_point.png)
+
+### Measurements
+A first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
+You can use the menu `Plugins > napari-clusters-plotter > Measure Widget` for that. 
+Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
+A table with the measurements will open:
+
+![](images/measure.png)
+
+Afterwards, you can save and/or close the measurement table. Also close the Measure widget.
+
+### Plotting
+
+Once measurements were made, these measurements were saved in the `properties` of the labels layer which was analysed.
+You can then plot these measurements using the menu `Plugins > napari-clusters-plotter > Plotter widget`.
+
+In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
+on the X- and Y-axis. Click on Run to draw the data points in the plot area.
+
+![](images/plot_plain.png)
+
+You can also manually select a region in the plot. The resulting manual clustering will also be visualized in the 
+original image. To optimize visualization in the image, turn off the visibility of the analysed labels layer.
+
+![](images/plot_interactive.png)
+
+### Dimensionality reduction: UMAP
+
+For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
+using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/).
+To apply it to your data use the menu `Plugins > napari-clusters-plotter > UMAP widget`.
+Select the label image that was analyzed and in the list below, select all measurements that should be
+dimensionality reduced. Make sure to unselect "label" and other "clustering" results, but
+only quantitative measurements such as intensity, size and shape. Click on "Run" and after a moment,
+the table of measurements will re-appear with two additional columns representing the reduced dimensions of the
+dataset.
+
+![](images/umap.png)
+
+Afterwards, you can again save and/or close the table. Also close the UMAP widget.
+
+### k-means clustering
+If manual clustering as shown above is no option, you can automatically cluster your data, e.g. using the
+[k-means clustering algorithm](). 
+Therefore, click the menu `Plugins > napari-clusters-plotter > Clustering widget`,
+again, select the analyzed labels layer.
+This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
+Select the clustering method `KMeans` and click on `Run`. 
+The table of measurements will reappear with an additional column `KMEANS_CLUSTERING_ID` containing the cluster ID of 
+each datapoint.
+
+![](images/kmeans_clustering.png)
+
+Afterwards, you can again save and/or close the table. Also close the clustering widget.
+
+### Plotting k-means clustering results.
+Return to the Plotter widget using the menu `Plugins > napari-clusters-plotter > Plotter widget`.
+Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `KMEANS_CLUSTERING_ID` as `Cluster`
+
+![](images/plot_umap.png)
 
 ## Installation
 
