@@ -17,24 +17,17 @@ from matplotlib.figure import Figure
 import matplotlib
 from matplotlib.patches import Rectangle
 
-matplotlib.use('Qt5Agg')
-
-'''
-To do list:
-1) add HDBSCAN
-2) add PCA
-3) sparse PCA
-4) highlight regions of the image (approximated cells) corresponding to user-selected areas in the plot or vice versa??
-'''
-
 from ._measure import MeasureWidget
 from ._plotter import PlotterWidget
 from ._umap import UMAPWidget
 from ._kmeans_clustering import ClusteringWidget
 
+matplotlib.use('Qt5Agg')
+
+
 @napari_hook_implementation
 def napari_experimental_provide_dock_widget():
-    return [Widget, MeasureWidget, PlotterWidget, UMAPWidget, ClusteringWidget]
+    return [WidgetOld, MeasureWidget, PlotterWidget, UMAPWidget, ClusteringWidget]
 
 
 class MplCanvas(FigureCanvas):
@@ -54,7 +47,6 @@ class MplCanvas(FigureCanvas):
         self.axes.spines['top'].set_color('white')
         self.axes.spines['right'].set_color('white')
         self.axes.spines['left'].set_color('white')
-        # self.axes.title('UMAP projection')
 
         # changing colors of axis labels
         self.axes.tick_params(axis='x', colors='white')
@@ -76,11 +68,6 @@ class MplCanvas(FigureCanvas):
         self.mpl_connect('motion_notify_event', self._on_motion)
         self.mpl_connect('button_release_event', self.on_release)
 
-    # draws a dot where user clicks on the map
-    # def _on_left_click(self, event):
-    #     print("clicked at", event.xdata, event.ydata)
-    #     self.axes.scatter(event.xdata, event.ydata)
-    #     self.fig.canvas.draw()
 
     def _on_left_click(self, event):
         self.is_pressed = True
@@ -155,7 +142,7 @@ def widgets_inactive(*widgets, active):
         widget.setVisible(active)
 
 
-class Widget(QWidget):
+class WidgetOld(QWidget):
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -212,7 +199,7 @@ class Widget(QWidget):
         choose_img_container.layout().addWidget(label_label_list)
         choose_img_container.layout().addWidget(self.label_list)
 
-        # selection if region properties should be calculated now or uploaded from file
+        # selection if region properties should be measured now or uploaded from file
         reg_props_container = QWidget()
         reg_props_container.setLayout(QHBoxLayout())
         label_reg_props = QLabel("Region Properties")
@@ -385,7 +372,6 @@ class Widget(QWidget):
             self.update_image_list()
 
     # toggle widgets visibility according to what is selected
-
     def change_kmeans_clustering(self):
         widgets_inactive(self.kmeans_settings_container, self.kmeans_settings_container2,
                          active=self.clust_method_choice_list.currentText() == 'KMeans')

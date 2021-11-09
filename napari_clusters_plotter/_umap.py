@@ -5,6 +5,7 @@ from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, 
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QTabWidget, QComboBox, QPlainTextEdit
 from qtpy.QtCore import QTimer, QRect
 
+# Should it also accept reg props uploaded from file??
 
 class UMAPWidget(QWidget):
 
@@ -142,6 +143,8 @@ class UMAPWidget(QWidget):
 
         from ._utilities import show_table
         show_table(self.viewer, labels_layer)
+
+        print("Dimensionality reduction finished")
 
 def umap(reg_props, n_components=2):
     from sklearn.preprocessing import StandardScaler

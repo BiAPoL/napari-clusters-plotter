@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QCom
 from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive
 
+
 class ClusteringWidget(QWidget):
 
     def __init__(self, napari_viewer):
@@ -17,7 +18,7 @@ class ClusteringWidget(QWidget):
 
         self.current_annotation = None
 
-        # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
+        # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
 
         label_container = QWidget()
@@ -120,7 +121,7 @@ class ClusteringWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
-        # hide widget for the selection of parameters for KMeans unless Kmeans clustering method is chosen
+        # hide widget for the selection of parameters for kmeans unless kmeans clustering method is chosen
         self.clust_method_choice_list.currentIndexChanged.connect(self.change_kmeans_clustering)
 
     def change_kmeans_clustering(self):
@@ -163,7 +164,6 @@ class ClusteringWidget(QWidget):
                     if p != "label":
                         item.setSelected(True)
 
-
     def _on_selection(self, event=None):
         num_labels_in_viewer = len([layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Labels)])
         if num_labels_in_viewer != self.label_list.size():
@@ -175,7 +175,7 @@ class ClusteringWidget(QWidget):
         print(labels_layer)
         print(selected_measurements_list)
 
-        # Turn properties from layer into a dataframe
+        # turn properties from layer into a dataframe
         properties = labels_layer.properties
         reg_props = pd.DataFrame(properties)
 
@@ -192,7 +192,6 @@ class ClusteringWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
-
 def kmeansclustering(measurements, cluster_number, iterations):
     from sklearn.cluster import KMeans
     print('KMeans predictions started...')
@@ -203,5 +202,3 @@ def kmeansclustering(measurements, cluster_number, iterations):
 
     # saving prediction as a list for generating clustering image
     return y_pred
-
-

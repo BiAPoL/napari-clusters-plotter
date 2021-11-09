@@ -5,7 +5,7 @@ import warnings
 import napari
 from magicgui.widgets import FileEdit
 from magicgui.types import FileDialogMode
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox, QLineEdit
 from ._utilities import show_table, widgets_inactive
 
 
@@ -20,7 +20,7 @@ class MeasureWidget(QWidget):
 
         self.current_annotation = None
 
-        # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
+        # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
@@ -40,7 +40,7 @@ class MeasureWidget(QWidget):
         choose_img_container.layout().addWidget(QLabel("Labels layer"))
         choose_img_container.layout().addWidget(self.label_list)
 
-        # selection if region properties should be calculated now or uploaded from file
+        # selection if region properties should be measured now or uploaded from file
         reg_props_container = QWidget()
         reg_props_container.setLayout(QHBoxLayout())
         reg_props_container.layout().addWidget(QLabel("Region Properties"))
@@ -49,7 +49,7 @@ class MeasureWidget(QWidget):
                                              'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
-        # Region properties file upload
+        # region properties file upload
         self.regpropsfile_widget = QWidget()
         self.regpropsfile_widget.setLayout(QVBoxLayout())
         filename_edit = FileEdit(
@@ -58,6 +58,15 @@ class MeasureWidget(QWidget):
             value="  ")
         self.regpropsfile_widget.layout().addWidget(filename_edit.native)
         self.regpropsfile_widget.setVisible(False)
+
+        # average distance of n closest points list
+        self.closest_points_container = QWidget()
+        self.closest_points_container.setLayout(QHBoxLayout())
+        self.closest_points_container.layout().addWidget(QLabel("Average distance of n closest points list"))
+        self.closest_points_list = QLineEdit()
+        self.closest_points_container.layout().addWidget(self.closest_points_list)
+        self.closest_points_list.setText("2, 3, 4")
+        self.closest_points_container.setVisible(False)
 
         # Run button
         run_widget = QWidget()
@@ -77,6 +86,7 @@ class MeasureWidget(QWidget):
                 self.get_selected_image().data,
                 self.get_selected_label().data,
                 str(filename_edit.value.absolute()).replace("\\", "/").replace("//", "/"),
+                self.closest_points_list.text(),
             )
 
         button.clicked.connect(run_clicked)
@@ -87,6 +97,7 @@ class MeasureWidget(QWidget):
         self.layout().addWidget(choose_img_container)
         self.layout().addWidget(reg_props_container)
         self.layout().addWidget(self.regpropsfile_widget)
+        self.layout().addWidget(self.closest_points_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
 
@@ -96,8 +107,10 @@ class MeasureWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
-        # hide choose file widget unless Upload file option is chosen
+        # hide widgets unless appropriate options are chosen
         self.reg_props_choice_list.currentIndexChanged.connect(self.change_reg_props_file)
+
+        self.reg_props_choice_list.currentIndexChanged.connect(self.change_closest_points_list)
 
     def get_selected_image(self):
         index = self.image_list.currentIndex()
@@ -157,8 +170,12 @@ class MeasureWidget(QWidget):
         widgets_inactive(self.regpropsfile_widget,
                          active=self.reg_props_choice_list.currentText() == 'Upload file')
 
+    def change_closest_points_list(self):
+        widgets_inactive(self.closest_points_container,
+                         active=self.reg_props_choice_list.currentText() == 'Measure now (with neighborhood data)')
+
     # this function runs after the run button is clicked
-    def run(self, image, labels, regpropsfile):
+    def run(self, image, labels, regpropsfile, n_closest_points_str):
         print("Measurement running")
 
         labels_layer = self.get_selected_label()
@@ -167,7 +184,7 @@ class MeasureWidget(QWidget):
         region_props_source = self.reg_props_choice_list.currentText()
 
         if region_props_source == 'Upload file':
-            # load regions region properties from file
+            # load region properties from csv file
             reg_props = pd.read_csv(regpropsfile)
             labels_layer.properties = reg_props
 
@@ -188,14 +205,20 @@ class MeasureWidget(QWidget):
             if columns:
                 reg_props = {column: value for column, value in reg_props.items() if column in columns}
 
-                # add table widget to napari
+                # saving measurement results into the properties of the analysed labels layer
                 labels_layer.properties = reg_props
 
             if 'neighborhood' in region_props_source:
-                reg_props = regionprops_with_neighborhood_data(labels, image, n_closest_points_list=[2, 3, 4])
+
+                n_closest_points_split = n_closest_points_str.split(",")
+                n_closest_points_list = map(int, n_closest_points_split)
+
+                reg_props = regionprops_with_neighborhood_data(labels, n_closest_points_list, reg_props)
+
                 labels_layer.properties = reg_props
 
             print("Measured:", list(reg_props.keys()))
+
         else:
             warnings.warn("No measurements.")
             return
@@ -203,26 +226,16 @@ class MeasureWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
-def regionprops_with_neighborhood_data(label_image, original_image, n_closest_points_list):
-    from skimage.measure import regionprops_table
+def regionprops_with_neighborhood_data(label_image, n_closest_points_list, reg_props):
 
     # get lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
-    # defining function for getting standard deviation as an extra property
-    # arguments must be in the specified order, matching regionprops
-    def image_stdev(region, intensities):
-        # note the ddof arg to get the sample var if you so desire!
-        return np.std(intensities[region], ddof=1)
+    columns = ['label', 'centroid_x', 'centroid_y', 'centroid_z', 'min_intensity', 'max_intensity', 'sum_intensity',
+               'mean_intensity', 'standard_deviation_intensity', 'area', 'mean_distance_to_centroid',
+               'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
 
-    # get region properties from labels
-    regionprops = regionprops_table(label_image.astype(dtype='uint16'), intensity_image=original_image,
-                                    properties=('area', 'centroid', 'feret_diameter_max',
-                                                'major_axis_length', 'minor_axis_length', 'solidity',
-                                                'mean_intensity',
-                                                'max_intensity', 'min_intensity'),
-                                    extra_properties=[image_stdev])
-    print('Scikit Regionprops Done')
+    region_props = {column: value for column, value in reg_props.items() if column in columns}
 
     # determine neighbors of cells
     touch_matrix = cle.generate_touch_matrix(label_image)
@@ -241,27 +254,25 @@ def regionprops_with_neighborhood_data(label_image, original_image, n_closest_po
     touching_neighbor_count = cle.count_touching_neighbors(touch_matrix)
     cle.set_column(touching_neighbor_count, 0, 0)
 
-    # conversion and editing of the distance matrix, so that it doesn't break cle.average_distance.....
+    # conversion and editing of the distance matrix, so that it does not break cle.average_distance
     viewdist_mat = cle.pull(distance_matrix)
     tempdist_mat = np.delete(viewdist_mat, range(min_label), axis=0)
     edited_distmat = np.delete(tempdist_mat, range(min_label), axis=1)
 
-    # iterating over different neighbor numbers for avg neighbor dist calculation
+    # iterating over different neighbor numbers for average neighbor distance calculation
     for i in n_closest_points_list:
         distance_of_n_closest_points = \
             cle.pull(cle.average_distance_of_n_closest_points(cle.push(edited_distmat), n=i))[0]
 
         # addition to the regionprops dictionary
-        regionprops['avg distance of {val} closest points'.format(val=i)] = distance_of_n_closest_points
+        region_props['avg distance of {val} closest points'.format(val=i)] = distance_of_n_closest_points
 
     # processing touching neighbor count for addition to regionprops (deletion of background & not used labels)
     touching_neighbor_c = cle.pull(touching_neighbor_count)
     touching_neighbor_count_formatted = np.delete(touching_neighbor_c, list(range(min_label)))
 
     # addition to the regionprops dictionary
-    regionprops['touching neighbor count'] = touching_neighbor_count_formatted
-    print('Regionprops Completed')
+    region_props['touching neighbor count'] = touching_neighbor_count_formatted
+    print('Measurements Completed.')
 
-    return regionprops
-
-
+    return region_props
