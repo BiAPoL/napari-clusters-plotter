@@ -1,5 +1,6 @@
 import pyclesperanto_prototype as cle
 import pandas as pd
+from pandas import DataFrame
 import numpy as np
 import warnings
 # import hdbscan
@@ -65,14 +66,14 @@ def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget
 
     @copy_button.clicked.connect
     def copy_trigger():
-        view.to_dataframe().to_clipboard()
+        DataFrame(table).to_clipboard()
 
     save_button = QPushButton("Save as csv...")
 
     @save_button.clicked.connect
     def save_trigger():
         filename, _ = QFileDialog.getSaveFileName(save_button, "Save as csv...", ".", "*.csv")
-        view.to_dataframe().to_csv(filename)
+        DataFrame(table).to_csv(filename)
 
     widget_table = QWidget()
     widget_table.setWindowTitle("region properties")
