@@ -1,22 +1,9 @@
 import pyclesperanto_prototype as cle
-import pandas as pd
 from pandas import DataFrame
 import numpy as np
-import warnings
-# import hdbscan
 import napari
-from magicgui.widgets import FileEdit
-from magicgui.types import FileDialogMode
-from napari_plugin_engine import napari_hook_implementation
-from PyQt5 import QtWidgets
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox, QGridLayout, \
-    QFileDialog, QTableWidget, QTableWidgetItem
+from qtpy.QtWidgets import QWidget, QPushButton, QGridLayout, QFileDialog, QTableWidget, QTableWidgetItem
 from qtpy.QtCore import QTimer
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-import matplotlib
-from matplotlib.patches import Rectangle
 
 
 def widgets_inactive(*widgets, active):
@@ -86,14 +73,15 @@ def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget
 
 # function for generating image labelled by clusters given the label image and the cluster prediction list
 def generate_parametric_cluster_image(labelimage, predictionlist):
-    print('Generation of parametric cluster image started...')
+
+    print('Generation of parametric cluster image started')
+
     # reforming the prediction list this is done to account for cluster labels that start at 0
     # conveniently hdbscan labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
 
     # this takes care of the background label that needs to be 0 as well as any other
     # labels that might have been accidentally deleted
-
     for i in range(int(np.min(labelimage[np.nonzero(labelimage)]))):
         predictionlist_new = np.insert(predictionlist_new, i, 0)
 
@@ -103,5 +91,5 @@ def generate_parametric_cluster_image(labelimage, predictionlist):
 
     # generation of cluster label image
     parametric_image = cle.pull(cle.replace_intensities(cle_labels, cle_list))
-    print('Generation of parametric cluster image finished...')
+    print('Generation of parametric cluster image finished')
     return np.array(parametric_image, dtype="int64")

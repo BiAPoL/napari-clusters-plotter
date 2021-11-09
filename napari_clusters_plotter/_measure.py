@@ -109,7 +109,6 @@ class MeasureWidget(QWidget):
 
         # hide widgets unless appropriate options are chosen
         self.reg_props_choice_list.currentIndexChanged.connect(self.change_reg_props_file)
-
         self.reg_props_choice_list.currentIndexChanged.connect(self.change_closest_points_list)
 
     def get_selected_image(self):
@@ -202,7 +201,7 @@ class MeasureWidget(QWidget):
                 columns = columns + ['area', 'mean_distance_to_centroid',
                                      'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
 
-            if columns:
+            if 'shape' in region_props_source or 'intensity' in region_props_source:
                 reg_props = {column: value for column, value in reg_props.items() if column in columns}
 
                 # saving measurement results into the properties of the analysed labels layer
@@ -212,8 +211,8 @@ class MeasureWidget(QWidget):
 
                 n_closest_points_split = n_closest_points_str.split(",")
                 n_closest_points_list = map(int, n_closest_points_split)
-
-                reg_props = regionprops_with_neighborhood_data(labels, n_closest_points_list, reg_props)
+                print("regionprops_with_neighborhood_data function got " + str(columns))
+                reg_props = regionprops_with_neighborhood_data(columns, labels, n_closest_points_list, reg_props)
 
                 labels_layer.properties = reg_props
 
@@ -226,12 +225,12 @@ class MeasureWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
-def regionprops_with_neighborhood_data(label_image, n_closest_points_list, reg_props):
+def regionprops_with_neighborhood_data(columns, label_image, n_closest_points_list, reg_props):
 
     # get lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
-    columns = ['label', 'centroid_x', 'centroid_y', 'centroid_z', 'min_intensity', 'max_intensity', 'sum_intensity',
+    columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
                'mean_intensity', 'standard_deviation_intensity', 'area', 'mean_distance_to_centroid',
                'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
 

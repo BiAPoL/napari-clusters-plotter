@@ -1,11 +1,9 @@
 import pandas as pd
 import warnings
 import napari
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout
-from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QTabWidget, QComboBox, QPlainTextEdit
-from qtpy.QtCore import QTimer, QRect
-
-# Should it also accept reg props uploaded from file??
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
+from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
+from qtpy.QtCore import QRect
 
 class UMAPWidget(QWidget):
 
@@ -36,9 +34,7 @@ class UMAPWidget(QWidget):
         # select properties to make a umap from
         choose_properties_container = QWidget()
         self.properties_list = QListWidget()
-        self.properties_list.setSelectionMode(
-            QAbstractItemView.ExtendedSelection
-        )
+        self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.properties_list.setGeometry(QRect(10, 10, 101, 291))
         self.update_properties_list()
 

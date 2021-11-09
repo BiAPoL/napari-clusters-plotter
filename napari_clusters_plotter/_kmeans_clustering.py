@@ -104,8 +104,6 @@ class ClusteringWidget(QWidget):
         run_widget.layout().addWidget(button)
 
         # adding all widgets to the layout
-        # side note: if widget is not added to the layout but set visible by connecting an event,
-        # it opens up as a pop-up
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
         self.layout().addWidget(choose_properties_container)

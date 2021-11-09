@@ -1,17 +1,7 @@
-
-import pyclesperanto_prototype as cle
-import pandas as pd
-import numpy as np
 import warnings
-# import hdbscan
 import napari
-from magicgui.widgets import FileEdit
-from magicgui.types import FileDialogMode
-from napari_plugin_engine import napari_hook_implementation
 from PyQt5 import QtWidgets
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, QVBoxLayout, QComboBox, QGridLayout, \
-    QFileDialog, QTableWidget, QTableWidgetItem
-from qtpy.QtCore import QTimer
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
@@ -60,11 +50,10 @@ class MplCanvas(FigureCanvas):
         # add an event when the user clicks somewhere in the plot
         self.mpl_connect('button_press_event', self._on_left_click)
         self.mpl_connect('motion_notify_event', self._on_motion)
-        self.mpl_connect('button_release_event', self.on_release)
+        self.mpl_connect('button_release_event', self._on_release)
 
     def reset(self):
         self.axes.clear()
-
         self.is_pressed = None
         self.axes.add_patch(self.rect)
 
@@ -89,7 +78,7 @@ class MplCanvas(FigureCanvas):
             self.fig.canvas.draw()
 
     # draws a rectangle when user releases the mouse
-    def on_release(self, event):
+    def _on_release(self, event):
         self.is_pressed = False
         self.x1 = event.xdata
         self.y1 = event.ydata
@@ -159,7 +148,7 @@ class PlotterWidget(QWidget):
 
         def manual_clustering_method(x0, y0, x1, y1):
             print("Coords", x0, y0, x1, y1)
-            if self.analysed_layer is None:
+            if self.analysed_layer is None or x0 == x1 or y0 == y1:
                 return # if nothing was plotted yet, leave
 
             min_x = min(x0, x1)
@@ -174,9 +163,10 @@ class PlotterWidget(QWidget):
             self.analysed_layer.properties[clustering_ID] = inside
 
             # redraw the whole plot
-            self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name, plot_cluster_name=clustering_ID)
+            self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name,
+                     plot_cluster_name=clustering_ID)
 
-        # Canvas Widget that displays the 'figure', it takes the 'figure' instance as a parameter to __init__
+        # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(self.figure, manual_clustering_method=manual_clustering_method)
 
         # Navigation widget
@@ -189,7 +179,7 @@ class PlotterWidget(QWidget):
         graph_container.layout().addWidget(self.toolbar)
         graph_container.layout().addWidget(self.graphics_widget)
 
-        # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
+        # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(graph_container)
 
@@ -307,6 +297,9 @@ class PlotterWidget(QWidget):
         if properties is None:
             warnings.warn("No labels image with properties was selected! Consider doing measurements first.")
             return
+        if plot_x_axis_name is None or plot_y_axis_name is None:
+            warnings.warn("No axis(-es) was/were selected!")
+            return
 
         self.data_x = properties[plot_x_axis_name]
         self.data_y = properties[plot_y_axis_name]
@@ -316,6 +309,7 @@ class PlotterWidget(QWidget):
         self.analysed_layer = self.get_selected_label()
 
         self.graphics_widget.reset()
+
         if plot_cluster_name is not None and plot_cluster_name != "label" and plot_cluster_name in list(properties.keys()):
             self.cluster_ids = properties[plot_cluster_name]
 
@@ -330,12 +324,14 @@ class PlotterWidget(QWidget):
             )
 
             cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
+
             if self.visualized_labels_layer is None:
                 self.visualized_labels_layer = self.viewer.add_labels(cluster_ids_in_space)
             else:
                 self.visualized_labels_layer.data = cluster_ids_in_space
             if self.visualized_labels_layer not in self.viewer.layers:
                 self.visualized_labels_layer = self.viewer.add_labels(self.visualized_labels_layer.data)
+
         else:
             self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
