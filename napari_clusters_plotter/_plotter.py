@@ -241,6 +241,9 @@ class PlotterWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
+        # adding spacing between fields for selecting two axes
+        axes_container.layout().setSpacing(6)
+
         # update axes combo boxes once a label is selected
         self.label_list.currentIndexChanged.connect(self.update_axes_list)
 
