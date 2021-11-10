@@ -2,7 +2,7 @@ import pandas as pd
 import warnings
 import napari
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
-from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
+from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox, QSpinBox
 from qtpy.QtCore import QRect
 
 class UMAPWidget(QWidget):
@@ -16,7 +16,7 @@ class UMAPWidget(QWidget):
 
         self.current_annotation = None
 
-        # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
+        # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
@@ -30,6 +30,19 @@ class UMAPWidget(QWidget):
         self.label_list.currentIndexChanged.connect(self.update_properties_list)
         choose_img_container.layout().addWidget(QLabel("Labels layer"))
         choose_img_container.layout().addWidget(self.label_list)
+
+        # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
+        # used for manifold approximation. Larger values result in more global views of the manifold, while smaller
+        # values result in more local data being preserved.
+        n_neighbors_container = QWidget()
+        n_neighbors_container.setLayout(QHBoxLayout())
+        n_neighbors_container.layout().addWidget(QLabel("Number of neighbors"))
+        self.n_neighbors = QSpinBox()
+        self.n_neighbors.setMinimumWidth(40)
+        self.n_neighbors.setMinimum(2)
+        self.n_neighbors.setMaximum(100)
+        self.n_neighbors.setValue(15)
+        n_neighbors_container.layout().addWidget(self.n_neighbors)
 
         # select properties to make a umap from
         choose_properties_container = QWidget()
@@ -64,6 +77,7 @@ class UMAPWidget(QWidget):
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
+        self.layout().addWidget(n_neighbors_container)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
