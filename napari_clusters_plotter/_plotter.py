@@ -8,6 +8,9 @@ from matplotlib.figure import Figure
 import matplotlib
 from matplotlib.patches import Rectangle
 from ._utilities import generate_parametric_cluster_image
+import numpy as np
+from qtpy.QtCore import QTimer
+
 
 matplotlib.use('Qt5Agg')
 
@@ -266,6 +269,20 @@ class PlotterWidget(QWidget):
                 i = i + 1
         self.label_list.setCurrentIndex(selected_index)
 
+    def clicked_label_in_view(self, event, event1):
+        # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
+        QTimer.singleShot(200, self.after_clicked_label_in_view)
+
+    def after_clicked_label_in_view(self):
+        clustering_ID = "MANUAL_CLUSTER_ID"
+
+        # save manual clustering; select only the label that's currently seleted on the layer
+        inside = np.ones((self.analysed_layer.data.max()))
+        inside[self.analysed_layer.selected_label - 1] = 0
+        self.analysed_layer.properties[clustering_ID] = inside
+
+        self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name, plot_cluster_name=clustering_ID)
+
     def update_axes_list(self):
         selected_layer = self.get_selected_label()
 
@@ -325,12 +342,16 @@ class PlotterWidget(QWidget):
 
             cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
 
+            keep_selection = list(self.viewer.layers.selection)
             if self.visualized_labels_layer is None:
                 self.visualized_labels_layer = self.viewer.add_labels(cluster_ids_in_space)
             else:
                 self.visualized_labels_layer.data = cluster_ids_in_space
             if self.visualized_labels_layer not in self.viewer.layers:
                 self.visualized_labels_layer = self.viewer.add_labels(self.visualized_labels_layer.data)
+            self.viewer.layers.selection.clear()
+            for s in keep_selection:
+                self.viewer.layers.selection.add(s)
 
         else:
             self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
@@ -338,3 +359,11 @@ class PlotterWidget(QWidget):
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
         self.graphics_widget.draw()
+
+        # remove interaction from all label layers, just in case
+        for layer in self.viewer.layers:
+            if self.clicked_label_in_view in layer.mouse_drag_callbacks:
+                layer.mouse_drag_callbacks.remove(self.clicked_label_in_view)
+
+        self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
+
