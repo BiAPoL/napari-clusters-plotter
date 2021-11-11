@@ -7,9 +7,74 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import matplotlib
 from matplotlib.patches import Rectangle
+from matplotlib.widgets import LassoSelector
+from matplotlib.path import Path
+import numpy as np
 from ._utilities import generate_parametric_cluster_image
 
 matplotlib.use('Qt5Agg')
+
+class SelectFromCollection:
+    """
+    Select indices from a matplotlib collection using `LassoSelector`.
+
+    Selected indices are saved in the `ind` attribute. This tool fades out the
+    points that are not part of the selection (i.e., reduces their alpha
+    values). If your collection has alpha < 1, this tool will permanently
+    alter the alpha values.
+
+    Note that this tool selects collection objects based on their *origins*
+    (i.e., `offsets`).
+
+    Parameters
+    ----------
+    ax : `~matplotlib.axes.Axes`
+        Axes to interact with.
+    collection : `matplotlib.collections.Collection` subclass
+        Collection you want to select from.
+    alpha_other : 0 <= float <= 1
+        To highlight a selection, this tool sets all selected points to an
+        alpha value of 1 and non-selected points to *alpha_other*.
+    """
+
+    def __init__(self, parent, ax, collection, alpha_other=0.3):
+        self.canvas = ax.figure.canvas
+        self.parent = parent
+        self.collection = collection
+        self.alpha_other = alpha_other
+
+        self.xys = collection.get_offsets()
+        self.Npts = len(self.xys)
+
+        # Ensure that we have separate colors for each object
+        self.fc = collection.get_facecolors()
+        if len(self.fc) == 0:
+            raise ValueError('Collection must have a facecolor')
+        elif len(self.fc) == 1:
+            self.fc = np.tile(self.fc, (self.Npts, 1))
+
+        self.lasso = LassoSelector(ax, onselect=self.onselect)
+        self.ind = []
+
+    def onselect(self, verts):
+        path = Path(verts)
+        self.ind = np.nonzero(path.contains_points(self.xys))[0]
+        self.fc[:, -1] = self.alpha_other
+        self.fc[self.ind, -1] = 1
+        self.collection.set_facecolors(self.fc)
+        self.canvas.draw_idle()
+        self.selected_coordinates = self.xys[self.ind].data
+        print("Got these points: ", self.selected_coordinates)
+        if self.parent.manual_clustering_method is not None:
+            print("BLAA")
+            # self.parent.manual_clustering_method(*coordinates)
+            self.parent.manual_clustering_method(self.selected_coordinates)
+
+    def disconnect(self):
+        self.lasso.disconnect_events()
+        self.fc[:, -1] = 1
+        self.collection.set_facecolors(self.fc)
+        self.canvas.draw_idle()
 
 class MplCanvas(FigureCanvas):
 
@@ -38,59 +103,84 @@ class MplCanvas(FigureCanvas):
 
         super(MplCanvas, self).__init__(self.fig)
 
-        # init rectangle defined via an anchor point xy and its width and height.
-        self.x0 = None
-        self.y0 = None
-        self.x1 = None
-        self.y1 = None
-        self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
+        # # init rectangle defined via an anchor point xy and its width and height.
+        # self.x0 = None
+        # self.y0 = None
+        # self.x1 = None
+        # self.y1 = None
+        # self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
+        # self.lasso = LassoSelector(self.axes, self._on_lasso)
+        
+        self.pts = self.axes.scatter([],[])
+        self.selector = SelectFromCollection(self, self.axes, self.pts)
 
         self.reset()
-
-        # add an event when the user clicks somewhere in the plot
-        self.mpl_connect('button_press_event', self._on_left_click)
-        self.mpl_connect('motion_notify_event', self._on_motion)
-        self.mpl_connect('button_release_event', self._on_release)
-
+        
+        self.mpl_connect('key_press_event', self.accept)
+        # # add an event when the user clicks somewhere in the plot
+        # self.mpl_connect('button_press_event', self._on_left_click)
+        # self.mpl_connect('motion_notify_event', self._on_motion)
+        # self.mpl_connect('button_release_event', self._on_release)
+        
+    # def _on_lasso(self,verts):
+        
+    #     path = Path(verts)
+    #     self.ind = np.nonzero(path.contains_points(self.xys))[0]
+    #     self.fc[:, -1] = self.alpha_other
+    #     self.fc[self.ind, -1] = 1
+    #     self.collection.set_facecolors(self.fc)
+    #     self.canvas.draw_idle()
+        
+    #     pix = "coordenadas dos pontos" #array n,2
+    #     ind = p.contains_points(pix, radius=1)
+    #     print(ind)
+    
+    def accept(self,event):
+        print("Key pressed")
+        if event.key == "enter":
+            print("Selected points:")
+            print(self.selector.xys[self.selector.ind])
+            
+    
     def reset(self):
         self.axes.clear()
         self.is_pressed = None
-        self.axes.add_patch(self.rect)
+        # self.axes.add_patch(self.rect)
 
-    def _on_left_click(self, event):
-        self.is_pressed = True
-        self.x0 = event.xdata
-        self.y0 = event.ydata
-        self.x1 = event.xdata
-        self.y1 = event.ydata
-        self.rect.set_width(self.x1 - self.x0)
-        self.rect.set_height(self.y1 - self.y0)
-        self.rect.set_xy((self.x0, self.y0))
-        self.fig.canvas.draw()
+    # def _on_left_click(self, event):
+    #     self.is_pressed = True
+    #     self.x0 = event.xdata
+    #     self.y0 = event.ydata
+    #     self.x1 = event.xdata
+    #     self.y1 = event.ydata
+    #     self.rect.set_width(self.x1 - self.x0)
+    #     self.rect.set_height(self.y1 - self.y0)
+    #     self.rect.set_xy((self.x0, self.y0))
+    #     self.fig.canvas.draw()
 
-    def _on_motion(self, event):
-        if self.is_pressed:
-            self.x1 = event.xdata
-            self.y1 = event.ydata
-            self.rect.set_width(self.x1 - self.x0)
-            self.rect.set_height(self.y1 - self.y0)
-            self.rect.set_xy((self.x0, self.y0))
-            self.fig.canvas.draw()
+    # def _on_motion(self, event):
+    #     if self.is_pressed:
+    #         self.x1 = event.xdata
+    #         self.y1 = event.ydata
+    #         self.rect.set_width(self.x1 - self.x0)
+    #         self.rect.set_height(self.y1 - self.y0)
+    #         self.rect.set_xy((self.x0, self.y0))
+    #         self.fig.canvas.draw()
 
-    # draws a rectangle when user releases the mouse
-    def _on_release(self, event):
-        self.is_pressed = False
-        self.x1 = event.xdata
-        self.y1 = event.ydata
-        self.rect.set_width(self.x1 - self.x0)
-        self.rect.set_height(self.y1 - self.y0)
-        self.rect.set_xy((self.x0, self.y0))
-        self.fig.canvas.draw()
-        coordinates = [self.x0, self.y0, self.x1, self.y1]
+    # # draws a rectangle when user releases the mouse
+    # def _on_release(self, event):
+    #     self.is_pressed = False
+    #     self.x1 = event.xdata
+    #     self.y1 = event.ydata
+    #     self.rect.set_width(self.x1 - self.x0)
+    #     self.rect.set_height(self.y1 - self.y0)
+    #     self.rect.set_xy((self.x0, self.y0))
+    #     self.fig.canvas.draw()
+    #     coordinates = [self.x0, self.y0, self.x1, self.y1]
 
-        # if a function is configured to do the manual clustering, call it
-        if self.manual_clustering_method is not None:
-            self.manual_clustering_method(*coordinates)
+        # # if a function is configured to do the manual clustering, call it
+        # if self.manual_clustering_method is not None:
+        #     self.manual_clustering_method(*coordinates)
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
@@ -146,20 +236,25 @@ class PlotterWidget(QWidget):
         self.analysed_layer = None
         self.visualized_labels_layer = None
 
-        def manual_clustering_method(x0, y0, x1, y1):
-            print("Coords", x0, y0, x1, y1)
-            if self.analysed_layer is None or x0 == x1 or y0 == y1:
+        # def manual_clustering_method(x0, y0, x1, y1):
+        #     print("Coords", x0, y0, x1, y1)
+        #     if self.analysed_layer is None or x0 == x1 or y0 == y1:
+        #         return # if nothing was plotted yet, leave
+
+        #     min_x = min(x0, x1)
+        #     max_x = max(x0, x1)
+        #     min_y = min(y0, y1)
+        #     max_y = max(y0, y1)
+
+        #     clustering_ID = "MANUAL_CLUSTER_ID"
+
+        #     # save manual clustering; for each point if it's inside the rectangle
+        #     inside = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
+        #     print("INSIDE=", inside)
+        def manual_clustering_method(inside):
+            if self.analysed_layer is None or len(inside)==0:
                 return # if nothing was plotted yet, leave
-
-            min_x = min(x0, x1)
-            max_x = max(x0, x1)
-            min_y = min(y0, y1)
-            max_y = max(y0, y1)
-
             clustering_ID = "MANUAL_CLUSTER_ID"
-
-            # save manual clustering; for each point if it's inside the rectangle
-            inside = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
             self.analysed_layer.properties[clustering_ID] = inside
 
             # redraw the whole plot
@@ -315,13 +410,15 @@ class PlotterWidget(QWidget):
 
             color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
                      '#17becf']
-            self.graphics_widget.axes.scatter(
+            self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
                 c=[color[int(x)] for x in self.cluster_ids],
                 cmap='Spectral',
                 s=10
             )
+            self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
+                                                                 self.graphics_widget.pts)
 
             cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
 
@@ -333,7 +430,9 @@ class PlotterWidget(QWidget):
                 self.visualized_labels_layer = self.viewer.add_labels(self.visualized_labels_layer.data)
 
         else:
-            self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
+            self.graphics_widget.pts = self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
+            self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
+                                                                 self.graphics_widget.pts)
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
