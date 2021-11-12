@@ -40,7 +40,9 @@ class UMAPWidget(QWidget):
         self.n_neighbors = QSpinBox()
         self.n_neighbors.setMinimumWidth(40)
         self.n_neighbors.setMinimum(2)
-        self.n_neighbors.setMaximum(100)
+        # changed maximum to 1000 since I had to use 400 in the thesis and I think some cases might need these high
+        # values - Ryan
+        self.n_neighbors.setMaximum(1000)
         self.n_neighbors.setValue(15)
         n_neighbors_container.layout().addWidget(self.n_neighbors)
 
@@ -67,7 +69,8 @@ class UMAPWidget(QWidget):
 
             self.run(
                 self.get_selected_label(),
-                [i.text() for i in self.properties_list.selectedItems()]
+                [i.text() for i in self.properties_list.selectedItems()],
+                self.n_neighbors.value()
                 # todo: enter number of components here as third parameter
             )
 
@@ -132,7 +135,7 @@ class UMAPWidget(QWidget):
             self.update_label_list()
 
     # this function runs after the run button is clicked
-    def run(self, labels_layer, selected_measurements_list, n_components=2):
+    def run(self, labels_layer, selected_measurements_list, n_neighbours ,n_components=2):
         print("Dimensionality reduction running")
         print(labels_layer)
         print(selected_measurements_list)
@@ -145,7 +148,7 @@ class UMAPWidget(QWidget):
         properties_to_reduce = reg_props[selected_measurements_list]
 
         # reduce dimensions
-        embedding = umap(properties_to_reduce, n_components)
+        embedding = umap(properties_to_reduce, n_neighbours, n_components)
 
         # write result back to properties
         for i in range(0, n_components):
@@ -156,11 +159,13 @@ class UMAPWidget(QWidget):
 
         print("Dimensionality reduction finished")
 
-def umap(reg_props, n_components=2):
+def umap(reg_props, n_neigh = 15, n_components=2):
     from sklearn.preprocessing import StandardScaler
     import umap.umap_ as umap
 
-    reducer = umap.UMAP(random_state=133, n_components=n_components)
+    reducer = umap.UMAP(random_state=133, n_components=n_components, 
+                        n_neighbors = n_neigh)
+
     scaled_regionprops = StandardScaler().fit_transform(reg_props)
 
     return reducer.fit_transform(scaled_regionprops)
