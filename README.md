@@ -26,7 +26,7 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 ### Measurements
 The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
-You can use the menu `Plugins > napari-clusters-plotter > Measure Widget` for that. 
+You can use the menu `Tools > Measurement > Measure intensity, shape and neighbor counts (ncp)` for that. 
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 A table with the measurements will open:
 
@@ -43,7 +43,7 @@ ADD AN IMAGE WITH label picker AND the show selected checkbox displayed.
 ### Plotting
 
 Once measurements were made, these measurements were saved in the `properties` of the labels layer which was analysed.
-You can then plot these measurements using the menu `Plugins > napari-clusters-plotter > Plotter widget`.
+You can then plot these measurements using the menu `Tools > Measurement > Plot measurement (ncp)`.
 
 In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
 on the X- and Y-axis. Click on Run to draw the data points in the plot area.
@@ -59,7 +59,7 @@ original image. To optimize visualization in the image, turn off the visibility 
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
 using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/).
-To apply it to your data use the menu `Plugins > napari-clusters-plotter > UMAP widget`.
+To apply it to your data use the menu `Tools > Measurement > UMAP dimensionality reduction (ncp)`.
 Select the label image that was analyzed and in the list below, select all measurements that should be
 dimensionality reduced. Make sure to unselect "label" and other "clustering" results, but
 only quantitative measurements such as intensity, size and shape. Click on "Run" and after a moment,
@@ -73,7 +73,7 @@ Afterwards, you can again save and/or close the table. Also, close the UMAP widg
 ### k-means clustering
 If manual clustering, as shown above, is not an option, you can automatically cluster your data, e.g. using the
 [k-means clustering algorithm](). 
-Therefore, click the menu `Plugins > napari-clusters-plotter > Clustering widget`,
+Therefore, click the menu `Tools > Measurement > Clustering (ncp)`,
 again, select the analyzed labels layer.
 This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
 Select the clustering method `KMeans` and click on `Run`. 
@@ -85,7 +85,7 @@ each datapoint.
 Afterwards, you can again save and/or close the table. Also, close the clustering widget.
 
 ### Plotting k-means clustering results.
-Return to the Plotter widget using the menu `Plugins > napari-clusters-plotter > Plotter widget`.
+Return to the Plotter widget using the menu `Tools > Measurement > Plot measurement (ncp)`.
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `KMEANS_CLUSTERING_ID` as `Cluster`
 
 ![](images/plot_umap.png)

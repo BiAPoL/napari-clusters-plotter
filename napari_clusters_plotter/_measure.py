@@ -9,7 +9,7 @@ from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayou
 from ._utilities import show_table, widgets_inactive
 from napari_tools_menu import  register_dock_widget
 
-@register_dock_widget(menu="Measurement > Measure (ncp)")
+@register_dock_widget(menu="Measurement > Measure intensity, shape and neighbor counts (ncp)")
 class MeasureWidget(QWidget):
 
     def __init__(self, napari_viewer):
