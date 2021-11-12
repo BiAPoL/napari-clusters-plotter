@@ -8,6 +8,8 @@ from matplotlib.figure import Figure
 import matplotlib
 from matplotlib.patches import Rectangle
 from ._utilities import generate_parametric_cluster_image
+from napari_tools_menu import  register_dock_widget
+
 
 matplotlib.use('Qt5Agg')
 
@@ -128,6 +130,7 @@ class MyNavigationToolbar(NavigationToolbar):
 
         self.canvas.draw()
 
+@register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
 
     def __init__(self, napari_viewer):
