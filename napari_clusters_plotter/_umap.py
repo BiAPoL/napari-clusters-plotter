@@ -40,9 +40,6 @@ class UMAPWidget(QWidget):
         self.n_neighbors = QSpinBox()
         self.n_neighbors.setMinimumWidth(40)
         self.n_neighbors.setMinimum(2)
-        # changed maximum to 1000 since I had to use 400 in the thesis and I think some cases might need these high
-        # values - Ryan
-        self.n_neighbors.setMaximum(1000)
         self.n_neighbors.setValue(15)
         n_neighbors_container.layout().addWidget(self.n_neighbors)
 
