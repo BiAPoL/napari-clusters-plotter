@@ -4,18 +4,20 @@ import numpy as np
 import napari
 from qtpy.QtWidgets import QWidget, QPushButton, QGridLayout, QFileDialog, QTableWidget, QTableWidgetItem
 from qtpy.QtCore import QTimer
+import warnings
 
 
 def widgets_inactive(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
 
-def show_table(viewer, labels_layer):
 
+def show_table(viewer, labels_layer):
     dock_widget = _table_to_widget(labels_layer.properties, labels_layer)
     viewer.window.add_dock_widget(dock_widget, name='Region properties table', area='right')
 
-# from Robert Haase napari-skimage-regionprops
+
+# adapted from Robert Haase napari-skimage-regionprops
 def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget:
     """
     Takes a table given as dictionary with strings as keys and numeric arrays as values and returns a QWidget which
@@ -32,17 +34,42 @@ def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget
         @view.clicked.connect
         def clicked_table():
             row = view.currentRow()
-            label = table["label"][row]
+            if "label" in table:
+                label = table["label"][row]-1
+                print("Selected label: " + str(label))
+            elif "Unnamed: 0" in table:
+                label = table["Unnamed: 0"][row]
+                print("Selected label: " + str(label))
+            else:
+                warnings.warn("Not possible to show selected label.")
+                return
             labels_layer.selected_label = label
 
         def after_labels_clicked():
             row = view.currentRow()
-            label = table["label"][row]
-            if label != labels_layer.selected_label:
-                for r, layer in enumerate(table["label"]):
-                    if layer == labels_layer.selected_label:
-                        view.setCurrentCell(r, view.currentColumn())
-                        break
+            if "label" in table:
+                label = table["label"][row]-1
+                print("Selected label: " + str(label))
+                if label != labels_layer.selected_label:
+                    for r, layer in enumerate(table["label"]):
+                        if layer == labels_layer.selected_label:
+                            view.setCurrentCell(r, view.currentColumn())
+                            break
+
+            elif "Unnamed: 0" in table:
+                label = table["Unnamed: 0"][row]
+                print("Selected label: " + str(label))
+
+                if label != labels_layer.selected_label:
+                    for r, layer in enumerate(table["Unnamed: 0"]):
+                        if layer == labels_layer.selected_label:
+                            view.setCurrentCell(r, view.currentColumn())
+                            break
+
+            else:
+                warnings.warn("Not possible to show selected label.")
+                return
+
 
         @labels_layer.mouse_drag_callbacks.append
         def clicked_labels(event, event1):
@@ -71,9 +98,9 @@ def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget
 
     return widget_table
 
+
 # function for generating image labelled by clusters given the label image and the cluster prediction list
 def generate_parametric_cluster_image(labelimage, predictionlist):
-
     print('Generation of parametric cluster image started')
 
     # reforming the prediction list this is done to account for cluster labels that start at 0
