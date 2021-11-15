@@ -37,8 +37,6 @@ interact with labels and see which row of the table corresponds to which labelle
 in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
 appropriate label is displayed (make sure that show selected checkbox is selected).
 
-ADD AN IMAGE WITH label picker AND the show selected checkbox displayed.
-
 
 ### Plotting
 
