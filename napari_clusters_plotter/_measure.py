@@ -45,8 +45,9 @@ class MeasureWidget(QWidget):
         reg_props_container.setLayout(QHBoxLayout())
         reg_props_container.layout().addWidget(QLabel("Region Properties"))
         self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)',
-                                             'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
+        self.reg_props_choice_list.addItems(['   ', 'Measure now (intensity)', 'Measure now (shape)',
+                                             'Measure now (intensity + shape)',
+                                             'Measure now (intensity + shape with neighborhood data)', 'Upload file'])
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # region properties file upload
