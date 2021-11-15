@@ -50,8 +50,9 @@ on the X- and Y-axis. Click on Run to draw the data points in the plot area.
 
 ![](images/plot_plain.png)
 
-You can also manually select a region in the plot. The resulting manual clustering will also be visualized in the 
-original image. To optimize visualization in the image, turn off the visibility of the analysed labels layer.
+You can also manually select a region in the plot. To use lasso (freehand) tool use left mouse click, and to use a
+rectangle - right click. The resulting manual clustering will also be visualized in the original image. To optimize
+visualization in the image, turn off the visibility of the analysed labels layer.
 
 ![](images/plot_interactive.png)
 
