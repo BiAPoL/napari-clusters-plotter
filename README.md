@@ -6,7 +6,7 @@
 [![tests](https://github.com/lazigu/napari-clusters-plotter/workflows/tests/badge.svg)](https://github.com/lazigu/napari-clusters-plotter/actions)
 [![codecov](https://codecov.io/gh/lazigu/napari-clusters-plotter/branch/master/graph/badge.svg)](https://codecov.io/gh/lazigu/napari-clusters-plotter)
 
-A simple plugin to use with napari
+A plugin to use with napari for clustering objects according to their properties.
 
 ----------------------------------
 
@@ -25,14 +25,20 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 ![](images/starting_point.png)
 
 ### Measurements
-A first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
+The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
 You can use the menu `Plugins > napari-clusters-plotter > Measure Widget` for that. 
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 A table with the measurements will open:
 
 ![](images/measure.png)
 
-Afterwards, you can save and/or close the measurement table. Also close the Measure widget.
+Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
+interact with labels and see which row of the table corresponds to which labelled object. For this, use the label picker
+and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and appropriate
+label is displayed.
+
+ADD AN IMAGE WITH label picker AND the show selected checkbox displayed.
+
 
 ### Plotting
 
@@ -49,6 +55,12 @@ original image. To optimize visualization in the image, turn off the visibility 
 
 ![](images/plot_interactive.png)
 
+You can also select a labeled object using the `Pick` mode in napari and see which data point in the plot it 
+corresponds to.
+
+![](images/select_in_layer.png)
+
+
 ### Dimensionality reduction: UMAP
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
@@ -62,10 +74,10 @@ dataset.
 
 ![](images/umap.png)
 
-Afterwards, you can again save and/or close the table. Also close the UMAP widget.
+Afterwards, you can again save and/or close the table. Also, close the UMAP widget.
 
 ### k-means clustering
-If manual clustering as shown above is no option, you can automatically cluster your data, e.g. using the
+If manual clustering, as shown above, is not an option, you can automatically cluster your data, e.g. using the
 [k-means clustering algorithm](). 
 Therefore, click the menu `Plugins > napari-clusters-plotter > Clustering widget`,
 again, select the analyzed labels layer.
@@ -76,7 +88,7 @@ each datapoint.
 
 ![](images/kmeans_clustering.png)
 
-Afterwards, you can again save and/or close the table. Also close the clustering widget.
+Afterwards, you can again save and/or close the table. Also, close the clustering widget.
 
 ### Plotting k-means clustering results.
 Return to the Plotter widget using the menu `Plugins > napari-clusters-plotter > Plotter widget`.

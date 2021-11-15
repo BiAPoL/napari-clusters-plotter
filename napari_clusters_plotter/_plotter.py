@@ -12,6 +12,9 @@ from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 import numpy as np
 from ._utilities import generate_parametric_cluster_image
+import numpy as np
+from qtpy.QtCore import QTimer
+
 
 matplotlib.use('Qt5Agg')
 # Class below was based upon matplotlib lasso selection example (https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html)
@@ -102,14 +105,7 @@ class MplCanvas(FigureCanvas):
         self.axes.tick_params(axis='y', colors='white')
 
         super(MplCanvas, self).__init__(self.fig)
-        ######################################################################
-        # # init rectangle defined via an anchor point xy and its width and height.
-        # self.x0 = None
-        # self.y0 = None
-        # self.x1 = None
-        # self.y1 = None
-        # self.rect = Rectangle((0, 0), 1, 1, edgecolor='white', fill=None)
-        ######################################################################
+
         self.pts = self.axes.scatter([],[])
         self.selector = SelectFromCollection(self, self.axes, self.pts)
         self.rectangle_selector = RectangleSelector(self.axes, self.draw_rectangle, 
@@ -121,7 +117,7 @@ class MplCanvas(FigureCanvas):
                                         interactive=False)
         self.reset()
     
-    def draw_rectangle(self,eclick, erelease):
+    def draw_rectangle(self, eclick, erelease):
         'eclick and erelease are the press and release events'
         x0, y0 = eclick.xdata, eclick.ydata
         x1, y1 = erelease.xdata, erelease.ydata
@@ -133,52 +129,11 @@ class MplCanvas(FigureCanvas):
         self.rect_ind_mask = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.xys[:,0], self.xys[:,1])]
         if self.manual_clustering_method is not None:
             self.manual_clustering_method(self.rect_ind_mask)
-        ######################################################################
-        # # add an event when the user clicks somewhere in the plot
-        # self.mpl_connect('button_press_event', self._on_left_click)
-        # self.mpl_connect('motion_notify_event', self._on_motion)
-        # self.mpl_connect('button_release_event', self._on_release)
-        #####################################################################
+
     def reset(self):
         self.axes.clear()
         self.is_pressed = None
-        # self.axes.add_patch(self.rect)  ##### Not needed anymore, rectangle is already drawn now with RectangleSelector
-##############################################################################
-    # def _on_left_click(self, event):
-    #     self.is_pressed = True
-    #     self.x0 = event.xdata
-    #     self.y0 = event.ydata
-    #     self.x1 = event.xdata
-    #     self.y1 = event.ydata
-    #     self.rect.set_width(self.x1 - self.x0)
-    #     self.rect.set_height(self.y1 - self.y0)
-    #     self.rect.set_xy((self.x0, self.y0))
-    #     self.fig.canvas.draw()
 
-    # def _on_motion(self, event):
-    #     if self.is_pressed:
-    #         self.x1 = event.xdata
-    #         self.y1 = event.ydata
-    #         self.rect.set_width(self.x1 - self.x0)
-    #         self.rect.set_height(self.y1 - self.y0)
-    #         self.rect.set_xy((self.x0, self.y0))
-    #         self.fig.canvas.draw()
-
-    # # draws a rectangle when user releases the mouse
-    # def _on_release(self, event):
-    #     self.is_pressed = False
-    #     self.x1 = event.xdata
-    #     self.y1 = event.ydata
-    #     self.rect.set_width(self.x1 - self.x0)
-    #     self.rect.set_height(self.y1 - self.y0)
-    #     self.rect.set_xy((self.x0, self.y0))
-    #     self.fig.canvas.draw()
-    #     coordinates = [self.x0, self.y0, self.x1, self.y1]
-
-        # # if a function is configured to do the manual clustering, call it
-        # if self.manual_clustering_method is not None:
-        #     self.manual_clustering_method(*coordinates)
-##############################################################################
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
 class MyNavigationToolbar(NavigationToolbar):
@@ -232,22 +187,7 @@ class PlotterWidget(QWidget):
 
         self.analysed_layer = None
         self.visualized_labels_layer = None
-##############################################################################
-        # def manual_clustering_method(x0, y0, x1, y1):
-        #     print("Coords", x0, y0, x1, y1)
-        #     if self.analysed_layer is None or x0 == x1 or y0 == y1:
-        #         return # if nothing was plotted yet, leave
 
-        #    min_x  = min(x0, x1)
-        #     max_x = max(x0, x1)
-        #     min_y = min(y0, y1)
-        #     max_y = max(y0, y1)
-
-        #     clustering_ID = "MANUAL_CLUSTER_ID"
-
-        #     # save manual clustering; for each point if it's inside the rectangle
-        #     inside = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.data_x, self.data_y)]
-##############################################################################
         def manual_clustering_method(inside):
             if self.analysed_layer is None or len(inside)==0:
                 return # if nothing was plotted yet, leave
@@ -333,6 +273,9 @@ class PlotterWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
+        # adding spacing between fields for selecting two axes
+        axes_container.layout().setSpacing(6)
+
         # update axes combo boxes once a label is selected
         self.label_list.currentIndexChanged.connect(self.update_axes_list)
 
@@ -357,6 +300,20 @@ class PlotterWidget(QWidget):
                 self.label_list.addItem(layer.name)
                 i = i + 1
         self.label_list.setCurrentIndex(selected_index)
+
+    def clicked_label_in_view(self, event, event1):
+        # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
+        QTimer.singleShot(200, self.after_clicked_label_in_view)
+
+    def after_clicked_label_in_view(self):
+        clustering_ID = "MANUAL_CLUSTER_ID"
+
+        # save manual clustering; select only the label that's currently seleted on the layer
+        inside = np.ones((self.analysed_layer.data.max()))
+        inside[self.analysed_layer.selected_label - 1] = 0
+        self.analysed_layer.properties[clustering_ID] = inside
+
+        self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name, plot_cluster_name=clustering_ID)
 
     def update_axes_list(self):
         selected_layer = self.get_selected_label()
@@ -420,13 +377,19 @@ class PlotterWidget(QWidget):
 
             cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
 
+            keep_selection = list(self.viewer.layers.selection)
             if self.visualized_labels_layer is None:
                 self.visualized_labels_layer = self.viewer.add_labels(cluster_ids_in_space)
             else:
                 self.visualized_labels_layer.data = cluster_ids_in_space
             if self.visualized_labels_layer not in self.viewer.layers:
                 self.visualized_labels_layer = self.viewer.add_labels(self.visualized_labels_layer.data)
-            
+
+            self.viewer.layers.selection.clear()
+            for s in keep_selection:
+                self.viewer.layers.selection.add(s)
+
+
         else:
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
             self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
@@ -435,6 +398,11 @@ class PlotterWidget(QWidget):
                                         #   because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-########################################################
-        # self.graphics_widget.draw()
-########################################################
+
+
+        # remove interaction from all label layers, just in case
+        for layer in self.viewer.layers:
+            if self.clicked_label_in_view in layer.mouse_drag_callbacks:
+                layer.mouse_drag_callbacks.remove(self.clicked_label_in_view)
+
+        self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
