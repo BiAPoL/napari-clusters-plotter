@@ -51,7 +51,9 @@ class ClusteringWidget(QWidget):
         self.clust_method_container.setLayout(QHBoxLayout())
         self.clust_method_container.layout().addWidget(QLabel("Clustering Method"))
         self.clust_method_choice_list = QComboBox()
-        self.clust_method_choice_list.addItems(['   ', 'KMeans', 'HDBSCAN'])
+        self.clust_method_choice_list.addItems(['   ', 'KMeans'
+                                                #, 'HDBSCAN'
+                                                ])
         self.clust_method_container.layout().addWidget(self.clust_method_choice_list)
 
         # clustering options for KMeans
