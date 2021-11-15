@@ -55,6 +55,12 @@ original image. To optimize visualization in the image, turn off the visibility 
 
 ![](images/plot_interactive.png)
 
+You can also select a labeled object using the `Pick` mode in napari and see which data point in the plot it 
+corresponds to.
+
+![](images/select_in_layer.png)
+
+
 ### Dimensionality reduction: UMAP
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.

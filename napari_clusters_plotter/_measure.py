@@ -186,7 +186,16 @@ class MeasureWidget(QWidget):
         if region_props_source == 'Upload file':
             # load region properties from csv file
             reg_props = pd.read_csv(regpropsfile)
-            labels_layer.properties = reg_props
+            try:
+                edited_regprops = reg_props.drop(['Unnamed: 0'], axis = 1)
+            except KeyError:
+                edited_regprops = reg_props
+            
+            if 'labels' not in edited_regprops.keys().tolist():
+                label_column = pd.DataFrame({'label':np.array(range(len(edited_regprops)))})
+                reg_props_w_labels = pd.concat([label_column,edited_regprops], axis = 1)
+                
+            labels_layer.properties = reg_props_w_labels
 
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto

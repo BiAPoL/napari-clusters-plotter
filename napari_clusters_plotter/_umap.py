@@ -2,7 +2,7 @@ import pandas as pd
 import warnings
 import napari
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
-from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
+from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox, QSpinBox
 from qtpy.QtCore import QRect
 from napari_tools_menu import  register_dock_widget
 
@@ -18,7 +18,7 @@ class UMAPWidget(QWidget):
 
         self.current_annotation = None
 
-        # setup layout of the whole dialog. QVBoxLayout - lines up widgets vertically
+        # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
@@ -32,6 +32,18 @@ class UMAPWidget(QWidget):
         self.label_list.currentIndexChanged.connect(self.update_properties_list)
         choose_img_container.layout().addWidget(QLabel("Labels layer"))
         choose_img_container.layout().addWidget(self.label_list)
+
+        # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
+        # used for manifold approximation. Larger values result in more global views of the manifold, while smaller
+        # values result in more local data being preserved.
+        n_neighbors_container = QWidget()
+        n_neighbors_container.setLayout(QHBoxLayout())
+        n_neighbors_container.layout().addWidget(QLabel("Number of neighbors"))
+        self.n_neighbors = QSpinBox()
+        self.n_neighbors.setMinimumWidth(40)
+        self.n_neighbors.setMinimum(2)
+        self.n_neighbors.setValue(15)
+        n_neighbors_container.layout().addWidget(self.n_neighbors)
 
         # select properties to make a umap from
         choose_properties_container = QWidget()
@@ -56,7 +68,8 @@ class UMAPWidget(QWidget):
 
             self.run(
                 self.get_selected_label(),
-                [i.text() for i in self.properties_list.selectedItems()]
+                [i.text() for i in self.properties_list.selectedItems()],
+                self.n_neighbors.value()
                 # todo: enter number of components here as third parameter
             )
 
@@ -66,6 +79,7 @@ class UMAPWidget(QWidget):
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(choose_img_container)
+        self.layout().addWidget(n_neighbors_container)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
@@ -120,7 +134,7 @@ class UMAPWidget(QWidget):
             self.update_label_list()
 
     # this function runs after the run button is clicked
-    def run(self, labels_layer, selected_measurements_list, n_components=2):
+    def run(self, labels_layer, selected_measurements_list, n_neighbours ,n_components=2):
         print("Dimensionality reduction running")
         print(labels_layer)
         print(selected_measurements_list)
@@ -133,7 +147,7 @@ class UMAPWidget(QWidget):
         properties_to_reduce = reg_props[selected_measurements_list]
 
         # reduce dimensions
-        embedding = umap(properties_to_reduce, n_components)
+        embedding = umap(properties_to_reduce, n_neighbours, n_components)
 
         # write result back to properties
         for i in range(0, n_components):
@@ -144,11 +158,13 @@ class UMAPWidget(QWidget):
 
         print("Dimensionality reduction finished")
 
-def umap(reg_props, n_components=2):
+def umap(reg_props, n_neigh = 15, n_components=2):
     from sklearn.preprocessing import StandardScaler
     import umap.umap_ as umap
 
-    reducer = umap.UMAP(random_state=133, n_components=n_components)
+    reducer = umap.UMAP(random_state=133, n_components=n_components, 
+                        n_neighbors = n_neigh)
+
     scaled_regionprops = StandardScaler().fit_transform(reg_props)
 
     return reducer.fit_transform(scaled_regionprops)
