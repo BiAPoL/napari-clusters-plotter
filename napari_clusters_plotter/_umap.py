@@ -4,7 +4,9 @@ import napari
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox, QSpinBox
 from qtpy.QtCore import QRect
+from napari_tools_menu import  register_dock_widget
 
+@register_dock_widget(menu="Measurement > UMAP dimensionality reduction (ncp)")
 class UMAPWidget(QWidget):
 
     def __init__(self, napari_viewer):

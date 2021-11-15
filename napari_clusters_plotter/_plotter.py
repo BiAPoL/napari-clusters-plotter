@@ -6,13 +6,12 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib
-# from matplotlib.patches import Rectangle
 from matplotlib.widgets import RectangleSelector
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 import numpy as np
 from ._utilities import generate_parametric_cluster_image
-import numpy as np
+from napari_tools_menu import  register_dock_widget
 from qtpy.QtCore import QTimer
 
 
@@ -170,6 +169,7 @@ class MyNavigationToolbar(NavigationToolbar):
 
         self.canvas.draw()
 
+@register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
 
     def __init__(self, napari_viewer):

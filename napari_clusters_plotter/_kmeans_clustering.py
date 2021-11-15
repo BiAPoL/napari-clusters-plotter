@@ -5,8 +5,9 @@ from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QSpinBox, QHBoxLayout, 
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
 from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive
+from napari_tools_menu import  register_dock_widget
 
-
+@register_dock_widget(menu="Measurement > Clustering (ncp)")
 class ClusteringWidget(QWidget):
 
     def __init__(self, napari_viewer):
