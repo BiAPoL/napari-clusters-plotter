@@ -37,9 +37,6 @@ def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget
             if "label" in table:
                 label = table["label"][row]-1
                 print("Selected label: " + str(label))
-            elif "Unnamed: 0" in table:
-                label = table["Unnamed: 0"][row]
-                print("Selected label: " + str(label))
             else:
                 warnings.warn("Not possible to show selected label.")
                 return
@@ -52,16 +49,6 @@ def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget
                 print("Selected label: " + str(label))
                 if label != labels_layer.selected_label:
                     for r, layer in enumerate(table["label"]):
-                        if layer == labels_layer.selected_label:
-                            view.setCurrentCell(r, view.currentColumn())
-                            break
-
-            elif "Unnamed: 0" in table:
-                label = table["Unnamed: 0"][row]
-                print("Selected label: " + str(label))
-
-                if label != labels_layer.selected_label:
-                    for r, layer in enumerate(table["Unnamed: 0"]):
                         if layer == labels_layer.selected_label:
                             view.setCurrentCell(r, view.currentColumn())
                             break
