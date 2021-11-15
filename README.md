@@ -33,9 +33,9 @@ A table with the measurements will open:
 ![](images/measure.png)
 
 Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
-interact with labels and see which row of the table corresponds to which labelled object. For this, use the label picker
-and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and appropriate
-label is displayed.
+interact with labels and see which row of the table corresponds to which labelled object. For this, use the Pick mode
+in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
+appropriate label is displayed (make sure that show selected checkbox is selected).
 
 ADD AN IMAGE WITH label picker AND the show selected checkbox displayed.
 
