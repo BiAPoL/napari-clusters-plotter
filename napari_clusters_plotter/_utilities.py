@@ -13,77 +13,8 @@ def widgets_inactive(*widgets, active):
 
 
 def show_table(viewer, labels_layer):
-    dock_widget = _table_to_widget(labels_layer.properties, labels_layer)
-    viewer.window.add_dock_widget(dock_widget, name='Region properties table', area='right')
-
-
-# adapted from Robert Haase napari-skimage-regionprops
-def _table_to_widget(table: dict, labels_layer: napari.layers.Labels) -> QWidget:
-    """
-    Takes a table given as dictionary with strings as keys and numeric arrays as values and returns a QWidget which
-    contains a QTableWidget with that data.
-    """
-    view = QTableWidget(len(next(iter(table.values()))), len(table))
-    for i, column in enumerate(table.keys()):
-        view.setItem(0, i, QTableWidgetItem(column))
-        for j, value in enumerate(table.get(column)):
-            view.setItem(j + 1, i, QTableWidgetItem(str(value)))
-
-    if labels_layer is not None:
-
-        @view.clicked.connect
-        def clicked_table():
-            row = view.currentRow()
-            if "label" in table:
-                label = table["label"][row]-1
-                print("Selected label: " + str(label))
-            else:
-                warnings.warn("Not possible to show selected label.")
-                return
-            labels_layer.selected_label = label
-
-        def after_labels_clicked():
-            row = view.currentRow()
-            if "label" in table:
-                label = table["label"][row]-1
-                print("Selected label: " + str(label))
-                if label != labels_layer.selected_label:
-                    for r, layer in enumerate(table["label"]):
-                        if layer == labels_layer.selected_label:
-                            view.setCurrentCell(r, view.currentColumn())
-                            break
-
-            else:
-                warnings.warn("Not possible to show selected label.")
-                return
-
-
-        @labels_layer.mouse_drag_callbacks.append
-        def clicked_labels(event, event1):
-            # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
-            QTimer.singleShot(200, after_labels_clicked)
-
-    copy_button = QPushButton("Copy to clipboard")
-
-    @copy_button.clicked.connect
-    def copy_trigger():
-        DataFrame(table).to_clipboard()
-
-    save_button = QPushButton("Save as csv...")
-
-    @save_button.clicked.connect
-    def save_trigger():
-        filename, _ = QFileDialog.getSaveFileName(save_button, "Save as csv...", ".", "*.csv")
-        DataFrame(table).to_csv(filename)
-
-    widget_table = QWidget()
-    widget_table.setWindowTitle("region properties")
-    widget_table.setLayout(QGridLayout())
-    widget_table.layout().addWidget(copy_button)
-    widget_table.layout().addWidget(save_button)
-    widget_table.layout().addWidget(view)
-
-    return widget_table
+    from napari_skimage_regionprops import add_table
+    add_table(labels_layer, viewer)
 
 
 # function for generating image labelled by clusters given the label image and the cluster prediction list
