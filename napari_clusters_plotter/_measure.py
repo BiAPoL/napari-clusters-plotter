@@ -10,6 +10,7 @@ from ._utilities import show_table, widgets_inactive
 from napari_tools_menu import  register_dock_widget
 
 @register_dock_widget(menu="Measurement > Measure intensity, shape and neighbor counts (ncp)")
+
 class MeasureWidget(QWidget):
 
     def __init__(self, napari_viewer):
@@ -46,9 +47,8 @@ class MeasureWidget(QWidget):
         reg_props_container.setLayout(QHBoxLayout())
         reg_props_container.layout().addWidget(QLabel("Region Properties"))
         self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now (intensity)', 'Measure now (shape)',
-                                             'Measure now (intensity + shape)',
-                                             'Measure now (intensity + shape with neighborhood data)', 'Upload file'])
+        self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)',
+                                             'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
         reg_props_container.layout().addWidget(self.reg_props_choice_list)
 
         # region properties file upload
@@ -193,7 +193,7 @@ class MeasureWidget(QWidget):
                 edited_regprops = reg_props
             
             if 'labels' not in edited_regprops.keys().tolist():
-                label_column = pd.DataFrame({'label':np.array(range(len(edited_regprops)))})
+                label_column = pd.DataFrame({'label':np.array(range(1,(len(edited_regprops)+1)))})
                 reg_props_w_labels = pd.concat([label_column,edited_regprops], axis = 1)
                 
             labels_layer.properties = reg_props_w_labels
