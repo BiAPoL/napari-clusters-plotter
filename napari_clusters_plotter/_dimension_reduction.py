@@ -24,7 +24,7 @@ class DimensionalityReductionWidget(QWidget):
         self.setLayout(QVBoxLayout())
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
-        label_container.layout().addWidget(QLabel("<b>Dimensionality reduction: UMAP</b>"))
+        label_container.layout().addWidget(QLabel("<b>Dimensionality reduction</b>"))
 
         # selection of labels layer
         choose_img_container = QWidget()
