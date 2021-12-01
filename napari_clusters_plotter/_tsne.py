@@ -23,7 +23,7 @@ class TSNEWidget(QWidget):
         self.setLayout(QVBoxLayout())
         label_container = QWidget()
         label_container.setLayout(QVBoxLayout())
-        label_container.layout().addWidget(QLabel("<b>Dimensionality reduction: TSNE</b>"))
+        label_container.layout().addWidget(QLabel("<b>Dimensionality reduction: t-SNE</b>"))
 
         # selection of labels layer
         choose_img_container = QWidget()
