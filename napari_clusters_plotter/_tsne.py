@@ -4,6 +4,9 @@ import napari
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox, QSpinBox
 from qtpy.QtCore import QRect
+from napari_tools_menu import  register_dock_widget
+
+@register_dock_widget(menu="Measurement > TSNE dimensionality reduction (ncp)")
 
 class TSNEWidget(QWidget):
 
