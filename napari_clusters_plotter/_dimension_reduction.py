@@ -40,7 +40,7 @@ class DimensionalityReductionWidget(QWidget):
         algorithm_container.setLayout(QHBoxLayout())
         algorithm_container.layout().addWidget(QLabel("Dimensionality Reduction Algorithm"))
         self.algorithm_choice_list = QComboBox()
-        self.algorithm_choice_list.addItems(['   ', 'UMAP', 'TSNE'])
+        self.algorithm_choice_list.addItems(['   ', 'UMAP', 't-SNE'])
         algorithm_container.layout().addWidget(self.algorithm_choice_list)
 
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
