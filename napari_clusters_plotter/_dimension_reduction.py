@@ -197,9 +197,6 @@ class DimensionalityReductionWidget(QWidget):
         else:
             warnings.warn('No Dimension Reduction Algorithm Chosen!')
 
-
-        
-
         from ._utilities import show_table
         show_table(self.viewer, labels_layer)
 
