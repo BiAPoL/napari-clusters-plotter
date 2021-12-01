@@ -1,10 +1,5 @@
 import pyclesperanto_prototype as cle
-from pandas import DataFrame
 import numpy as np
-import napari
-from qtpy.QtWidgets import QWidget, QPushButton, QGridLayout, QFileDialog, QTableWidget, QTableWidgetItem
-from qtpy.QtCore import QTimer
-import warnings
 
 
 def widgets_inactive(*widgets, active):
