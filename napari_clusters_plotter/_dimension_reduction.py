@@ -38,7 +38,7 @@ class DimensionalityReductionWidget(QWidget):
         # selection of dimension reduction algorithm
         algorithm_container = QWidget()
         algorithm_container.setLayout(QHBoxLayout())
-        algorithm_container.layout().addWidget(QLabel("Dimension Reduction Algorithm"))
+        algorithm_container.layout().addWidget(QLabel("Dimensionality Reduction Algorithm"))
         self.algorithm_choice_list = QComboBox()
         self.algorithm_choice_list.addItems(['   ', 'UMAP', 'TSNE'])
         algorithm_container.layout().addWidget(self.algorithm_choice_list)
