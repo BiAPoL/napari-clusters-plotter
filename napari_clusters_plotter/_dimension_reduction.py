@@ -186,13 +186,13 @@ class DimensionalityReductionWidget(QWidget):
                 properties["UMAP_" + str(i)] = embedding[:,i]
 
 
-        elif selected_algorithm == 'TSNE':
+        elif selected_algorithm == 't-SNE':
             # reduce dimensions
             embedding = tsne(properties_to_reduce, perplexity, n_components)
 
             # write result back to properties
             for i in range(0, n_components):
-                properties["TSNE_" + str(i)] = embedding[:,i]
+                properties['t-SNE_' + str(i)] = embedding[:,i]
 
         else:
             warnings.warn('No Dimension Reduction Algorithm Chosen!')
