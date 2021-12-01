@@ -5,6 +5,9 @@ from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayou
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox, QSpinBox
 from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive
+from napari_tools_menu import  register_dock_widget
+
+@register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
 
 class dimredWidget(QWidget):
 
@@ -35,7 +38,7 @@ class dimredWidget(QWidget):
         # selection of dimension reduction algorithm
         algorithm_container = QWidget()
         algorithm_container.setLayout(QHBoxLayout())
-        algorithm_container.layout().addWidget(QLabel("Region Properties"))
+        algorithm_container.layout().addWidget(QLabel("Dimension Reduction Algorithm"))
         self.algorithm_choice_list = QComboBox()
         self.algorithm_choice_list.addItems(['   ', 'UMAP', 'TSNE'])
         algorithm_container.layout().addWidget(self.algorithm_choice_list)
@@ -65,9 +68,6 @@ class dimredWidget(QWidget):
         self.perplexity_container.layout().addWidget(self.perplexity)
         self.perplexity_container.setVisible(False)
 
-        # hide widgets unless appropriate options are chosen
-        self.algorithm_choice_list.currentIndexChanged.connect(self.change_nneigbors_list)
-        self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
 
         # select properties of which to produce a dimension reduce version
         choose_properties_container = QWidget()
@@ -93,7 +93,8 @@ class dimredWidget(QWidget):
             self.run(
                 self.get_selected_label(),
                 [i.text() for i in self.properties_list.selectedItems()],
-                self.n_neighbors.value(), self.perplexity.value()
+                self.n_neighbors.value(), self.perplexity.value(),
+                self.algorithm_choice_list.currentText()
                 # todo: enter number of components here as third parameter
             )
 
@@ -115,6 +116,10 @@ class dimredWidget(QWidget):
             item = self.layout().itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
+
+        # hide widgets unless appropriate options are chosen
+        self.algorithm_choice_list.currentIndexChanged.connect(self.change_nneigbors_list)
+        self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
 
     def get_selected_label(self):
         index = self.label_list.currentIndex()
@@ -175,15 +180,25 @@ class dimredWidget(QWidget):
         if selected_algorithm == 'UMAP':
             # reduce dimensions
             embedding = umap(properties_to_reduce, n_neighbours, n_components)
+
+            # write result back to properties
+            for i in range(0, n_components):
+                properties["UMAP_" + str(i)] = embedding[:,i]
+
+
         elif selected_algorithm == 'TSNE':
+            # reduce dimensions
             embedding = tsne(properties_to_reduce, perplexity, n_components)
+
+            # write result back to properties
+            for i in range(0, n_components):
+                properties["TSNE_" + str(i)] = embedding[:,i]
+
         else:
             warnings.warn('No Dimension Reduction Algorithm Chosen!')
 
 
-        # write result back to properties
-        for i in range(0, n_components):
-            properties["UMAP_" + str(i)] = embedding[:,i]
+        
 
         from ._utilities import show_table
         show_table(self.viewer, labels_layer)
