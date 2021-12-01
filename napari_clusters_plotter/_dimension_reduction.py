@@ -5,10 +5,10 @@ from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayou
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox, QSpinBox
 from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive
-from napari_tools_menu import  register_dock_widget
+from napari_tools_menu import register_dock_widget
+
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
-
 class DimensionalityReductionWidget(QWidget):
 
     def __init__(self, napari_viewer):
@@ -56,8 +56,7 @@ class DimensionalityReductionWidget(QWidget):
         self.n_neighbors_container.layout().addWidget(self.n_neighbors)
         self.n_neighbors_container.setVisible(False)
 
-        # slection of the level of perplexity. Higher values should be chosen when handling
-        # large datasets
+        # selection of the level of perplexity. Higher values should be chosen when handling large datasets
         self.perplexity_container = QWidget()
         self.perplexity_container.setLayout(QHBoxLayout())
         self.perplexity_container.layout().addWidget(QLabel("Perplexity"))
@@ -67,7 +66,6 @@ class DimensionalityReductionWidget(QWidget):
         self.perplexity.setValue(30)
         self.perplexity_container.layout().addWidget(self.perplexity)
         self.perplexity_container.setVisible(False)
-
 
         # select properties of which to produce a dimension reduce version
         choose_properties_container = QWidget()
@@ -118,7 +116,7 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.algorithm_choice_list.currentIndexChanged.connect(self.change_nneigbors_list)
+        self.algorithm_choice_list.currentIndexChanged.connect(self.change_neighbours_list)
         self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
 
     def get_selected_label(self):
@@ -165,7 +163,8 @@ class DimensionalityReductionWidget(QWidget):
             self.update_label_list()
 
     # this function runs after the run button is clicked
-    def run(self, labels_layer, selected_measurements_list, n_neighbours, perplexity, selected_algorithm ,n_components=2):
+    def run(self, labels_layer, selected_measurements_list, n_neighbours, perplexity, selected_algorithm,
+            n_components=2):
         print("Dimensionality reduction running")
         print(labels_layer)
         print(selected_measurements_list)
@@ -183,8 +182,7 @@ class DimensionalityReductionWidget(QWidget):
 
             # write result back to properties
             for i in range(0, n_components):
-                properties["UMAP_" + str(i)] = embedding[:,i]
-
+                properties["UMAP_" + str(i)] = embedding[:, i]
 
         elif selected_algorithm == 't-SNE':
             # reduce dimensions
@@ -192,7 +190,7 @@ class DimensionalityReductionWidget(QWidget):
 
             # write result back to properties
             for i in range(0, n_components):
-                properties['t-SNE_' + str(i)] = embedding[:,i]
+                properties['t-SNE_' + str(i)] = embedding[:, i]
 
         else:
             warnings.warn('No Dimension Reduction Algorithm Chosen!')
@@ -203,33 +201,30 @@ class DimensionalityReductionWidget(QWidget):
         print("Dimensionality reduction finished")
 
     # toggle widgets visibility according to what is selected
-    def change_nneigbors_list(self):
-        widgets_inactive(self.n_neighbors_container,
-                         active=self.algorithm_choice_list.currentText() == 'UMAP')
+    def change_neighbours_list(self):
+        widgets_inactive(self.n_neighbors_container, active=self.algorithm_choice_list.currentText() == 'UMAP')
 
     def change_perplexity(self):
-        widgets_inactive(self.perplexity_container,
-                         active=self.algorithm_choice_list.currentText() == 'TSNE')
+        widgets_inactive(self.perplexity_container, active=self.algorithm_choice_list.currentText() == 'TSNE')
 
-def umap(reg_props, n_neigh = 15, n_components=2):
+
+def umap(reg_props, n_neigh=15, n_components=2):
     from sklearn.preprocessing import StandardScaler
     import umap.umap_ as umap
 
-    reducer = umap.UMAP(random_state=133, n_components=n_components, 
-                        n_neighbors = n_neigh)
+    reducer = umap.UMAP(random_state=133, n_components=n_components, n_neighbors=n_neigh)
 
     scaled_regionprops = StandardScaler().fit_transform(reg_props)
 
     return reducer.fit_transform(scaled_regionprops)
+
 
 def tsne(reg_props, perplexity, n_components=2):
     from sklearn.preprocessing import StandardScaler
     from sklearn.manifold import TSNE
 
-    reducer = TSNE(perplexity=perplexity, n_components=n_components, 
-                   learning_rate='auto', init = 'pca', random_state=42)
+    reducer = TSNE(perplexity=perplexity, n_components=n_components, learning_rate='auto', init='pca', random_state=42)
 
     scaled_regionprops = StandardScaler().fit_transform(reg_props)
 
     return reducer.fit_transform(scaled_regionprops)
-
