@@ -9,7 +9,7 @@ from napari_tools_menu import  register_dock_widget
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
 
-class dimredWidget(QWidget):
+class DimensionalityReductionWidget(QWidget):
 
     def __init__(self, napari_viewer):
         super().__init__()
