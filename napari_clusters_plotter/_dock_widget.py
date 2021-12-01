@@ -3,7 +3,7 @@ from ._measure import MeasureWidget
 from ._plotter import PlotterWidget
 from ._umap import UMAPWidget
 from ._tsne import TSNEWidget
-from ._dimension_reduction import dimredWidget
+from ._dimension_reduction import DimensionalityReductionWidget
 from ._kmeans_clustering import ClusteringWidget
 
 
