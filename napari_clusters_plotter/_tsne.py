@@ -6,7 +6,7 @@ from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QCom
 from qtpy.QtCore import QRect
 from napari_tools_menu import  register_dock_widget
 
-@register_dock_widget(menu="Measurement > TSNE dimensionality reduction (ncp)")
+@register_dock_widget(menu="Measurement > t-SNE dimensionality reduction (ncp)")
 
 class TSNEWidget(QWidget):
 
