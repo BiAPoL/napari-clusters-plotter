@@ -6,6 +6,8 @@ from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QCom
 from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive
 from napari_tools_menu import register_dock_widget
+
+# Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action='ignore', category=FutureWarning, module='sklearn')
 
 
