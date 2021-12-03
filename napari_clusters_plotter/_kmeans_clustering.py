@@ -1,3 +1,4 @@
+from enum import Enum
 import pandas as pd
 import warnings
 from napari.layers import Labels
@@ -18,6 +19,12 @@ DEFAULTS = dict(
 
 @register_dock_widget(menu="Measurement > Clustering (ncp)")
 class ClusteringWidget(QWidget):
+
+    class Options(Enum):
+        EMPTY = ""
+        KMEANS = "KMeans"
+        HDBSCAN = "HDBSCAN"
+
     def __init__(self, napari_viewer):
         super().__init__()
         self.setLayout(QVBoxLayout())
@@ -50,10 +57,8 @@ class ClusteringWidget(QWidget):
         self.clust_method_container.layout().addWidget(QLabel("Clustering Method"))
         self.clust_method_choice_list = create_widget(widget_type="ComboBox",
                                                       name="Clustering_method",
-                                                      value='',
-                                                      options=dict(choices=['', 'KMeans',
-                                                                            # 'HDBSCAN'
-                                                                            ]))
+                                                      value=self.Options.EMPTY.value,
+                                                      options=dict(choices=[e.value for e in self.Options]))
 
         self.clust_method_container.layout().addWidget(self.clust_method_choice_list.native)
 
@@ -146,7 +151,7 @@ class ClusteringWidget(QWidget):
 
     def change_kmeans_clustering(self):
         widgets_inactive(self.kmeans_settings_container_nr, self.kmeans_settings_container_iter,
-                         active=self.clust_method_choice_list.current_choice == 'KMeans')
+                         active=self.clust_method_choice_list.current_choice == self.Options.KMEANS.value)
 
     def update_properties_list(self):
         selected_layer = self.labels_select.value
