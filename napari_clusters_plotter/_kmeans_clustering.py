@@ -175,7 +175,7 @@ class ClusteringWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        # turn properties from layer into pandas dataframe
+        # turn properties from layer into a pandas dataframe
         properties = labels_layer.properties
         reg_props = pd.DataFrame(properties)
 
