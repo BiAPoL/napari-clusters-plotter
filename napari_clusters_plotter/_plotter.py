@@ -374,7 +374,8 @@ class PlotterWidget(QWidget):
                 self.data_y,
                 c=[colors[int(x)] for x in self.cluster_ids],
                 cmap='Spectral',
-                s=10
+                s=[5 if id >= 0 else 2.5 for id in self.cluster_ids],
+                alpha = [0.7 if id >= 0 else 0.3 for id in self.cluster_ids]
             )
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
@@ -450,7 +451,7 @@ def get_nice_colormap():
                 '#8c5481', '#516b4d', '#994440', '#2e5667', '#af7e5c', '#432432', '#b49bb0',
                 '#382718', '#b67576', '#294d46', '#935c54', '#52756e', '#6d363c', '#85856a',
                 '#644466', '#635738', '#876d84', '#623c23', '#596776', '#864e5d', '#5f5848',
-                '#9f7e80', '#5c4a56', '#735647', '#ad8f16']
+                '#9f7e80', '#5c4a56', '#735647', '#bcbcbc']
 
     colours_ryan_master  = [ '#80b1d3', '#fdb462', '#8dd3c7', '#e2ed2f', '#bebada', '#fb8072',
                 '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd', '#ccebc5', '#ffed6f', '#0054b6',
