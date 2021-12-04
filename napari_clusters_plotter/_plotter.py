@@ -13,7 +13,7 @@ import numpy as np
 from ._utilities import generate_parametric_cluster_image
 from napari_tools_menu import  register_dock_widget
 from qtpy.QtCore import QTimer
-
+import pandas as pd
 
 matplotlib.use('Qt5Agg')
 # Class below was based upon matplotlib lasso selection example (https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html)
@@ -362,12 +362,14 @@ class PlotterWidget(QWidget):
         if plot_cluster_name is not None and plot_cluster_name != "label" and plot_cluster_name in list(properties.keys()):
             self.cluster_ids = properties[plot_cluster_name]
 
-            color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
-                     '#17becf']
+            colors = pd.read_csv('Nice Colourmap Set3 (256) hex.csv')['colours'].to_numpy()
+
+            #color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
+            #         '#17becf']
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[color[int(x)] for x in self.cluster_ids],
+                c=[colors[int(x)] for x in self.cluster_ids],
                 cmap='Spectral',
                 s=10
             )
