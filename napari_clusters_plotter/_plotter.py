@@ -380,16 +380,26 @@ class PlotterWidget(QWidget):
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
                                                                  self.graphics_widget.pts)
+            # measuring time to check if speedup is worth it
+            import time
+            start = time.process_time()
 
-            cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
+            cmap_dict = hex_colormap_to_dict(colors)
+            np_cluster_ids_p1 = np.array(self.cluster_ids) + 1
+            cluster_id_dict = {i+1 : cmap_dict[color] for i,color in enumerate(np_cluster_ids_p1)}
+            end_cl_dict_generation = time.process_time()
 
             keep_selection = list(self.viewer.layers.selection)
             if self.visualized_labels_layer is None:
-                self.visualized_labels_layer = self.viewer.add_labels(cluster_ids_in_space)
+                self.visualized_labels_layer = self.viewer.add_labels(self.analysed_layer.data, color = cluster_id_dict)
             else:
-                self.visualized_labels_layer.data = cluster_ids_in_space
+                self.visualized_labels_layer.color = cluster_id_dict
             if self.visualized_labels_layer not in self.viewer.layers:
-                self.visualized_labels_layer = self.viewer.add_labels(self.visualized_labels_layer.data)
+                self.visualized_labels_layer = self.viewer.add_labels(self.analysed_layer.data, color = cluster_id_dict)
+
+            end = time.process_time()
+            print('showing cluster layer took {}s'.format(end-start))
+            print('generating cluster image took {}s'.format(end_cl_dict_generation-start))
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
@@ -413,8 +423,15 @@ class PlotterWidget(QWidget):
 
         self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
 
-def get_nice_colormap():
+def hex_colormap_to_dict(hex_color_list):
+    hex_color_list_w_background = ['#000000'] + hex_color_list
+    rgba_palette_list = [list(int(h[i:i+2], 16)/255 for i in (1, 3, 5))+[1] for h in hex_color_list_w_background]
+    rgba_palette_list[0][3] = 0
+    napari_labels_cmap_dict = {k:v for k, v in enumerate(rgba_palette_list)}
 
+    return napari_labels_cmap_dict
+
+def get_nice_colormap():
     colours_w_old_colors = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
                 '#e377c2', '#7f7f7f', '#bcbd22', '#17becf', '#ccebc5', '#ffed6f', '#0054b6',
                 '#6aa866', '#ffbfff', '#8d472a', '#417239', '#d48fd0', '#8b7e32', '#7989dc',
