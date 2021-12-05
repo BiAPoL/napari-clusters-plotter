@@ -397,7 +397,7 @@ class PlotterWidget(QWidget):
 
 
         else:
-            self.graphics_widget.pts = self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
+            self.graphics_widget.pts = self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=5)
             self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
                                                                  self.graphics_widget.pts)
             self.graphics_widget.draw() # Only redraws when cluster is not manually selected
