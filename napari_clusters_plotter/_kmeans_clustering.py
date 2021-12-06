@@ -160,11 +160,11 @@ class ClusteringWidget(QWidget):
             if selected_layer.properties is not None:
                 self.properties_list.clear()
                 for p in list(properties.keys()):
+                    if p == "label" or "CLUSTER_ID" in p:
+                        continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
-                    # per default select all measurements that are not "label"
-                    if p != "label":
-                        item.setSelected(True)
+                    item.setSelected(True)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
