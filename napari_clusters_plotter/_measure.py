@@ -1,3 +1,4 @@
+from enum import Enum
 import pyclesperanto_prototype as cle
 import pandas as pd
 import numpy as np
@@ -5,13 +6,20 @@ import warnings
 from napari.layers import Labels, Image
 from magicgui.widgets import FileEdit, create_widget
 from magicgui.types import FileDialogMode
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox, QLineEdit
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit
 from ._utilities import show_table, widgets_inactive
 from napari_tools_menu import register_dock_widget
 
 
 @register_dock_widget(menu="Measurement > Measure intensity, shape and neighbor counts (ncp)")
 class MeasureWidget(QWidget):
+    class Choices(Enum):
+        EMPTY = " "
+        NEIGHBORHOOD = "Measure now (with neighborhood data)"
+        INTENSITY = "Measure now (intensity)"
+        SHAPE = "Measure now (shape)"
+        BOTH = "Measure now (intensity + shape)"
+        FILE = 'Upload file'
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -42,10 +50,12 @@ class MeasureWidget(QWidget):
         reg_props_container = QWidget()
         reg_props_container.setLayout(QHBoxLayout())
         reg_props_container.layout().addWidget(QLabel("Region Properties"))
-        self.reg_props_choice_list = QComboBox()
-        self.reg_props_choice_list.addItems(['   ', 'Measure now (with neighborhood data)', 'Measure now (intensity)',
-                                             'Measure now (shape)', 'Measure now (intensity + shape)', 'Upload file'])
-        reg_props_container.layout().addWidget(self.reg_props_choice_list)
+        self.reg_props_choice_list = create_widget(widget_type="ComboBox",
+                                                   name="Region_properties",
+                                                   value=self.Choices.EMPTY.value,
+                                                   options=dict(choices=[e.value for e in self.Choices]))
+
+        reg_props_container.layout().addWidget(self.reg_props_choice_list.native)
 
         # region properties file upload
         self.reg_props_file_widget = QWidget()
@@ -93,6 +103,7 @@ class MeasureWidget(QWidget):
             self.run(
                 self.image_select.value,
                 self.labels_select.value,
+                self.reg_props_choice_list.value,
                 str(filename_edit.value.absolute()).replace("\\", "/").replace("//", "/"),
                 self.closest_points_list.text(),
             )
@@ -107,8 +118,8 @@ class MeasureWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.reg_props_choice_list.currentIndexChanged.connect(self.change_reg_props_file)
-        self.reg_props_choice_list.currentIndexChanged.connect(self.change_closest_points_list)
+        self.reg_props_choice_list.changed.connect(self.change_reg_props_file)
+        self.reg_props_choice_list.changed.connect(self.change_closest_points_list)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -121,20 +132,20 @@ class MeasureWidget(QWidget):
     # toggle widgets visibility according to what is selected
     def change_reg_props_file(self):
         widgets_inactive(self.reg_props_file_widget,
-                         active=self.reg_props_choice_list.currentText() == 'Upload file')
+                         active=self.reg_props_choice_list.value == self.Choices.FILE.value)
 
     def change_closest_points_list(self):
         widgets_inactive(self.closest_points_container,
-                         active=self.reg_props_choice_list.currentText() == 'Measure now (with neighborhood data)')
+                         active=self.reg_props_choice_list.value == self.Choices.NEIGHBORHOOD.value)
 
     # this function runs after the run button is clicked
-    def run(self, image_layer, labels_layer, reg_props_file, n_closest_points_str):
+    def run(self, image_layer, labels_layer, region_props_source, reg_props_file, n_closest_points_str):
         print("Measurement running")
+        print("Region properties source: " + str(region_props_source))
 
         # depending on settings,...
-        region_props_source = self.reg_props_choice_list.currentText()
 
-        if region_props_source == 'Upload file':
+        if region_props_source == self.Choices.FILE.value:
             # load region properties from csv file
             reg_props = pd.read_csv(reg_props_file)
             try:
@@ -170,8 +181,8 @@ class MeasureWidget(QWidget):
             if 'neighborhood' in region_props_source:
                 n_closest_points_split = n_closest_points_str.split(",")
                 n_closest_points_list = map(int, n_closest_points_split)
-                print("regionprops_with_neighborhood_data function got " + str(columns))
-                reg_props = regionprops_with_neighborhood_data(columns, labels_layer, n_closest_points_list, reg_props)
+                reg_props = region_props_with_neighborhood_data(columns, labels_layer.data, n_closest_points_list,
+                                                                reg_props)
 
                 labels_layer.properties = reg_props
 
@@ -184,7 +195,7 @@ class MeasureWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
-def regionprops_with_neighborhood_data(columns, label_image, n_closest_points_list, reg_props):
+def region_props_with_neighborhood_data(columns, label_image, n_closest_points_list, reg_props):
     # get lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
