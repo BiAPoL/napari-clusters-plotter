@@ -114,10 +114,10 @@ class ClusteringWidget(QWidget):
         self.hdbscan_settings_container_min_nr = QWidget()
         self.hdbscan_settings_container_min_nr.setLayout(QHBoxLayout())
         self.hdbscan_settings_container_min_nr.layout().addWidget(QLabel("Minimum number of samples"))
+        # hdbscan_min_nr_samples defaults to the min_cluster_size
         self.hdbscan_min_nr_samples = create_widget(widget_type="SpinBox",
                                                     name="hdbscan_min_nr_samples",
                                                     value=self.hdbscan_min_clusters_size.value,
-                                                    # defaults to the min_cluster_size
                                                     options=dict(min=1, step=1))
 
         self.hdbscan_settings_container_min_nr.layout().addWidget(self.hdbscan_min_nr_samples.native)
