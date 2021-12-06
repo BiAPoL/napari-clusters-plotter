@@ -5,8 +5,7 @@ from napari.layers import Labels
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from qtpy.QtCore import QRect
-from ._utilities import widgets_inactive
-from ._utilities import restore_defaults
+from ._utilities import widgets_inactive, restore_defaults
 from napari_tools_menu import register_dock_widget
 from magicgui.widgets import create_widget
 from functools import partial
@@ -112,12 +111,12 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(title_container)
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(choose_properties_container)
+        self.layout().addWidget(update_container)
         self.layout().addWidget(self.clust_method_container)
         self.layout().addWidget(self.kmeans_settings_container_nr)
         self.layout().addWidget(self.kmeans_settings_container_iter)
-        self.layout().addWidget(run_container)
         self.layout().addWidget(defaults_container)
-        self.layout().addWidget(update_container)
+        self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
 
         def run_clicked():
@@ -170,7 +169,6 @@ class ClusteringWidget(QWidget):
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
-        self.update_properties_list()
 
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
