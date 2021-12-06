@@ -73,7 +73,7 @@ class SelectFromCollection:
         self.collection.set_facecolors(self.fc)
         self.canvas.draw_idle()
         self.selected_coordinates = self.xys[self.ind].data
-        # print("Got these points: ", self.selected_coordinates)
+
         if self.parent.manual_clustering_method is not None:
             self.parent.manual_clustering_method(self.ind_mask)
 
@@ -90,14 +90,14 @@ class MplCanvas(FigureCanvas):
         self.fig = Figure(figsize=(width, height))
         self.manual_clustering_method = manual_clustering_method
 
-        # changing color of axis background to napari main window color
+        # changing color of axes background to napari main window color
         self.fig.patch.set_facecolor('#262930')
         self.axes = self.fig.add_subplot(111)
 
         # changing color of plot background to napari main window color
         self.axes.set_facecolor('#262930')
 
-        # changing colors of all axis
+        # changing colors of all axes
         self.axes.spines['bottom'].set_color('white')
         self.axes.spines['top'].set_color('white')
         self.axes.spines['right'].set_color('white')
@@ -105,7 +105,7 @@ class MplCanvas(FigureCanvas):
         self.axes.xaxis.label.set_color('white')
         self.axes.yaxis.label.set_color('white')
 
-        # changing colors of axis labels
+        # changing colors of axes labels
         self.axes.tick_params(axis='x', colors='white')
         self.axes.tick_params(axis='y', colors='white')
 
