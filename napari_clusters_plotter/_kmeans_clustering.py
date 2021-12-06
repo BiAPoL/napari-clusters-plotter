@@ -246,8 +246,6 @@ class ClusteringWidget(QWidget):
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(standardize, selected_properties, min_cluster_size, min_nr_samples)
             print("HDBSCAN predictions finished.")
-            #warnings.warn("Whoops, HDBSCAN is not yet implemented.")  # todo: DELETE LATER
-            #return
             # write result back to properties of the labels layer
             properties["HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize)] = y_pred
         else:
