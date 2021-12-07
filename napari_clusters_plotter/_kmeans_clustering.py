@@ -10,12 +10,12 @@ from napari_tools_menu import register_dock_widget
 from magicgui.widgets import create_widget
 from functools import partial
 
-DEFAULTS = dict(
-    kmeans_nr_clusters=2,
-    kmeans_nr_iterations=3000,
-    normalization=False,
-    hdbscan_min_clusters_size=5,
-)
+DEFAULTS = {
+    "kmeans_nr_clusters": 2,
+    "kmeans_nr_iterations": 3000,
+    "normalization": False,
+    "hdbscan_min_clusters_size": 5,
+}
 
 
 @register_dock_widget(menu="Measurement > Clustering (ncp)")
@@ -53,7 +53,7 @@ class ClusteringWidget(QWidget):
         self.clust_method_choice_list = create_widget(widget_type="ComboBox",
                                                       name="Clustering_method",
                                                       value='',
-                                                      options=dict(choices=["", "KMeans", "HDBSCAN"]))
+                                                      options={"choices": ["", "KMeans", "HDBSCAN"]})
 
         self.clust_method_container.layout().addWidget(self.clust_method_choice_list.native)
 
@@ -65,7 +65,7 @@ class ClusteringWidget(QWidget):
         self.kmeans_nr_clusters = create_widget(widget_type="SpinBox",
                                                 name="kmeans_nr_clusters",
                                                 value=DEFAULTS["kmeans_nr_clusters"],
-                                                options=dict(min=2, step=1))
+                                                options={"min": 2, "step": 1})
 
         self.kmeans_settings_container_nr.layout().addWidget(self.kmeans_nr_clusters.native)
         self.kmeans_settings_container_nr.setVisible(False)
