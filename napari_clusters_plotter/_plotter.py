@@ -366,7 +366,8 @@ class PlotterWidget(QWidget):
                 properties.keys()):
             self.cluster_ids = properties[plot_cluster_name]
 
-            colors = pd.read_csv('Nice Colourmap Set3 (256) hex.csv')['colours'].to_numpy()
+            color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
+                     '#17becf']
 
             #color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
             #         '#17becf']
