@@ -14,7 +14,11 @@ import numpy as np
 from ._utilities import generate_parametric_cluster_image
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
+<<<<<<< Updated upstream
 from magicgui.widgets import create_widget
+=======
+from qtpy.QtGui import QIcon
+>>>>>>> Stashed changes
 
 matplotlib.use('Qt5Agg')
 
@@ -146,7 +150,7 @@ class MyNavigationToolbar(NavigationToolbar):
     def __init__(self, canvas, parent):
         super().__init__(canvas, parent)
         self.canvas = canvas
-
+    
     def save_figure(self):
         self.canvas.fig.set_facecolor("#00000000")
         self.canvas.fig.axes[0].set_facecolor("#00000000")
@@ -207,6 +211,17 @@ class PlotterWidget(QWidget):
 
         # Navigation widget
         self.toolbar = MyNavigationToolbar(self.graphics_widget, self)
+        
+        # Modify toolbar icons and some tooltips
+        for action in self.toolbar.actions():
+            text = action.text()
+            if text == 'Pan':
+                action.setToolTip('Left button pans, Right button zooms\nClick to activate\nClick again to deactivate')
+            if text == 'Zoom':
+                action.setToolTip("Zoom to rectangle\nClick to activate\nClick again to deactivate")
+            if len(text)>0:
+                icon_path = "images//my_toolbar_icons//" + text + ".png"
+                action.setIcon(QIcon(icon_path))
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
