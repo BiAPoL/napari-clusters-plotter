@@ -368,7 +368,7 @@ class PlotterWidget(QWidget):
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[colors[int(x)] for x in self.cluster_ids],
+                c=[colors[int(x) % len(colors)] for x in self.cluster_ids],
                 cmap='Spectral',
                 # here spot size is set differentially: larger (5) for all clustered datapoints (id >=0)
                 # and smaller (2.5) for the noise points with id = -1
