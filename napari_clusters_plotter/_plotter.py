@@ -1,5 +1,6 @@
 import warnings
 import napari
+from napari.layers import Labels
 from PyQt5 import QtWidgets
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -11,12 +12,15 @@ from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 import numpy as np
 from ._utilities import generate_parametric_cluster_image
-from napari_tools_menu import  register_dock_widget
+from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
-
+from magicgui.widgets import create_widget
 
 matplotlib.use('Qt5Agg')
-# Class below was based upon matplotlib lasso selection example (https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html)
+
+
+# Class below was based upon matplotlib lasso selection example:
+# https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
 class SelectFromCollection:
     """
     Select indices from a matplotlib collection using `LassoSelector`.
@@ -59,6 +63,7 @@ class SelectFromCollection:
         self.lasso = LassoSelector(ax, onselect=self.onselect, button=1)
         self.ind = []
         self.ind_mask = []
+
     def onselect(self, verts):
         path = Path(verts)
         self.ind = np.nonzero(path.contains_points(self.xys))[0]
@@ -68,7 +73,7 @@ class SelectFromCollection:
         self.collection.set_facecolors(self.fc)
         self.canvas.draw_idle()
         self.selected_coordinates = self.xys[self.ind].data
-        # print("Got these points: ", self.selected_coordinates)
+
         if self.parent.manual_clustering_method is not None:
             self.parent.manual_clustering_method(self.ind_mask)
 
@@ -78,20 +83,21 @@ class SelectFromCollection:
         self.collection.set_facecolors(self.fc)
         self.canvas.draw_idle()
 
+
 class MplCanvas(FigureCanvas):
 
     def __init__(self, parent=None, width=7, height=4, manual_clustering_method=None):
         self.fig = Figure(figsize=(width, height))
         self.manual_clustering_method = manual_clustering_method
 
-        # changing color of axis background to napari main window color
+        # changing color of axes background to napari main window color
         self.fig.patch.set_facecolor('#262930')
         self.axes = self.fig.add_subplot(111)
 
         # changing color of plot background to napari main window color
         self.axes.set_facecolor('#262930')
 
-        # changing colors of all axis
+        # changing colors of all axes
         self.axes.spines['bottom'].set_color('white')
         self.axes.spines['top'].set_color('white')
         self.axes.spines['right'].set_color('white')
@@ -99,33 +105,34 @@ class MplCanvas(FigureCanvas):
         self.axes.xaxis.label.set_color('white')
         self.axes.yaxis.label.set_color('white')
 
-        # changing colors of axis labels
+        # changing colors of axes labels
         self.axes.tick_params(axis='x', colors='white')
         self.axes.tick_params(axis='y', colors='white')
 
         super(MplCanvas, self).__init__(self.fig)
 
-        self.pts = self.axes.scatter([],[])
+        self.pts = self.axes.scatter([], [])
         self.selector = SelectFromCollection(self, self.axes, self.pts)
-        self.rectangle_selector = RectangleSelector(self.axes, self.draw_rectangle, 
-                                      drawtype='box', useblit=True,
-                                      rectprops = dict(edgecolor="white", fill=False),
-                                      button=3,  # right button
-                                        minspanx=5, minspany=5,
-                                        spancoords='pixels',
-                                        interactive=False)
+        self.rectangle_selector = RectangleSelector(self.axes, self.draw_rectangle,
+                                                    drawtype='box', useblit=True,
+                                                    rectprops=dict(edgecolor="white", fill=False),
+                                                    button=3,  # right button
+                                                    minspanx=5, minspany=5,
+                                                    spancoords='pixels',
+                                                    interactive=False)
         self.reset()
-    
+
     def draw_rectangle(self, eclick, erelease):
-        'eclick and erelease are the press and release events'
+        """eclick and erelease are the press and release events"""
         x0, y0 = eclick.xdata, eclick.ydata
         x1, y1 = erelease.xdata, erelease.ydata
         self.xys = self.pts.get_offsets()
-        min_x  = min(x0, x1)
+        min_x = min(x0, x1)
         max_x = max(x0, x1)
         min_y = min(y0, y1)
         max_y = max(y0, y1)
-        self.rect_ind_mask = [x >= min_x and x <= max_x and y >= min_y and y <= max_y for x, y in zip(self.xys[:,0], self.xys[:,1])]
+        self.rect_ind_mask = [min_x <= x <= max_x and min_y <= y <= max_y for x, y in
+                              zip(self.xys[:, 0], self.xys[:, 1])]
         if self.manual_clustering_method is not None:
             self.manual_clustering_method(self.rect_ind_mask)
 
@@ -169,6 +176,7 @@ class MyNavigationToolbar(NavigationToolbar):
 
         self.canvas.draw()
 
+
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
 
@@ -177,20 +185,16 @@ class PlotterWidget(QWidget):
 
         self.viewer = napari_viewer
 
-        napari_viewer.layers.selection.events.changed.connect(self._on_selection)
-
-        self.current_annotation = None
-        self._available_labels = []
-
         # a figure instance to plot on
         self.figure = Figure()
 
         self.analysed_layer = None
         self.visualized_labels_layer = None
 
+        # noinspection PyPep8Naming
         def manual_clustering_method(inside):
-            if self.analysed_layer is None or len(inside)==0:
-                return # if nothing was plotted yet, leave
+            if self.analysed_layer is None or len(inside) == 0:
+                return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
             self.analysed_layer.properties[clustering_ID] = inside
 
@@ -219,13 +223,13 @@ class PlotterWidget(QWidget):
         label_container.setLayout(QVBoxLayout())
         label_container.layout().addWidget(QLabel("<b>Plotting</b>"))
 
-        # selection of labels layer
-        choose_img_container = QWidget()
-        choose_img_container.setLayout(QHBoxLayout())
-        self.label_list = QComboBox()
-        choose_img_container.layout().addWidget(QLabel("Labels layer"))
-        choose_img_container.layout().addWidget(self.label_list)
-        self.update_label_list()
+        # widget for the selection of labels layer
+        labels_layer_selection_container = QWidget()
+        labels_layer_selection_container.setLayout(QHBoxLayout())
+        labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
+        self.labels_select = create_widget(annotation=Labels, label="labels_layer")
+
+        labels_layer_selection_container.layout().addWidget(self.labels_select.native)
 
         # selection if region properties should be calculated now or uploaded from file
         axes_container = QWidget()
@@ -243,26 +247,44 @@ class PlotterWidget(QWidget):
         self.plot_cluster_id = QComboBox()
         cluster_container.layout().addWidget(self.plot_cluster_id)
 
+        # Update measurements button
+        update_container = QWidget()
+        update_container.setLayout(QHBoxLayout())
+        update_button = QPushButton("Update Axes Lists")
+        update_container.layout().addWidget(update_button)
+
         # Run button
         run_widget = QWidget()
         run_widget.setLayout(QHBoxLayout())
-        button = QPushButton("Run")
+        run_button = QPushButton("Run")
+        run_widget.layout().addWidget(run_button)
 
         def run_clicked():
+
+            if self.labels_select.value is None:
+                warnings.warn("Please select labels layer!")
+                return
+            if self.labels_select.value.properties is None:
+                warnings.warn("No labels image with properties was selected! Consider doing measurements first.")
+                return
+            if self.plot_x_axis.currentText() == '' or self.plot_y_axis.currentText() == '':
+                warnings.warn('No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, '
+                              'but you have performed measurements/dimensionality reduction before, try clicking '
+                              'Update Axes List')
+                return
+
             self.run(
-                self.get_selected_label().properties,
+                self.labels_select.value.properties,
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText()
             )
 
-        button.clicked.connect(run_clicked)
-        run_widget.layout().addWidget(button)
-
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
-        self.layout().addWidget(choose_img_container)
+        self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(axes_container)
+        self.layout().addWidget(update_container)
         self.layout().addWidget(cluster_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
@@ -276,30 +298,21 @@ class PlotterWidget(QWidget):
         # adding spacing between fields for selecting two axes
         axes_container.layout().setSpacing(6)
 
-        # update axes combo boxes once a label is selected
-        self.label_list.currentIndexChanged.connect(self.update_axes_list)
+        # update axes combo boxes once a new label layer is selected
+        self.labels_select.changed.connect(self.update_axes_list)
 
-    def get_selected_label(self):
-        index = self.label_list.currentIndex()
-        if index >= 0:
-            return self._available_labels[index]
-        return None
+        # update axes combo boxes once a update button is clicked
+        update_button.clicked.connect(self.update_axes_list)
 
-    def update_label_list(self):
-        selected_layer = self.get_selected_label()
-        selected_index = -1
+        # select what happens when the run button is clicked
+        run_button.clicked.connect(run_clicked)
 
-        self._available_labels = []
-        self.label_list.clear()
-        i = 0
-        for layer in self.viewer.layers:
-            if isinstance(layer, napari.layers.Labels):
-                self._available_labels.append(layer)
-                if layer == selected_layer:
-                    selected_index = i
-                self.label_list.addItem(layer.name)
-                i = i + 1
-        self.label_list.setCurrentIndex(selected_index)
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        self.reset_choices()
+
+    def reset_choices(self, event=None):
+        self.labels_select.reset_choices(event)
 
     def clicked_label_in_view(self, event, event1):
         # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
@@ -308,15 +321,16 @@ class PlotterWidget(QWidget):
     def after_clicked_label_in_view(self):
         clustering_ID = "MANUAL_CLUSTER_ID"
 
-        # save manual clustering; select only the label that's currently seleted on the layer
+        # save manual clustering; select only the label that's currently selected on the layer
         inside = np.ones((self.analysed_layer.data.max()))
         inside[self.analysed_layer.selected_label - 1] = 0
         self.analysed_layer.properties[clustering_ID] = inside
 
-        self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name, plot_cluster_name=clustering_ID)
+        self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name,
+                 plot_cluster_name=clustering_ID)
 
     def update_axes_list(self):
-        selected_layer = self.get_selected_label()
+        selected_layer = self.labels_select.value
 
         former_x_axis = self.plot_x_axis.currentIndex()
         former_y_axis = self.plot_y_axis.currentIndex()
@@ -335,31 +349,20 @@ class PlotterWidget(QWidget):
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
-    def _on_selection(self, event=None):
-
-        num_labels_in_viewer = len([layer for layer in self.viewer.layers if isinstance(layer, napari.layers.Labels)])
-        if num_labels_in_viewer != self.label_list.size():
-            self.update_label_list()
-
     # this function runs after the run button is clicked
     def run(self, properties, plot_x_axis_name, plot_y_axis_name, plot_cluster_name=None):
-        if properties is None:
-            warnings.warn("No labels image with properties was selected! Consider doing measurements first.")
-            return
-        if plot_x_axis_name is None or plot_y_axis_name is None:
-            warnings.warn("No axis(-es) was/were selected!")
-            return
 
         self.data_x = properties[plot_x_axis_name]
         self.data_y = properties[plot_y_axis_name]
         self.plot_x_axis_name = plot_x_axis_name
         self.plot_y_axis_name = plot_y_axis_name
         self.plot_cluster_name = plot_cluster_name
-        self.analysed_layer = self.get_selected_label()
+        self.analysed_layer = self.labels_select.value
 
         self.graphics_widget.reset()
 
-        if plot_cluster_name is not None and plot_cluster_name != "label" and plot_cluster_name in list(properties.keys()):
+        if plot_cluster_name is not None and plot_cluster_name != "label" and plot_cluster_name in list(
+                properties.keys()):
             self.cluster_ids = properties[plot_cluster_name]
 
             color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
@@ -372,7 +375,7 @@ class PlotterWidget(QWidget):
                 s=10
             )
             self.graphics_widget.selector.disconnect()
-            self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
+            self.graphics_widget.selector = SelectFromCollection(self.graphics_widget, self.graphics_widget.axes,
                                                                  self.graphics_widget.pts)
 
             cluster_ids_in_space = generate_parametric_cluster_image(self.analysed_layer.data, self.cluster_ids)
@@ -389,16 +392,15 @@ class PlotterWidget(QWidget):
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
 
-
         else:
-            self.graphics_widget.pts = self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA', s=10)
-            self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
+            self.graphics_widget.pts = self.graphics_widget.axes.scatter(self.data_x, self.data_y, color='#BABABA',
+                                                                         s=10)
+            self.graphics_widget.selector = SelectFromCollection(self.graphics_widget, self.graphics_widget.axes,
                                                                  self.graphics_widget.pts)
-            self.graphics_widget.draw() # Only redraws when cluster is not manually selected
-                                        #   because manual selection already does that elsewhere
+            self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
+            # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-
 
         # remove interaction from all label layers, just in case
         for layer in self.viewer.layers:
