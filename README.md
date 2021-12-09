@@ -131,7 +131,7 @@ If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...
 ImportError: DLL load failed while importing _cl
 ```
 
-Try downloading and installing a pyopencl with a lower cl version, e.g. cl12 : pyopencl=2020.1. However, in this case
+Try downloading and installing a pyopencl with a lower cl version, e.g. cl12 : pyopencl=2020.1. However, in this case,
 you will need an environment with a lower python version (python=3.8).
 
 ## Contributing
