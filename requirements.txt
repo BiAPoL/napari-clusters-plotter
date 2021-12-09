@@ -19,4 +19,5 @@ pyqt5~=5.15.4
 qtpy~=1.11.2
 scikit-image~=0.19
 umap-learn~=0.5.1
+hdbscan~=0.8.27
 scikit-learn~=1.0
