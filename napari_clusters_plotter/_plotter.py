@@ -369,10 +369,12 @@ class PlotterWidget(QWidget):
             color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
                      '#17becf']
 
+            #color = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22',
+            #         '#17becf']
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[color[int(x)] for x in self.cluster_ids],
+                c=[colors[int(x)] for x in self.cluster_ids],
                 cmap='Spectral',
                 s=10
             )
