@@ -374,7 +374,7 @@ class PlotterWidget(QWidget):
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[colors[int(x)] for x in self.cluster_ids],
+                c=[color[int(x)] for x in self.cluster_ids],
                 cmap='Spectral',
                 s=10
             )
