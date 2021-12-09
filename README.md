@@ -99,16 +99,38 @@ Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `KMEANS_CLUSTERING_ID` as 
 
 * Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html). 
   If you never used python/conda environments before, please follow the instructions 
-  [here](https://mpicbg-scicomp.github.io/ipf_howtoguides/guides/Python_Conda_Environments) first.
-* Install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
+  [here](https://mpicbg-scicomp.github.io/ipf_howtoguides/guides/Python_Conda_Environments) first. It is recommended to
+  install python 3.9 to your new conda environment from the start. The plugin is not yet supported with Python 3.10.
+  Create a new environment, for example, like this:
+
+```
+conda create --name napari-clusters-plotter python=3.9
+```
+
+* Activate the new environment and install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
 
 ```
 conda install -c conda-forge pyopencl
 ```
 
+* Install [napari], e.g. via [pip]:
+
+```
+pip install "napari[all]"
+``
+
 Afterwards, you can install `napari-clusters-plotter` via [pip]:
 
     pip install napari-clusters-plotter
+
+## Troubleshooting installation
+
+If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
+
+ImportError: DLL load failed while importing _cl
+
+Try downloading and installing a pyopencl with a lower cl version, e.g. cl12 : pyopencl=2020.1. However, in this case
+you will need an environment with a lower python version (python=3.8).
 
 ## Contributing
 
@@ -122,7 +144,8 @@ Distributed under the terms of the [BSD-3] license,
 
 ## Issues
 
-If you encounter any problems, please [file an issue] along with a detailed description.
+If you encounter any problems, please [file an issue](https://github.com/BiAPoL/napari-clusters-plotter/issues) along
+with a detailed description.
 
 [napari]: https://github.com/napari/napari
 [Cookiecutter]: https://github.com/audreyr/cookiecutter
