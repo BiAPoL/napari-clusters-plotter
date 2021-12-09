@@ -430,6 +430,7 @@ class PlotterWidget(QWidget):
 
         self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
 
+# converts hexadecimal code colors to RGBA values with alpha = 1
 def hex_colormap_to_list(hex_color_list):
     hex_color_list_w_background = hex_color_list
     rgba_palette_list = [list(int(h[i:i+2], 16)/255 for i in (1, 3, 5))+[1] for h in hex_color_list_w_background]
