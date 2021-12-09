@@ -153,10 +153,12 @@ class MeasureWidget(QWidget):
             except KeyError:
                 edited_reg_props = reg_props
 
-            if 'labels' not in edited_reg_props.keys().tolist():
+            if 'label' not in edited_reg_props.keys().tolist():
                 label_column = pd.DataFrame({'label': np.array(range(1, (len(edited_reg_props) + 1)))})
                 reg_props_w_labels = pd.concat([label_column, edited_reg_props], axis=1)
                 labels_layer.properties = reg_props_w_labels
+            else:
+                labels_layer.properties = edited_reg_props
 
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
