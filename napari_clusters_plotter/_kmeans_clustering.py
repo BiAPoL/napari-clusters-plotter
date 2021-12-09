@@ -10,20 +10,16 @@ from napari_tools_menu import register_dock_widget
 from magicgui.widgets import create_widget
 from functools import partial
 
-
-
 DEFAULTS = {
     "kmeans_nr_clusters": 2,
     "kmeans_nr_iterations": 3000,
-    "normalization"=False,
-    "hdbscan_min_clusters_size"=5,
+    "normalization": False,
+    "hdbscan_min_clusters_size": 5,
 }
-
 
 
 @register_dock_widget(menu="Measurement > Clustering (ncp)")
 class ClusteringWidget(QWidget):
-
     class Options(Enum):
         EMPTY = ""
         KMEANS = "KMeans"
