@@ -251,7 +251,7 @@ class PlotterWidget(QWidget):
         # Update measurements button
         update_container = QWidget()
         update_container.setLayout(QHBoxLayout())
-        update_button = QPushButton("Update Axes Lists")
+        update_button = QPushButton("Update Axes Selection Boxes")
         update_container.layout().addWidget(update_button)
 
         # Run button
@@ -269,9 +269,9 @@ class PlotterWidget(QWidget):
                 warnings.warn("No labels image with properties was selected! Consider doing measurements first.")
                 return
             if self.plot_x_axis.currentText() == '' or self.plot_y_axis.currentText() == '':
-                warnings.warn('No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, '
-                              'but you have performed measurements/dimensionality reduction before, try clicking '
-                              'Update Axes List')
+                warnings.warn("No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
+                              "but you have performed measurements/dimensionality reduction before, try clicking "
+                              "Update Axes Selection Boxes")
                 return
 
             self.run(
