@@ -15,6 +15,7 @@ DEFAULTS = {
     "kmeans_nr_iterations": 3000,
     "normalization": False,
     "hdbscan_min_clusters_size": 5,
+    "hdbscan_settings_container_min_nr": 5,
 }
 
 
