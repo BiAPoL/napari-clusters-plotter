@@ -386,23 +386,23 @@ class PlotterWidget(QWidget):
             import time
             start = time.process_time()
 
-            # get colormap as rgba array with background (see through) at beginning
+            # get colormap as rgba array
             cmap = hex_colormap_to_list(colors)
-            np_cluster_ids_p1 = np.array(self.cluster_ids) + 1
 
             # generate dictionary mapping each label to the color of the cluster
-            cluster_id_dict = {i+1 : cmap[int(color)] for i,color in enumerate(np_cluster_ids_p1)}
+            # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
+            cluster_id_dict = {i+1 : (cmap[int(color) % len(cmap)] if color >= 0 else [0,0,0,0]) for i,color in enumerate(self.cluster_ids)}
             end_cl_dict_generation = time.process_time()
 
             keep_selection = list(self.viewer.layers.selection)
-            if self.visualized_labels_layer is None:
+
+            if self.visualized_labels_layer is None or self.visualized_labels_layer not in self.viewer.layers:
                 # instead of visualising cluster image, visualise label image with dictionary mapping
                 self.visualized_labels_layer = self.viewer.add_labels(self.analysed_layer.data, color = cluster_id_dict)
             else:
                 # instead of updating data, update colormap
                 self.visualized_labels_layer.color = cluster_id_dict
-            if self.visualized_labels_layer not in self.viewer.layers:
-                self.visualized_labels_layer = self.viewer.add_labels(self.analysed_layer.data, color = cluster_id_dict)
+            
 
             end = time.process_time()
             print('showing cluster layer took {}s'.format(end-start))
@@ -431,9 +431,9 @@ class PlotterWidget(QWidget):
         self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
 
 def hex_colormap_to_list(hex_color_list):
-    hex_color_list_w_background = ['#000000'] + hex_color_list
+    hex_color_list_w_background = hex_color_list
     rgba_palette_list = [list(int(h[i:i+2], 16)/255 for i in (1, 3, 5))+[1] for h in hex_color_list_w_background]
-    rgba_palette_list[0][3] = 0
+    
 
     return rgba_palette_list
 
