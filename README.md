@@ -117,7 +117,7 @@ conda install -c conda-forge pyopencl
 
 ```
 pip install "napari[all]"
-``
+```
 
 Afterwards, you can install `napari-clusters-plotter` via [pip]:
 
