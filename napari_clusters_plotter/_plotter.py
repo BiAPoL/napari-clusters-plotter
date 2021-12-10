@@ -382,17 +382,12 @@ class PlotterWidget(QWidget):
             self.graphics_widget.selector = SelectFromCollection(self.graphics_widget,self.graphics_widget.axes, 
                                                                  self.graphics_widget.pts)
 
-            # measuring time to check if speedup is worth it
-            import time
-            start = time.process_time()
-
             # get colormap as rgba array
             cmap = hex_colormap_to_list(colors)
 
             # generate dictionary mapping each label to the color of the cluster
             # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
             cluster_id_dict = {i+1 : (cmap[int(color) % len(cmap)] if color >= 0 else [0,0,0,0]) for i,color in enumerate(self.cluster_ids)}
-            end_cl_dict_generation = time.process_time()
 
             keep_selection = list(self.viewer.layers.selection)
 
@@ -402,11 +397,6 @@ class PlotterWidget(QWidget):
             else:
                 # instead of updating data, update colormap
                 self.visualized_labels_layer.color = cluster_id_dict
-            
-
-            end = time.process_time()
-            print('showing cluster layer took {}s'.format(end-start))
-            print('generating cmap dictionary took {}s'.format(end_cl_dict_generation-start))
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
