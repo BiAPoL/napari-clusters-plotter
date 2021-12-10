@@ -383,7 +383,8 @@ class PlotterWidget(QWidget):
                                                                  self.graphics_widget.pts)
 
             # get colormap as rgba array
-            cmap = hex_colormap_to_list(colors)
+            from vispy.color import Color
+            cmap = [Color(hex_name).RGBA.astype('float')/255 for hex_name in colors]
 
             # generate dictionary mapping each label to the color of the cluster
             # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
@@ -420,13 +421,6 @@ class PlotterWidget(QWidget):
 
         self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
 
-# converts hexadecimal code colors to RGBA values with alpha = 1
-def hex_colormap_to_list(hex_color_list):
-    hex_color_list_w_background = hex_color_list
-    rgba_palette_list = [list(int(h[i:i+2], 16)/255 for i in (1, 3, 5))+[1] for h in hex_color_list_w_background]
-    
-
-    return rgba_palette_list
 
 def get_nice_colormap():
     colours_w_old_colors = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
