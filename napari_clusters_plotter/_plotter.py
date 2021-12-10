@@ -213,9 +213,9 @@ class PlotterWidget(QWidget):
         for action in self.toolbar.actions():
             text = action.text()
             if text == 'Pan':
-                action.setToolTip('Left button pans, Right button zooms\nClick once to activate\nClick again to deactivate')
+                action.setToolTip("Pan/Zoom: Left button pans; Right button zooms; Click once to activate; Click again to deactivate")
             if text == 'Zoom':
-                action.setToolTip("Zoom to rectangle\nClick once to activate\nClick again to deactivate")
+                action.setToolTip("Zoom to rectangle; Click once to activate; Click again to deactivate")
             if len(text)>0: # i.e. not a separator item
                 icon_path = "images//my_toolbar_icons//" + text + ".png"
                 action.setIcon(QIcon(icon_path))
