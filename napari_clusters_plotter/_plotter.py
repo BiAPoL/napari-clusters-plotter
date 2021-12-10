@@ -14,11 +14,8 @@ import numpy as np
 from ._utilities import generate_parametric_cluster_image
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
-<<<<<<< Updated upstream
 from magicgui.widgets import create_widget
-=======
 from qtpy.QtGui import QIcon
->>>>>>> Stashed changes
 
 matplotlib.use('Qt5Agg')
 
