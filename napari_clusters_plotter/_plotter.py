@@ -148,6 +148,20 @@ class MyNavigationToolbar(NavigationToolbar):
         super().__init__(canvas, parent)
         self.canvas = canvas
     
+    def _update_buttons_checked(self):
+        super()._update_buttons_checked()
+        # changes pan/zoom icons depending on state (checked or not)
+        if 'pan' in self._actions:
+            if self._actions['pan'].isChecked():
+                self._actions['pan'].setIcon(QIcon("images//my_toolbar_icons//pan_checked.png"))
+            else:
+                self._actions['pan'].setIcon(QIcon("images//my_toolbar_icons//pan.png"))
+        if 'zoom' in self._actions:
+            if self._actions['zoom'].isChecked():
+                self._actions['zoom'].setIcon(QIcon("images//my_toolbar_icons//zoom_checked.png"))
+            else:
+                self._actions['zoom'].setIcon(QIcon("images//my_toolbar_icons//zoom.png"))
+        
     def save_figure(self):
         self.canvas.fig.set_facecolor("#00000000")
         self.canvas.fig.axes[0].set_facecolor("#00000000")
