@@ -1,5 +1,6 @@
 import warnings
 import napari
+import os
 from napari.layers import Labels
 from PyQt5 import QtWidgets
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
@@ -153,14 +154,14 @@ class MyNavigationToolbar(NavigationToolbar):
         # changes pan/zoom icons depending on state (checked or not)
         if 'pan' in self._actions:
             if self._actions['pan'].isChecked():
-                self._actions['pan'].setIcon(QIcon("images//my_toolbar_icons//pan_checked.png"))
+                self._actions['pan'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Pan_checked.png")))
             else:
-                self._actions['pan'].setIcon(QIcon("images//my_toolbar_icons//pan.png"))
+                self._actions['pan'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Pan.png")))
         if 'zoom' in self._actions:
             if self._actions['zoom'].isChecked():
-                self._actions['zoom'].setIcon(QIcon("images//my_toolbar_icons//zoom_checked.png"))
+                self._actions['zoom'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Zoom_checked.png")))
             else:
-                self._actions['zoom'].setIcon(QIcon("images//my_toolbar_icons//zoom.png"))
+                self._actions['zoom'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Zoom.png")))
         
     def save_figure(self):
         self.canvas.fig.set_facecolor("#00000000")
@@ -190,7 +191,6 @@ class MyNavigationToolbar(NavigationToolbar):
         self.canvas.axes.tick_params(axis='y', colors='white')
 
         self.canvas.draw()
-
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
@@ -222,7 +222,7 @@ class PlotterWidget(QWidget):
 
         # Navigation widget
         self.toolbar = MyNavigationToolbar(self.graphics_widget, self)
-        
+
         # Modify toolbar icons and some tooltips
         for action in self.toolbar.actions():
             text = action.text()
@@ -231,7 +231,11 @@ class PlotterWidget(QWidget):
             if text == 'Zoom':
                 action.setToolTip("Zoom to rectangle; Click once to activate; Click again to deactivate")
             if len(text)>0: # i.e. not a separator item
-                icon_path = "images//my_toolbar_icons//" + text + ".png"
+                print(text)
+                icon_path = os.path.join(os.getcwd(),"images", "my_toolbar_icons", text + ".png")
+                print(icon_path)
+                icon_path = os.path.normcase(icon_path)
+                print(icon_path)
                 action.setIcon(QIcon(icon_path))
 
         # create a placeholder widget to hold the toolbar and graphics widget.
