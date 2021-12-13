@@ -17,6 +17,9 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
 from magicgui.widgets import create_widget
 from qtpy.QtGui import QIcon
+from pathlib import Path
+
+ICON_ROOT = Path(__file__).parent / "icons"
 
 matplotlib.use('Qt5Agg')
 
@@ -154,14 +157,14 @@ class MyNavigationToolbar(NavigationToolbar):
         # changes pan/zoom icons depending on state (checked or not)
         if 'pan' in self._actions:
             if self._actions['pan'].isChecked():
-                self._actions['pan'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Pan_checked.png")))
+                self._actions['pan'].setIcon(QIcon(os.path.join(ICON_ROOT, "Pan_checked.png")))
             else:
-                self._actions['pan'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Pan.png")))
+                self._actions['pan'].setIcon(QIcon(os.path.join(ICON_ROOT, "Pan.png")))
         if 'zoom' in self._actions:
             if self._actions['zoom'].isChecked():
-                self._actions['zoom'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Zoom_checked.png")))
+                self._actions['zoom'].setIcon(QIcon(os.path.join(ICON_ROOT, "Zoom_checked.png")))
             else:
-                self._actions['zoom'].setIcon(QIcon(os.path.join(os.getcwd(), "images", "my_toolbar_icons", "Zoom.png")))
+                self._actions['zoom'].setIcon(QIcon(os.path.join(ICON_ROOT, "Zoom.png")))
         
     def save_figure(self):
         self.canvas.fig.set_facecolor("#00000000")
@@ -232,9 +235,7 @@ class PlotterWidget(QWidget):
                 action.setToolTip("Zoom to rectangle; Click once to activate; Click again to deactivate")
             if len(text)>0: # i.e. not a separator item
                 print(text)
-                icon_path = os.path.join(os.getcwd(),"images", "my_toolbar_icons", text + ".png")
-                print(icon_path)
-                icon_path = os.path.normcase(icon_path)
+                icon_path = os.path.join(ICON_ROOT, text + ".png")
                 print(icon_path)
                 action.setIcon(QIcon(icon_path))
 
