@@ -234,9 +234,7 @@ class PlotterWidget(QWidget):
             if text == 'Zoom':
                 action.setToolTip("Zoom to rectangle; Click once to activate; Click again to deactivate")
             if len(text)>0: # i.e. not a separator item
-                print(text)
                 icon_path = os.path.join(ICON_ROOT, text + ".png")
-                print(icon_path)
                 action.setIcon(QIcon(icon_path))
 
         # create a placeholder widget to hold the toolbar and graphics widget.
