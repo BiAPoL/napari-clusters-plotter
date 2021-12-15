@@ -17,9 +17,9 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
 from magicgui.widgets import create_widget
 from qtpy.QtGui import QIcon
-from pathlib import Path
+from pathlib import Path as PathL
 
-ICON_ROOT = Path(__file__).parent / "icons"
+ICON_ROOT = PathL(__file__).parent / "icons"
 
 matplotlib.use('Qt5Agg')
 
@@ -151,7 +151,7 @@ class MyNavigationToolbar(NavigationToolbar):
     def __init__(self, canvas, parent):
         super().__init__(canvas, parent)
         self.canvas = canvas
-    
+
     def _update_buttons_checked(self):
         super()._update_buttons_checked()
         # changes pan/zoom icons depending on state (checked or not)
@@ -165,7 +165,7 @@ class MyNavigationToolbar(NavigationToolbar):
                 self._actions['zoom'].setIcon(QIcon(os.path.join(ICON_ROOT, "Zoom_checked.png")))
             else:
                 self._actions['zoom'].setIcon(QIcon(os.path.join(ICON_ROOT, "Zoom.png")))
-        
+
     def save_figure(self):
         self.canvas.fig.set_facecolor("#00000000")
         self.canvas.fig.axes[0].set_facecolor("#00000000")
