@@ -1,5 +1,6 @@
 import warnings
 import napari
+import os
 from napari.layers import Labels
 from PyQt5 import QtWidgets
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QComboBox
@@ -16,6 +17,10 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
 import pandas as pd
 from magicgui.widgets import create_widget
+from qtpy.QtGui import QIcon
+from pathlib import Path as PathL
+
+ICON_ROOT = PathL(__file__).parent / "icons"
 
 matplotlib.use('Qt5Agg')
 
@@ -148,6 +153,20 @@ class MyNavigationToolbar(NavigationToolbar):
         super().__init__(canvas, parent)
         self.canvas = canvas
 
+    def _update_buttons_checked(self):
+        super()._update_buttons_checked()
+        # changes pan/zoom icons depending on state (checked or not)
+        if 'pan' in self._actions:
+            if self._actions['pan'].isChecked():
+                self._actions['pan'].setIcon(QIcon(os.path.join(ICON_ROOT, "Pan_checked.png")))
+            else:
+                self._actions['pan'].setIcon(QIcon(os.path.join(ICON_ROOT, "Pan.png")))
+        if 'zoom' in self._actions:
+            if self._actions['zoom'].isChecked():
+                self._actions['zoom'].setIcon(QIcon(os.path.join(ICON_ROOT, "Zoom_checked.png")))
+            else:
+                self._actions['zoom'].setIcon(QIcon(os.path.join(ICON_ROOT, "Zoom.png")))
+
     def save_figure(self):
         self.canvas.fig.set_facecolor("#00000000")
         self.canvas.fig.axes[0].set_facecolor("#00000000")
@@ -176,7 +195,6 @@ class MyNavigationToolbar(NavigationToolbar):
         self.canvas.axes.tick_params(axis='y', colors='white')
 
         self.canvas.draw()
-
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
@@ -208,6 +226,17 @@ class PlotterWidget(QWidget):
 
         # Navigation widget
         self.toolbar = MyNavigationToolbar(self.graphics_widget, self)
+
+        # Modify toolbar icons and some tooltips
+        for action in self.toolbar.actions():
+            text = action.text()
+            if text == 'Pan':
+                action.setToolTip("Pan/Zoom: Left button pans; Right button zooms; Click once to activate; Click again to deactivate")
+            if text == 'Zoom':
+                action.setToolTip("Zoom to rectangle; Click once to activate; Click again to deactivate")
+            if len(text)>0: # i.e. not a separator item
+                icon_path = os.path.join(ICON_ROOT, text + ".png")
+                action.setIcon(QIcon(icon_path))
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
