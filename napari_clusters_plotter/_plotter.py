@@ -329,6 +329,7 @@ class PlotterWidget(QWidget):
 
         self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name,
                  plot_cluster_name=clustering_ID)
+        self.graphics_widget.draw()
 
     def update_axes_list(self):
         selected_layer = self.labels_select.value
