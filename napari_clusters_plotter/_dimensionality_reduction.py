@@ -13,10 +13,11 @@ from napari_tools_menu import register_dock_widget
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action='ignore', category=FutureWarning, module='sklearn')
 
-DEFAULTS = dict(
-    n_neighbors=15,
-    perplexity=30,
-)
+DEFAULTS = {
+    "n_neighbors": 15,
+    "perplexity": 30,
+    "standardization": True,
+}
 
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
@@ -113,6 +114,15 @@ class DimensionalityReductionWidget(QWidget):
         choose_properties_container.layout().addWidget(QLabel("Measurements"))
         choose_properties_container.layout().addWidget(self.properties_list)
 
+        # checkbox whether data should be standardized
+        self.settings_container_scaler = QWidget()
+        self.settings_container_scaler.setLayout(QHBoxLayout())
+        self.standardization = create_widget(widget_type="CheckBox", name="Standardize Features",
+                                             value=DEFAULTS["standardization"])
+
+        self.settings_container_scaler.layout().addWidget(self.standardization.native)
+        self.settings_container_scaler.setVisible(False)
+
         # Run button
         run_widget = QWidget()
         run_widget.setLayout(QHBoxLayout())
@@ -149,7 +159,8 @@ class DimensionalityReductionWidget(QWidget):
                 self.labels_select.value,
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value, self.perplexity.value,
-                self.algorithm_choice_list.currentText()
+                self.algorithm_choice_list.currentText(),
+                self.standardization.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -162,6 +173,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(algorithm_container)
         self.layout().addWidget(self.perplexity_container)
         self.layout().addWidget(self.n_neighbors_container)
+        self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
@@ -175,8 +187,8 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.algorithm_choice_list.currentIndexChanged.connect(self.change_neighbours_list)
-        self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
+        self.algorithm_choice_list.currentIndexChanged.connect(self.change_umap_settings)
+        self.algorithm_choice_list.currentIndexChanged.connect(self.change_tsne_settings)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -186,11 +198,17 @@ class DimensionalityReductionWidget(QWidget):
         self.labels_select.reset_choices(event)
 
     # toggle widgets visibility according to what is selected
-    def change_neighbours_list(self):
+    def change_umap_settings(self):
         widgets_inactive(self.n_neighbors_container, active=self.algorithm_choice_list.currentText() == 'UMAP')
+        widgets_inactive(self.settings_container_scaler,
+                         active=(self.algorithm_choice_list.currentText() == 'UMAP' or
+                                 self.algorithm_choice_list.currentText() == 't-SNE'))
 
-    def change_perplexity(self):
+    def change_tsne_settings(self):
         widgets_inactive(self.perplexity_container, active=self.algorithm_choice_list.currentText() == 't-SNE')
+        widgets_inactive(self.settings_container_scaler,
+                         active=(self.algorithm_choice_list.currentText() == 'UMAP' or
+                                 self.algorithm_choice_list.currentText() == 't-SNE'))
 
     def update_properties_list(self):
         selected_layer = self.labels_select.value
@@ -199,15 +217,16 @@ class DimensionalityReductionWidget(QWidget):
             if selected_layer.properties is not None:
                 self.properties_list.clear()
                 for p in list(properties.keys()):
-                    if p == "label" or "CLUSTER_ID" or "UMAP" or "t-SNE" in p:
+                    if "label" in p or "CLUSTER_ID" in p or "UMAP" in p or "t-SNE" in p:
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
                     item.setSelected(True)
 
     # this function runs after the run button is clicked
-    def run(self, labels_layer, selected_measurements_list, n_neighbours, perplexity, selected_algorithm,
+    def run(self, labels_layer, selected_measurements_list, n_neighbours, perplexity, selected_algorithm, standardize,
             n_components=2):
+        # n_components: dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
@@ -219,18 +238,20 @@ class DimensionalityReductionWidget(QWidget):
         properties_to_reduce = reg_props[selected_measurements_list]
 
         if selected_algorithm == 'UMAP':
-            print("Dimensionality reduction started (" + str(selected_algorithm) + ")...")
+            print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
+                  + ")...")
             # reduce dimensionality
-            embedding = umap(properties_to_reduce, n_neighbours, n_components)
+            embedding = umap(properties_to_reduce, n_neighbours, n_components, standardize)
 
             # write result back to properties
             for i in range(0, n_components):
                 properties["UMAP_" + str(i)] = embedding[:, i]
 
         elif selected_algorithm == 't-SNE':
-            print("Dimensionality reduction started (" + str(selected_algorithm) + ")...")
+            print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
+                  + ")...")
             # reduce dimensionality
-            embedding = tsne(properties_to_reduce, perplexity, n_components)
+            embedding = tsne(properties_to_reduce, perplexity, n_components, standardize)
 
             # write result back to properties
             for i in range(0, n_components):
@@ -242,23 +263,29 @@ class DimensionalityReductionWidget(QWidget):
         print("Dimensionality reduction finished")
 
 
-def umap(reg_props, n_neigh, n_components):  # n_components: dimension of the embedded space. For now 2 by default,
-    from sklearn.preprocessing import StandardScaler  # since only 2D plotting is supported
+def umap(reg_props, n_neigh, n_components, standardize):
     import umap.umap_ as umap
 
     reducer = umap.UMAP(random_state=133, n_components=n_components, n_neighbors=n_neigh)
 
-    scaled_regionprops = StandardScaler().fit_transform(reg_props)
+    if standardize:
+        from sklearn.preprocessing import StandardScaler
 
-    return reducer.fit_transform(scaled_regionprops)
+        scaled_regionprops = StandardScaler().fit_transform(reg_props)
+        return reducer.fit_transform(scaled_regionprops)
+    else:
+        return reducer.fit_transform(reg_props)
 
 
-def tsne(reg_props, perplexity, n_components):
-    from sklearn.preprocessing import StandardScaler
+def tsne(reg_props, perplexity, n_components, standardize):
     from sklearn.manifold import TSNE
 
     reducer = TSNE(perplexity=perplexity, n_components=n_components, learning_rate='auto', init='pca', random_state=42)
 
-    scaled_regionprops = StandardScaler().fit_transform(reg_props)
+    if standardize:
+        from sklearn.preprocessing import StandardScaler
 
-    return reducer.fit_transform(scaled_regionprops)
+        scaled_regionprops = StandardScaler().fit_transform(reg_props)
+        return reducer.fit_transform(scaled_regionprops)
+    else:
+        return reducer.fit_transform(reg_props)
