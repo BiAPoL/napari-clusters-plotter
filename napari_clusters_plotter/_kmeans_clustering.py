@@ -102,25 +102,49 @@ class ClusteringWidget(QWidget):
         self.hdbscan_settings_container_size = QWidget()
         self.hdbscan_settings_container_size.setLayout(QHBoxLayout())
         self.hdbscan_settings_container_size.layout().addWidget(QLabel("Minimum size of clusters"))
+        self.hdbscan_settings_container_size.layout().addStretch()
         self.hdbscan_min_clusters_size = create_widget(widget_type="SpinBox",
                                                        name="hdbscan_min_clusters_size",
                                                        value=DEFAULTS["hdbscan_min_clusters_size"],
                                                        options={"min": 2, "step": 1})
 
+        help_min_clusters_size = QLabel()
+        help_min_clusters_size.setOpenExternalLinks(True)
+        help_min_clusters_size.setText('<a href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html" '
+                                       'style="text-decoration:none; color:white"><b>?</b></a>')
+
+        help_min_clusters_size.setToolTip(
+            "The minimum size of clusters; single linkage splits that contain fewer points than this will be "
+            "considered points falling out of a cluster rather than a cluster splitting into two new clusters. "
+            " Click on question mark to read more.")
+
+        self.hdbscan_min_clusters_size.native.setMaximumWidth(70)
         self.hdbscan_settings_container_size.layout().addWidget(self.hdbscan_min_clusters_size.native)
+        self.hdbscan_settings_container_size.layout().addWidget(help_min_clusters_size)
         self.hdbscan_settings_container_size.setVisible(False)
 
         # selection of the minimum number of samples in a neighborhood for a point to be considered as a core point
         self.hdbscan_settings_container_min_nr = QWidget()
         self.hdbscan_settings_container_min_nr.setLayout(QHBoxLayout())
         self.hdbscan_settings_container_min_nr.layout().addWidget(QLabel("Minimum number of samples"))
-        # hdbscan_min_nr_samples defaults to the min_cluster_size
+        self.hdbscan_settings_container_min_nr.layout().addStretch()
         self.hdbscan_min_nr_samples = create_widget(widget_type="SpinBox",
                                                     name="hdbscan_min_nr_samples",
                                                     value=self.hdbscan_min_clusters_size.value,
                                                     options={"min": 1, "step": 1})
+        help_min_nr_samples = QLabel()
+        help_min_nr_samples.setOpenExternalLinks(True)
+        help_min_nr_samples.setText(
+            '<a href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#selecting-min-samples" '
+            'style="text-decoration:none; color:white"><b>?</b></a>')
 
+        help_min_nr_samples.setToolTip("The number of samples in a neighbourhood for a point to be considered a core "
+                                       "point. By default it is equal to the minimum cluster size. Click on the "
+                                       "question mark to read more.")
+
+        self.hdbscan_min_nr_samples.native.setMaximumWidth(70)
         self.hdbscan_settings_container_min_nr.layout().addWidget(self.hdbscan_min_nr_samples.native)
+        self.hdbscan_settings_container_min_nr.layout().addWidget(help_min_nr_samples)
         self.hdbscan_settings_container_min_nr.setVisible(False)
 
         # Run button

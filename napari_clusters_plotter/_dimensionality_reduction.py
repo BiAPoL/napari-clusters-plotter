@@ -55,24 +55,51 @@ class DimensionalityReductionWidget(QWidget):
         self.n_neighbors_container = QWidget()
         self.n_neighbors_container.setLayout(QHBoxLayout())
         self.n_neighbors_container.layout().addWidget(QLabel("Number of neighbors"))
+        self.n_neighbors_container.layout().addStretch()
         self.n_neighbors = create_widget(widget_type="SpinBox",
                                          name='n_neighbors',
                                          value=DEFAULTS['n_neighbors'],
                                          options=dict(min=2, step=1))
 
+        help_n_neighbors = QLabel()
+        help_n_neighbors.setOpenExternalLinks(True)
+        help_n_neighbors.setText('<a href="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors" '
+                                 'style="text-decoration:none; color:white"><b>?</b></a>')
+
+        help_n_neighbors.setToolTip(
+            "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold "
+            "approximation. Larger values result in more global views of the manifold, while smaller values should be "
+            "in the range 2 to 100. Click on the question mark to read more.")
+
+        self.n_neighbors.native.setMaximumWidth(70)
         self.n_neighbors_container.layout().addWidget(self.n_neighbors.native)
+        self.n_neighbors_container.layout().addWidget(help_n_neighbors)
         self.n_neighbors_container.setVisible(False)
 
         # selection of the level of perplexity. Higher values should be chosen when handling large datasets
         self.perplexity_container = QWidget()
         self.perplexity_container.setLayout(QHBoxLayout())
         self.perplexity_container.layout().addWidget(QLabel("Perplexity"))
+        self.perplexity_container.layout().addStretch()
         self.perplexity = create_widget(widget_type="SpinBox",
                                         name='perplexity',
                                         value=DEFAULTS['perplexity'],
                                         options=dict(min=1, step=1))
 
+        help_perplexity = QLabel()
+        help_perplexity.setOpenExternalLinks(True)
+        help_perplexity.setText('<a href="https://distill.pub/2016/misread-tsne/" '
+                                'style="text-decoration:none; color:white"><b>?</b></a>')
+
+        help_perplexity.setToolTip(
+            "The perplexity is related to the number of nearest neighbors that is used in other manifold learning "
+            "algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5 and "
+            "50. Different values can result in significantly different results. "
+            "Click on the question mark to read more.")
+
+        self.perplexity.native.setMaximumWidth(70)
         self.perplexity_container.layout().addWidget(self.perplexity.native)
+        self.perplexity_container.layout().addWidget(help_perplexity)
         self.perplexity_container.setVisible(False)
 
         # select properties of which to produce a dimension reduce version
