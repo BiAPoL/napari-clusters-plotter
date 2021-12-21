@@ -1,11 +1,11 @@
+from enum import Enum
 import pandas as pd
 import warnings
 from napari.layers import Labels
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from qtpy.QtCore import QRect
-from ._utilities import widgets_inactive
-from ._utilities import restore_defaults
+from ._utilities import widgets_inactive, restore_defaults
 from napari_tools_menu import register_dock_widget
 from magicgui.widgets import create_widget
 from functools import partial
@@ -15,11 +15,17 @@ DEFAULTS = {
     "kmeans_nr_iterations": 3000,
     "normalization": False,
     "hdbscan_min_clusters_size": 5,
+    "hdbscan_min_nr_samples": 5,
 }
 
 
 @register_dock_widget(menu="Measurement > Clustering (ncp)")
 class ClusteringWidget(QWidget):
+    class Options(Enum):
+        EMPTY = ""
+        KMEANS = "KMeans"
+        HDBSCAN = "HDBSCAN"
+
     def __init__(self, napari_viewer):
         super().__init__()
         self.setLayout(QVBoxLayout())
@@ -52,8 +58,8 @@ class ClusteringWidget(QWidget):
         self.clust_method_container.layout().addWidget(QLabel("Clustering Method"))
         self.clust_method_choice_list = create_widget(widget_type="ComboBox",
                                                       name="Clustering_method",
-                                                      value='',
-                                                      options={"choices": ["", "KMeans", "HDBSCAN"]})
+                                                      value=self.Options.EMPTY.value,
+                                                      options={"choices": [e.value for e in self.Options]})
 
         self.clust_method_container.layout().addWidget(self.clust_method_choice_list.native)
 
@@ -77,7 +83,7 @@ class ClusteringWidget(QWidget):
         self.kmeans_nr_iterations = create_widget(widget_type="SpinBox",
                                                   name="kmeans_nr_iter",
                                                   value=DEFAULTS["kmeans_nr_iterations"],
-                                                  options=dict(min=1, max=10000))
+                                                  options={"min": 1, "max": 10000})
 
         self.kmeans_settings_container_iter.layout().addWidget(self.kmeans_nr_iterations.native)
         self.kmeans_settings_container_iter.setVisible(False)
@@ -99,7 +105,7 @@ class ClusteringWidget(QWidget):
         self.hdbscan_min_clusters_size = create_widget(widget_type="SpinBox",
                                                        name="hdbscan_min_clusters_size",
                                                        value=DEFAULTS["hdbscan_min_clusters_size"],
-                                                       options=dict(min=2, step=1))
+                                                       options={"min": 2, "step": 1})
 
         self.hdbscan_settings_container_size.layout().addWidget(self.hdbscan_min_clusters_size.native)
         self.hdbscan_settings_container_size.setVisible(False)
@@ -108,11 +114,11 @@ class ClusteringWidget(QWidget):
         self.hdbscan_settings_container_min_nr = QWidget()
         self.hdbscan_settings_container_min_nr.setLayout(QHBoxLayout())
         self.hdbscan_settings_container_min_nr.layout().addWidget(QLabel("Minimum number of samples"))
+        # hdbscan_min_nr_samples defaults to the min_cluster_size
         self.hdbscan_min_nr_samples = create_widget(widget_type="SpinBox",
                                                     name="hdbscan_min_nr_samples",
                                                     value=self.hdbscan_min_clusters_size.value,
-                                                    # defaults to the min_cluster_size
-                                                    options=dict(min=1, step=1))
+                                                    options={"min": 1, "step": 1})
 
         self.hdbscan_settings_container_min_nr.layout().addWidget(self.hdbscan_min_nr_samples.native)
         self.hdbscan_settings_container_min_nr.setVisible(False)
@@ -139,15 +145,15 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(title_container)
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(choose_properties_container)
+        self.layout().addWidget(update_container)
         self.layout().addWidget(self.clust_method_container)
         self.layout().addWidget(self.kmeans_settings_container_nr)
         self.layout().addWidget(self.kmeans_settings_container_iter)
         self.layout().addWidget(self.hdbscan_settings_container_size)
         self.layout().addWidget(self.hdbscan_settings_container_min_nr)
         self.layout().addWidget(self.clustering_settings_container_scaler)
-        self.layout().addWidget(run_container)
         self.layout().addWidget(defaults_container)
-        self.layout().addWidget(update_container)
+        self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
 
         def run_clicked():
@@ -193,12 +199,12 @@ class ClusteringWidget(QWidget):
 
     def change_clustering_options_visibility(self):
         widgets_inactive(self.kmeans_settings_container_nr, self.kmeans_settings_container_iter,
-                         active=self.clust_method_choice_list.current_choice == "KMeans")
+                         active=self.clust_method_choice_list.current_choice == self.Options.KMEANS.value)
         widgets_inactive(self.hdbscan_settings_container_size, self.hdbscan_settings_container_min_nr,
-                         active=self.clust_method_choice_list.current_choice == "HDBSCAN")
+                         active=self.clust_method_choice_list.current_choice == self.Options.HDBSCAN.value)
         widgets_inactive(self.clustering_settings_container_scaler,
-                         active=(self.clust_method_choice_list.current_choice == "KMeans" or
-                                 self.clust_method_choice_list.current_choice == "HDBSCAN"))
+                         active=(self.clust_method_choice_list.current_choice == self.Options.KMEANS.value or
+                                 self.clust_method_choice_list.current_choice == self.Options.HDBSCAN.value))
 
     def update_properties_list(self):
         selected_layer = self.labels_select.value
@@ -217,7 +223,6 @@ class ClusteringWidget(QWidget):
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
-        self.update_properties_list()
 
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
@@ -229,7 +234,7 @@ class ClusteringWidget(QWidget):
         print("Selected measurements: " + str(selected_measurements_list))
         print("Selected clustering method: " + str(selected_method))
 
-        # turn properties from layer into pandas dataframe
+        # turn properties from layer into a pandas dataframe
         properties = labels_layer.properties
         reg_props = pd.DataFrame(properties)
 
@@ -246,8 +251,6 @@ class ClusteringWidget(QWidget):
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(standardize, selected_properties, min_cluster_size, min_nr_samples)
             print("HDBSCAN predictions finished.")
-            #warnings.warn("Whoops, HDBSCAN is not yet implemented.")  # todo: DELETE LATER
-            #return
             # write result back to properties of the labels layer
             properties["HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize)] = y_pred
         else:
