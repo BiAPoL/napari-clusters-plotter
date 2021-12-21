@@ -12,7 +12,6 @@ from matplotlib.widgets import RectangleSelector
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 import numpy as np
-from ._utilities import generate_parametric_cluster_image
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QTimer
 from magicgui.widgets import create_widget
