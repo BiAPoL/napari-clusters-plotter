@@ -92,7 +92,7 @@ Select the clustering method `KMeans` and click on `Run`.
 The table of measurements will reappear with an additional column `ALGORITHM_NAME_CLUSTERING_ID` containing the cluster
 ID of each datapoint.
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/kmeans_clustering.png)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/clustering.png)
 
 Afterwards, you can again save and/or close the table. Also, close the clustering widget.
 
@@ -100,7 +100,8 @@ Afterwards, you can again save and/or close the table. Also, close the clusterin
 Return to the Plotter widget using the menu `Tools > Measurement > Plot measurement (ncp)`.
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Cluster`, and click on `Run`.
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_umap.png)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/hdbscan_clusters_plot.png)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/kmeans_clusters_plot.png)
 
 ## Installation
 
