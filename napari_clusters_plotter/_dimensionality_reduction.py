@@ -199,7 +199,7 @@ class DimensionalityReductionWidget(QWidget):
             if selected_layer.properties is not None:
                 self.properties_list.clear()
                 for p in list(properties.keys()):
-                    if p == "label" or "CLUSTER_ID" in p:
+                    if p == "label" or "CLUSTER_ID" or "UMAP" or "t-SNE" in p:
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
