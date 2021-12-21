@@ -61,7 +61,7 @@ You can also select a labeled object in the original labels layer (not "cluster_
 mode in napari and see which data point in the plot it corresponds to. Again, make sure that `show selected` checkbox is
 selected.
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.png)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.gif)
 
 
 ### Dimensionality reduction: UMAP or t-SNE
