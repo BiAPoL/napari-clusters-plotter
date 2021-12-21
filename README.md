@@ -57,8 +57,8 @@ visualization in the image, turn off the visibility of the analysed labels layer
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
-You can also select a labeled object in the original labels layer (not cluster_ids_in_space layer) using the `Pick` mode
-in napari and see which data point in the plot it corresponds to. Again, make sure that `show selected` checkbox is
+You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
+mode in napari and see which data point in the plot it corresponds to. Again, make sure that `show selected` checkbox is
 selected.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.png)
@@ -69,7 +69,7 @@ selected.
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
 using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/) or [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html).
 To apply it to your data use the menu `Tools > Measurement > Dimensionality reduction (ncp)`.
-Select the label image that was analyzed and in the list below, select all measurements that should be
+Select the label image that was analysed and in the list below, select all measurements that should be
 dimensionality reduced. By default, all measurements are selected in the box. If you cannot see any measurements, but
 you have performed them, click on `Update Measurements` to refresh the box. You can read more about parameters of both
 algorithms by hovering over question marks or by clicking on them. When you are done with the selection, click on `Run`
@@ -86,7 +86,7 @@ If manual clustering, as shown above, is not an option, you can automatically cl
 [k-means clustering algorithm](https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
 or [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html).
 Therefore, click the menu `Tools > Measurement > Clustering (ncp)`,
-again, select the analyzed labels layer.
+again, select the analysed labels layer.
 This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
 Select the clustering method `KMeans` and click on `Run`. 
 The table of measurements will reappear with an additional column `ALGORITHM_NAME_CLUSTERING_ID` containing the cluster
