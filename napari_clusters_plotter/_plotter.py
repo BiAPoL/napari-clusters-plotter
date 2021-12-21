@@ -374,6 +374,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis.clear()
                 self.plot_y_axis.addItems(list(properties.keys()))
                 self.plot_cluster_id.clear()
+                self.plot_cluster_id.addItem("")
                 self.plot_cluster_id.addItems([l for l in list(properties.keys()) if "CLUSTER" in l])
         self.plot_x_axis.setCurrentIndex(former_x_axis)
         self.plot_y_axis.setCurrentIndex(former_y_axis)
