@@ -58,8 +58,7 @@ visualization in the image, turn off the visibility of the analysed labels layer
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
 You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
-mode in napari and see which data point in the plot it corresponds to. Again, make sure that `show selected` checkbox is
-selected.
+mode in napari and see which data point in the plot it corresponds to. 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.gif)
 
@@ -101,6 +100,8 @@ Return to the Plotter widget using the menu `Tools > Measurement > Plot measurem
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Cluster`, and click on `Run`.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/hdbscan_clusters_plot.png)
+
+Example of k-means clustering results:
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/kmeans_clusters_plot.png)
 
 ## Installation
