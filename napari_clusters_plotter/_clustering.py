@@ -12,8 +12,8 @@ from functools import partial
 
 DEFAULTS = {
     "kmeans_nr_clusters": 2,
-    "kmeans_nr_iterations": 3000,
-    "normalization": False,
+    "kmeans_nr_iterations": 300,
+    "standardization": False,
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
 }
@@ -88,13 +88,13 @@ class ClusteringWidget(QWidget):
         self.kmeans_settings_container_iter.layout().addWidget(self.kmeans_nr_iterations.native)
         self.kmeans_settings_container_iter.setVisible(False)
 
-        # checkbox whether data should be normalized
+        # checkbox whether data should be standardized
         self.clustering_settings_container_scaler = QWidget()
         self.clustering_settings_container_scaler.setLayout(QHBoxLayout())
-        self.normalization = create_widget(widget_type="CheckBox", name="Standardize Features",
-                                           value=DEFAULTS["normalization"])
+        self.standardization = create_widget(widget_type="CheckBox", name="Standardize Features",
+                                             value=DEFAULTS["standardization"])
 
-        self.clustering_settings_container_scaler.layout().addWidget(self.normalization.native)
+        self.clustering_settings_container_scaler.layout().addWidget(self.standardization.native)
         self.clustering_settings_container_scaler.setVisible(False)
 
         # Clustering options for HDBSCAN
@@ -200,7 +200,7 @@ class ClusteringWidget(QWidget):
                 self.clust_method_choice_list.current_choice,
                 self.kmeans_nr_clusters.value,
                 self.kmeans_nr_iterations.value,
-                self.normalization.value,
+                self.standardization.value,
                 self.hdbscan_min_clusters_size.value,
                 self.hdbscan_min_nr_samples.value
             )
@@ -238,7 +238,7 @@ class ClusteringWidget(QWidget):
             if selected_layer.properties is not None:
                 self.properties_list.clear()
                 for p in list(properties.keys()):
-                    if p == "label" or "CLUSTER_ID" in p:
+                    if "label" in p or "CLUSTER_ID" in p:
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
@@ -288,7 +288,7 @@ class ClusteringWidget(QWidget):
 
 def kmeans_clustering(standardize, measurements, cluster_number, iterations):
     from sklearn.cluster import KMeans
-    print("KMeans predictions started...")
+    print("KMeans predictions started (standardize: " + str(standardize) + ")...")
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
@@ -305,7 +305,7 @@ def kmeans_clustering(standardize, measurements, cluster_number, iterations):
 
 def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples):
     import hdbscan
-    print("HDBSCAN predictions started...")
+    print("HDBSCAN predictions started (standardize: " + str(standardize) + ")...")
 
     clustering_hdbscan = hdbscan.HDBSCAN(min_cluster_size=min_cluster_size, min_samples=min_samples)
 
