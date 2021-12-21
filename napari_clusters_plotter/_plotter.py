@@ -13,7 +13,6 @@ import numpy as np
 from ._utilities import generate_parametric_cluster_image
 from napari_tools_menu import  register_dock_widget
 from qtpy.QtCore import QTimer
-import pandas as pd
 
 matplotlib.use('Qt5Agg')
 # Class below was based upon matplotlib lasso selection example (https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html)
