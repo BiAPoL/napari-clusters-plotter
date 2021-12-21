@@ -130,9 +130,6 @@ class FeatureSelectionWidget(QWidget):
                     widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
                     widget.setGeometry(QRect(10, 10, 101, 291))
                     for i,p in enumerate(key_list):
-                        # TODO see if this is unnecessary
-                        if p == "label" or "CLUSTER_ID" in p:
-                            continue
                         item = QListWidgetItem(p)
                         widget.addItem(item)
 
@@ -239,8 +236,9 @@ class FeatureSelectionWidget(QWidget):
         # getting the keys and then turning the indices into keys
         keys = df_regprops.keys()
      
-        self.correlating_keys = [keys[ind].tolist() for ind in corr_ind_list if keys[ind] != 'label']
-
+        correlating_keys = [keys[ind].tolist() for ind in corr_ind_list]
+        # remove label key
+        self.correlating_keys = [[key for key in keygroup if key != 'label' ] for keygroup in correlating_keys]
         #TODO
         print('correlating keys are:')
         print(self.correlating_keys)
@@ -272,7 +270,7 @@ class FeatureSelectionWidget(QWidget):
 
         if self.method_choice_list.currentText() == 'Correlation Filter':
             resulting_df = self.get_uncorrelating_subselection(reg_props)
-            labels_layer.properties = resulting_df.to_dict()
+            labels_layer.properties = resulting_df#.to_dict()
     
 
         from ._utilities import show_table
