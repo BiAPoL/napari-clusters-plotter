@@ -36,7 +36,7 @@ A table with the measurements will open:
 Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
 interact with labels and see which row of the table corresponds to which labelled object. For this, use the Pick mode
 in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
-appropriate label is displayed (make sure that show selected checkbox is selected).
+appropriate label is displayed (make sure that `show selected` checkbox is selected).
 
 
 ### Plotting
@@ -56,8 +56,9 @@ visualization in the image, turn off the visibility of the analysed labels layer
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
-You can also select a labeled object in the original labels layer (not cluster_id_in_space layer) using the `Pick` mode
-in napari and see which data point in the plot it corresponds to.
+You can also select a labeled object in the original labels layer (not cluster_ids_in_space layer) using the `Pick` mode
+in napari and see which data point in the plot it corresponds to. Again, make sure that `show selected` checkbox is
+selected.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.png)
 
