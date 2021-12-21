@@ -393,7 +393,8 @@ class PlotterWidget(QWidget):
 
             if self.visualized_labels_layer is None or self.visualized_labels_layer not in self.viewer.layers:
                 # instead of visualising cluster image, visualise label image with dictionary mapping
-                self.visualized_labels_layer = self.viewer.add_labels(self.analysed_layer.data, color = cluster_id_dict)
+                self.visualized_labels_layer = self.viewer.add_labels(self.analysed_layer.data, color = cluster_id_dict,
+                                                                      name = "cluster_ids_in_space")
             else:
                 # instead of updating data, update colormap
                 self.visualized_labels_layer.color = cluster_id_dict
