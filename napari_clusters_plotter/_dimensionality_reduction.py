@@ -96,7 +96,7 @@ class DimensionalityReductionWidget(QWidget):
         self.pca_components = create_widget(widget_type="SpinBox",
                                         name='pca_components',
                                         value=DEFAULTS['pca_components'],
-                                        options=dict(min=0, max=len(self.properties_list), step=1))
+                                        options=dict(min=0, step=1)) #TODO , max=len(self.properties_list)
 
         self.pca_components_container.layout().addWidget(self.pca_components.native)
         self.pca_components_container.setVisible(False)
@@ -113,6 +113,7 @@ class DimensionalityReductionWidget(QWidget):
 
         self.explained_variance_container.layout().addWidget(self.explained_variance.native)
         self.explained_variance_container.setVisible(False)
+
         # Run button
         run_widget = QWidget()
         run_widget.setLayout(QHBoxLayout())
@@ -291,7 +292,7 @@ def pca(reg_props, explained_variance_threshold, n_components):
     from sklearn.preprocessing import StandardScaler
     import numpy as np
 
-    if n_components == 0:
+    if n_components == 0 or n_components > len(reg_props.columns):
         pca_object = PCA()
     else:
         pca_object = PCA(n_components=n_components) 
