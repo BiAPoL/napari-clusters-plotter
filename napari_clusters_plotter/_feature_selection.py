@@ -59,17 +59,13 @@ class FeatureSelectionWidget(QWidget):
         self.correlation_threshold_container.layout().addWidget(self.correlation_threshold.native)
         self.correlation_threshold_container.setVisible(False)
 
-        # TODO figure out if I want to keep this
-        # select properties of which to produce a dimension reduce version
-        #choose_properties_container = QWidget()
+        # get all properties to be able to perform feature selection
         self.properties_list = QListWidget()
         self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.properties_list.setGeometry(QRect(10, 10, 101, 291))
         self.update_properties_list()
 
-        #choose_properties_container.setLayout(QVBoxLayout())
-        #choose_properties_container.layout().addWidget(QLabel("Measurements"))
-        #choose_properties_container.layout().addWidget(self.properties_list)
+        
         
         # Run button
         run_widget = QWidget()
@@ -162,7 +158,6 @@ class FeatureSelectionWidget(QWidget):
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(method_container)
         self.layout().addWidget(self.correlation_threshold_container)
-        #self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_widget)
