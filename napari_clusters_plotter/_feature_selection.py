@@ -47,7 +47,7 @@ class FeatureSelectionWidget(QWidget):
         self.method_choice_list.addItems(['', 'Correlation Filter'])
         method_container.layout().addWidget(self.method_choice_list)
 
-        # TODO description
+        # Threshold of Pearson's correlation at which two features are categorised as correlating
         self.correlation_threshold_container = QWidget()
         self.correlation_threshold_container.setLayout(QHBoxLayout())
         self.correlation_threshold_container.layout().addWidget(QLabel("Number of neighbors"))
@@ -204,13 +204,13 @@ class FeatureSelectionWidget(QWidget):
     def analyse_correlation(self):
         import numpy as np
         import pandas as pd
-        # TODO remove testing prints and add comments
-        print('analysis of correlation started')
         
-
+        # get thresholds and region properties from selected labels layer
         threshold = self.correlation_threshold.value
         self.update_properties_list()
         labels_layer = self.labels_select.value
+
+        # convert properties to dataframe for further processing
         df_regprops = pd.DataFrame(labels_layer.properties)
 
         # Actually finding the correlating features with pandas
@@ -230,14 +230,11 @@ class FeatureSelectionWidget(QWidget):
         
         # getting the keys and then turning the indices into keys
         keys = df_regprops.keys()
-     
         correlating_keys = [keys[ind].tolist() for ind in corr_ind_list]
-        # remove label key
+
+        # remove label key and save correlating keys into self variable for later recall
         self.correlating_keys = [[key for key in keygroup if key != 'label' ] for keygroup in correlating_keys]
-        #TODO
-        print('correlating keys are:')
-        print(self.correlating_keys)
-        print('length of correlating keys variable: {}'.format(len(self.correlating_keys)))   
+        
 
 
     
@@ -265,7 +262,9 @@ class FeatureSelectionWidget(QWidget):
 
         if self.method_choice_list.currentText() == 'Correlation Filter':
             resulting_df = self.get_uncorrelating_subselection(reg_props)
-            labels_layer.properties = resulting_df#.to_dict()
+
+            # replace previous table with new table containing only uncorrelating features
+            labels_layer.properties = resulting_df
     
 
         from ._utilities import show_table
@@ -273,6 +272,7 @@ class FeatureSelectionWidget(QWidget):
 
         print("Feature selection finished")
 
+    # TODO description of what this does
     def get_uncorrelating_subselection(self, df_regprops):
         kept_feats = []
         for widget in self.correlation_key_lists:
@@ -289,7 +289,7 @@ class FeatureSelectionWidget(QWidget):
 
         return resulting_df
 
-
+# TODO description of what this does
 def agglomerate_corr_feats(correlating_features_sets):
     new_sets = []
     for i in correlating_features_sets:
