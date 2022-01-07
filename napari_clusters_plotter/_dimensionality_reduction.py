@@ -290,7 +290,6 @@ def tsne(reg_props, perplexity, n_components):
 def pca(reg_props, explained_variance_threshold, n_components):
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
-    import numpy as np
 
     if n_components == 0 or n_components > len(reg_props.columns):
         pca_object = PCA()
