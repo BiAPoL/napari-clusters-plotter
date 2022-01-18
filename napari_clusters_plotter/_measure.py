@@ -156,9 +156,9 @@ class MeasureWidget(QWidget):
             if 'label' not in edited_reg_props.keys().tolist():
                 label_column = pd.DataFrame({'label': np.array(range(1, (len(edited_reg_props) + 1)))})
                 reg_props_w_labels = pd.concat([label_column, edited_reg_props], axis=1)
-                labels_layer.properties = reg_props_w_labels
+                labels_layer.features = reg_props_w_labels
             else:
-                labels_layer.properties = edited_reg_props
+                labels_layer.features = edited_reg_props
 
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
@@ -178,7 +178,7 @@ class MeasureWidget(QWidget):
                 reg_props = {column: value for column, value in reg_props.items() if column in columns}
 
                 # saving measurement results into the properties of the analysed labels layer
-                labels_layer.properties = reg_props
+                labels_layer.features = reg_props
 
             if 'neighborhood' in region_props_source:
                 n_closest_points_split = n_closest_points_str.split(",")
@@ -186,7 +186,7 @@ class MeasureWidget(QWidget):
                 reg_props = region_props_with_neighborhood_data(columns, labels_layer.data, n_closest_points_list,
                                                                 reg_props)
 
-                labels_layer.properties = reg_props
+                labels_layer.features = reg_props
 
             print("Measured:", list(reg_props.keys()))
 

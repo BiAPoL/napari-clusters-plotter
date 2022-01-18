@@ -213,10 +213,13 @@ class PlotterWidget(QWidget):
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
-            self.analysed_layer.properties[clustering_ID] = inside
+            try:
+                self.analysed_layer.features[clustering_ID] = inside
+            except AttributeError:
+                warnings.warn("Use ncp=0.2.1 for napari<0.4.13")
 
             # redraw the whole plot
-            self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name,
+            self.run(self.analysed_layer.features, self.plot_x_axis_name, self.plot_y_axis_name,
                      plot_cluster_name=clustering_ID)
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
@@ -260,7 +263,7 @@ class PlotterWidget(QWidget):
 
         labels_layer_selection_container.layout().addWidget(self.labels_select.native)
 
-        # selection if region properties should be calculated now or uploaded from file
+        # widget for the selection of axes
         axes_container = QWidget()
         axes_container.setLayout(QHBoxLayout())
         axes_container.layout().addWidget(QLabel("Axes"))
@@ -293,8 +296,8 @@ class PlotterWidget(QWidget):
             if self.labels_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
-            if self.labels_select.value.properties is None:
-                warnings.warn("No labels image with properties was selected! Consider doing measurements first.")
+            if self.labels_select.value.features is None:
+                warnings.warn("No labels image with features was selected! Consider doing measurements first.")
                 return
             if self.plot_x_axis.currentText() == '' or self.plot_y_axis.currentText() == '':
                 warnings.warn("No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
@@ -303,7 +306,7 @@ class PlotterWidget(QWidget):
                 return
 
             self.run(
-                self.labels_select.value.properties,
+                self.labels_select.value.features,
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText()
@@ -330,7 +333,7 @@ class PlotterWidget(QWidget):
         # update axes combo boxes once a new label layer is selected
         self.labels_select.changed.connect(self.update_axes_list)
 
-        # update axes combo boxes once a update button is clicked
+        # update axes combo boxes once update button is clicked
         update_button.clicked.connect(self.update_axes_list)
 
         # select what happens when the run button is clicked
@@ -353,9 +356,9 @@ class PlotterWidget(QWidget):
         # save manual clustering; select only the label that's currently selected on the layer
         inside = np.ones((self.analysed_layer.data.max()))
         inside[self.analysed_layer.selected_label - 1] = 0
-        self.analysed_layer.properties[clustering_ID] = inside
+        self.analysed_layer.features[clustering_ID] = inside
 
-        self.run(self.analysed_layer.properties, self.plot_x_axis_name, self.plot_y_axis_name,
+        self.run(self.analysed_layer.features, self.plot_x_axis_name, self.plot_y_axis_name,
                  plot_cluster_name=clustering_ID)
         self.graphics_widget.draw()
 
@@ -367,24 +370,24 @@ class PlotterWidget(QWidget):
         former_cluster_id = self.plot_cluster_id.currentIndex()
 
         if selected_layer is not None:
-            properties = selected_layer.properties
-            if selected_layer.properties is not None:
+            features = selected_layer.features
+            if selected_layer.features is not None:
                 self.plot_x_axis.clear()
-                self.plot_x_axis.addItems(list(properties.keys()))
+                self.plot_x_axis.addItems(list(features.keys()))
                 self.plot_y_axis.clear()
-                self.plot_y_axis.addItems(list(properties.keys()))
+                self.plot_y_axis.addItems(list(features.keys()))
                 self.plot_cluster_id.clear()
                 self.plot_cluster_id.addItem("")
-                self.plot_cluster_id.addItems([l for l in list(properties.keys()) if "CLUSTER" in l])
+                self.plot_cluster_id.addItems([l for l in list(features.keys()) if "CLUSTER" in l])
         self.plot_x_axis.setCurrentIndex(former_x_axis)
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
     # this function runs after the run button is clicked
-    def run(self, properties, plot_x_axis_name, plot_y_axis_name, plot_cluster_name=None):
+    def run(self, features, plot_x_axis_name, plot_y_axis_name, plot_cluster_name=None):
 
-        self.data_x = properties[plot_x_axis_name]
-        self.data_y = properties[plot_y_axis_name]
+        self.data_x = features[plot_x_axis_name]
+        self.data_y = features[plot_y_axis_name]
         self.plot_x_axis_name = plot_x_axis_name
         self.plot_y_axis_name = plot_y_axis_name
         self.plot_cluster_name = plot_cluster_name
@@ -393,8 +396,8 @@ class PlotterWidget(QWidget):
         self.graphics_widget.reset()
 
         if plot_cluster_name is not None and plot_cluster_name != "label" and plot_cluster_name in list(
-                properties.keys()):
-            self.cluster_ids = properties[plot_cluster_name]
+                features.keys()):
+            self.cluster_ids = features[plot_cluster_name]
 
             # get long colormap from function
             colors = get_nice_colormap()
