@@ -7,7 +7,7 @@ from napari.layers import Labels, Image
 from magicgui.widgets import FileEdit, create_widget
 from magicgui.types import FileDialogMode
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit
-from ._utilities import show_table, widgets_inactive
+from ._utilities import show_table, widgets_inactive, set_features
 from napari_tools_menu import register_dock_widget
 
 
@@ -19,7 +19,7 @@ class MeasureWidget(QWidget):
         INTENSITY = "Measure now (intensity)"
         SHAPE = "Measure now (shape)"
         BOTH = "Measure now (intensity + shape)"
-        FILE = 'Upload file'
+        FILE = "Upload file"
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -156,9 +156,9 @@ class MeasureWidget(QWidget):
             if 'label' not in edited_reg_props.keys().tolist():
                 label_column = pd.DataFrame({'label': np.array(range(1, (len(edited_reg_props) + 1)))})
                 reg_props_w_labels = pd.concat([label_column, edited_reg_props], axis=1)
-                labels_layer.features = reg_props_w_labels
+                set_features(labels_layer, reg_props_w_labels)
             else:
-                labels_layer.features = edited_reg_props
+                set_features(labels_layer, edited_reg_props)
 
         elif 'Measure now' in region_props_source:
             # or determine it now using clEsperanto
@@ -177,8 +177,8 @@ class MeasureWidget(QWidget):
             if 'shape' in region_props_source or 'intensity' in region_props_source:
                 reg_props = {column: value for column, value in reg_props.items() if column in columns}
 
-                # saving measurement results into the properties of the analysed labels layer
-                labels_layer.features = reg_props
+                # saving measurement results into the properties or features of the analysed labels layer
+                set_features(labels_layer, reg_props)
 
             if 'neighborhood' in region_props_source:
                 n_closest_points_split = n_closest_points_str.split(",")
@@ -186,7 +186,7 @@ class MeasureWidget(QWidget):
                 reg_props = region_props_with_neighborhood_data(columns, labels_layer.data, n_closest_points_list,
                                                                 reg_props)
 
-                labels_layer.features = reg_props
+                set_features(labels_layer, reg_props)
 
             print("Measured:", list(reg_props.keys()))
 
