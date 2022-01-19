@@ -134,6 +134,8 @@ Afterwards, you can install `napari-clusters-plotter` via [pip]:
     pip install napari-clusters-plotter
 
 ## Troubleshooting installation
+If you use napari=0.4.12 or lower, use ncp=0.2.1, otherwise, many functions will not work.
+
 If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
 
 ```
