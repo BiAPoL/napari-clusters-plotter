@@ -16,7 +16,7 @@ from qtpy.QtCore import QTimer
 from magicgui.widgets import create_widget
 from qtpy.QtGui import QIcon
 from pathlib import Path as PathL
-from ._utilities import set_features, get_layer_tabular_data
+from ._utilities import get_layer_tabular_data
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 
