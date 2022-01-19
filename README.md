@@ -97,12 +97,11 @@ Afterwards, you can again save and/or close the table. Also, close the clusterin
 
 ### Plotting clustering results
 Return to the Plotter widget using the menu `Tools > Measurement > Plot measurement (ncp)`.
-Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Clustering`, and click on `Run`.
+Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Cluster`, and click on `Run`.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/hdbscan_clusters_plot.png)
 
 Example of k-means clustering results:
-
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/kmeans_clusters_plot.png)
 
 ## Installation
@@ -114,7 +113,7 @@ Example of k-means clustering results:
   Create a new environment, for example, like this:
 
 ```
-conda create --name ncp-env python=3.9
+conda create --name napari-clusters-plotter python=3.9
 ```
 
 * Activate the new environment and install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
@@ -126,7 +125,7 @@ conda install -c conda-forge pyopencl
 * Install [napari], e.g. via [pip]:
 
 ```
-python -m pip install "napari[all]"
+pip install "napari[all]"
 ```
 
 Afterwards, you can install `napari-clusters-plotter` via [pip]:
@@ -134,7 +133,6 @@ Afterwards, you can install `napari-clusters-plotter` via [pip]:
     pip install napari-clusters-plotter
 
 ## Troubleshooting installation
-If you use napari=0.4.12 or lower, use ncp=0.2.1, otherwise, many functions will not work.
 
 If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
 
