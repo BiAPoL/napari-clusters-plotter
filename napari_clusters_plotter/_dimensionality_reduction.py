@@ -1,13 +1,12 @@
 from functools import partial
-
-import pandas as pd
 import warnings
 from napari.layers import Labels
 from magicgui.widgets import create_widget
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
 from qtpy.QtCore import QRect
-from ._utilities import widgets_inactive, restore_defaults
+from ._utilities import widgets_inactive, restore_defaults, get_layer_tabular_data, \
+    add_column_to_layer_tabular_data
 from napari_tools_menu import register_dock_widget
 
 # Remove when the problem is fixed from sklearn side
@@ -103,12 +102,11 @@ class DimensionalityReductionWidget(QWidget):
         self.perplexity_container.layout().addWidget(help_perplexity)
         self.perplexity_container.setVisible(False)
 
-        # select properties of which to produce a dimension reduce version
+        # select properties of which to produce a dimensionality reduced version
         choose_properties_container = QWidget()
         self.properties_list = QListWidget()
         self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.properties_list.setGeometry(QRect(10, 10, 101, 291))
-        self.update_properties_list()
 
         choose_properties_container.setLayout(QVBoxLayout())
         choose_properties_container.layout().addWidget(QLabel("Measurements"))
@@ -167,6 +165,9 @@ class DimensionalityReductionWidget(QWidget):
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
+        # update measurements list when a new labels layer is selected
+        self.labels_select.changed.connect(self.update_properties_list)
+
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(labels_layer_selection_container)
@@ -213,10 +214,10 @@ class DimensionalityReductionWidget(QWidget):
     def update_properties_list(self):
         selected_layer = self.labels_select.value
         if selected_layer is not None:
-            properties = selected_layer.properties
-            if selected_layer.properties is not None:
+            features = get_layer_tabular_data(selected_layer)
+            if features is not None:
                 self.properties_list.clear()
-                for p in list(properties.keys()):
+                for p in list(features.keys()):
                     if "label" in p or "CLUSTER_ID" in p or "UMAP" in p or "t-SNE" in p:
                         continue
                     item = QListWidgetItem(p)
@@ -230,12 +231,10 @@ class DimensionalityReductionWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        # Turn properties from layer into a dataframe
-        properties = labels_layer.properties
-        reg_props = pd.DataFrame(properties)
+        features = get_layer_tabular_data(labels_layer)
 
         # only select the columns the user requested
-        properties_to_reduce = reg_props[selected_measurements_list]
+        properties_to_reduce = features[selected_measurements_list]
 
         if selected_algorithm == 'UMAP':
             print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
@@ -243,9 +242,9 @@ class DimensionalityReductionWidget(QWidget):
             # reduce dimensionality
             embedding = umap(properties_to_reduce, n_neighbours, n_components, standardize)
 
-            # write result back to properties
+            # write result back to features/properties
             for i in range(0, n_components):
-                properties["UMAP_" + str(i)] = embedding[:, i]
+                add_column_to_layer_tabular_data(labels_layer, "UMAP_" + str(i), embedding[:, i])
 
         elif selected_algorithm == 't-SNE':
             print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
@@ -253,9 +252,9 @@ class DimensionalityReductionWidget(QWidget):
             # reduce dimensionality
             embedding = tsne(properties_to_reduce, perplexity, n_components, standardize)
 
-            # write result back to properties
+            # write result back to features/properties
             for i in range(0, n_components):
-                properties['t-SNE_' + str(i)] = embedding[:, i]
+                add_column_to_layer_tabular_data(labels_layer, "t-SNE_" + str(i), embedding[:, i])
 
         from ._utilities import show_table
         show_table(self.viewer, labels_layer)

@@ -1,11 +1,11 @@
 from enum import Enum
-import pandas as pd
 import warnings
 from napari.layers import Labels
 from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView
 from qtpy.QtCore import QRect
-from ._utilities import widgets_inactive, restore_defaults
+from ._utilities import widgets_inactive, restore_defaults, get_layer_tabular_data, \
+    add_column_to_layer_tabular_data
 from napari_tools_menu import register_dock_widget
 from magicgui.widgets import create_widget
 from functools import partial
@@ -234,10 +234,10 @@ class ClusteringWidget(QWidget):
         selected_layer = self.labels_select.value
 
         if selected_layer is not None:
-            properties = selected_layer.properties
-            if selected_layer.properties is not None:
+            features = get_layer_tabular_data(selected_layer)
+            if features is not None:
                 self.properties_list.clear()
-                for p in list(properties.keys()):
+                for p in list(features.keys()):
                     if "label" in p or "CLUSTER_ID" in p:
                         continue
                     item = QListWidgetItem(p)
@@ -258,25 +258,23 @@ class ClusteringWidget(QWidget):
         print("Selected measurements: " + str(selected_measurements_list))
         print("Selected clustering method: " + str(selected_method))
 
-        # turn properties from layer into a pandas dataframe
-        properties = labels_layer.properties
-        reg_props = pd.DataFrame(properties)
+        features = get_layer_tabular_data(labels_layer)
 
         # only select the columns the user requested
-        selected_properties = reg_props[selected_measurements_list]
+        selected_properties = features[selected_measurements_list]
 
         # perform clustering
         if selected_method == "KMeans":
             y_pred = kmeans_clustering(standardize, selected_properties, num_clusters, num_iterations)
             print("KMeans predictions finished.")
-            # write result back to properties of the labels layer
-            properties["KMEANS_CLUSTER_ID_SCALER_" + str(standardize)] = y_pred
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred)
 
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(standardize, selected_properties, min_cluster_size, min_nr_samples)
             print("HDBSCAN predictions finished.")
-            # write result back to properties of the labels layer
-            properties["HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize)] = y_pred
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred)
         else:
             warnings.warn("Clustering unsuccessful. Please check again selected options.")
             return
