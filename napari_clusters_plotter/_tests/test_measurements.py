@@ -4,7 +4,6 @@ import napari_clusters_plotter as ncp
 import napari
 import numpy as np
 
-
 def test_measurements():
 
     viewer = napari.Viewer()
