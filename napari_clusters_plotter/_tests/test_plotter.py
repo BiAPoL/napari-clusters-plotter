@@ -41,19 +41,6 @@ def test_plotting():
     viewer.window.add_dock_widget(plot_widget)
     assert len(viewer.window._dock_widgets) == 2
 
-    # redraw the whole plot
-    plot_widget.viewer = viewer
-    plot_widget.analysed_layer = [label_layer]
-    plot_widget.plot_x_axis_name = 'max_intensity'
-    plot_widget.plot_y_axis_name = 'mean_intensity'
-
-    print(plot_widget.labels_select.value)
-
-
-    # print(plot_widget.analysed_layer)
-    # plot_widget.run(features, plot_widget.plot_x_axis_name, plot_widget.plot_y_axis_name,
-    #                 plot_cluster_name="MANUAL_CLUSTER_ID")
-
 
 if __name__ == '__main__':
     test_plotting()
