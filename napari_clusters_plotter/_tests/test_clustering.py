@@ -4,10 +4,9 @@ import napari
 import numpy as np
 from sklearn import datasets
 
-import pandas as pd
-
 import sys
 sys.path.append('../')
+import matplotlib.pyplot as plt
 
 
 def test_clustering_widget():
@@ -71,7 +70,7 @@ def test_hdbscan_clustering():
 
     # create an example dataset
     n_samples = 100
-    data = datasets.make_moons(n_samples=n_samples, random_state=1, noise=0.1)
+    data = datasets.make_moons(n_samples=n_samples, random_state=1, noise=0.05)
 
     true_class = data[1]
     measurements = data[0]
@@ -79,16 +78,20 @@ def test_hdbscan_clustering():
     from napari_clusters_plotter._clustering import hdbscan_clustering
 
     min_cluster_size = 5
-    min_samples = 60  # number of samples that should be included in one cluster
+    min_samples = 2  # number of samples that should be included in one cluster
 
     # test without standardization
     result = hdbscan_clustering(standardize=False,
                                 measurements=measurements,
                                 min_cluster_size=min_cluster_size,
                                 min_samples=min_samples)
+    
+    plt.figure()
+    plt.scatter(measurements[:, 0], measurements[:, 1], c=result)
+    plt.pause(1)
 
     assert len(np.unique(result)) == 2
-    assert sum(result == 0) > min_samples
+    assert np.array_equal(true_class, result)
 
     # test with standardization
     result = hdbscan_clustering(standardize=True,
@@ -97,8 +100,9 @@ def test_hdbscan_clustering():
                                 min_samples=min_samples)
 
     assert len(np.unique(result)) == 2
-    assert sum(result == 0) > min_samples
+    assert np.array_equal(true_class, result)
 
 
 if __name__ == "__main__":
     test_kmeans_clustering()
+    test_hdbscan_clustering()
