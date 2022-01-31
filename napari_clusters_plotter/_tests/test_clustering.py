@@ -3,9 +3,6 @@
 import napari
 import numpy as np
 from sklearn import datasets
-
-import sys
-sys.path.append('../')
 import matplotlib.pyplot as plt
 
 
@@ -85,10 +82,6 @@ def test_hdbscan_clustering():
                                 measurements=measurements,
                                 min_cluster_size=min_cluster_size,
                                 min_samples=min_samples)
-    
-    plt.figure()
-    plt.scatter(measurements[:, 0], measurements[:, 1], c=result)
-    plt.pause(1)
 
     assert len(np.unique(result)) == 2
     assert np.array_equal(true_class, result)
