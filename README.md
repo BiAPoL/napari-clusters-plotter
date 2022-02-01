@@ -137,7 +137,7 @@ pip install napari-clusters-plotter
 
 ## Troubleshooting installation
 
-If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
+- If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
 
 ```
 ImportError: DLL load failed while importing _cl
@@ -146,16 +146,20 @@ ImportError: DLL load failed while importing _cl
 Try downloading and installing a pyopencl with a lower cl version, e.g. cl12 : pyopencl=2020.1. However, in this case,
 you will need an environment with a lower python version (python=3.8).
 
-If you encounter such an error:
+- `Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly`
 
-```
-Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly
-```
-
-You can install hdbscan via conda before installing the plugin:
+Install hdbscan via conda before installing the plugin:
 
 ```
 conda install -c conda-forge hdbscan
+```
+
+- `ValueError: numpy.ndarray size changed, may indicate binary incompatibility. Expected 96 from C header, got 88 from PyObject`
+
+Similar to the above-described error, this error can occur when importing hdbscan through pip or in the wrong order. This can be fixed by installing packages separately through conda and in the following order:
+```bash
+conda install -c conda-forge napari pyopencl hdbscan
+pip install napari-clusters-plotter
 ```
 
 ## Contributing
