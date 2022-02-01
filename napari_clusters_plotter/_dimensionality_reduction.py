@@ -8,6 +8,7 @@ from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive, restore_defaults, get_layer_tabular_data, \
     add_column_to_layer_tabular_data
 from napari_tools_menu import register_dock_widget
+from napari.qt.threading import create_worker
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action='ignore', category=FutureWarning, module='sklearn')
@@ -153,7 +154,8 @@ class DimensionalityReductionWidget(QWidget):
                 warnings.warn("Please select dimensionality reduction algorithm.")
                 return
 
-            self.run(
+            run(
+                self.viewer,
                 self.labels_select.value,
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value, self.perplexity.value,
@@ -224,54 +226,68 @@ class DimensionalityReductionWidget(QWidget):
                     self.properties_list.addItem(item)
                     item.setSelected(True)
 
-    # this function runs after the run button is clicked
-    def run(self, labels_layer, selected_measurements_list, n_neighbours, perplexity, selected_algorithm, standardize,
-            n_components=2):
-        # n_components: dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
-        print("Selected labels layer: " + str(labels_layer))
-        print("Selected measurements: " + str(selected_measurements_list))
 
-        features = get_layer_tabular_data(labels_layer)
+# this function runs after the run button is clicked
+def run(viewer, labels_layer, selected_measurements_list, n_neighbours, perplexity, selected_algorithm, standardize,
+        n_components=2):
+    # n_components: dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
 
-        # only select the columns the user requested
-        properties_to_reduce = features[selected_measurements_list]
+    print("Selected labels layer: " + str(labels_layer))
+    print("Selected measurements: " + str(selected_measurements_list))
 
-        if selected_algorithm == 'UMAP':
-            print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
-                  + ")...")
-            # reduce dimensionality
-            embedding = umap(properties_to_reduce, n_neighbours, n_components, standardize)
+    features = get_layer_tabular_data(labels_layer)
 
-            # write result back to features/properties
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(labels_layer, "UMAP_" + str(i), embedding[:, i])
+    # only select the columns the user requested
+    properties_to_reduce = features[selected_measurements_list]
 
-        elif selected_algorithm == 't-SNE':
-            print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
-                  + ")...")
-            # reduce dimensionality
-            embedding = tsne(properties_to_reduce, perplexity, n_components, standardize)
+    def return_func_umap(embedding):
 
-            # write result back to features/properties
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(labels_layer, "t-SNE_" + str(i), embedding[:, i])
+        for i in range(0, n_components):
+            add_column_to_layer_tabular_data(labels_layer, "UMAP_" + str(i), embedding[:, i])
 
         from ._utilities import show_table
-        show_table(self.viewer, labels_layer)
+        show_table(viewer, labels_layer)
 
         print("Dimensionality reduction finished")
+
+    def return_func_tsne(embedding):
+
+        for i in range(0, n_components):
+            add_column_to_layer_tabular_data(labels_layer, "t-SNE_" + str(i), embedding[:, i])
+
+        from ._utilities import show_table
+        show_table(viewer, labels_layer)
+
+        print("Dimensionality reduction finished")
+
+    if selected_algorithm == 'UMAP':
+        print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
+              + ")...")
+
+        worker = create_worker(umap, properties_to_reduce, n_neighbours, n_components, standardize, _progress=True)
+        worker.returned.connect(return_func_umap)
+        worker.start()
+
+    elif selected_algorithm == 't-SNE':
+        print("Dimensionality reduction started (" + str(selected_algorithm) + ", standardize: " + str(standardize)
+              + ")...")
+
+        worker = create_worker(tsne, properties_to_reduce, perplexity, n_components, standardize, _progress=True)
+        worker.returned.connect(return_func_tsne)
+        worker.start()
 
 
 def umap(reg_props, n_neigh, n_components, standardize):
     import umap.umap_ as umap
 
-    reducer = umap.UMAP(random_state=133, n_components=n_components, n_neighbors=n_neigh)
+    reducer = umap.UMAP(random_state=133, n_components=n_components, n_neighbors=n_neigh, verbose=True)
 
     if standardize:
         from sklearn.preprocessing import StandardScaler
 
         scaled_regionprops = StandardScaler().fit_transform(reg_props)
         return reducer.fit_transform(scaled_regionprops)
+
     else:
         return reducer.fit_transform(reg_props)
 
@@ -279,12 +295,14 @@ def umap(reg_props, n_neigh, n_components, standardize):
 def tsne(reg_props, perplexity, n_components, standardize):
     from sklearn.manifold import TSNE
 
-    reducer = TSNE(perplexity=perplexity, n_components=n_components, learning_rate='auto', init='pca', random_state=42)
+    reducer = TSNE(perplexity=perplexity, n_components=n_components, learning_rate='auto', init='pca',
+                   random_state=42)
 
     if standardize:
         from sklearn.preprocessing import StandardScaler
 
         scaled_regionprops = StandardScaler().fit_transform(reg_props)
         return reducer.fit_transform(scaled_regionprops)
+
     else:
         return reducer.fit_transform(reg_props)
