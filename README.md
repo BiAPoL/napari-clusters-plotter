@@ -7,6 +7,7 @@
 [![codecov](https://codecov.io/gh/lazigu/napari-clusters-plotter/branch/master/graph/badge.svg)](https://codecov.io/gh/lazigu/napari-clusters-plotter)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/napari-clusters-plotter.svg)](https://pypistats.org/packages/napari-clusters-plotter)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clusters-plotter)](https://www.napari-hub.org/plugins/napari-clusters-plotter)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5884658.svg)](https://doi.org/10.5281/zenodo.5884658)
 
 A plugin to use with napari for clustering objects according to their properties.
 
