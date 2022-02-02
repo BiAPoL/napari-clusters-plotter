@@ -2,7 +2,7 @@ from functools import partial
 import warnings
 from napari.layers import Labels
 from magicgui.widgets import create_widget
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout
+from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QProgressBar, QPlainTextEdit
 from qtpy.QtWidgets import QListWidget, QListWidgetItem, QAbstractItemView, QComboBox
 from qtpy.QtCore import QRect
 from ._utilities import widgets_inactive, restore_defaults, get_layer_tabular_data, \
@@ -12,6 +12,10 @@ from napari.qt.threading import create_worker
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action='ignore', category=FutureWarning, module='sklearn')
+
+# Ignore warning: Private attribute access ('ViewerStatusBar._toggle_activity_dock') in this context (e.g. inside a
+# plugin widget or dock widget) is deprecated and will be unavailable in version 0.5.0
+warnings.filterwarnings(action='ignore', category=FutureWarning, module='napari')
 
 DEFAULTS = {
     "n_neighbors": 15,
@@ -140,6 +144,8 @@ class DimensionalityReductionWidget(QWidget):
         defaults_button = QPushButton("Restore Defaults")
         defaults_container.layout().addWidget(defaults_button)
 
+        # self.progress_bar = QProgressBar()
+
         def run_clicked():
 
             if self.labels_select.value is None:
@@ -189,6 +195,8 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
+        # self.layout().addWidget(self.progress_bar)
+
         # hide widgets unless appropriate options are chosen
         self.algorithm_choice_list.currentIndexChanged.connect(self.change_umap_settings)
         self.algorithm_choice_list.currentIndexChanged.connect(self.change_tsne_settings)
@@ -235,6 +243,7 @@ def run(viewer, labels_layer, selected_measurements_list, n_neighbours, perplexi
     print("Selected labels layer: " + str(labels_layer))
     print("Selected measurements: " + str(selected_measurements_list))
 
+    viewer.window._status_bar._toggle_activity_dock(True)
     features = get_layer_tabular_data(labels_layer)
 
     # only select the columns the user requested
@@ -248,6 +257,7 @@ def run(viewer, labels_layer, selected_measurements_list, n_neighbours, perplexi
         from ._utilities import show_table
         show_table(viewer, labels_layer)
 
+        viewer.window._status_bar._toggle_activity_dock(False)
         print("Dimensionality reduction finished")
 
     def return_func_tsne(embedding):
@@ -258,6 +268,7 @@ def run(viewer, labels_layer, selected_measurements_list, n_neighbours, perplexi
         from ._utilities import show_table
         show_table(viewer, labels_layer)
 
+        viewer.window._status_bar._toggle_activity_dock(False)
         print("Dimensionality reduction finished")
 
     if selected_algorithm == 'UMAP':
@@ -280,7 +291,12 @@ def run(viewer, labels_layer, selected_measurements_list, n_neighbours, perplexi
 def umap(reg_props, n_neigh, n_components, standardize):
     import umap.umap_ as umap
 
-    reducer = umap.UMAP(random_state=133, n_components=n_components, n_neighbors=n_neigh, verbose=True)
+    reducer = umap.UMAP(random_state=133, n_components=n_components, n_neighbors=n_neigh, verbose=True,
+                        tqdm_kwds={'desc': 'Dimensionality reduction progress',
+                                   # 'dynamic_ncols': True,
+                                   # 'file': 'sys.stdout',
+    }
+                        )
 
     if standardize:
         from sklearn.preprocessing import StandardScaler
