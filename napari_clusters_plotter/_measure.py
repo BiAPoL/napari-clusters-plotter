@@ -191,6 +191,20 @@ class MeasureWidget(QWidget):
 def get_regprops_from_regprops_source(intensity_image, label_image, 
                                       region_props_source, 
                                       n_closest_points_list= [2,3,4]):
+    '''
+    Calculate Regionproperties based on the region properties source string
+
+    Parameters
+    ----------
+    intensity_image : numpy array
+        original image from which the labels were generated
+    label_image : numpy array
+        segmented image with background = 0 and labels >= 1
+    region_props_source: str
+        must include either shape, intensity, both or neighborhood
+    n_closest_points_list: list
+        number of closest neighbors for which neighborhood properties will be calculated
+    '''
     # and select columns, depending on if intensities and/or shape were selected
     columns = ['label', 'centroid_x', 'centroid_y', 'centroid_z']
 
@@ -218,6 +232,21 @@ def get_regprops_from_regprops_source(intensity_image, label_image,
         
 
 def region_props_with_neighborhood_data(columns, label_image, n_closest_points_list, reg_props):
+    '''
+    Calculate neighborhood regionproperties and combine with other regionproperties
+
+    Parameters
+    ----------
+    columns: list
+        list of names of regionproperties
+    label_image : numpy array
+        segmented image with background = 0 and labels >= 1
+    reg_props: dict
+        region properties to be combined with
+    n_closest_points_list: list
+        number of closest neighbors for which neighborhood properties will be calculated
+    '''
+
     # get lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
