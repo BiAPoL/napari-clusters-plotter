@@ -36,4 +36,9 @@ repos:
     hooks:
     - id: pyupgrade
       args: ["--py37-plus"]
+-   repo: https://github.com/myint/autoflake
+    rev: 'v1.4'
+    hooks:
+    - id: autoflake
+      args: ["--remove-all-unused-imports", "-i"]
       exclude: napari_clusters_plotter/__init__.py
