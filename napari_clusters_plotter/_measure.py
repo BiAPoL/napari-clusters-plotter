@@ -1,17 +1,28 @@
-from enum import Enum
-import pyclesperanto_prototype as cle
-import pandas as pd
-import numpy as np
 import warnings
-from napari.layers import Labels, Image
-from magicgui.widgets import FileEdit, create_widget
+from enum import Enum
+
+import numpy as np
+import pandas as pd
+import pyclesperanto_prototype as cle
 from magicgui.types import FileDialogMode
-from qtpy.QtWidgets import QWidget, QPushButton, QLabel, QHBoxLayout, QVBoxLayout, QLineEdit
-from ._utilities import show_table, widgets_inactive, set_features
+from magicgui.widgets import FileEdit, create_widget
+from napari.layers import Image, Labels
 from napari_tools_menu import register_dock_widget
+from qtpy.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ._utilities import set_features, show_table, widgets_inactive
 
 
-@register_dock_widget(menu="Measurement > Measure intensity, shape and neighbor counts (ncp)")
+@register_dock_widget(
+    menu="Measurement > Measure intensity, shape and neighbor counts (ncp)"
+)
 class MeasureWidget(QWidget):
     class Choices(Enum):
         EMPTY = " "
@@ -50,10 +61,12 @@ class MeasureWidget(QWidget):
         reg_props_container = QWidget()
         reg_props_container.setLayout(QHBoxLayout())
         reg_props_container.layout().addWidget(QLabel("Region Properties"))
-        self.reg_props_choice_list = create_widget(widget_type="ComboBox",
-                                                   name="Region_properties",
-                                                   value=self.Choices.EMPTY.value,
-                                                   options=dict(choices=[e.value for e in self.Choices]))
+        self.reg_props_choice_list = create_widget(
+            widget_type="ComboBox",
+            name="Region_properties",
+            value=self.Choices.EMPTY.value,
+            options=dict(choices=[e.value for e in self.Choices]),
+        )
 
         reg_props_container.layout().addWidget(self.reg_props_choice_list.native)
 
@@ -61,16 +74,17 @@ class MeasureWidget(QWidget):
         self.reg_props_file_widget = QWidget()
         self.reg_props_file_widget.setLayout(QVBoxLayout())
         filename_edit = FileEdit(
-            mode=FileDialogMode.EXISTING_FILE,
-            filter='*.csv',
-            value="  ")
+            mode=FileDialogMode.EXISTING_FILE, filter="*.csv", value="  "
+        )
         self.reg_props_file_widget.layout().addWidget(filename_edit.native)
         self.reg_props_file_widget.setVisible(False)
 
         # average distance of n closest points list
         self.closest_points_container = QWidget()
         self.closest_points_container.setLayout(QHBoxLayout())
-        self.closest_points_container.layout().addWidget(QLabel("Average distance of n closest points list"))
+        self.closest_points_container.layout().addWidget(
+            QLabel("Average distance of n closest points list")
+        )
         self.closest_points_list = QLineEdit()
         self.closest_points_container.layout().addWidget(self.closest_points_list)
         self.closest_points_list.setText("2, 3, 4")
@@ -104,7 +118,9 @@ class MeasureWidget(QWidget):
                 self.image_select.value,
                 self.labels_select.value,
                 self.reg_props_choice_list.value,
-                str(filename_edit.value.absolute()).replace("\\", "/").replace("//", "/"),
+                str(filename_edit.value.absolute())
+                .replace("\\", "/")
+                .replace("//", "/"),
                 self.closest_points_list.text(),
             )
 
@@ -131,15 +147,26 @@ class MeasureWidget(QWidget):
 
     # toggle widgets visibility according to what is selected
     def change_reg_props_file(self):
-        widgets_inactive(self.reg_props_file_widget,
-                         active=self.reg_props_choice_list.value == self.Choices.FILE.value)
+        widgets_inactive(
+            self.reg_props_file_widget,
+            active=self.reg_props_choice_list.value == self.Choices.FILE.value,
+        )
 
     def change_closest_points_list(self):
-        widgets_inactive(self.closest_points_container,
-                         active=self.reg_props_choice_list.value == self.Choices.NEIGHBORHOOD.value)
+        widgets_inactive(
+            self.closest_points_container,
+            active=self.reg_props_choice_list.value == self.Choices.NEIGHBORHOOD.value,
+        )
 
     # this function runs after the run button is clicked
-    def run(self, image_layer, labels_layer, region_props_source, reg_props_file, n_closest_points_str):
+    def run(
+        self,
+        image_layer,
+        labels_layer,
+        region_props_source,
+        reg_props_file,
+        n_closest_points_str,
+    ):
         print("Measurement running")
         print("Region properties source: " + str(region_props_source))
 
@@ -149,34 +176,38 @@ class MeasureWidget(QWidget):
             # load region properties from csv file
             reg_props = pd.read_csv(reg_props_file)
             try:
-                edited_reg_props = reg_props.drop(['Unnamed: 0'], axis=1)
+                edited_reg_props = reg_props.drop(["Unnamed: 0"], axis=1)
             except KeyError:
                 edited_reg_props = reg_props
 
-            if 'label' not in edited_reg_props.keys().tolist():
-                label_column = pd.DataFrame({'label': np.array(range(1, (len(edited_reg_props) + 1)))})
+            if "label" not in edited_reg_props.keys().tolist():
+                label_column = pd.DataFrame(
+                    {"label": np.array(range(1, (len(edited_reg_props) + 1)))}
+                )
                 reg_props_w_labels = pd.concat([label_column, edited_reg_props], axis=1)
                 set_features(labels_layer, reg_props_w_labels)
             else:
                 set_features(labels_layer, edited_reg_props)
 
-        elif 'Measure now' in region_props_source:
-            if 'shape' in region_props_source or 'intensity' in region_props_source:
-                reg_props = get_regprops_from_regprops_source(image_layer.data, 
-                                                              labels_layer.data,
-                                                              region_props_source)
+        elif "Measure now" in region_props_source:
+            if "shape" in region_props_source or "intensity" in region_props_source:
+                reg_props = get_regprops_from_regprops_source(
+                    image_layer.data, labels_layer.data, region_props_source
+                )
 
                 # saving measurement results into the properties or features of the analysed labels layer
-                set_features(labels_layer, reg_props) 
+                set_features(labels_layer, reg_props)
                 print("Measured:", list(reg_props.keys()))
 
-            if 'neighborhood' in region_props_source:
+            if "neighborhood" in region_props_source:
                 n_closest_points_split = n_closest_points_str.split(",")
                 n_closest_points_list = map(int, n_closest_points_split)
-                reg_props = get_regprops_from_regprops_source(image_layer.data, 
-                                                              labels_layer.data,
-                                                              region_props_source,
-                                                              n_closest_points_list)
+                reg_props = get_regprops_from_regprops_source(
+                    image_layer.data,
+                    labels_layer.data,
+                    region_props_source,
+                    n_closest_points_list,
+                )
 
                 set_features(labels_layer, reg_props)
                 print("Measured:", list(reg_props.keys()))
@@ -188,11 +219,11 @@ class MeasureWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
-def get_regprops_from_regprops_source(intensity_image, label_image, 
-                                      region_props_source, 
-                                      n_closest_points_list= [2,3,4]):
-    '''
-    Calculate Regionproperties based on the region properties source string
+def get_regprops_from_regprops_source(
+    intensity_image, label_image, region_props_source, n_closest_points_list=[2, 3, 4]
+):
+    """
+    Calculate Region properties based on the region properties source string
 
     Parameters
     ----------
@@ -204,35 +235,45 @@ def get_regprops_from_regprops_source(intensity_image, label_image,
         must include either shape, intensity, both or neighborhood
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
-    '''
+    """
     # and select columns, depending on if intensities and/or shape were selected
-    columns = ['label', 'centroid_x', 'centroid_y', 'centroid_z']
+    columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
 
-    if 'intensity' in region_props_source:
-        columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
-                             'mean_intensity', 'standard_deviation_intensity']
+    if "intensity" in region_props_source:
+        columns = columns + [
+            "min_intensity",
+            "max_intensity",
+            "sum_intensity",
+            "mean_intensity",
+            "standard_deviation_intensity",
+        ]
 
-    if 'shape' in region_props_source:
-        columns = columns + ['area', 'mean_distance_to_centroid',
-                             'max_distance_to_centroid', 
-                             'mean_max_distance_to_centroid_ratio']
+    if "shape" in region_props_source:
+        columns = columns + [
+            "area",
+            "mean_distance_to_centroid",
+            "max_distance_to_centroid",
+            "mean_max_distance_to_centroid_ratio",
+        ]
 
-    # Determine Regionproperties using clEsperanto
+    # Determine Region properties using clEsperanto
     reg_props = cle.statistics_of_labelled_pixels(intensity_image, label_image)
 
-    if 'shape' in region_props_source or 'intensity' in region_props_source: 
-        return {column: value for column, value in reg_props.items() if column in columns}
+    if "shape" in region_props_source or "intensity" in region_props_source:
+        return {
+            column: value for column, value in reg_props.items() if column in columns
+        }
 
-    if 'neighborhood' in region_props_source:
-        return region_props_with_neighborhood_data(columns, 
-                                                   label_image, 
-                                                   n_closest_points_list,
-                                                   reg_props)
+    if "neighborhood" in region_props_source:
+        return region_props_with_neighborhood_data(
+            columns, label_image, n_closest_points_list, reg_props
+        )
 
-        
 
-def region_props_with_neighborhood_data(columns, label_image, n_closest_points_list, reg_props):
-    '''
+def region_props_with_neighborhood_data(
+    columns, label_image, n_closest_points_list, reg_props
+):
+    """
     Calculate neighborhood regionproperties and combine with other regionproperties
 
     Parameters
@@ -245,16 +286,26 @@ def region_props_with_neighborhood_data(columns, label_image, n_closest_points_l
         region properties to be combined with
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
-    '''
+    """
 
-    # get lowest label index to adjust sizes of measurement arrays
+    # get the lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
-    columns = columns + ['min_intensity', 'max_intensity', 'sum_intensity',
-                         'mean_intensity', 'standard_deviation_intensity', 'area', 'mean_distance_to_centroid',
-                         'max_distance_to_centroid', 'mean_max_distance_to_centroid_ratio']
+    columns = columns + [
+        "min_intensity",
+        "max_intensity",
+        "sum_intensity",
+        "mean_intensity",
+        "standard_deviation_intensity",
+        "area",
+        "mean_distance_to_centroid",
+        "max_distance_to_centroid",
+        "mean_max_distance_to_centroid_ratio",
+    ]
 
-    region_props = {column: value for column, value in reg_props.items() if column in columns}
+    region_props = {
+        column: value for column, value in reg_props.items() if column in columns
+    }
 
     # determine neighbors of cells
     touch_matrix = cle.generate_touch_matrix(label_image)
@@ -280,18 +331,23 @@ def region_props_with_neighborhood_data(columns, label_image, n_closest_points_l
 
     # iterating over different neighbor numbers for average neighbor distance calculation
     for i in n_closest_points_list:
-        distance_of_n_closest_points = \
-            cle.pull(cle.average_distance_of_n_closest_points(cle.push(edited_dist_mat), n=i))[0]
+        distance_of_n_closest_points = cle.pull(
+            cle.average_distance_of_n_closest_points(cle.push(edited_dist_mat), n=i)
+        )[0]
 
         # addition to the regionprops dictionary
-        region_props['avg distance of {val} closest points'.format(val=i)] = distance_of_n_closest_points
+        region_props[
+            f"avg distance of {i} closest points"
+        ] = distance_of_n_closest_points
 
     # processing touching neighbor count for addition to regionprops (deletion of background & not used labels)
     touching_neighbor_c = cle.pull(touching_neighbor_count)
-    touching_neighbor_count_formatted = np.delete(touching_neighbor_c, list(range(min_label)))
+    touching_neighbor_count_formatted = np.delete(
+        touching_neighbor_c, list(range(min_label))
+    )
 
     # addition to the regionprops dictionary
-    region_props['touching neighbor count'] = touching_neighbor_count_formatted
-    print('Measurements Completed.')
+    region_props["touching neighbor count"] = touching_neighbor_count_formatted
+    print("Measurements Completed.")
 
     return region_props
