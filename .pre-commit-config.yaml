@@ -4,6 +4,15 @@ repos:
     hooks:
     - id: black
       pass_filenames: true
+-   repo: https://github.com/PyCQA/flake8
+    rev: 4.0.1
+    hooks:
+    - id: flake8
+      pass_filenames: true
+      # this seems to need to be here in addition to setup.cfg
+      exclude: vendored|__init__.py|examples
+      additional_dependencies:
+      - flake8-tidy-imports
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
     hooks:
@@ -14,3 +23,7 @@ repos:
     - id: trailing-whitespace
     - id: debug-statements
     - id: mixed-line-ending
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.10.1
+    hooks:
+    - id: isort
