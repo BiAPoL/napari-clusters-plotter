@@ -190,50 +190,27 @@ class MeasureWidget(QWidget):
                 set_features(labels_layer, edited_reg_props)
 
         elif "Measure now" in region_props_source:
-            # or determine it now using clEsperanto
-            reg_props = cle.statistics_of_labelled_pixels(
-                image_layer.data, labels_layer.data
-            )
-
-            # and select columns, depending on if intensities and/or shape were selected
-            columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
-            if "intensity" in region_props_source:
-                columns = columns + [
-                    "min_intensity",
-                    "max_intensity",
-                    "sum_intensity",
-                    "mean_intensity",
-                    "standard_deviation_intensity",
-                ]
-
-            if "shape" in region_props_source:
-                columns = columns + [
-                    "area",
-                    "mean_distance_to_centroid",
-                    "max_distance_to_centroid",
-                    "mean_max_distance_to_centroid_ratio",
-                ]
-
             if "shape" in region_props_source or "intensity" in region_props_source:
-                reg_props = {
-                    column: value
-                    for column, value in reg_props.items()
-                    if column in columns
-                }
+                reg_props = get_regprops_from_regprops_source(
+                    image_layer.data, labels_layer.data, region_props_source
+                )
 
                 # saving measurement results into the properties or features of the analysed labels layer
                 set_features(labels_layer, reg_props)
+                print("Measured:", list(reg_props.keys()))
 
             if "neighborhood" in region_props_source:
                 n_closest_points_split = n_closest_points_str.split(",")
                 n_closest_points_list = map(int, n_closest_points_split)
-                reg_props = region_props_with_neighborhood_data(
-                    columns, labels_layer.data, n_closest_points_list, reg_props
+                reg_props = get_regprops_from_regprops_source(
+                    image_layer.data,
+                    labels_layer.data,
+                    region_props_source,
+                    n_closest_points_list,
                 )
 
                 set_features(labels_layer, reg_props)
-
-            print("Measured:", list(reg_props.keys()))
+                print("Measured:", list(reg_props.keys()))
 
         else:
             warnings.warn("No measurements.")
@@ -242,9 +219,75 @@ class MeasureWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
+def get_regprops_from_regprops_source(
+    intensity_image, label_image, region_props_source, n_closest_points_list=[2, 3, 4]
+):
+    """
+    Calculate Region properties based on the region properties source string
+
+    Parameters
+    ----------
+    intensity_image : numpy array
+        original image from which the labels were generated
+    label_image : numpy array
+        segmented image with background = 0 and labels >= 1
+    region_props_source: str
+        must include either shape, intensity, both or neighborhood
+    n_closest_points_list: list
+        number of closest neighbors for which neighborhood properties will be calculated
+    """
+    # and select columns, depending on if intensities and/or shape were selected
+    columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
+
+    if "intensity" in region_props_source:
+        columns = columns + [
+            "min_intensity",
+            "max_intensity",
+            "sum_intensity",
+            "mean_intensity",
+            "standard_deviation_intensity",
+        ]
+
+    if "shape" in region_props_source:
+        columns = columns + [
+            "area",
+            "mean_distance_to_centroid",
+            "max_distance_to_centroid",
+            "mean_max_distance_to_centroid_ratio",
+        ]
+
+    # Determine Region properties using clEsperanto
+    reg_props = cle.statistics_of_labelled_pixels(intensity_image, label_image)
+
+    if "shape" in region_props_source or "intensity" in region_props_source:
+        return {
+            column: value for column, value in reg_props.items() if column in columns
+        }
+
+    if "neighborhood" in region_props_source:
+        return region_props_with_neighborhood_data(
+            columns, label_image, n_closest_points_list, reg_props
+        )
+
+
 def region_props_with_neighborhood_data(
     columns, label_image, n_closest_points_list, reg_props
 ):
+    """
+    Calculate neighborhood regionproperties and combine with other regionproperties
+
+    Parameters
+    ----------
+    columns: list
+        list of names of regionproperties
+    label_image : numpy array
+        segmented image with background = 0 and labels >= 1
+    reg_props: dict
+        region properties to be combined with
+    n_closest_points_list: list
+        number of closest neighbors for which neighborhood properties will be calculated
+    """
+
     # get the lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
