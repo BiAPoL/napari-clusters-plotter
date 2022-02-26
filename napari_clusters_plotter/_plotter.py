@@ -120,7 +120,7 @@ class MplCanvas(FigureCanvas):
         self.axes.tick_params(axis="x", colors="white")
         self.axes.tick_params(axis="y", colors="white")
 
-        super(MplCanvas, self).__init__(self.fig)
+        super().__init__(self.fig)
 
         self.pts = self.axes.scatter([], [])
         self.selector = SelectFromCollection(self, self.axes, self.pts)
@@ -390,7 +390,7 @@ class PlotterWidget(QWidget):
         clustering_ID = "MANUAL_CLUSTER_ID"
 
         # save manual clustering; select only the label that's currently selected on the layer
-        inside = np.ones((self.analysed_layer.data.max()))
+        inside = np.ones(self.analysed_layer.data.max())
         inside[self.analysed_layer.selected_label - 1] = 0
         features = get_layer_tabular_data(self.analysed_layer)
         features[clustering_ID] = inside

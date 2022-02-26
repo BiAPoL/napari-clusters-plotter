@@ -294,7 +294,7 @@ def region_props_with_neighborhood_data(
 
         # addition to the regionprops dictionary
         region_props[
-            "avg distance of {val} closest points".format(val=i)
+            f"avg distance of {i} closest points"
         ] = distance_of_n_closest_points
 
     # processing touching neighbor count for addition to regionprops (deletion of background & not used labels)
