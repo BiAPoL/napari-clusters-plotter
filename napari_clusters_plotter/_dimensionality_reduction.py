@@ -5,7 +5,12 @@ from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QRect
-from qtpy.QtWidgets import (QAbstractItemView,QComboBox,QHBoxLayout,QLabel,QListWidget,
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
     QListWidgetItem,
     QPushButton,
     QVBoxLayout,
