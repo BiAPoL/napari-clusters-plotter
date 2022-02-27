@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import napari
 import numpy as np
 from sklearn import datasets
-import matplotlib.pyplot as plt
 
 
 def test_clustering_widget():
@@ -33,8 +30,13 @@ def test_kmeans_clustering():
     # create an example dataset
     n_samples = 20
     n_centers = 2
-    data = datasets.make_blobs(n_samples=n_samples, random_state=1,
-                               centers=n_centers, cluster_std=0.3, n_features=2)
+    data = datasets.make_blobs(
+        n_samples=n_samples,
+        random_state=1,
+        centers=n_centers,
+        cluster_std=0.3,
+        n_features=2,
+    )
 
     true_class = data[1]
     measurements = data[0]
@@ -42,22 +44,27 @@ def test_kmeans_clustering():
     from napari_clusters_plotter._clustering import kmeans_clustering
 
     # test without standardization
-    result = kmeans_clustering(standardize=False,
-                               measurements=measurements,
-                               cluster_number=n_centers,
-                               iterations=50)
+    result = kmeans_clustering(
+        standardize=False,
+        measurements=measurements,
+        cluster_number=n_centers,
+        iterations=50,
+    )
 
     assert len(np.unique(result)) == n_centers
-    assert np.array_equal(1-true_class, result)
+    assert np.array_equal(1 - true_class, result)
 
     # test with standardization
-    result = kmeans_clustering(standardize=True,
-                               measurements=measurements,
-                               cluster_number=n_centers,
-                               iterations=50)
+    result = kmeans_clustering(
+        standardize=True,
+        measurements=measurements,
+        cluster_number=n_centers,
+        iterations=50,
+    )
 
     assert len(np.unique(result)) == n_centers
-    assert np.array_equal(1-true_class, result)
+    assert np.array_equal(1 - true_class, result)
+
 
 def test_hdbscan_clustering():
 
@@ -78,19 +85,23 @@ def test_hdbscan_clustering():
     min_samples = 2  # number of samples that should be included in one cluster
 
     # test without standardization
-    result = hdbscan_clustering(standardize=False,
-                                measurements=measurements,
-                                min_cluster_size=min_cluster_size,
-                                min_samples=min_samples)
+    result = hdbscan_clustering(
+        standardize=False,
+        measurements=measurements,
+        min_cluster_size=min_cluster_size,
+        min_samples=min_samples,
+    )
 
     assert len(np.unique(result)) == 2
     assert np.array_equal(true_class, result)
 
     # test with standardization
-    result = hdbscan_clustering(standardize=True,
-                                measurements=measurements,
-                                min_cluster_size=min_cluster_size,
-                                min_samples=min_samples)
+    result = hdbscan_clustering(
+        standardize=True,
+        measurements=measurements,
+        min_cluster_size=min_cluster_size,
+        min_samples=min_samples,
+    )
 
     assert len(np.unique(result)) == 2
     assert np.array_equal(true_class, result)

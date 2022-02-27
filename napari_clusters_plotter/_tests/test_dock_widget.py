@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
+import napari
 
 import napari_clusters_plotter as ncp
-import napari
 
 
 def test_widget_creation():
@@ -18,5 +17,5 @@ def test_widget_creation():
     assert len(viewer.window._dock_widgets) == n_wdgts + 4
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_widget_creation()
