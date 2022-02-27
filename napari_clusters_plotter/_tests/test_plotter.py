@@ -4,11 +4,8 @@ import napari
 import numpy as np
 
 import napari_clusters_plotter as ncp
-from _utilities import get_layer_tabular_data
 
 sys.path.append("../")
-
-
 
 
 def test_plotting():
