@@ -8,7 +8,6 @@ def test_measurements():
 
     viewer = napari.Viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
-    n_wdgts = len(viewer.window._dock_widgets)
 
     label = np.array(
         [
