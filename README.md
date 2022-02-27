@@ -5,8 +5,10 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-clusters-plotter.svg?color=green)](https://python.org)
 [![tests](https://github.com/lazigu/napari-clusters-plotter/workflows/tests/badge.svg)](https://github.com/lazigu/napari-clusters-plotter/actions)
 [![codecov](https://codecov.io/gh/lazigu/napari-clusters-plotter/branch/master/graph/badge.svg)](https://codecov.io/gh/lazigu/napari-clusters-plotter)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/napari-clusters-plotter.svg)](https://pypistats.org/packages/napari-clusters-plotter)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clusters-plotter)](https://www.napari-hub.org/plugins/napari-clusters-plotter)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5884658.svg)](https://doi.org/10.5281/zenodo.5884658)
 
 A plugin to use with napari for clustering objects according to their properties.
 
@@ -20,7 +22,7 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 
 ### Starting point
 For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and a label image
-representing a segmentation of objects. For segmenting objects, you can for example use the 
+representing a segmentation of objects. For segmenting objects, you can for example use the
 [Voronoi-Otsu-labeling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labeling)
 in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://www.napari-hub.org/plugins/napari-segment-blobs-and-things-with-membranes).
 
@@ -28,7 +30,7 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 ### Measurements
 The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
-You can use the menu `Tools > Measurement > Measure intensity, shape and neighbor counts (ncp)` for that. 
+You can use the menu `Tools > Measurement > Measure intensity, shape and neighbor counts (ncp)` for that.
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 A table with the measurements will open:
 
@@ -58,7 +60,7 @@ visualization in the image, turn off the visibility of the analysed labels layer
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
 You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
-mode in napari and see which data point in the plot it corresponds to. 
+mode in napari and see which data point in the plot it corresponds to.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.gif)
 
@@ -87,7 +89,7 @@ or [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html).
 Therefore, click the menu `Tools > Measurement > Clustering (ncp)`,
 again, select the analysed labels layer.
 This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
-Select the clustering method `KMeans` and click on `Run`. 
+Select the clustering method `KMeans` and click on `Run`.
 The table of measurements will reappear with an additional column `ALGORITHM_NAME_CLUSTERING_ID` containing the cluster
 ID of each datapoint.
 
@@ -107,8 +109,8 @@ Example of k-means clustering results:
 
 ## Installation
 
-* Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html). 
-  If you never used python/conda environments before, please follow the instructions 
+* Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html).
+  If you never used python/conda environments before, please follow the instructions
   [here](https://mpicbg-scicomp.github.io/ipf_howtoguides/guides/Python_Conda_Environments) first. It is recommended to
   install python 3.9 to your new conda environment from the start. The plugin is not yet supported with Python 3.10.
   Create a new environment, for example, like this:
@@ -137,7 +139,7 @@ pip install napari-clusters-plotter
 
 ## Troubleshooting installation
 
-If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
+- If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
 
 ```
 ImportError: DLL load failed while importing _cl
@@ -146,16 +148,20 @@ ImportError: DLL load failed while importing _cl
 Try downloading and installing a pyopencl with a lower cl version, e.g. cl12 : pyopencl=2020.1. However, in this case,
 you will need an environment with a lower python version (python=3.8).
 
-If you encounter such an error:
+- `Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly`
 
-```
-Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly
-```
-
-You can install hdbscan via conda before installing the plugin:
+Install hdbscan via conda before installing the plugin:
 
 ```
 conda install -c conda-forge hdbscan
+```
+
+- `ValueError: numpy.ndarray size changed, may indicate binary incompatibility. Expected 96 from C header, got 88 from PyObject`
+
+Similar to the above-described error, this error can occur when importing hdbscan through pip or in the wrong order. This can be fixed by installing packages separately through conda and in the following order:
+```bash
+conda install -c conda-forge napari pyopencl hdbscan
+pip install napari-clusters-plotter
 ```
 
 ## Contributing
