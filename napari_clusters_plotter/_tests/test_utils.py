@@ -6,19 +6,16 @@ import pandas as pd
 
 import napari_clusters_plotter as ncp
 
-sys.path.append("../")
-
 from _utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     set_features,
 )
 
+sys.path.append("../")
 
 def test_feature_setting():
     viewer = napari.Viewer()
-    widget_list = ncp.napari_experimental_provide_dock_widget()
-    n_wdgts = len(viewer.window._dock_widgets)
     label = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
