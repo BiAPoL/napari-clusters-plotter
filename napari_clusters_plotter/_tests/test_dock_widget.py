@@ -40,16 +40,12 @@ def test_processing_dask_array(make_napari_viewer):
         img_layer.data, label_layer.data, region_props_source
     )
     assert np.all(
-            np.array_equal(
-                expected_region_props_partial["label"], region_props["label"]
-            )
-            and np.array_equal(
-                expected_region_props_partial["area"], region_props["area"]
-            )
-            and np.array_equal(
-                expected_region_props_partial["mean_intensity"],
-                region_props["mean_intensity"],
-            )
+        np.array_equal(expected_region_props_partial["label"], region_props["label"])
+        and np.array_equal(expected_region_props_partial["area"], region_props["area"])
+        and np.array_equal(
+            expected_region_props_partial["mean_intensity"],
+            region_props["mean_intensity"],
+        )
     )
 
 
