@@ -149,9 +149,7 @@ class FeatureSelectionWidget(QWidget):
                 ]
                 for i, widget in enumerate(self.correlation_containers):
                     widget.setLayout(QVBoxLayout())
-                    widget.layout().addWidget(
-                        QLabel(f"Correlating Group #{i + 1}")
-                    )
+                    widget.layout().addWidget(QLabel(f"Correlating Group #{i + 1}"))
                     widget.layout().addWidget(self.correlation_key_lists[i])
                     widget.setVisible(False)
 
