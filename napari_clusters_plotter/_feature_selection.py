@@ -128,7 +128,7 @@ class FeatureSelectionWidget(QWidget):
             self.analyse_correlation()
 
             # adding widgets
-            if self.correlating_keys != None and len(self.correlating_keys) != 0:
+            if self.correlating_keys is not None and len(self.correlating_keys) != 0:
                 self.correlation_key_lists = [
                     QListWidget() for correlations in self.correlating_keys
                 ]
@@ -149,9 +149,7 @@ class FeatureSelectionWidget(QWidget):
                 ]
                 for i, widget in enumerate(self.correlation_containers):
                     widget.setLayout(QVBoxLayout())
-                    widget.layout().addWidget(
-                        QLabel(f"Correlating Group #{i + 1}")
-                    )
+                    widget.layout().addWidget(QLabel(f"Correlating Group #{i + 1}"))
                     widget.layout().addWidget(self.correlation_key_lists[i])
                     widget.setVisible(False)
 
@@ -177,7 +175,7 @@ class FeatureSelectionWidget(QWidget):
         self.layout().addWidget(run_widget)
         self.layout().addWidget(self.analyse_correlation_container)
 
-        if self.correlating_keys != None and len(self.correlating_keys) != 0:
+        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             for container in self.correlation_containers:
                 self.layout().addWidget(container)
             self.layout().setSpacing(0)
@@ -219,7 +217,7 @@ class FeatureSelectionWidget(QWidget):
         )
 
     def change_correlation_boxes(self):
-        if self.correlating_keys != None and len(self.correlating_keys) != 0:
+        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             for widget in self.correlation_containers:
                 widgets_inactive(
                     widget,
