@@ -1,5 +1,4 @@
-import pytest
-
+import napari
 import napari_clusters_plotter
 from napari_clusters_plotter._measure import get_regprops_from_regprops_source
 import numpy as np
@@ -45,7 +44,7 @@ def test_processing_dask_array(make_napari_viewer):
 
 
 @pytest.mark.parametrize("widget_name", MY_WIDGET_NAMES)
-def test_something_with_viewer(widget_name, make_napari_viewer,
+def test_widget_creation(widget_name, make_napari_viewer,
                                napari_plugin_manager):
     '''Function to test docking widgets into viewer'''
     napari_plugin_manager.register(napari_clusters_plotter,
@@ -56,3 +55,4 @@ def test_something_with_viewer(widget_name, make_napari_viewer,
         plugin_name=MY_PLUGIN_NAME, widget_name=widget_name
     )
     assert len(viewer.window._dock_widgets) == num_dw + 1
+
