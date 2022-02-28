@@ -1,9 +1,9 @@
 import warnings
 from enum import Enum
 
+import dask.array as da
 import numpy as np
 import pandas as pd
-import dask.array as da
 import pyclesperanto_prototype as cle
 from magicgui.types import FileDialogMode
 from magicgui.widgets import FileEdit, create_widget
