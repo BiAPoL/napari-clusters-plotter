@@ -1,5 +1,6 @@
-import napari_clusters_plotter
 import pytest
+
+import napari_clusters_plotter
 
 # this is your plugin name declared in your napari.plugins entry point
 MY_PLUGIN_NAME = "napari-clusters-plotter"
