@@ -25,19 +25,17 @@ def set_features(layer, tabular_data):
 
 
 def get_layer_tabular_data(layer):
-    if hasattr(layer, "features") and layer.features is not None:
-        return layer.features
     if hasattr(layer, "properties") and layer.properties is not None:
         return pd.DataFrame(layer.properties)
+    if hasattr(layer, "features") and layer.features is not None:
+        return layer.features
     return None
-
 
 def add_column_to_layer_tabular_data(layer, column_name, data):
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
     if hasattr(layer, "features"):
         layer.features[column_name] = data
-
 
 def get_nice_colormap():
     colours_w_old_colors = [
