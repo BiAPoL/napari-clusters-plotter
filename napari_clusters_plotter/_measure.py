@@ -3,6 +3,7 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
+import dask.array as da
 import pyclesperanto_prototype as cle
 from magicgui.types import FileDialogMode
 from magicgui.widgets import FileEdit, create_widget
@@ -113,7 +114,6 @@ class MeasureWidget(QWidget):
             if self.image_select.value is None:
                 warnings.warn("No image was selected!")
                 return
-
             self.run(
                 self.image_select.value,
                 self.labels_select.value,
@@ -287,7 +287,8 @@ def region_props_with_neighborhood_data(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-
+    if isinstance(label_image, da.core.Array):
+        label_image = np.asarray(label_image)
     # get the lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
