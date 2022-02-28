@@ -20,8 +20,8 @@ from qtpy.QtWidgets import (
 from ._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
-    set_features,
     restore_defaults,
+    set_features,
     widgets_inactive,
 )
 
@@ -398,13 +398,14 @@ class DimensionalityReductionWidget(QWidget):
             # reduce dimensionality
             embedding = pca(properties_to_reduce, explained_variance, pca_components)
 
-            # check if principle components are already present 
+            # check if principle components are already present
             # and remove them by overwriting the features
             tabular_data = get_layer_tabular_data(labels_layer)
-            dropkeys = [column for column in tabular_data.keys() if column.startswith("PC_")]
-            df_principal_components_removed = tabular_data.drop(dropkeys, axis = 1)
-            set_features(labels_layer,df_principal_components_removed)
-
+            dropkeys = [
+                column for column in tabular_data.keys() if column.startswith("PC_")
+            ]
+            df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
+            set_features(labels_layer, df_principal_components_removed)
 
             # write result back to properties
             for i in range(0, len(embedding.T)):

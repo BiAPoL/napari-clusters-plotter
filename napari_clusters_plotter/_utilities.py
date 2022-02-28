@@ -31,11 +31,13 @@ def get_layer_tabular_data(layer):
         return layer.features
     return None
 
+
 def add_column_to_layer_tabular_data(layer, column_name, data):
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
     if hasattr(layer, "features"):
         layer.features[column_name] = data
+
 
 def get_nice_colormap():
     colours_w_old_colors = [
