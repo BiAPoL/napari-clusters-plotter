@@ -21,6 +21,7 @@ from ._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     restore_defaults,
+    set_features,
     widgets_inactive,
 )
 
@@ -31,6 +32,8 @@ DEFAULTS = {
     "n_neighbors": 15,
     "perplexity": 30,
     "standardization": True,
+    "pca_components": 0,
+    "explained_variance": 95.0,
 }
 
 
@@ -62,7 +65,7 @@ class DimensionalityReductionWidget(QWidget):
             QLabel("Dimensionality Reduction Algorithm")
         )
         self.algorithm_choice_list = QComboBox()
-        self.algorithm_choice_list.addItems(["", "UMAP", "t-SNE"])
+        self.algorithm_choice_list.addItems(["", "UMAP", "t-SNE", "PCA"])
         algorithm_container.layout().addWidget(self.algorithm_choice_list)
 
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
@@ -138,6 +141,39 @@ class DimensionalityReductionWidget(QWidget):
         choose_properties_container.layout().addWidget(QLabel("Measurements"))
         choose_properties_container.layout().addWidget(self.properties_list)
 
+        # selection of the number of components to keep after PCA transformation,
+        # values above 0 will override explained variance option
+        self.pca_components_container = QWidget()
+        self.pca_components_container.setLayout(QHBoxLayout())
+        self.pca_components_container.layout().addWidget(QLabel("Number of Components"))
+        self.pca_components = create_widget(
+            widget_type="SpinBox",
+            name="pca_components",
+            value=DEFAULTS["pca_components"],
+            options=dict(min=0, step=1),
+        )  # TODO , max=len(self.properties_list)
+
+        self.pca_components_container.layout().addWidget(self.pca_components.native)
+        self.pca_components_container.setVisible(False)
+
+        # Minimum percentage of variance explained by kept PCA components,
+        # will not be used if pca_components > 0
+        self.explained_variance_container = QWidget()
+        self.explained_variance_container.setLayout(QHBoxLayout())
+        self.explained_variance_container.layout().addWidget(
+            QLabel("Explained Variance Threshold")
+        )
+        self.explained_variance = create_widget(
+            widget_type="FloatSpinBox",
+            name="explained_variance",
+            value=DEFAULTS["explained_variance"],
+            options=dict(min=1, max=100, step=1),
+        )
+
+        self.explained_variance_container.layout().addWidget(
+            self.explained_variance.native
+        )
+        self.explained_variance_container.setVisible(False)
         # checkbox whether data should be standardized
         self.settings_container_scaler = QWidget()
         self.settings_container_scaler.setLayout(QHBoxLayout())
@@ -189,6 +225,8 @@ class DimensionalityReductionWidget(QWidget):
                 self.perplexity.value,
                 self.algorithm_choice_list.currentText(),
                 self.standardization.value,
+                self.explained_variance.value,
+                self.pca_components.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -204,6 +242,8 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(algorithm_container)
         self.layout().addWidget(self.perplexity_container)
         self.layout().addWidget(self.n_neighbors_container)
+        self.layout().addWidget(self.pca_components_container)
+        self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(update_container)
@@ -218,6 +258,14 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
+        # self.algorithm_choice_list.currentIndexChanged.connect(self.change_neighbours_list)
+        # self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
+        self.algorithm_choice_list.currentIndexChanged.connect(
+            self.change_pca_components
+        )
+        self.algorithm_choice_list.currentIndexChanged.connect(
+            self.change_explained_variance
+        )
         self.algorithm_choice_list.currentIndexChanged.connect(
             self.change_umap_settings
         )
@@ -259,6 +307,18 @@ class DimensionalityReductionWidget(QWidget):
             ),
         )
 
+    def change_pca_components(self):
+        widgets_inactive(
+            self.pca_components_container,
+            active=self.algorithm_choice_list.currentText() == "PCA",
+        )
+
+    def change_explained_variance(self):
+        widgets_inactive(
+            self.explained_variance_container,
+            active=self.algorithm_choice_list.currentText() == "PCA",
+        )
+
     def update_properties_list(self):
         selected_layer = self.labels_select.value
         if selected_layer is not None:
@@ -281,9 +341,10 @@ class DimensionalityReductionWidget(QWidget):
         perplexity,
         selected_algorithm,
         standardize,
+        explained_variance,
+        pca_components,
         n_components=2,
     ):
-        # n_components: dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
@@ -330,6 +391,28 @@ class DimensionalityReductionWidget(QWidget):
                     labels_layer, "t-SNE_" + str(i), embedding[:, i]
                 )
 
+        elif selected_algorithm == "PCA":
+            print(
+                "Dimensionality reduction started (" + str(selected_algorithm) + ")..."
+            )
+            # reduce dimensionality
+            embedding = pca(properties_to_reduce, explained_variance, pca_components)
+
+            # check if principle components are already present
+            # and remove them by overwriting the features
+            tabular_data = get_layer_tabular_data(labels_layer)
+            dropkeys = [
+                column for column in tabular_data.keys() if column.startswith("PC_")
+            ]
+            df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
+            set_features(labels_layer, df_principal_components_removed)
+
+            # write result back to properties
+            for i in range(0, len(embedding.T)):
+                add_column_to_layer_tabular_data(
+                    labels_layer, "PC_" + str(i), embedding[:, i]
+                )
+
         from ._utilities import show_table
 
         show_table(self.viewer, labels_layer)
@@ -371,3 +454,29 @@ def tsne(reg_props, perplexity, n_components, standardize):
         return reducer.fit_transform(scaled_regionprops)
     else:
         return reducer.fit_transform(reg_props)
+
+
+def pca(reg_props, explained_variance_threshold, n_components):
+    from sklearn.decomposition import PCA
+    from sklearn.preprocessing import StandardScaler
+
+    if n_components == 0 or n_components > len(reg_props.columns):
+        pca_object = PCA()
+    else:
+        pca_object = PCA(n_components=n_components)
+
+    scaled_regionprops = StandardScaler().fit_transform(reg_props)
+    pca_transformed_props = pca_object.fit_transform(scaled_regionprops)
+
+    if n_components == 0:
+        explained_variance = pca_object.explained_variance_ratio_
+        cumulative_expl_var = [
+            sum(explained_variance[: i + 1]) for i in range(len(explained_variance))
+        ]
+        for i, j in enumerate(cumulative_expl_var):
+            if j >= explained_variance_threshold / 100:
+                pca_cum_var_idx = i
+                break
+        return pca_transformed_props.T[: pca_cum_var_idx + 1].T
+    else:
+        return pca_transformed_props
