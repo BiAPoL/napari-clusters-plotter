@@ -3,7 +3,7 @@
 
 name: tests
 
-on: 
+on:
   push:
     branches:
       - master
@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v2
@@ -58,18 +58,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools tox tox-gh-actions
 
-      # this runs the platform-specific tests declared in tox.ini
-      - name: Test with tox
-        run: tox
-        env:
-          PLATFORM: ${{ matrix.platform }}
+      # # this runs the platform-specific tests declared in tox.ini
+      # - name: Test with tox
+      #   run: tox
+      #   env:
+      #     PLATFORM: ${{ matrix.platform }}
 
-      - name: Coverage
-        uses: codecov/codecov-action@v1
+      # - name: Coverage
+      #   uses: codecov/codecov-action@v1
 
   deploy:
     # this will run when you have tagged a commit, starting with "v*"
-    # and requires that you have put your twine API key in your 
+    # and requires that you have put your twine API key in your
     # github secrets (see readme for details)
     needs: [test]
     runs-on: ubuntu-latest
