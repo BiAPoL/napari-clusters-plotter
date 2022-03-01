@@ -153,7 +153,21 @@ class DimensionalityReductionWidget(QWidget):
             options=dict(min=0, step=1),
         )  # TODO , max=len(self.properties_list)
 
+        help_pca_components = QLabel()
+        help_pca_components.setOpenExternalLinks(True)
+        help_pca_components.setText(
+            '<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+
+        help_pca_components.setToolTip(
+            "The number of components sets the number of principal components to be included after the transformation. "
+            "When set to 0 the number of components that are selected is determined by the explained variance threshold "
+            "Click on the question mark to read more."
+        )
+    
         self.pca_components_container.layout().addWidget(self.pca_components.native)
+        self.pca_components_container.layout().addWidget(help_pca_components)
         self.pca_components_container.setVisible(False)
 
         # Minimum percentage of variance explained by kept PCA components,
@@ -170,8 +184,26 @@ class DimensionalityReductionWidget(QWidget):
             options=dict(min=1, max=100, step=1),
         )
 
+        help_explained_variance = QLabel()
+        help_explained_variance.setOpenExternalLinks(True)
+        help_explained_variance.setText(
+            '<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+
+        help_explained_variance.setToolTip(
+            "The explained variance threshold sets the amount of variance in the dataset that can minimally be represented "
+            "by the principal components. The closer the threshold is to 100% ,the more the variance in the dataset can be "
+            "accounted for by the chosen principal components (and the less dimensionality reduction will be perfomed as a "
+            "result) "
+            "Click on the question mark to read more."
+        )
+
         self.explained_variance_container.layout().addWidget(
             self.explained_variance.native
+        )
+        self.explained_variance_container.layout().addWidget(
+            help_explained_variance
         )
         self.explained_variance_container.setVisible(False)
         # checkbox whether data should be standardized
