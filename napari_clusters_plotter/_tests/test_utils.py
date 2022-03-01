@@ -3,7 +3,8 @@ import sys
 import napari
 import numpy as np
 import pandas as pd
-from _utilities import (
+
+from .._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     set_features,
