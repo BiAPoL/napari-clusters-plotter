@@ -1,15 +1,14 @@
-import sys
-
 import napari
 import numpy as np
 import pandas as pd
-from _utilities import (
+
+from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     set_features,
 )
 
-sys.path.append("../")
+# .path.append("../")
 
 
 def test_feature_setting():

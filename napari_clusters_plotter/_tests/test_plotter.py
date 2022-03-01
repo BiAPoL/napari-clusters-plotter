@@ -1,11 +1,9 @@
-import sys
-
 import napari
 import numpy as np
 
 import napari_clusters_plotter as ncp
 
-sys.path.append("../")
+# sys.path.append("../")
 
 
 def test_plotting():
