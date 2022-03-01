@@ -25,3 +25,4 @@ brotli~=1.0.9
 pytz~=2021.3
 numba~=0.54.1
 pre-commit
+pytest
