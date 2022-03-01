@@ -1,5 +1,6 @@
 import dask.array as da
 import numpy as np
+import pytest
 
 import napari_clusters_plotter
 from napari_clusters_plotter._measure import get_regprops_from_regprops_source
