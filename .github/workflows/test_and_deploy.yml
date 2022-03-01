@@ -70,7 +70,7 @@ jobs:
         run: |
           conda install -y pyopencl hdbscan
           python -m pip install --upgrade pip
-          pip install setuptools tox tox-gh-actions pytest pytest-cov pytest-benchmark pytest-qt pyqt5 pytest-xvfb
+          pip install setuptools tox tox-gh-actions pytest pytest-cov PyQt5
           pip install -e .
       # # this runs the platform-specific tests declared in tox.ini
       # - name: Test with tox
