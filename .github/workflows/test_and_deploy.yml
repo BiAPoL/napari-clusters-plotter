@@ -64,8 +64,8 @@ jobs:
       #   env:
       #     PLATFORM: ${{ matrix.platform }}
 
-      # - name: Coverage
-      #   uses: codecov/codecov-action@v1
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
 
   deploy:
     # this will run when you have tagged a commit, starting with "v*"
