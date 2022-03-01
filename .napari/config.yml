@@ -1,0 +1,14 @@
+# Add labels from the EDAM Bioimaging ontology
+labels:
+  ontology: EDAM-BIOIMAGING:alpha06
+  terms:
+  - 2D image
+  - 3D image
+  - Unsupervised learning
+  - Clustering
+  - Centroid-based clustering
+  - Hierarchical clustering
+  - Visualisation
+  - Plotting
+  - Object feature extraction
+  - Shape features extraction
