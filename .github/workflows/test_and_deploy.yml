@@ -57,7 +57,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install --upgrade pip
-          pip install setuptools pytest pytest-cov
+          pip install setuptools wheel pytest pytest-cov
 
           pip install -e .
 
