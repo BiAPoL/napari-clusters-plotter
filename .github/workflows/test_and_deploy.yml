@@ -70,14 +70,14 @@ jobs:
         run: |
           conda install -y pyopencl hdbscan
           python -m pip install --upgrade pip
-          pip install setuptools tox tox-gh-actions pytest pytest-cov PyQt5
+          pip install setuptools pytest pytest-cov PyQt5 pytest-qt
           pip install -e .
       # # this runs the platform-specific tests declared in tox.ini
       # - name: Test with tox
       #   run: tox
       #   env:
       #     PLATFORM: ${{ matrix.platform }}
-      - name: Test
+      - name: Run tests
         shell: bash -l {0}
         run: pytest -v --cov=./ --cov-report=xml
 
