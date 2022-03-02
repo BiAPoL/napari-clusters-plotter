@@ -1,9 +1,9 @@
 import sys
 
-import napari
 import numpy as np
 import pandas as pd
-from _utilities import (
+
+from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     set_features,
@@ -12,8 +12,9 @@ from _utilities import (
 sys.path.append("../")
 
 
-def test_feature_setting():
-    viewer = napari.Viewer()
+def test_feature_setting(make_napari_viewer):
+
+    viewer = make_napari_viewer()
     label = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
