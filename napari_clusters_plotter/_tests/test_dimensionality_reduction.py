@@ -131,6 +131,20 @@ def test_tsne():
     assert result.shape[-1] == n_comp
 
 
+def test_pca():
+
+    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+    n_comp = 3
+
+    from napari_clusters_plotter._dimensionality_reduction import pca
+
+    result = pca(X, explained_variance_threshold=95.0, n_components=0)
+    assert result.shape[-1] == n_comp
+
+    result = pca(X, explained_variance_threshold=95.0, n_components=0)
+    assert result.shape[-1] == n_comp
+
+
 if __name__ == "__main__":
     test_clustering_widget()
     test_call_to_function()
