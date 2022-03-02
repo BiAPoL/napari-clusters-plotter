@@ -1,12 +1,11 @@
 import numpy as np
 
-import napari_clusters_plotter as ncp
+from napari_clusters_plotter._measure import MeasureWidget
 
 
 def test_measurements(make_napari_viewer):
 
     viewer = make_napari_viewer()
-    widget_list = ncp.napari_experimental_provide_dock_widget()
 
     label = np.array(
         [
@@ -25,14 +24,9 @@ def test_measurements(make_napari_viewer):
     label_layer = viewer.add_labels(label)
     image_layer = viewer.add_image(image)
 
-    for widget in widget_list:
-        _widget = widget(viewer)
-        if isinstance(_widget, ncp._measure.MeasureWidget):
-            break
+    widget = MeasureWidget(napari_viewer=viewer)
 
-    viewer.window.add_dock_widget(_widget)
-
-    _widget.run(image_layer, label_layer, "Measure now intensity", None, None)
+    widget.run(image_layer, label_layer, "Measure now intensity", None, None)
     data = label_layer.features
     assert "max_intensity" in data.columns
     assert "sum_intensity" in data.columns
@@ -41,7 +35,7 @@ def test_measurements(make_napari_viewer):
 
     assert data["max_intensity"].max() == 7 * 1.5
 
-    _widget.run(image_layer, label_layer, "Measure now shape", None, None)
+    widget.run(image_layer, label_layer, "Measure now shape", None, None)
     data = label_layer.features
     assert "area" in data.columns
     assert "mean_distance_to_centroid" in data.columns
@@ -50,7 +44,7 @@ def test_measurements(make_napari_viewer):
 
     assert data["area"].max() == 5
 
-    _widget.run(image_layer, label_layer, "Measure now neighborhood", None, "2, 3, 4")
+    widget.run(image_layer, label_layer, "Measure now neighborhood", None, "2, 3, 4")
     data = label_layer.features
     assert "avg distance of 2 closest points" in data.columns
     assert "avg distance of 3 closest points" in data.columns
