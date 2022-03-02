@@ -68,9 +68,10 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
+          set CONDA_DLL_SEARCH_MODIFICATION_ENABLE=1
           conda install -y pyopencl hdbscan
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov PyQt5 pytest-qt pytest-xvfb scipy
+          pip install pytest pytest-cov PyQt5 pytest-qt pytest-xvfb
           pip install -e .
       # # this runs the platform-specific tests declared in tox.ini
       # - name: Test with tox
