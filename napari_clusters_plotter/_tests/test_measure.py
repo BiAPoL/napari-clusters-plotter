@@ -1,6 +1,7 @@
 import numpy as np
 
 from napari_clusters_plotter._measure import MeasureWidget
+from napari_clusters_plotter._utilities import get_layer_tabular_data
 
 
 def test_measurements(make_napari_viewer):
@@ -26,8 +27,15 @@ def test_measurements(make_napari_viewer):
 
     widget = MeasureWidget(napari_viewer=viewer)
 
-    widget.run(image_layer, label_layer, "Measure now intensity", None, None)
-    data = label_layer.features
+    widget.run(
+        image_layer=image_layer,
+        labels_layer=label_layer,
+        region_props_source="Measure now intensity",
+        reg_props_file=None,
+        n_closest_points_str=None,
+    )
+
+    data = get_layer_tabular_data(label_layer)
     assert "max_intensity" in data.columns
     assert "sum_intensity" in data.columns
     assert "mean_intensity" in data.columns
@@ -35,8 +43,15 @@ def test_measurements(make_napari_viewer):
 
     assert data["max_intensity"].max() == 7 * 1.5
 
-    widget.run(image_layer, label_layer, "Measure now shape", None, None)
-    data = label_layer.features
+    widget.run(
+        image_layer=image_layer,
+        labels_layer=label_layer,
+        region_props_source="Measure now shape",
+        reg_props_file=None,
+        n_closest_points_str=None,
+    )
+
+    data = get_layer_tabular_data(label_layer)
     assert "area" in data.columns
     assert "mean_distance_to_centroid" in data.columns
     assert "max_distance_to_centroid" in data.columns
@@ -44,8 +59,15 @@ def test_measurements(make_napari_viewer):
 
     assert data["area"].max() == 5
 
-    widget.run(image_layer, label_layer, "Measure now neighborhood", None, "2, 3, 4")
-    data = label_layer.features
+    widget.run(
+        image_layer=image_layer,
+        labels_layer=label_layer,
+        region_props_source="Measure now neighborhood",
+        reg_props_file=None,
+        n_closest_points_str="2, 3, 4",
+    )
+
+    data = get_layer_tabular_data(label_layer)
     assert "avg distance of 2 closest points" in data.columns
     assert "avg distance of 3 closest points" in data.columns
     assert "avg distance of 4 closest points" in data.columns
