@@ -1,12 +1,11 @@
-import napari
 import numpy as np
 
 import napari_clusters_plotter as ncp
 
 
-def test_measurements():
+def test_measurements(make_napari_viewer):
 
-    viewer = napari.Viewer()
+    viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
 
     label = np.array(
@@ -28,7 +27,7 @@ def test_measurements():
 
     for widget in widget_list:
         _widget = widget(viewer)
-        if isinstance(_widget, ncp.MeasureWidget):
+        if isinstance(_widget, ncp._measure.MeasureWidget):
             break
 
     viewer.window.add_dock_widget(_widget)

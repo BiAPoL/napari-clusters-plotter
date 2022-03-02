@@ -1,14 +1,11 @@
-import napari
 import numpy as np
 
 import napari_clusters_plotter as ncp
 
-# sys.path.append("../")
 
+def test_plotting(make_napari_viewer):
 
-def test_plotting():
-
-    viewer = napari.Viewer()
+    viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
 
     label = np.array(
@@ -30,12 +27,12 @@ def test_plotting():
 
     for widget in widget_list:
         _widget = widget(viewer)
-        if isinstance(_widget, ncp.MeasureWidget):
+        if isinstance(_widget, ncp._measure.MeasureWidget):
             _widget.run(
                 image_layer, label_layer, "Measure now intensity shape", None, None
             )
 
-        if isinstance(_widget, ncp.PlotterWidget):
+        if isinstance(_widget, ncp._plotter.PlotterWidget):
             plot_widget = _widget
 
     viewer.window.add_dock_widget(plot_widget)
