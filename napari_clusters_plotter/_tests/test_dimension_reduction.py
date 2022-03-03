@@ -1,4 +1,5 @@
 import sys
+import time
 
 import numpy as np
 from skimage import measure
@@ -26,7 +27,7 @@ def test_clustering_widget(make_napari_viewer):
     assert len(viewer.window._dock_widgets) == n_wdgts + 1
 
 
-def test_call_to_function(make_napari_viewer):
+def test_call_to_function(qtbot, make_napari_viewer):
 
     viewer = make_napari_viewer()
 
@@ -53,8 +54,8 @@ def test_call_to_function(make_napari_viewer):
     from napari_clusters_plotter._utilities import get_layer_tabular_data
 
     widget = DimensionalityReductionWidget(napari_viewer=viewer)
-
     widget.run(
+        viewer=viewer,
         labels_layer=label_layer,
         selected_measurements_list=["area", "perimeter"],
         n_neighbours=2,
@@ -66,12 +67,19 @@ def test_call_to_function(make_napari_viewer):
         pca_components=0,
     )
 
+    # waiting till the thread worker finished
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=100000)
+    blocker.wait()
+    # additional waiting so the return_func_umap gets the returned embedding
+    # from the thread, and writes the results into properties/features of the labels layer
+    time.sleep(5)
     result = get_layer_tabular_data(label_layer)
 
     assert "UMAP_0" in result.columns
     assert "UMAP_1" in result.columns
 
     widget.run(
+        viewer=viewer,
         labels_layer=label_layer,
         selected_measurements_list=["area", "perimeter"],
         n_neighbours=2,
@@ -83,11 +91,16 @@ def test_call_to_function(make_napari_viewer):
         pca_components=0,
     )
 
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=100000)
+    blocker.wait()
+    time.sleep(5)
+
     result = get_layer_tabular_data(label_layer)
     assert "t-SNE_0" in result.columns
     assert "t-SNE_1" in result.columns
 
     widget.run(
+        viewer=viewer,
         labels_layer=label_layer,
         selected_measurements_list=["area", "perimeter"],
         n_neighbours=2,
@@ -98,6 +111,10 @@ def test_call_to_function(make_napari_viewer):
         explained_variance=95.0,
         pca_components=0,
     )
+
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=100000)
+    blocker.wait()
+    time.sleep(5)
 
     result = get_layer_tabular_data(label_layer)
     assert "PC_0" in result.columns
