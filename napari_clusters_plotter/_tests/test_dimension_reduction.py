@@ -68,7 +68,7 @@ def test_call_to_function(qtbot, make_napari_viewer):
     )
 
     # waiting till the thread worker finished
-    blocker = qtbot.waitSignal(widget.worker.finished, timeout=100000)
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
     # additional waiting so the return_func_umap gets the returned embedding
     # from the thread, and writes the results into properties/features of the labels layer
@@ -91,7 +91,7 @@ def test_call_to_function(qtbot, make_napari_viewer):
         pca_components=0,
     )
 
-    blocker = qtbot.waitSignal(widget.worker.finished, timeout=100000)
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
     time.sleep(5)
 
@@ -112,7 +112,7 @@ def test_call_to_function(qtbot, make_napari_viewer):
         pca_components=0,
     )
 
-    blocker = qtbot.waitSignal(widget.worker.finished, timeout=100000)
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
     time.sleep(5)
 
