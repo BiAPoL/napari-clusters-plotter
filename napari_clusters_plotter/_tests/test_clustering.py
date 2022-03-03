@@ -1,13 +1,12 @@
-import napari
 import numpy as np
 from sklearn import datasets
 
 
-def test_clustering_widget():
+def test_clustering_widget(make_napari_viewer):
 
     import napari_clusters_plotter as ncp
 
-    viewer = napari.Viewer()
+    viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
     n_wdgts = len(viewer.window._dock_widgets)
 
@@ -22,10 +21,6 @@ def test_clustering_widget():
 
 
 def test_kmeans_clustering():
-
-    # viewer = napari.Viewer()
-    # widget_list = ncp.napari_experimental_provide_dock_widget()
-    # n_wdgts = len(viewer.window._dock_widgets)
 
     # create an example dataset
     n_samples = 20
