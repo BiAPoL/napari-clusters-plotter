@@ -13,6 +13,7 @@ from qtpy.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -29,7 +30,6 @@ from ._utilities import (
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
-
 
 DEFAULTS = {
     "n_neighbors": 15,
@@ -207,7 +207,14 @@ class DimensionalityReductionWidget(QWidget):
         defaults_button = QPushButton("Restore Defaults")
         defaults_container.layout().addWidget(defaults_button)
 
-        # self.progress_bar = QProgressBar()
+        # Progress bar
+        progress_bar_container = QWidget()
+        progress_bar_container.setLayout(QHBoxLayout())
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(0)
+        self.progress_bar.hide()
+        progress_bar_container.layout().addWidget(self.progress_bar)
 
         def run_clicked():
 
@@ -236,6 +243,7 @@ class DimensionalityReductionWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
+        run_button.clicked.connect(self.show_progress_bar)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
@@ -263,11 +271,9 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
-        # self.layout().addWidget(self.progress_bar)
+        self.layout().addWidget(progress_bar_container)
 
         # hide widgets unless appropriate options are chosen
-        # self.algorithm_choice_list.currentIndexChanged.connect(self.change_neighbours_list)
-        # self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
         self.algorithm_choice_list.currentIndexChanged.connect(
             self.change_pca_components
         )
@@ -287,6 +293,9 @@ class DimensionalityReductionWidget(QWidget):
 
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
+
+    def show_progress_bar(self):
+        self.progress_bar.show()
 
     # toggle widgets visibility according to what is selected
     def change_umap_settings(self):
@@ -342,6 +351,7 @@ class DimensionalityReductionWidget(QWidget):
 
     # this function runs after the run button is clicked
     def run(
+        self,
         viewer,
         labels_layer,
         selected_measurements_list,
@@ -351,12 +361,12 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
-        n_components=2,
+        n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
     ):
-        # n_components: dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
 
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
+        print("Dimensionality reduction started: " + str(selected_algorithm))
 
         features = get_layer_tabular_data(labels_layer)
 
@@ -369,8 +379,10 @@ class DimensionalityReductionWidget(QWidget):
                 add_column_to_layer_tabular_data(
                     labels_layer, "UMAP_" + str(i), embedding[:, i]
                 )
-
+            list_props = get_layer_tabular_data(labels_layer)
+            print("added to properties: " + str(list_props.keys()))
             show_table(viewer, labels_layer)
+            self.progress_bar.hide()
             print("Dimensionality reduction finished")
 
         def return_func_tsne(embedding):
@@ -381,6 +393,7 @@ class DimensionalityReductionWidget(QWidget):
                 )
 
             show_table(viewer, labels_layer)
+            self.progress_bar.hide()
             print("Dimensionality reduction finished")
 
         def return_func_pca(embedding):
@@ -400,18 +413,11 @@ class DimensionalityReductionWidget(QWidget):
                 )
 
             show_table(viewer, labels_layer)
-            print("Dimensionality reduction finished")
+            self.progress_bar.hide()
 
         if selected_algorithm == "UMAP":
-            print(
-                "Dimensionality reduction started ("
-                + str(selected_algorithm)
-                + ", standardize: "
-                + str(standardize)
-                + ")..."
-            )
 
-            worker = create_worker(
+            self.worker = create_worker(
                 umap,
                 properties_to_reduce,
                 n_neighbours,
@@ -419,19 +425,12 @@ class DimensionalityReductionWidget(QWidget):
                 standardize,
                 _progress=True,
             )
-            worker.returned.connect(return_func_umap)
-            worker.start()
+            self.worker.returned.connect(return_func_umap)
+            self.worker.start()
 
         elif selected_algorithm == "t-SNE":
-            print(
-                "Dimensionality reduction started ("
-                + str(selected_algorithm)
-                + ", standardize: "
-                + str(standardize)
-                + ")..."
-            )
 
-            worker = create_worker(
+            self.worker = create_worker(
                 tsne,
                 properties_to_reduce,
                 perplexity,
@@ -439,23 +438,20 @@ class DimensionalityReductionWidget(QWidget):
                 standardize,
                 _progress=True,
             )
-            worker.returned.connect(return_func_tsne)
-            worker.start()
+            self.worker.returned.connect(return_func_tsne)
+            self.worker.start()
 
         elif selected_algorithm == "PCA":
-            print(
-                "Dimensionality reduction started (" + str(selected_algorithm) + ")..."
-            )
 
-            worker = create_worker(
+            self.worker = create_worker(
                 pca,
                 properties_to_reduce,
                 explained_variance,
                 pca_components,
                 _progress=True,
             )
-            worker.returned.connect(return_func_pca)
-            worker.start()
+            self.worker.returned.connect(return_func_pca)
+            self.worker.start()
 
 
 def umap(reg_props, n_neigh, n_components, standardize):
@@ -466,11 +462,7 @@ def umap(reg_props, n_neigh, n_components, standardize):
         n_components=n_components,
         n_neighbors=n_neigh,
         verbose=True,
-        tqdm_kwds={
-            "desc": "Dimensionality reduction progress",
-            # 'dynamic_ncols': True,
-            # 'file': 'sys.stdout',
-        },
+        tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
 
     if standardize:
