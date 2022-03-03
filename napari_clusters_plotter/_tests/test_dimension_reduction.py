@@ -112,9 +112,9 @@ def test_call_to_function(qtbot, make_napari_viewer):
         pca_components=0,
     )
 
-    blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=10000000)
     blocker.wait()
-    time.sleep(5)
+    time.sleep(10)
 
     result = get_layer_tabular_data(label_layer)
     assert "PC_0" in result.columns
