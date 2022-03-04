@@ -46,8 +46,10 @@ def test_kmeans_clustering():
         iterations=50,
     )
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(1 - true_class, result)
+    # a tuple is returned, where the first item (returned[0]) is the name of
+    # the clustering method, and the second one is predictions (returned[1])
+    assert len(np.unique(result[1])) == n_centers
+    assert np.array_equal(1 - true_class, result[1])
 
     # test with standardization
     result = kmeans_clustering(
@@ -57,8 +59,8 @@ def test_kmeans_clustering():
         iterations=50,
     )
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(1 - true_class, result)
+    assert len(np.unique(result[1])) == n_centers
+    assert np.array_equal(1 - true_class, result[1])
 
 
 def test_hdbscan_clustering():
@@ -87,8 +89,10 @@ def test_hdbscan_clustering():
         min_samples=min_samples,
     )
 
-    assert len(np.unique(result)) == 2
-    assert np.array_equal(true_class, result)
+    # a tuple is returned, where the first item (returned[0]) is the name of
+    # the clustering method, and the second one is predictions (returned[1])
+    assert len(np.unique(result[1])) == 2
+    assert np.array_equal(true_class, result[1])
 
     # test with standardization
     result = hdbscan_clustering(
@@ -98,8 +102,8 @@ def test_hdbscan_clustering():
         min_samples=min_samples,
     )
 
-    assert len(np.unique(result)) == 2
-    assert np.array_equal(true_class, result)
+    assert len(np.unique(result[1])) == 2
+    assert np.array_equal(true_class, result[1])
 
 
 if __name__ == "__main__":

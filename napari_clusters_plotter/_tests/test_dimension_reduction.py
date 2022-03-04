@@ -128,10 +128,12 @@ def test_umap():
     n_comp = 2
 
     result = umap(X, n_neigh=2, n_components=n_comp, standardize=True)
-    assert result.shape[-1] == n_comp
+    # a tuple is returned, where the first item (result[0]) is the name of
+    # the dimensionality reduction method, and the second one is the embedding (result[1])
+    assert result[1].shape[-1] == n_comp
 
     result = umap(X, n_neigh=2, n_components=n_comp, standardize=False)
-    assert result.shape[-1] == n_comp
+    assert result[1].shape[-1] == n_comp
 
 
 def test_tsne():
@@ -142,10 +144,10 @@ def test_tsne():
     from napari_clusters_plotter._dimensionality_reduction import tsne
 
     result = tsne(X, perplexity=5, n_components=2, standardize=False)
-    assert result.shape[-1] == n_comp
+    assert result[1].shape[-1] == n_comp
 
     result = tsne(X, perplexity=5, n_components=2, standardize=True)
-    assert result.shape[-1] == n_comp
+    assert result[1].shape[-1] == n_comp
 
 
 def test_pca():
