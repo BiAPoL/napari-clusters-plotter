@@ -4,6 +4,7 @@ from functools import partial
 
 from magicgui.widgets import create_widget
 from napari.layers import Labels
+from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
@@ -12,6 +13,7 @@ from qtpy.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -21,6 +23,7 @@ from ._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     restore_defaults,
+    show_table,
     widgets_inactive,
 )
 
@@ -218,6 +221,15 @@ class ClusteringWidget(QWidget):
         defaults_button = QPushButton("Restore Defaults")
         defaults_container.layout().addWidget(defaults_button)
 
+        # Progress bar
+        progress_bar_container = QWidget()
+        progress_bar_container.setLayout(QHBoxLayout())
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(0)
+        self.progress_bar.hide()
+        progress_bar_container.layout().addWidget(self.progress_bar)
+
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
         self.layout().addWidget(labels_layer_selection_container)
@@ -259,6 +271,7 @@ class ClusteringWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
+        run_button.clicked.connect(self.show_progress_bar)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
@@ -270,6 +283,8 @@ class ClusteringWidget(QWidget):
             item = self.layout().itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
+
+        self.layout().addWidget(progress_bar_container)
 
         # hide widget for the selection of parameters unless specific method is chosen
         self.clust_method_choice_list.changed.connect(
@@ -313,6 +328,9 @@ class ClusteringWidget(QWidget):
                     self.properties_list.addItem(item)
                     item.setSelected(True)
 
+    def show_progress_bar(self):
+        self.progress_bar.show()
+
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
@@ -341,36 +359,49 @@ class ClusteringWidget(QWidget):
         # only select the columns the user requested
         selected_properties = features[selected_measurements_list]
 
+        # from a secondary thread a tuple is returned, where the first item (returned[0]) is the name of
+        # the clustering method, and the second one is predictions (returned[1])
+        def result_of_clustering(returned):
+            print(returned[0] + " predictions finished.")
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(
+                labels_layer,
+                returned[1] + "_CLUSTER_ID_SCALER_" + str(standardize),
+                returned[1],
+            )
+            show_table(self.viewer, labels_layer)
+            self.progress_bar.hide()
+
         # perform clustering
         if selected_method == "KMeans":
-            y_pred = kmeans_clustering(
-                standardize, selected_properties, num_clusters, num_iterations
+            self.worker = create_worker(
+                kmeans_clustering,
+                standardize=standardize,
+                measurements=selected_properties,
+                cluster_number=num_clusters,
+                iterations=num_iterations,
+                _progress=True,
             )
-            print("KMeans predictions finished.")
-            # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
 
         elif selected_method == "HDBSCAN":
-            y_pred = hdbscan_clustering(
-                standardize, selected_properties, min_cluster_size, min_nr_samples
+            self.worker = create_worker(
+                hdbscan_clustering,
+                standardize=standardize,
+                measurements=selected_properties,
+                min_cluster_size=min_cluster_size,
+                min_samples=min_nr_samples,
+                _progress=True,
             )
-            print("HDBSCAN predictions finished.")
-            # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+
         else:
             warnings.warn(
                 "Clustering unsuccessful. Please check again selected options."
             )
             return
-
-        # show region properties table as a new widget
-        from ._utilities import show_table
-
-        show_table(self.viewer, labels_layer)
 
 
 def kmeans_clustering(standardize, measurements, cluster_number, iterations):
@@ -385,10 +416,10 @@ def kmeans_clustering(standardize, measurements, cluster_number, iterations):
 
         scaled_measurements = StandardScaler().fit_transform(measurements)
         # returning prediction as a list for generating clustering image
-        return km.fit_predict(scaled_measurements)
+        return "KMEANS", km.fit_predict(scaled_measurements)
 
     else:
-        return km.fit_predict(measurements)
+        return "KMEANS", km.fit_predict(measurements)
 
 
 def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples):
@@ -405,7 +436,10 @@ def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples)
 
         scaled_measurements = StandardScaler().fit_transform(measurements)
         clustering_hdbscan.fit(scaled_measurements)
-        return clustering_hdbscan.fit_predict(scaled_measurements)
+        return "HDBSCAN", clustering_hdbscan.fit_predict(scaled_measurements)
 
     else:
-        return clustering_hdbscan.fit_predict(measurements)
+        return (
+            "HDBSCAN",
+            clustering_hdbscan.fit_predict(measurements),
+        )
