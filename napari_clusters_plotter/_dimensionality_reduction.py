@@ -373,23 +373,13 @@ class DimensionalityReductionWidget(QWidget):
         # only select the columns the user requested
         properties_to_reduce = features[selected_measurements_list]
 
-        def return_func_umap(embedding):
+        # from a secondary thread a tuple is returned, where the first item (result[0]) is the name of
+        # the dimensionality reduction method, and the second one is the embedding (result[1])
+        def return_func_umap_or_tsne(result):
 
             for i in range(0, n_components):
                 add_column_to_layer_tabular_data(
-                    labels_layer, "UMAP_" + str(i), embedding[:, i]
-                )
-            list_props = get_layer_tabular_data(labels_layer)
-            print("added to properties: " + str(list_props.keys()))
-            show_table(viewer, labels_layer)
-            self.progress_bar.hide()
-            print("Dimensionality reduction finished")
-
-        def return_func_tsne(embedding):
-
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "t-SNE_" + str(i), embedding[:, i]
+                    labels_layer, result[0] + "_" + str(i), result[1][:, i]
                 )
 
             show_table(viewer, labels_layer)
@@ -414,6 +404,7 @@ class DimensionalityReductionWidget(QWidget):
 
             show_table(viewer, labels_layer)
             self.progress_bar.hide()
+            print("Dimensionality reduction finished")
 
         if selected_algorithm == "UMAP":
 
@@ -425,7 +416,7 @@ class DimensionalityReductionWidget(QWidget):
                 standardize,
                 _progress=True,
             )
-            self.worker.returned.connect(return_func_umap)
+            self.worker.returned.connect(return_func_umap_or_tsne)
             self.worker.start()
 
         elif selected_algorithm == "t-SNE":
@@ -438,7 +429,7 @@ class DimensionalityReductionWidget(QWidget):
                 standardize,
                 _progress=True,
             )
-            self.worker.returned.connect(return_func_tsne)
+            self.worker.returned.connect(return_func_umap_or_tsne)
             self.worker.start()
 
         elif selected_algorithm == "PCA":
@@ -469,10 +460,10 @@ def umap(reg_props, n_neigh, n_components, standardize):
         from sklearn.preprocessing import StandardScaler
 
         scaled_regionprops = StandardScaler().fit_transform(reg_props)
-        return reducer.fit_transform(scaled_regionprops)
+        return "UMAP", reducer.fit_transform(scaled_regionprops)
 
     else:
-        return reducer.fit_transform(reg_props)
+        return "UMAP", reducer.fit_transform(reg_props)
 
 
 def tsne(reg_props, perplexity, n_components, standardize):
@@ -490,10 +481,10 @@ def tsne(reg_props, perplexity, n_components, standardize):
         from sklearn.preprocessing import StandardScaler
 
         scaled_regionprops = StandardScaler().fit_transform(reg_props)
-        return reducer.fit_transform(scaled_regionprops)
+        return "t-SNE", reducer.fit_transform(scaled_regionprops)
 
     else:
-        return reducer.fit_transform(reg_props)
+        return "t-SNE", reducer.fit_transform(reg_props)
 
 
 def pca(reg_props, explained_variance_threshold, n_components):
