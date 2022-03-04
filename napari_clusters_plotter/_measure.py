@@ -8,11 +8,13 @@ import pyclesperanto_prototype as cle
 from magicgui.types import FileDialogMode
 from magicgui.widgets import FileEdit, create_widget
 from napari.layers import Image, Labels
+from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -94,7 +96,17 @@ class MeasureWidget(QWidget):
         # Run button
         run_button_container = QWidget()
         run_button_container.setLayout(QHBoxLayout())
-        button = QPushButton("Run")
+        run_button = QPushButton("Run")
+        run_button_container.layout().addWidget(run_button)
+
+        # Progress bar
+        progress_bar_container = QWidget()
+        progress_bar_container.setLayout(QHBoxLayout())
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(0)
+        self.progress_bar.hide()
+        progress_bar_container.layout().addWidget(self.progress_bar)
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
@@ -124,8 +136,8 @@ class MeasureWidget(QWidget):
                 self.closest_points_list.text(),
             )
 
-        button.clicked.connect(run_clicked)
-        run_button_container.layout().addWidget(button)
+        run_button.clicked.connect(run_clicked)
+        run_button.clicked.connect(self.show_progress_bar)
 
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
@@ -133,9 +145,14 @@ class MeasureWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
+        self.layout().addWidget(progress_bar_container)
+
         # hide widgets unless appropriate options are chosen
         self.reg_props_choice_list.changed.connect(self.change_reg_props_file)
         self.reg_props_choice_list.changed.connect(self.change_closest_points_list)
+
+    def show_progress_bar(self):
+        self.progress_bar.show()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -170,8 +187,14 @@ class MeasureWidget(QWidget):
         print("Measurement running")
         print("Region properties source: " + str(region_props_source))
 
-        # depending on settings,...
+        def result_of_get_regprops(returned):
+            # saving measurement results into the properties or features of the analysed labels layer
+            set_features(labels_layer, returned)
+            print("Measured:", list(returned.keys()))
+            show_table(self.viewer, labels_layer)
+            self.progress_bar.hide()
 
+        # depending on settings,...
         if region_props_source == self.Choices.FILE.value:
             # load region properties from csv file
             reg_props = pd.read_csv(reg_props_file)
@@ -188,35 +211,40 @@ class MeasureWidget(QWidget):
                 set_features(labels_layer, reg_props_w_labels)
             else:
                 set_features(labels_layer, edited_reg_props)
+            show_table(self.viewer, labels_layer)
+            self.progress_bar.hide()
 
         elif "Measure now" in region_props_source:
             if "shape" in region_props_source or "intensity" in region_props_source:
-                reg_props = get_regprops_from_regprops_source(
-                    image_layer.data, labels_layer.data, region_props_source
-                )
 
-                # saving measurement results into the properties or features of the analysed labels layer
-                set_features(labels_layer, reg_props)
-                print("Measured:", list(reg_props.keys()))
+                self.worker = create_worker(
+                    get_regprops_from_regprops_source,
+                    intensity_image=image_layer.data,
+                    label_image=labels_layer.data,
+                    region_props_source=region_props_source,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_get_regprops)
+                self.worker.start()
 
             if "neighborhood" in region_props_source:
                 n_closest_points_split = n_closest_points_str.split(",")
                 n_closest_points_list = map(int, n_closest_points_split)
-                reg_props = get_regprops_from_regprops_source(
-                    image_layer.data,
-                    labels_layer.data,
-                    region_props_source,
-                    n_closest_points_list,
-                )
 
-                set_features(labels_layer, reg_props)
-                print("Measured:", list(reg_props.keys()))
+                self.worker = create_worker(
+                    get_regprops_from_regprops_source,
+                    intensity_image=image_layer.data,
+                    label_image=labels_layer.data,
+                    region_props_source=region_props_source,
+                    n_closest_points_list=n_closest_points_list,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_get_regprops)
+                self.worker.start()
 
         else:
             warnings.warn("No measurements.")
             return
-
-        show_table(self.viewer, labels_layer)
 
 
 def get_regprops_from_regprops_source(
