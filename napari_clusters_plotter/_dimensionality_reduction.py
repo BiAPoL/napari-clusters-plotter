@@ -91,8 +91,9 @@ class DimensionalityReductionWidget(QWidget):
 
         help_n_neighbors.setToolTip(
             "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold "
-            "approximation. Larger values result in more global views of the manifold, while smaller values should be "
-            "in the range 2 to 100. Click on the question mark to read more."
+            "approximation. Larger values result in more global views of the manifold, while smaller values "
+            "result in more local data being preserved. In general, it should be in the range 2 to 100. Click on the "
+            "question mark to read more."
         )
 
         self.n_neighbors.native.setMaximumWidth(70)
