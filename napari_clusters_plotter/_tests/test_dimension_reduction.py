@@ -1,17 +1,16 @@
 import sys
 
-import napari
 import numpy as np
 from skimage import measure
 
 sys.path.append("../")
 
 
-def test_clustering_widget():
+def test_clustering_widget(make_napari_viewer):
 
     import napari_clusters_plotter as ncp
 
-    viewer = napari.Viewer()
+    viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
     n_wdgts = len(viewer.window._dock_widgets)
 
@@ -27,9 +26,9 @@ def test_clustering_widget():
     assert len(viewer.window._dock_widgets) == n_wdgts + 1
 
 
-def test_call_to_function():
+def test_call_to_function(make_napari_viewer):
 
-    viewer = napari.Viewer()
+    viewer = make_napari_viewer()
 
     label = np.array(
         [
@@ -63,6 +62,8 @@ def test_call_to_function():
         selected_algorithm="UMAP",
         standardize=False,
         n_components=2,
+        explained_variance=95.0,
+        pca_components=0,
     )
 
     result = get_layer_tabular_data(label_layer)
@@ -78,11 +79,28 @@ def test_call_to_function():
         selected_algorithm="t-SNE",
         standardize=False,
         n_components=2,
+        explained_variance=95.0,
+        pca_components=0,
     )
 
     result = get_layer_tabular_data(label_layer)
     assert "t-SNE_0" in result.columns
     assert "t-SNE_1" in result.columns
+
+    widget.run(
+        labels_layer=label_layer,
+        selected_measurements_list=["area", "perimeter"],
+        n_neighbours=2,
+        perplexity=5,
+        selected_algorithm="PCA",
+        standardize=False,
+        n_components=2,
+        explained_variance=95.0,
+        pca_components=0,
+    )
+
+    result = get_layer_tabular_data(label_layer)
+    assert "PC_0" in result.columns
 
 
 def test_umap():
@@ -110,6 +128,20 @@ def test_tsne():
     assert result.shape[-1] == n_comp
 
     result = tsne(X, perplexity=5, n_components=2, standardize=True)
+    assert result.shape[-1] == n_comp
+
+
+def test_pca():
+
+    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+    n_comp = 3
+
+    from napari_clusters_plotter._dimensionality_reduction import pca
+
+    result = pca(X, explained_variance_threshold=95.0, n_components=0)
+    assert result.shape[-1] == n_comp
+
+    result = pca(X, explained_variance_threshold=95.0, n_components=0)
     assert result.shape[-1] == n_comp
 
 
