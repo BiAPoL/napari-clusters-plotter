@@ -165,7 +165,7 @@ class DimensionalityReductionWidget(QWidget):
             "When set to 0 the number of components that are selected is determined by the explained variance threshold "
             "Click on the question mark to read more."
         )
-    
+
         self.pca_components_container.layout().addWidget(self.pca_components.native)
         self.pca_components_container.layout().addWidget(help_pca_components)
         self.pca_components_container.setVisible(False)
@@ -202,9 +202,7 @@ class DimensionalityReductionWidget(QWidget):
         self.explained_variance_container.layout().addWidget(
             self.explained_variance.native
         )
-        self.explained_variance_container.layout().addWidget(
-            help_explained_variance
-        )
+        self.explained_variance_container.layout().addWidget(help_explained_variance)
         self.explained_variance_container.setVisible(False)
         # checkbox whether data should be standardized
         self.settings_container_scaler = QWidget()
