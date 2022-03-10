@@ -162,8 +162,8 @@ class DimensionalityReductionWidget(QWidget):
 
         help_pca_components.setToolTip(
             "The number of components sets the number of principal components to be included after the transformation. "
-            "When set to 0 the number of components that are selected is determined by the explained variance threshold "
-            "Click on the question mark to read more."
+            "When set to 0 the number of components that are selected is determined by the explained variance "
+            "threshold. Click on the question mark to read more."
         )
 
         self.pca_components_container.layout().addWidget(self.pca_components.native)
@@ -192,11 +192,10 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         help_explained_variance.setToolTip(
-            "The explained variance threshold sets the amount of variance in the dataset that can minimally be represented "
-            "by the principal components. The closer the threshold is to 100% ,the more the variance in the dataset can be "
-            "accounted for by the chosen principal components (and the less dimensionality reduction will be perfomed as a "
-            "result) "
-            "Click on the question mark to read more."
+            "The explained variance threshold sets the amount of variance in the dataset that can minimally be "
+            "represented by the principal components. The closer the threshold is to 100% ,the more the variance in "
+            "the dataset can be accounted for by the chosen principal components (and the less dimensionality "
+            "reduction will be perfomed as a result). Click on the question mark to read more."
         )
 
         self.explained_variance_container.layout().addWidget(
