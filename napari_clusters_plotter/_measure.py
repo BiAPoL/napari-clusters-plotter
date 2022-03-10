@@ -1,5 +1,6 @@
 import warnings
 from enum import Enum
+from functools import partial
 
 import dask.array as da
 import numpy as np
@@ -19,6 +20,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from tqdm import tqdm
 
 from ._utilities import set_features, show_table, widgets_inactive
 
@@ -93,6 +95,17 @@ class MeasureWidget(QWidget):
         self.closest_points_list.setText("2, 3, 4")
         self.closest_points_container.setVisible(False)
 
+        # checkbox whether image is a timelapse
+        self.timelapse_container = QWidget()
+        self.timelapse_container.setLayout(QHBoxLayout())
+        self.timelapse = create_widget(
+            widget_type="CheckBox",
+            name="Timelapse",
+            value=False,
+        )
+
+        self.timelapse_container.layout().addWidget(self.timelapse.native)
+
         # Run button
         run_button_container = QWidget()
         run_button_container.setLayout(QHBoxLayout())
@@ -115,6 +128,7 @@ class MeasureWidget(QWidget):
         self.layout().addWidget(reg_props_container)
         self.layout().addWidget(self.reg_props_file_widget)
         self.layout().addWidget(self.closest_points_container)
+        self.layout().addWidget(self.timelapse_container)
         self.layout().addWidget(run_button_container)
         self.layout().setSpacing(0)
 
@@ -126,6 +140,17 @@ class MeasureWidget(QWidget):
             if self.image_select.value is None:
                 warnings.warn("No image was selected!")
                 return
+
+            if (
+                not self.timelapse.value
+                and len(self.image_select.value.data.shape) == 4
+            ):
+                warnings.warn("Please check that timelapse checkbox is checked!")
+                run_button.clicked.connect(
+                    partial(self.progress_bar_status, self, False)
+                )
+                return
+
             self.run(
                 self.image_select.value,
                 self.labels_select.value,
@@ -134,10 +159,11 @@ class MeasureWidget(QWidget):
                 .replace("\\", "/")
                 .replace("//", "/"),
                 self.closest_points_list.text(),
+                self.timelapse.value,
             )
 
         run_button.clicked.connect(run_clicked)
-        run_button.clicked.connect(self.show_progress_bar)
+        run_button.clicked.connect(partial(self.progress_bar_status, self, True))
 
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
@@ -151,8 +177,11 @@ class MeasureWidget(QWidget):
         self.reg_props_choice_list.changed.connect(self.change_reg_props_file)
         self.reg_props_choice_list.changed.connect(self.change_closest_points_list)
 
-    def show_progress_bar(self):
-        self.progress_bar.show()
+    def progress_bar_status(self, show):
+        if show:
+            self.progress_bar.show()
+        else:
+            self.progress_bar.hide()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -183,12 +212,15 @@ class MeasureWidget(QWidget):
         region_props_source,
         reg_props_file,
         n_closest_points_str,
+        timelapse,
     ):
         print("Measurement running")
         print("Region properties source: " + str(region_props_source))
 
         def result_of_get_regprops(returned):
             # saving measurement results into the properties or features of the analysed labels layer
+            # df = pd.DataFrame(returned)
+            # df_without_bg = df.drop([0])
             set_features(labels_layer, returned)
             print("Measured:", list(returned.keys()))
             show_table(self.viewer, labels_layer)
@@ -216,11 +248,11 @@ class MeasureWidget(QWidget):
 
         elif "Measure now" in region_props_source:
             if "shape" in region_props_source or "intensity" in region_props_source:
-
                 self.worker = create_worker(
                     get_regprops_from_regprops_source,
                     intensity_image=image_layer.data,
                     label_image=labels_layer.data,
+                    timelapse=timelapse,
                     region_props_source=region_props_source,
                     _progress=True,
                 )
@@ -236,6 +268,7 @@ class MeasureWidget(QWidget):
                     intensity_image=image_layer.data,
                     label_image=labels_layer.data,
                     region_props_source=region_props_source,
+                    timelapse=timelapse,
                     n_closest_points_list=n_closest_points_list,
                     _progress=True,
                 )
@@ -248,13 +281,19 @@ class MeasureWidget(QWidget):
 
 
 def get_regprops_from_regprops_source(
-    intensity_image, label_image, region_props_source, n_closest_points_list=[2, 3, 4]
+    intensity_image,
+    label_image,
+    region_props_source,
+    timelapse,
+    n_closest_points_list=[2, 3, 4],
 ):
     """
     Calculate Region properties based on the region properties source string
 
     Parameters
     ----------
+    timelapse : bool
+        true if original image is a timelapse
     intensity_image : numpy array
         original image from which the labels were generated
     label_image : numpy array
@@ -264,6 +303,9 @@ def get_regprops_from_regprops_source(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
+    print("Shape of the intensity image: " + str(intensity_image.shape))
+    print("Shape of the labels image: " + str(label_image.shape))
+
     # and select columns, depending on if intensities and/or shape were selected
     columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
 
@@ -285,7 +327,23 @@ def get_regprops_from_regprops_source(
         ]
 
     # Determine Region properties using clEsperanto
-    reg_props = cle.statistics_of_labelled_pixels(intensity_image, label_image)
+    if timelapse:
+        reg_props_all = []
+        for t, timepoint in enumerate(tqdm(range(intensity_image.shape[0]))):
+            reg_props_single_t = pd.DataFrame(
+                cle.statistics_of_labelled_pixels(
+                    intensity_image[timepoint], label_image[timepoint]
+                )
+            )
+            reg_props_single_t["timepoint"] = t
+            reg_props_all.append(reg_props_single_t)
+        reg_props = pd.concat(reg_props_all)
+        columns += ["timepoint"]
+        print("Columns for a timelapse: " + str(columns))
+        print("Reg props measured for each timepoint.")
+    else:
+        reg_props = cle.statistics_of_labelled_pixels(intensity_image, label_image)
+        print("Reg props measured not for a timelapse.")
 
     if "shape" in region_props_source or "intensity" in region_props_source:
         return {
