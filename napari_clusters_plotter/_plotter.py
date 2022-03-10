@@ -388,12 +388,30 @@ class PlotterWidget(QWidget):
 
     def after_clicked_label_in_view(self):
         clustering_ID = "MANUAL_CLUSTER_ID"
+        features = get_layer_tabular_data(self.analysed_layer)
 
         # save manual clustering; select only the label that's currently selected on the layer
-        inside = np.ones(self.analysed_layer.data.max())
-        inside[self.analysed_layer.selected_label - 1] = 0
-        features = get_layer_tabular_data(self.analysed_layer)
-        features[clustering_ID] = inside
+        if features["label"].size > self.analysed_layer.data.max():
+            print(True)
+            inside = np.ones(features["label"].size)
+            print(f"Inside length: {len(inside)}")
+            selected_label = self.analysed_layer.selected_label
+            for i, label in enumerate(features["label"]):
+                if label == selected_label:
+                    inside[i] = 0
+                    print(
+                        "i = "
+                        + str(i)
+                        + "; label = "
+                        + str(label)
+                        + " has been set to 0."
+                    )
+            features[clustering_ID] = inside
+
+        else:
+            inside = np.ones(self.analysed_layer.data.max())
+            inside[self.analysed_layer.selected_label - 1] = 0
+            features[clustering_ID] = inside
 
         self.run(
             features,
