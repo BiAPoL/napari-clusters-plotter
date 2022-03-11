@@ -165,6 +165,14 @@ conda install -c conda-forge napari pyopencl hdbscan
 pip install napari-clusters-plotter
 ```
 
+- `WARNING: No ICDs were found` or `LogicError: clGetPlatformIDs failed: PLATFORM_NOT_FOUND_KHR`
+
+Make your system-wide implementation visible by installing ocl-icd-system conda package:
+
+```
+conda install -c conda-forge ocl-icd-system
+```
+
 ## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
