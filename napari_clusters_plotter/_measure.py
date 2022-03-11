@@ -1,6 +1,5 @@
 import warnings
 from enum import Enum
-from functools import partial
 
 import dask.array as da
 import numpy as np
@@ -146,9 +145,6 @@ class MeasureWidget(QWidget):
                 and len(self.image_select.value.data.shape) == 4
             ):
                 warnings.warn("Please check that timelapse checkbox is checked!")
-                run_button.clicked.connect(
-                    partial(self.progress_bar_status, self, False)
-                )
                 return
 
             self.run(
@@ -163,7 +159,7 @@ class MeasureWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        run_button.clicked.connect(partial(self.progress_bar_status, self, True))
+        run_button.clicked.connect(self.progress_bar_status)
 
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
@@ -177,11 +173,8 @@ class MeasureWidget(QWidget):
         self.reg_props_choice_list.changed.connect(self.change_reg_props_file)
         self.reg_props_choice_list.changed.connect(self.change_closest_points_list)
 
-    def progress_bar_status(self, show):
-        if show:
-            self.progress_bar.show()
-        else:
-            self.progress_bar.hide()
+    def progress_bar_status(self):
+        self.progress_bar.show()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
