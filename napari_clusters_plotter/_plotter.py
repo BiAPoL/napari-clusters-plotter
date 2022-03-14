@@ -497,8 +497,8 @@ class PlotterWidget(QWidget):
             # generate dictionary mapping each label to the color of the cluster
             # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
             cluster_id_dict = {
-                i + 1: (cmap[int(color) % len(cmap)] if color >= 0 else [0, 0, 0, 0])
-                for i, color in enumerate(self.cluster_ids)
+                i: (cmap[int(color) % len(cmap)] if color >= 0 else [0, 0, 0, 0])
+                for i, color in zip(features['label'], self.cluster_ids)
             }
 
             keep_selection = list(self.viewer.layers.selection)
