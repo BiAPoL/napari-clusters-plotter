@@ -307,7 +307,7 @@ class ClusteringWidget(QWidget):
             if features is not None:
                 self.properties_list.clear()
                 for p in list(features.keys()):
-                    if "label" in p or "CLUSTER_ID" in p:
+                    if "label" in p or "CLUSTER_ID" in p or "index" in p:
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
