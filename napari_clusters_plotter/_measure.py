@@ -275,11 +275,26 @@ class MeasureWidget(QWidget):
 def new_regprops(
     intensity_image,
     label_image,
-    region_props_source,
-    timelapse,
-    n_closest_points_list=[2, 3, 4],
-    ):
+    region_props_source: str,
+    timelapse: bool,
+    n_closest_points_list: list = [2, 3, 4],
+    ) -> pd.DataFrame:
+    """
+    Calculate Region properties based on the region properties source string
 
+    Parameters
+    ----------
+    timelapse : bool
+        true if original image is a timelapse
+    intensity_image : numpy array
+        original image from which the labels were generated
+    label_image : numpy array
+        segmented image with background = 0 and labels >= 1
+    region_props_source: str
+        must include either shape, intensity, both or neighborhood
+    n_closest_points_list: list
+        number of closest neighbors for which neighborhood properties will be calculated
+    """
     print("Shape of the intensity image: " + str(intensity_image.shape))
     print("Shape of the labels image: " + str(label_image.shape))
 
@@ -350,10 +365,10 @@ def new_regprops(
 def get_regprops_from_regprops_source(
     intensity_image,
     label_image,
-    region_props_source,
-    timelapse,
-    n_closest_points_list=[2, 3, 4],
-):
+    region_props_source: str,
+    timelapse: bool,
+    n_closest_points_list: list = [2, 3, 4],
+) -> pd.DataFrame:
     """
     Calculate Region properties based on the region properties source string
 
@@ -433,8 +448,10 @@ def get_regprops_from_regprops_source(
 
 
 def region_props_with_neighborhood_data(
-    label_image, n_closest_points_list, reg_props
-):
+    label_image, 
+    n_closest_points_list: list, 
+    reg_props: pd.DataFrame
+) -> pd.DataFrame:
     """
     Calculate neighborhood regionproperties and combine with other regionproperties
 
