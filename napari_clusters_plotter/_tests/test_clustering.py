@@ -19,6 +19,41 @@ def test_clustering_widget(make_napari_viewer):
     viewer.window.add_dock_widget(plot_widget)
     assert len(viewer.window._dock_widgets) == n_wdgts + 1
 
+def test_clustering_bad_data(make_napari_viewer):
+    viewer = make_napari_viewer()
+    from napari_clusters_plotter._clustering import ClusteringWidget
+    from napari_clusters_plotter._measure import get_regprops_from_regprops_source
+    from napari_clusters_plotter._utilities import set_features
+
+    label = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 0, 2, 2],
+            [0, 0, 0, 0, 2, 2, 2],
+            [3, 3, 0, 0, 0, 0, 0],
+            [0, 0, 4, 4, 0, 0, 0],
+            [6, 6, 6, 6, 0, 5, 0],  # <-single pixel label
+            [0, 7, 7, 0, 0, 0, 0],
+        ]
+    )
+
+    image = np.random.random((label.shape))
+    labels_layer = viewer.add_labels(label)
+
+    widget = ClusteringWidget(viewer)
+    measurements = get_regprops_from_regprops_source(image, label, 'shape + intensity')
+    set_features(labels_layer, measurements)
+
+    widget.run(
+            labels_layer=labels_layer,
+            selected_measurements_list=list(measurements.keys()),
+            selected_method='KMEANS',
+            num_clusters=2,
+            num_iterations=2,
+            standardize=True,
+            min_cluster_size=1,
+            min_nr_samples=1,
+        )
 
 def test_kmeans_clustering():
 
@@ -103,5 +138,5 @@ def test_hdbscan_clustering():
 
 
 if __name__ == "__main__":
-    test_kmeans_clustering()
-    test_hdbscan_clustering()
+    import napari
+    test_clustering_bad_data(napari.Viewer)
