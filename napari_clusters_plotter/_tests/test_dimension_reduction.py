@@ -2,6 +2,7 @@ import sys
 
 import numpy as np
 from skimage import measure
+import napari_clusters_plotter as ncp
 
 sys.path.append("../")
 
@@ -102,6 +103,46 @@ def test_call_to_function(make_napari_viewer):
     result = get_layer_tabular_data(label_layer)
     assert "PC_0" in result.columns
 
+def test_bad_measurements(make_napari_viewer):
+
+    viewer = make_napari_viewer()
+    widget_list = ncp.napari_experimental_provide_dock_widget()
+
+    label = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 0, 2, 2],
+            [0, 0, 0, 0, 2, 2, 2],
+            [3, 3, 0, 0, 0, 0, 0],
+            [0, 0, 4, 4, 0, 0, 0],
+            [6, 6, 6, 6, 0, 5, 0],  # <-single pixel label
+            [0, 7, 7, 0, 0, 0, 0],
+        ]
+    )
+
+    image = np.random.random((label.shape))
+
+    img_layer = viewer.add_image(image)
+    labels_layer = viewer.add_labels(label)
+
+    for widget in widget_list:
+        _widget = widget(viewer)
+        if isinstance(_widget, ncp._dimensionality_reduction.DimensionalityReductionWidget):
+            break
+
+    viewer.window.add_dock_widget(_widget)
+
+    from napari_clusters_plotter._measure import get_regprops_from_regprops_source
+    from napari_clusters_plotter._utilities import set_features
+
+    measurements = get_regprops_from_regprops_source(image, label, 'shape + intensity')
+    set_features(labels_layer, measurements)
+
+    _widget.run(labels_layer, list(labels_layer.properties.keys()),
+                5, 3, 'PCA', True, 10, 2, 2)
+
+
+
 
 def test_umap():
 
@@ -146,5 +187,5 @@ def test_pca():
 
 
 if __name__ == "__main__":
-    test_clustering_widget()
-    test_call_to_function()
+    import napari
+    test_bad_measurements(napari.Viewer)
