@@ -390,6 +390,7 @@ class DimensionalityReductionWidget(QWidget):
         # only select the columns the user requested and drop NaNs
         properties_to_reduce = features[selected_measurements_list]
         non_nan_entries = features.dropna().index
+        non_nan_labels = properties_to_reduce['label'].iloc[non_nan_entries]
 
         if selected_algorithm == "UMAP":
             print(
@@ -410,11 +411,7 @@ class DimensionalityReductionWidget(QWidget):
         elif selected_algorithm == "t-SNE":
             print(
                 "Dimensionality reduction started ("
-                + str(selected_algorithm)
-                + ", standardize: "
-                + str(standardize)
-                + ")..."
-            )
+                + f"{selected_algorithm}, standardize: {standardize}")
             # reduce dimensionality
             embedding = tsne(
                 properties_to_reduce.iloc[non_nan_entries],
@@ -423,24 +420,13 @@ class DimensionalityReductionWidget(QWidget):
                 standardize
             )
 
+
         elif selected_algorithm == "PCA":
-            print(
-                "Dimensionality reduction started (" + str(selected_algorithm) + ")..."
-            )
+            print(f"Dimensionality reduction started ({selected_algorithm}...")
             # reduce dimensionality
             embedding = pca(properties_to_reduce.iloc[non_nan_entries],
                             explained_variance,
                             pca_components)
-
-            # Create Dataframe with correct label entries
-            df_embedding = pd.DataFrame(
-                properties_to_reduce['label'].iloc[non_nan_entries],
-                columns=['label'],
-                )
-            embedding_columns = [
-                f'{selected_algorithm}_{i}' for i in range(pca_components)
-                ]
-            df_embedding[embedding_columns] = embedding
 
             # check if principle components are already present
             # and remove them by overwriting the features
@@ -450,6 +436,12 @@ class DimensionalityReductionWidget(QWidget):
             ]
             df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
             set_features(labels_layer, df_principal_components_removed)
+
+        # Create Dataframe with correct label entries
+        df_embedding = pd.DataFrame(non_nan_labels, columns = ['label'])
+        df_embedding[
+            [f'{selected_algorithm}_{i}' for i in range(pca_components)]
+            ] = embedding
 
         # write result back to properties
         add_column_to_layer_tabular_data(labels_layer,df_embedding)
