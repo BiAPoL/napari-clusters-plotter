@@ -372,85 +372,106 @@ class DimensionalityReductionWidget(QWidget):
     # this function runs after the run button is clicked
     def run(
         self,
-        labels_layer,
-        selected_measurements_list,
-        n_neighbours,
-        perplexity,
-        selected_algorithm,
-        standardize,
-        explained_variance,
-        pca_components,
-        n_components=2,
-    ):
-        print("Selected labels layer: " + str(labels_layer))
-        print("Selected measurements: " + str(selected_measurements_list))
+        labels_layer: Labels,
+        selected_measurements_list: list,
+        n_neighbours: int,
+        perplexity: float,
+        selected_algorithm: str,
+        standardize: bool,
+        explained_variance: float,
+        pca_components: int,
+        n_components: int = 2):
 
-        features = get_layer_tabular_data(labels_layer)
-
-        # only select the columns the user requested and drop NaNs
-        properties_to_reduce = features[selected_measurements_list]
-        non_nan_entries = features.dropna().index
-        non_nan_labels = properties_to_reduce['label'].iloc[non_nan_entries]
-
-        if selected_algorithm == "UMAP":
-            print(
-                "Dimensionality reduction started ("
-                + str(selected_algorithm)
-                + ", standardize: "
-                + str(standardize)
-                + ")..."
-            )
-            # reduce dimensionality
-            embedding = umap(
-                properties_to_reduce.iloc[non_nan_entries],
-                n_neighbours,
-                n_components,
-                standardize
-            )
-
-        elif selected_algorithm == "t-SNE":
-            print(
-                "Dimensionality reduction started ("
-                + f"{selected_algorithm}, standardize: {standardize}")
-            # reduce dimensionality
-            embedding = tsne(
-                properties_to_reduce.iloc[non_nan_entries],
-                perplexity,
-                n_components,
-                standardize
-            )
-
-
-        elif selected_algorithm == "PCA":
-            print(f"Dimensionality reduction started ({selected_algorithm}...")
-            # reduce dimensionality
-            embedding = pca(properties_to_reduce.iloc[non_nan_entries],
-                            explained_variance,
-                            pca_components)
-
-            # check if principle components are already present
-            # and remove them by overwriting the features
-            tabular_data = get_layer_tabular_data(labels_layer)
-            dropkeys = [
-                column for column in tabular_data.keys() if column.startswith(selected_algorithm + '_')
-            ]
-            df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
-            set_features(labels_layer, df_principal_components_removed)
-
-        # Create Dataframe with correct label entries
-        df_embedding = pd.DataFrame(non_nan_labels, columns = ['label'])
-        df_embedding[
-            [f'{selected_algorithm}_{i}' for i in range(pca_components)]
-            ] = embedding
-
-        # write result back to properties
-        add_column_to_layer_tabular_data(labels_layer,df_embedding)
+        # Run dimensionality reduction
+        run_dimensionality_reduction(
+            labels_layer=labels_layer,
+            selected_measurements_list=selected_measurements_list,
+            n_neighbours=n_neighbours,
+            perplexity=perplexity,
+            selected_algorithm=selected_algorithm,
+            standardize=standardize,
+            explained_variance=explained_variance,
+            pca_components=pca_components,
+            n_components=n_components)
 
         from ._utilities import show_table
-
         show_table(self.viewer, labels_layer)
 
-        print("Dimensionality reduction finished")
+
+def run_dimensionality_reduction(
+        labels_layer: Labels,
+        selected_measurements_list: list,
+        n_neighbours: int,
+        perplexity: float,
+        selected_algorithm: str,
+        standardize: bool,
+        explained_variance: float,
+        pca_components: int,
+        n_components: int = 2):
+    print("Selected labels layer: " + str(labels_layer))
+    print("Selected measurements: " + str(selected_measurements_list))
+
+    features = get_layer_tabular_data(labels_layer)
+
+    # only select the columns the user requested and drop NaNs
+    properties_to_reduce = features[selected_measurements_list]
+    non_nan_entries = features.dropna().index
+    non_nan_labels = properties_to_reduce['label'].iloc[non_nan_entries]
+
+    if selected_algorithm == "UMAP":
+        print(
+            "Dimensionality reduction started ("
+            + str(selected_algorithm)
+            + ", standardize: "
+            + str(standardize)
+            + ")..."
+        )
+        # reduce dimensionality
+        embedding = umap(
+            properties_to_reduce.iloc[non_nan_entries],
+            n_neighbours,
+            n_components,
+            standardize
+        )
+
+    elif selected_algorithm == "t-SNE":
+        print(
+            "Dimensionality reduction started ("
+            + f"{selected_algorithm}, standardize: {standardize}")
+        # reduce dimensionality
+        embedding = tsne(
+            properties_to_reduce.iloc[non_nan_entries],
+            perplexity,
+            n_components,
+            standardize
+        )
+
+    elif selected_algorithm == "PCA":
+        print(f"Dimensionality reduction started ({selected_algorithm}...")
+        # reduce dimensionality
+        embedding = pca(properties_to_reduce.iloc[non_nan_entries],
+                        explained_variance,
+                        pca_components)
+
+        # check if principle components are already present
+        # and remove them by overwriting the features
+        tabular_data = get_layer_tabular_data(labels_layer)
+        dropkeys = [
+            column for column in tabular_data.keys() if column.startswith(selected_algorithm + '_')
+        ]
+        df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
+        set_features(labels_layer, df_principal_components_removed)
+
+    # Create Dataframe with correct label entries
+    df_embedding = pd.DataFrame(non_nan_labels, columns = ['label'])
+    df_embedding[
+        [f'{selected_algorithm}_{i}' for i in range(pca_components)]
+        ] = embedding
+
+    # write result back to properties
+    add_column_to_layer_tabular_data(labels_layer,df_embedding)
+
+    print("Dimensionality reduction finished")
 
 
 def umap(reg_props, n_neigh, n_components, standardize):
