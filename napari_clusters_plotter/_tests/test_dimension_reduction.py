@@ -121,8 +121,6 @@ def test_bad_measurements(make_napari_viewer):
     )
 
     image = np.random.random((label.shape))
-
-    img_layer = viewer.add_image(image)
     labels_layer = viewer.add_labels(label)
 
     for widget in widget_list:
@@ -140,9 +138,10 @@ def test_bad_measurements(make_napari_viewer):
 
     _widget.run(labels_layer, list(labels_layer.properties.keys()),
                 5, 3, 'PCA', True, 10, 2, 2)
-
-
-
+    _widget.run(labels_layer, list(labels_layer.properties.keys()),
+                5, 3, 'UMAP', True, 10, 2, 2)
+    _widget.run(labels_layer, list(labels_layer.properties.keys()),
+                5, 3, 't-SNE', True, 10, 2, 2)
 
 def test_umap():
 
