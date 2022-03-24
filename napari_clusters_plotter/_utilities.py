@@ -32,11 +32,12 @@ def get_layer_tabular_data(layer):
     return None
 
 
-def add_column_to_layer_tabular_data(layer, column_name, data):
+def add_column_to_layer_tabular_data(layer, data):
     if hasattr(layer, "properties"):
-        layer.properties[column_name] = data
+        df = pd.DataFrame(layer.properties).merge(data, how='outer', on='label')
+        layer.properties = df.to_dict(orient='list')
     if hasattr(layer, "features"):
-        layer.features[column_name] = data
+        layer.features.merge(data, how='outer', on='label')
 
 
 def get_nice_colormap():
