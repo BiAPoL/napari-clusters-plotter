@@ -1,5 +1,6 @@
 import warnings
 from functools import partial
+import pandas as pd
 
 from magicgui.widgets import create_widget
 from napari.layers import Labels
@@ -386,8 +387,9 @@ class DimensionalityReductionWidget(QWidget):
 
         features = get_layer_tabular_data(labels_layer)
 
-        # only select the columns the user requested
+        # only select the columns the user requested and drop NaNs
         properties_to_reduce = features[selected_measurements_list]
+        non_nan_entries = features.dropna().index
 
         if selected_algorithm == "UMAP":
             print(
@@ -399,14 +401,11 @@ class DimensionalityReductionWidget(QWidget):
             )
             # reduce dimensionality
             embedding = umap(
-                properties_to_reduce, n_neighbours, n_components, standardize
+                properties_to_reduce.iloc[non_nan_entries],
+                n_neighbours,
+                n_components,
+                standardize
             )
-
-            # write result back to features/properties
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "UMAP_" + str(i), embedding[:, i]
-                )
 
         elif selected_algorithm == "t-SNE":
             print(
@@ -418,36 +417,42 @@ class DimensionalityReductionWidget(QWidget):
             )
             # reduce dimensionality
             embedding = tsne(
-                properties_to_reduce, perplexity, n_components, standardize
+                properties_to_reduce.iloc[non_nan_entries],
+                perplexity,
+                n_components,
+                standardize
             )
-
-            # write result back to features/properties
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "t-SNE_" + str(i), embedding[:, i]
-                )
 
         elif selected_algorithm == "PCA":
             print(
                 "Dimensionality reduction started (" + str(selected_algorithm) + ")..."
             )
             # reduce dimensionality
-            embedding = pca(properties_to_reduce, explained_variance, pca_components)
+            embedding = pca(properties_to_reduce.iloc[non_nan_entries],
+                            explained_variance,
+                            pca_components)
+
+            # Create Dataframe with correct label entries
+            df_embedding = pd.DataFrame(
+                properties_to_reduce['label'].iloc[non_nan_entries],
+                columns=['label'],
+                )
+            embedding_columns = [
+                f'{selected_algorithm}_{i}' for i in range(pca_components)
+                ]
+            df_embedding[embedding_columns] = embedding
 
             # check if principle components are already present
             # and remove them by overwriting the features
             tabular_data = get_layer_tabular_data(labels_layer)
             dropkeys = [
-                column for column in tabular_data.keys() if column.startswith("PC_")
+                column for column in tabular_data.keys() if column.startswith(selected_algorithm + '_')
             ]
             df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
             set_features(labels_layer, df_principal_components_removed)
 
-            # write result back to properties
-            for i in range(0, len(embedding.T)):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "PC_" + str(i), embedding[:, i]
-                )
+        # write result back to properties
+        add_column_to_layer_tabular_data(labels_layer,df_embedding)
 
         from ._utilities import show_table
 
