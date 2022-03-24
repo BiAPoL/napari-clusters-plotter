@@ -1,6 +1,7 @@
 import warnings
 from enum import Enum
 from functools import partial
+import pandas as pd
 
 from magicgui.widgets import create_widget
 from napari.layers import Labels
@@ -338,8 +339,10 @@ class ClusteringWidget(QWidget):
 
         features = get_layer_tabular_data(labels_layer)
 
-        # only select the columns the user requested
+        # only select the columns the user requested and remove NaNs
         selected_properties = features[selected_measurements_list]
+        non_nan_entries = features.dropna().index
+        non_nan_labels = selected_properties['label'].iloc[non_nan_entries]
 
         # perform clustering
         if selected_method == "KMeans":
@@ -347,25 +350,25 @@ class ClusteringWidget(QWidget):
                 standardize, selected_properties, num_clusters, num_iterations
             )
             print("KMeans predictions finished.")
-            # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
 
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(
                 standardize, selected_properties, min_cluster_size, min_nr_samples
             )
             print("HDBSCAN predictions finished.")
-            # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
         else:
             warnings.warn(
-                "Clustering unsuccessful. Please check again selected options."
+                "Clustering unsuccessful. Please re-check selected options."
             )
             return
+
+        # write result back to features/properties of the labels layer
+        df_clusters = pd.DataFrame(non_nan_labels, columns = ['label'])
+        df_clusters[
+            f"{selected_method}_CLUSTER_ID_SCALER_{str(standardize)}"
+            ] = y_pred
+
+        add_column_to_layer_tabular_data(labels_layer, y_pred)
 
         # show region properties table as a new widget
         from ._utilities import show_table
