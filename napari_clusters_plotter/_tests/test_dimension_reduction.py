@@ -105,8 +105,9 @@ def test_call_to_function(make_napari_viewer):
 
 def test_bad_measurements(make_napari_viewer):
 
-    viewer = make_napari_viewer()
-    widget_list = ncp.napari_experimental_provide_dock_widget()
+    from napari_clusters_plotter._measure import get_regprops_from_regprops_source
+    from napari_clusters_plotter._utilities import set_features, get_layer_tabular_data
+    from napari_clusters_plotter._dimensionality_reduction import run_dimensionality_reduction
 
     label = np.array(
         [
@@ -115,33 +116,38 @@ def test_bad_measurements(make_napari_viewer):
             [0, 0, 0, 0, 2, 2, 2],
             [3, 3, 0, 0, 0, 0, 0],
             [0, 0, 4, 4, 0, 0, 0],
-            [6, 6, 6, 6, 0, 5, 0],  # <-single pixel label
+            [6, 6, 6, 6, 0, 5, 0],  # <-single pixel label leading to NaN meas.
             [0, 7, 7, 0, 0, 0, 0],
         ]
     )
 
-    image = np.random.random((label.shape))
+    viewer = make_napari_viewer()
     labels_layer = viewer.add_labels(label)
 
-    for widget in widget_list:
-        _widget = widget(viewer)
-        if isinstance(_widget, ncp._dimensionality_reduction.DimensionalityReductionWidget):
-            break
-
-    viewer.window.add_dock_widget(_widget)
-
-    from napari_clusters_plotter._measure import get_regprops_from_regprops_source
-    from napari_clusters_plotter._utilities import set_features
-
+    image = np.random.random((label.shape))
     measurements = get_regprops_from_regprops_source(image, label, 'shape + intensity')
     set_features(labels_layer, measurements)
 
-    _widget.run(labels_layer, list(labels_layer.properties.keys()),
-                5, 3, 'PCA', True, 10, 2, 2)
-    _widget.run(labels_layer, list(labels_layer.properties.keys()),
-                5, 3, 'UMAP', True, 10, 2, 2)
-    _widget.run(labels_layer, list(labels_layer.properties.keys()),
-                5, 3, 't-SNE', True, 10, 2, 2)
+    run_dimensionality_reduction(labels_layer=labels_layer,
+                                 selected_measurements_list=list(labels_layer.properties.keys()),
+                                 selected_algorithm='PCA')
+
+    assert 'PCA_0' in get_layer_tabular_data(labels_layer).columns
+    assert 'PCA_1' in get_layer_tabular_data(labels_layer).columns
+
+    run_dimensionality_reduction(labels_layer=labels_layer,
+                                 selected_measurements_list=list(labels_layer.properties.keys()),
+                                 selected_algorithm='UMAP')
+
+    assert 'UMAP_0' in get_layer_tabular_data(labels_layer).columns
+    assert 'UMAP_1' in get_layer_tabular_data(labels_layer).columns
+
+    run_dimensionality_reduction(labels_layer=labels_layer,
+                                 selected_measurements_list=list(labels_layer.properties.keys()),
+                                 selected_algorithm='t-SNE')
+
+    assert 't-SNE_0' in get_layer_tabular_data(labels_layer).columns
+    assert 't-SNE_1' in get_layer_tabular_data(labels_layer).columns
 
 
 def test_umap():
@@ -188,4 +194,4 @@ def test_pca():
 
 if __name__ == "__main__":
     import napari
-    test_call_to_function(napari.Viewer)
+    test_bad_measurements(napari.Viewer)
