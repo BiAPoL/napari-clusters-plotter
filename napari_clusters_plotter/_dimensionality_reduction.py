@@ -416,7 +416,7 @@ def run_dimensionality_reduction(
     # only select the columns the user requested and drop NaNs
     properties_to_reduce = features[selected_measurements_list]
     non_nan_entries = features.dropna().index
-    non_nan_labels = properties_to_reduce['label'].iloc[non_nan_entries]
+    non_nan_labels = features['label'].iloc[non_nan_entries]
 
     if selected_algorithm == "UMAP":
         print(
