@@ -24,6 +24,7 @@ def test_clustering_bad_data(make_napari_viewer):
     from napari_clusters_plotter._clustering import ClusteringWidget
     from napari_clusters_plotter._measure import get_regprops_from_regprops_source
     from napari_clusters_plotter._utilities import set_features
+    from napari_clusters_plotter._dimensionality_reduction import run_dimensionality_reduction
 
     label = np.array(
         [
@@ -44,16 +45,29 @@ def test_clustering_bad_data(make_napari_viewer):
     measurements = get_regprops_from_regprops_source(image, label, 'shape + intensity')
     set_features(labels_layer, measurements)
 
-    widget.run(
-            labels_layer=labels_layer,
-            selected_measurements_list=list(measurements.keys()),
-            selected_method='KMEANS',
+    # Reduce dimensionality
+    run_dimensionality_reduction(
+        labels_layer=labels_layer,
+        selected_measurements_list=list(measurements.keys()),
+        n_neighbours=15,
+        perplexity=5,
+        selected_algorithm='UMAP',
+        standardize=True,
+        explained_variance=5,
+        pca_components=2,
+        n_components=2)
+
+    widget = ClusteringWidget(viewer)
+    widget.run(labels_layer=labels_layer,
+            selected_measurements_list = ['UMAP_0', 'UMAP_1'],
+            selected_method='HDBSCAN',
             num_clusters=2,
-            num_iterations=2,
+            num_iterations=100,
             standardize=True,
-            min_cluster_size=1,
-            min_nr_samples=1,
-        )
+            min_cluster_size=2,
+            min_nr_samples=1)
+
+    assert 'HDBSCAN_CLUSTER_ID_SCALER_True' in list(labels_layer.properties.keys())
 
 def test_kmeans_clustering():
 
