@@ -101,7 +101,7 @@ def test_call_to_function(make_napari_viewer):
     )
 
     result = get_layer_tabular_data(label_layer)
-    assert "PC_0" in result.columns
+    assert "PCA_0" in result.columns
 
 def test_bad_measurements(make_napari_viewer):
 
@@ -142,6 +142,7 @@ def test_bad_measurements(make_napari_viewer):
                 5, 3, 'UMAP', True, 10, 2, 2)
     _widget.run(labels_layer, list(labels_layer.properties.keys()),
                 5, 3, 't-SNE', True, 10, 2, 2)
+
 
 def test_umap():
 
@@ -187,4 +188,4 @@ def test_pca():
 
 if __name__ == "__main__":
     import napari
-    test_bad_measurements(napari.Viewer)
+    test_call_to_function(napari.Viewer)
