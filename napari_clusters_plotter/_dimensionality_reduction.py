@@ -465,7 +465,7 @@ def run_dimensionality_reduction(
     # Create Dataframe with correct label entries
     df_embedding = pd.DataFrame(non_nan_labels, columns = ['label'])
     df_embedding[
-        [f'{selected_algorithm}_{i}' for i in range(pca_components)]
+        [f'{selected_algorithm}_{i}' for i in range(embedding.shape[1])]
         ] = embedding
 
     # write result back to properties
