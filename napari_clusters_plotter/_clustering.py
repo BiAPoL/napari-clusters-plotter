@@ -345,7 +345,42 @@ def run_clustering(labels_layer: Labels,
                    standardize: bool = True,
                    min_cluster_size: int = 5,
                    min_nr_samples: int = 5):
+    """
+    Run selected clustering algorithm on data stored in a layer.properties dict.
 
+    Parameters
+    ----------
+    labels_layer : Labels
+        labels_layer with attribute `properties` or `features`
+    selected_measurements_list : list
+        list of features that should be included for the clustering. Must be
+        list of strings (e.g., `['measurement_1', 'measurement_2', ...]`).
+    selected_method : str
+        Selected clustering method. Can be either of ['KMEANS', 'HDBSCAN'].
+    num_clusters : int, optional
+        Number of clusters to be detected. Only applicable to PCA clustering.
+        The default is 2.
+    num_iterations : int, optional
+        Number of iterations for clustering procedure Only applicable to PCA.
+        The default is 100.
+    standardize : bool, optional
+        Whether to standardize features. The default is True.
+    min_cluster_size : int, optional
+        Minimal amount of data points to constitute a cluster. Only applicable
+        to HDBSCAN. The default is 5.
+    min_nr_samples : int, optional
+        Measure of how conservative the algorithm should decide on whether to
+        add a data point to a cluster or not. The default is 5.
+
+    Returns
+    -------
+    None.
+
+    See also
+    --------
+    https://hdbscan.readthedocs.io/en/latest/index.html
+    https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
+    """
     print("Selected labels layer: " + str(labels_layer))
     print("Selected measurements: " + str(selected_measurements_list))
     print("Selected clustering method: " + str(selected_method))
