@@ -31,15 +31,22 @@ def test_feature_setting(make_napari_viewer):
     some_features = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
     set_features(label_layer, some_features)
 
-    assert isinstance(label_layer.features, pd.DataFrame)
+    features = get_layer_tabular_data(label_layer)
+
+    assert isinstance(features, pd.DataFrame)
+    assert features.equals(some_features)
 
     some_features = get_layer_tabular_data(label_layer)
     assert isinstance(some_features, pd.DataFrame)
 
-    add_column_to_layer_tabular_data(label_layer, "C", [5, 6, 7])
+    new_data = pd.DataFrame(columns=['A', 'C'])
+    new_data['A'] = some_features['A']
+    new_data['C'] = [3, 4, 7]
+    add_column_to_layer_tabular_data(label_layer, new_data, on='A')
     some_features = get_layer_tabular_data(label_layer)
     assert "C" in some_features.columns
 
 
 if __name__ == "__main__":
-    test_feature_setting()
+    import napari
+    test_feature_setting(napari.Viewer)
