@@ -324,14 +324,14 @@ class ClusteringWidget(QWidget):
     # this function runs after the run button is clicked
     def run(
         self,
-        labels_layer,
-        selected_measurements_list,
-        selected_method,
-        num_clusters,
-        num_iterations,
-        standardize,
-        min_cluster_size,
-        min_nr_samples,
+        labels_layer: Labels,
+        selected_measurements_list: list,
+        selected_method: str,
+        num_clusters: int,
+        num_iterations: int,
+        standardize: bool,
+        min_cluster_size: int,
+        min_nr_samples: int,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -342,7 +342,7 @@ class ClusteringWidget(QWidget):
         # only select the columns the user requested and remove NaNs
         selected_properties = features[selected_measurements_list]
         non_nan_entries = features.dropna().index
-        non_nan_labels = selected_properties['label'].iloc[non_nan_entries]
+        non_nan_labels = features['label'].iloc[non_nan_entries]
 
         # perform clustering
         if selected_method == "KMeans":
