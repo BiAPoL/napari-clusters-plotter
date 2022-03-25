@@ -322,58 +322,69 @@ class ClusteringWidget(QWidget):
         self.labels_select.reset_choices(event)
 
     # this function runs after the run button is clicked
-    def run(
-        self,
-        labels_layer: Labels,
-        selected_measurements_list: list,
-        selected_method: str,
-        num_clusters: int,
-        num_iterations: int,
-        standardize: bool,
-        min_cluster_size: int,
-        min_nr_samples: int,
-    ):
-        print("Selected labels layer: " + str(labels_layer))
-        print("Selected measurements: " + str(selected_measurements_list))
-        print("Selected clustering method: " + str(selected_method))
+    def run(self, labels_layer: Labels,
+            selected_measurements_list: list,
+            selected_method: str,
+            **kwargs):
 
-        features = get_layer_tabular_data(labels_layer)
-
-        # only select the columns the user requested and remove NaNs
-        selected_properties = features[selected_measurements_list]
-        non_nan_entries = features.dropna().index
-        non_nan_labels = features['label'].iloc[non_nan_entries]
-
-        # perform clustering
-        if selected_method == "KMeans":
-            y_pred = kmeans_clustering(
-                standardize, selected_properties, num_clusters, num_iterations
-            )
-            print("KMeans predictions finished.")
-
-        elif selected_method == "HDBSCAN":
-            y_pred = hdbscan_clustering(
-                standardize, selected_properties, min_cluster_size, min_nr_samples
-            )
-            print("HDBSCAN predictions finished.")
-        else:
-            warnings.warn(
-                "Clustering unsuccessful. Please re-check selected options."
-            )
-            return
-
-        # write result back to features/properties of the labels layer
-        df_clusters = pd.DataFrame(non_nan_labels, columns = ['label'])
-        df_clusters[
-            f"{selected_method}_CLUSTER_ID_SCALER_{str(standardize)}"
-            ] = y_pred
-
-        add_column_to_layer_tabular_data(labels_layer, y_pred)
+        run_clustering(labels_layer=labels_layer,
+                       selected_measurements_list=selected_measurements_list,
+                       selected_method=selected_method,
+                       **kwargs)
 
         # show region properties table as a new widget
         from ._utilities import show_table
 
         show_table(self.viewer, labels_layer)
+
+def run_clustering(labels_layer: Labels,
+                   selected_measurements_list: list,
+                   selected_method: str,
+                   num_clusters: int = 2,
+                   num_iterations: int = 100,
+                   standardize: bool = True,
+                   min_cluster_size: int = 5,
+                   min_nr_samples: int = 5):
+
+    print("Selected labels layer: " + str(labels_layer))
+    print("Selected measurements: " + str(selected_measurements_list))
+    print("Selected clustering method: " + str(selected_method))
+
+    features = get_layer_tabular_data(labels_layer)
+
+    # only select the columns the user requested and remove NaNs
+    selected_properties = features[selected_measurements_list]
+    non_nan_entries = features.index  # take all entries here
+    non_nan_labels = features['label'].iloc[non_nan_entries]
+
+    # perform clustering
+    if selected_method == "KMeans":
+        y_pred = kmeans_clustering(
+            standardize, selected_properties.iloc[non_nan_entries],
+            num_clusters, num_iterations
+        )
+        print("KMeans predictions finished.")
+
+    elif selected_method == "HDBSCAN":
+        y_pred = hdbscan_clustering(
+            standardize, selected_properties.iloc[non_nan_entries],
+            min_cluster_size, min_nr_samples
+        )
+        print("HDBSCAN predictions finished.")
+    else:
+        warnings.warn(
+            "Clustering unsuccessful. Please re-check selected options."
+        )
+        return
+
+    # write result back to features/properties of the labels layer
+    df_clusters = pd.DataFrame(non_nan_labels, columns = ['label'])
+    df_clusters[
+        f"{selected_method}_CLUSTER_ID_SCALER_{str(standardize)}"
+        ] = y_pred
+
+    add_column_to_layer_tabular_data(labels_layer, df_clusters)
+
 
 
 def kmeans_clustering(standardize, measurements, cluster_number, iterations):
