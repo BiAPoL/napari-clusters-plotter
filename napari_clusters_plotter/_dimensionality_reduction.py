@@ -1,7 +1,7 @@
 import warnings
 from functools import partial
-import pandas as pd
 
+import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
@@ -250,14 +250,16 @@ class DimensionalityReductionWidget(QWidget):
                 return
 
             self.run(
-                self.labels_select.value,
-                [i.text() for i in self.properties_list.selectedItems()],
-                self.n_neighbors.value,
-                self.perplexity.value,
-                self.algorithm_choice_list.currentText(),
-                self.standardization.value,
-                self.explained_variance.value,
-                self.pca_components.value,
+                labels_layer=self.labels_select.value,
+                selected_measurements_list=[
+                    i.text() for i in self.properties_list.selectedItems()
+                ],
+                selected_algorithm=self.algorithm_choice_list.currentText(),
+                n_neighbours=self.n_neighbors.value,
+                perplexity=self.perplexity.value,
+                standardize=self.standardization.value,
+                explained_variance=self.explained_variance.value,
+                pca_components=self.pca_components.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -375,29 +377,33 @@ class DimensionalityReductionWidget(QWidget):
         labels_layer: Labels,
         selected_measurements_list: list,
         selected_algorithm: str,
-        **kwargs):
+        **kwargs,
+    ):
 
         # Call external clustering function and pass all keyword arguments
         run_dimensionality_reduction(
             labels_layer=labels_layer,
             selected_measurements_list=selected_measurements_list,
             selected_algorithm=selected_algorithm,
-            **kwargs)
+            **kwargs,
+        )
 
         from ._utilities import show_table
+
         show_table(self.viewer, labels_layer)
 
 
 def run_dimensionality_reduction(
-        labels_layer: Labels,
-        selected_measurements_list: list,
-        selected_algorithm: str,
-        n_neighbours: int = DEFAULTS['n_neighbors'],
-        perplexity: float = DEFAULTS['perplexity'],
-        standardize: bool = DEFAULTS['standardization'],
-        explained_variance: float = DEFAULTS['explained_variance'],
-        pca_components: int = DEFAULTS['pca_components'],
-        n_components: int = 2):
+    labels_layer: Labels,
+    selected_measurements_list: list,
+    selected_algorithm: str,
+    n_neighbours: int = DEFAULTS["n_neighbors"],
+    perplexity: float = DEFAULTS["perplexity"],
+    standardize: bool = DEFAULTS["standardization"],
+    explained_variance: float = DEFAULTS["explained_variance"],
+    pca_components: int = DEFAULTS["pca_components"],
+    n_components: int = 2,
+):
     f"""
     Run dimensionality reduction algorithm on data stored in layer.properties.
 
@@ -451,7 +457,7 @@ def run_dimensionality_reduction(
     # only select the columns the user requested and drop NaNs
     properties_to_reduce = features[selected_measurements_list]
     non_nan_entries = features.dropna().index
-    non_nan_labels = features['label'].iloc[non_nan_entries]
+    non_nan_labels = features["label"].iloc[non_nan_entries]
 
     if selected_algorithm == "UMAP":
         print(
@@ -466,45 +472,50 @@ def run_dimensionality_reduction(
             properties_to_reduce.iloc[non_nan_entries],
             n_neighbours,
             n_components,
-            standardize
+            standardize,
         )
 
     elif selected_algorithm == "t-SNE":
         print(
             "Dimensionality reduction started ("
-            + f"{selected_algorithm}, standardize: {standardize}")
+            + f"{selected_algorithm}, standardize: {standardize}"
+        )
         # reduce dimensionality
         embedding = tsne(
             properties_to_reduce.iloc[non_nan_entries],
             perplexity,
             n_components,
-            standardize
+            standardize,
         )
 
     elif selected_algorithm == "PCA":
         print(f"Dimensionality reduction started ({selected_algorithm}...")
         # reduce dimensionality
-        embedding = pca(properties_to_reduce.iloc[non_nan_entries],
-                        explained_variance,
-                        pca_components)
+        embedding = pca(
+            properties_to_reduce.iloc[non_nan_entries],
+            explained_variance,
+            pca_components,
+        )
 
         # check if principle components are already present
         # and remove them by overwriting the features
         tabular_data = get_layer_tabular_data(labels_layer)
         dropkeys = [
-            column for column in tabular_data.keys() if column.startswith(selected_algorithm + '_')
+            column
+            for column in tabular_data.keys()
+            if column.startswith(selected_algorithm + "_")
         ]
         df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
         set_features(labels_layer, df_principal_components_removed)
 
     # Create Dataframe with correct label entries
-    df_embedding = pd.DataFrame(non_nan_labels, columns = ['label'])
+    df_embedding = pd.DataFrame(non_nan_labels, columns=["label"])
     df_embedding[
-        [f'{selected_algorithm}_{i}' for i in range(embedding.shape[1])]
-        ] = embedding
+        [f"{selected_algorithm}_{i}" for i in range(embedding.shape[1])]
+    ] = embedding
 
     # write result back to properties
-    add_column_to_layer_tabular_data(labels_layer,df_embedding)
+    add_column_to_layer_tabular_data(labels_layer, df_embedding)
 
     print("Dimensionality reduction finished")
 
