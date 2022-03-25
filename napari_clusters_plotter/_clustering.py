@@ -364,7 +364,8 @@ def run_clustering(labels_layer: Labels,
         Number of iterations for clustering procedure Only applicable to PCA.
         The default is 100.
     standardize : bool, optional
-        Whether to standardize features. The default is True.
+        Whether to standardize the data with z-score normalization. The default
+        is True.
     min_cluster_size : int, optional
         Minimal amount of data points to constitute a cluster. Only applicable
         to HDBSCAN. The default is 5.
