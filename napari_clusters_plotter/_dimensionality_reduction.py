@@ -374,25 +374,15 @@ class DimensionalityReductionWidget(QWidget):
         self,
         labels_layer: Labels,
         selected_measurements_list: list,
-        n_neighbours: int,
-        perplexity: float,
         selected_algorithm: str,
-        standardize: bool,
-        explained_variance: float,
-        pca_components: int,
-        n_components: int = 2):
+        **kwargs):
 
-        # Run dimensionality reduction
+        # Call external clustering function and pass all keyword arguments
         run_dimensionality_reduction(
             labels_layer=labels_layer,
             selected_measurements_list=selected_measurements_list,
-            n_neighbours=n_neighbours,
-            perplexity=perplexity,
             selected_algorithm=selected_algorithm,
-            standardize=standardize,
-            explained_variance=explained_variance,
-            pca_components=pca_components,
-            n_components=n_components)
+            **kwargs)
 
         from ._utilities import show_table
         show_table(self.viewer, labels_layer)
@@ -401,13 +391,58 @@ class DimensionalityReductionWidget(QWidget):
 def run_dimensionality_reduction(
         labels_layer: Labels,
         selected_measurements_list: list,
-        n_neighbours: int,
-        perplexity: float,
         selected_algorithm: str,
-        standardize: bool,
-        explained_variance: float,
-        pca_components: int,
+        n_neighbours: int = DEFAULTS['n_neighbors'],
+        perplexity: float = DEFAULTS['perplexity'],
+        standardize: bool = DEFAULTS['standardization'],
+        explained_variance: float = DEFAULTS['explained_variance'],
+        pca_components: int = DEFAULTS['pca_components'],
         n_components: int = 2):
+    f"""
+    Run dimensionality reduction algorithm on data stored in layer.properties.
+
+    Parameters
+    ----------
+    labels_layer : Labels
+        Labels layer with measurements stored in layer.properties or
+        layer.features
+    selected_measurements_list : list
+        List of measurements that should be included for the dimensionality
+        reduction. Must be list of strings (e.g.,
+        `['measurement_1', 'measurement_2', ...]`).
+    selected_algorithm : str
+        Dimensionality reduction algorithm to use. Can be either of
+        `['PCA', 'UMAP', 't-SNE']`
+    n_neighbours : int, optional
+        Number of neighbors to consider for dimensionality reduction.
+        Only applicable to UMAP. The default is {DEFAULTS['n_neighbors']}.
+    perplexity : float, optional
+        Determines a degree of separation between similar and different data
+        points. Only applicable to t-SNE. The default is {DEFAULTS['perplexity']}.
+    standardize : bool, optional
+        Whether to standardize the data with z-score normalization.
+        The default is {DEFAULTS['standardization']}.
+    explained_variance : float, optional
+        The amount of variance explained by each of the selected components.
+        Only applicable to PCA. The default is {DEFAULTS['explained_variance']}.
+    pca_components : int, optional
+        The number of dimensions of the reduced feature space.
+        Only applicable for PCA. The default is {DEFAULTS['pca_components']}.
+    n_components : int, optional
+        The number of dimensions of the reduced feature space.
+        Only applicable to UMAP and t-SNE. The default is 2.
+
+    Returns
+    -------
+    None.
+
+    See also
+    --------
+    https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html
+    https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+    https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html
+    https://pypi.org/project/umap-learn/
+    """
     print("Selected labels layer: " + str(labels_layer))
     print("Selected measurements: " + str(selected_measurements_list))
 
