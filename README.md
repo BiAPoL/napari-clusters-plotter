@@ -87,10 +87,14 @@ need to save them for usage in other widgets unless you wish to do so.
 
 Afterwards, you can again save and/or close the table. Also, close the Dimensionality Reduction widget.
 
-### Clustering: k-means or HDBSCAN
-If manual clustering, as shown above, is not an option, you can automatically cluster your data, e.g. using the
-[k-means clustering algorithm](https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
-or [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html).
+### Clustering
+If manual clustering, as shown above, is not an option, you can automatically cluster your data, using these implemented algorithms:
+* [k-means clustering (KMEANS)](https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
+* [Hierarchical Density-Based Spatial Clustering of Applications with Noise (HDBSCAN)](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html)
+* [Gaussian Mixture Model (GMM)](https://scikit-learn.org/stable/modules/mixture.html)
+* [Mean Shift (MS)](https://scikit-learn.org/stable/auto_examples/cluster/plot_mean_shift.html#sphx-glr-auto-examples-cluster-plot-mean-shift-py)
+* [Agglomerative clustering (AC)](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html)
+
 Therefore, click the menu `Tools > Measurement > Clustering (ncp)`,
 again, select the analysed labels layer.
 This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
