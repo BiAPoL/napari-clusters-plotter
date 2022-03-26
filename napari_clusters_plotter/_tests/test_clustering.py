@@ -40,18 +40,6 @@ def test_kmeans_clustering():
 
     # test without standardization
     result = kmeans_clustering(
-        standardize=False,
-        measurements=measurements,
-        cluster_number=n_centers,
-        iterations=50,
-    )
-
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(1 - true_class, result)
-
-    # test with standardization
-    result = kmeans_clustering(
-        standardize=True,
         measurements=measurements,
         cluster_number=n_centers,
         iterations=50,
@@ -81,18 +69,6 @@ def test_hdbscan_clustering():
 
     # test without standardization
     result = hdbscan_clustering(
-        standardize=False,
-        measurements=measurements,
-        min_cluster_size=min_cluster_size,
-        min_samples=min_samples,
-    )
-
-    assert len(np.unique(result)) == 2
-    assert np.array_equal(true_class, result)
-
-    # test with standardization
-    result = hdbscan_clustering(
-        standardize=True,
         measurements=measurements,
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
