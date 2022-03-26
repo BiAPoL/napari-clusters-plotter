@@ -280,6 +280,7 @@ class ClusteringWidget(QWidget):
                 self.standardization.value,
                 self.hdbscan_min_clusters_size.value,
                 self.hdbscan_min_nr_samples.value,
+                self.gmm_settings_container_nr.value
             )
 
         run_button.clicked.connect(run_clicked)
@@ -362,6 +363,7 @@ class ClusteringWidget(QWidget):
         standardize,
         min_cluster_size,
         min_nr_samples,
+        gmm_num_cluster
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -394,7 +396,7 @@ class ClusteringWidget(QWidget):
             )
         elif selected_method == "Gaussian Mixture Model (GMM)":
             y_pred = gaussian_mixture_model(
-                standardize, selected_properties, num_clusters
+                standardize, selected_properties, gmm_num_cluster
             )
             print("Gaussian Mixture Model predictions finished.")
             # write result back to features/properties of the labels layer
