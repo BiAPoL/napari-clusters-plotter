@@ -500,7 +500,7 @@ class ClusteringWidget(QWidget):
             print("KMeans predictions finished.")
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
-                labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+                labels_layer, "KMEANS_CLUSTER_ID", y_pred
             )
 
         elif selected_method == "HDBSCAN":
@@ -510,7 +510,7 @@ class ClusteringWidget(QWidget):
             print("HDBSCAN predictions finished.")
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
-                labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+                labels_layer, "HDBSCAN_CLUSTER_ID", y_pred
             )
         elif selected_method == "Gaussian Mixture Model (GMM)":
             y_pred = gaussian_mixture_model(
@@ -519,7 +519,7 @@ class ClusteringWidget(QWidget):
             print("Gaussian Mixture Model predictions finished.")
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
-                labels_layer, "GMM_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+                labels_layer, "GMM_CLUSTER_ID", y_pred
             )
         elif selected_method == "Mean Shift (MS)":
             y_pred = mean_shift(
@@ -528,7 +528,7 @@ class ClusteringWidget(QWidget):
             print("Mean Shift predictions finished.")
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
-                labels_layer, "MS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+                labels_layer, "MS_CLUSTER_ID", y_pred
             )
         elif selected_method == "Agglomerative Clustering (AC)":
             y_pred = agglomerative_clustering(
@@ -537,7 +537,7 @@ class ClusteringWidget(QWidget):
             print("Agglomerative Clustering predictions finished.")
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
-                labels_layer, "AC_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+                labels_layer, "AC_CLUSTER_ID", y_pred
             )
         else:
             warnings.warn(
@@ -599,8 +599,6 @@ def agglomerative_clustering(measurements, cluster_number, n_neighbors):
 
 def hdbscan_clustering(measurements, min_cluster_size, min_samples):
     import hdbscan
-
-    print("HDBSCAN predictions started (standardize: " + str(standardize) + ")...")
 
     clustering_hdbscan = hdbscan.HDBSCAN(
         min_cluster_size=min_cluster_size, min_samples=min_samples
