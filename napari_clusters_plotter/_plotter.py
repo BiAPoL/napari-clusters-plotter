@@ -13,8 +13,8 @@ from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import QTimer
-from qtpy.QtGui import QIcon
+from qtpy.QtCore import QTimer, Qt
+from qtpy.QtGui import QIcon, QGuiApplication
 from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -24,7 +24,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ._utilities import get_layer_tabular_data, get_nice_colormap
+from ._utilities import get_layer_tabular_data, get_nice_colormap, add_column_to_layer_tabular_data
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 
@@ -236,7 +236,15 @@ class PlotterWidget(QWidget):
             clustering_ID = "MANUAL_CLUSTER_ID"
 
             features = get_layer_tabular_data(self.analysed_layer)
-            features[clustering_ID] = inside
+
+            modifiers = QGuiApplication.keyboardModifiers()
+            if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
+                former_clusters = features[clustering_ID]
+                former_clusters[inside] = np.max(former_clusters) + 1
+                features[clustering_ID] = former_clusters
+            else:
+                features[clustering_ID] = inside
+            add_column_to_layer_tabular_data(self.analysed_layer, clustering_ID, features[clustering_ID])
 
             # redraw the whole plot
             self.run(
