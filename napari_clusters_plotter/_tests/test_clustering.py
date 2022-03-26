@@ -38,7 +38,6 @@ def test_kmeans_clustering():
 
     from napari_clusters_plotter._clustering import kmeans_clustering
 
-    
     result = kmeans_clustering(
         measurements=measurements,
         cluster_number=n_centers,
@@ -67,7 +66,6 @@ def test_hdbscan_clustering():
     min_cluster_size = 5
     min_samples = 2  # number of samples that should be included in one cluster
 
-    
     result = hdbscan_clustering(
         measurements=measurements,
         min_cluster_size=min_cluster_size,
@@ -96,11 +94,7 @@ def test_gaussian_mixture_model():
 
     from napari_clusters_plotter._clustering import gaussian_mixture_model
 
-    
-    result = gaussian_mixture_model(
-        measurements=measurements,
-        cluster_number=2        
-    )
+    result = gaussian_mixture_model(measurements=measurements, cluster_number=2)
 
     assert len(np.unique(result)) == n_centers
     assert np.array_equal(1 - true_class, result)
@@ -124,11 +118,8 @@ def test_agglomerative_clustering():
 
     from napari_clusters_plotter._clustering import agglomerative_clustering
 
-    
     result = agglomerative_clustering(
-        measurements=measurements,
-        cluster_number=2,
-        n_neighbors=2
+        measurements=measurements, cluster_number=2, n_neighbors=2
     )
 
     assert len(np.unique(result)) == n_centers
@@ -152,14 +143,7 @@ def test_mean_shift():
 
     from napari_clusters_plotter._clustering import mean_shift
 
-    result = mean_shift(
-        measurements=measurements,
-        quantile=0.5,
-        n_samples=50
-    )
+    result = mean_shift(measurements=measurements, quantile=0.5, n_samples=50)
 
     assert len(np.unique(result)) == n_centers
     assert np.array_equal(true_class, result)
-
-
-
