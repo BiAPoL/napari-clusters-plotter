@@ -30,6 +30,7 @@ DEFAULTS = {
     "standardization": False,
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
+    "gmm_nr_clusters": 2,
 }
 
 
@@ -39,6 +40,7 @@ class ClusteringWidget(QWidget):
         EMPTY = ""
         KMEANS = "KMeans"
         HDBSCAN = "HDBSCAN"
+        GMM = "Gaussian Mixture Model (GMM)"
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -117,6 +119,27 @@ class ClusteringWidget(QWidget):
             self.kmeans_nr_iterations.native
         )
         self.kmeans_settings_container_iter.setVisible(False)
+
+        # clustering options for Gaussian mixture model
+        # selection of number of clusters
+        self.gmm_settings_container_nr = QWidget()
+        self.gmm_settings_container_nr.setLayout(QHBoxLayout())
+        self.gmm_settings_container_nr.layout().addWidget(
+            QLabel("Number of Clusters")
+        )
+        self.gmm_nr_clusters = create_widget(
+            widget_type="SpinBox",
+            name="gmm_nr_clusters",
+            value=DEFAULTS["gmm_nr_clusters"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.gmm_settings_container_nr.layout().addWidget(
+            self.gmm_nr_clusters.native
+        )
+        self.gmm_settings_container_nr.setVisible(False)
+
+
 
         # checkbox whether data should be standardized
         self.clustering_settings_container_scaler = QWidget()
@@ -228,6 +251,7 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(self.kmeans_settings_container_iter)
         self.layout().addWidget(self.hdbscan_settings_container_size)
         self.layout().addWidget(self.hdbscan_settings_container_min_nr)
+        self.layout().addWidget(self.gmm_settings_container_nr)
         self.layout().addWidget(self.clustering_settings_container_scaler)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
@@ -290,12 +314,19 @@ class ClusteringWidget(QWidget):
             == self.Options.HDBSCAN.value,
         )
         widgets_inactive(
+            self.gmm_settings_container_nr,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.GMM.value,
+        )
+        widgets_inactive(
             self.clustering_settings_container_scaler,
             active=(
                 self.clust_method_choice_list.current_choice
                 == self.Options.KMEANS.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.HDBSCAN.value
+                or self.clust_method_choice_list.current_choice
+                == self.Options.GMM.value
             ),
         )
 
@@ -361,6 +392,15 @@ class ClusteringWidget(QWidget):
             add_column_to_layer_tabular_data(
                 labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred
             )
+        elif selected_method == "Gaussian Mixture Model (GMM)":
+            y_pred = gaussian_mixture_model(
+                standardize, selected_properties, num_clusters
+            )
+            print("Gaussian Mixture Model predictions finished.")
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(
+                labels_layer, "GMM_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+            )
         else:
             warnings.warn(
                 "Clustering unsuccessful. Please check again selected options."
@@ -372,6 +412,17 @@ class ClusteringWidget(QWidget):
 
         show_table(self.viewer, labels_layer)
 
+def gaussian_mixture_model(standardize, measurements, cluster_number):
+    from sklearn import mixture
+
+    # fit a Gaussian Mixture Model
+    gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type='full')
+
+    if standardize:
+        measurements = standard_scale(measurements)
+
+    return gmm.fit_predict(measurements)
+
 
 def kmeans_clustering(standardize, measurements, cluster_number, iterations):
     from sklearn.cluster import KMeans
@@ -382,7 +433,7 @@ def kmeans_clustering(standardize, measurements, cluster_number, iterations):
 
     if standardize:
         measurements = standard_scale(measurements)
-        
+
     return km.fit_predict(measurements)
 
 
@@ -403,4 +454,4 @@ def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples)
 def standard_scale(data):
     from sklearn.preprocessing import StandardScaler
 
-    return StandardScaler().fit_transform(measurements)
+    return StandardScaler().fit_transform(data)
