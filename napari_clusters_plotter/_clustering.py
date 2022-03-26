@@ -31,6 +31,8 @@ DEFAULTS = {
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
     "gmm_nr_clusters": 2,
+    "ms_quantile": 0.2, 
+    "ms_n_samples": 50,
 }
 
 
@@ -41,6 +43,7 @@ class ClusteringWidget(QWidget):
         KMEANS = "KMeans"
         HDBSCAN = "HDBSCAN"
         GMM = "Gaussian Mixture Model (GMM)"
+        MS = "Mean Shift (MS)"
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -139,7 +142,43 @@ class ClusteringWidget(QWidget):
         )
         self.gmm_settings_container_nr.setVisible(False)
 
+        # 
+        # clustering options for Mean Shift
+        # selection of quantile
+        self.ms_settings_container_nr = QWidget()
+        self.ms_settings_container_nr.setLayout(QHBoxLayout())
+        self.ms_settings_container_nr.layout().addWidget(
+            QLabel("Quantile")
+        )
+        self.ms_quantile = create_widget(
+            widget_type="FloatSpinBox",
+            name="ms_quantile",
+            value=DEFAULTS["ms_quantile"],
+            options={"min": 0, "step": 0.1, "max": 1},
+        )
 
+        self.ms_settings_container_nr.layout().addWidget(
+            self.ms_quantile.native
+        )
+        self.ms_settings_container_nr.setVisible(False)
+
+        # selection of number of samples
+        self.ms_settings_container_samples = QWidget()
+        self.ms_settings_container_samples.setLayout(QHBoxLayout())
+        self.ms_settings_container_samples.layout().addWidget(
+            QLabel("Number of samples")
+        )
+        self.ms_n_samples = create_widget(
+            widget_type="SpinBox",
+            name="ms_n_samples",
+            value=DEFAULTS["ms_n_samples"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ms_settings_container_samples.layout().addWidget(
+            self.ms_n_samples.native
+        )
+        self.ms_settings_container_samples.setVisible(False)
 
         # checkbox whether data should be standardized
         self.clustering_settings_container_scaler = QWidget()
@@ -252,6 +291,8 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(self.hdbscan_settings_container_size)
         self.layout().addWidget(self.hdbscan_settings_container_min_nr)
         self.layout().addWidget(self.gmm_settings_container_nr)
+        self.layout().addWidget(self.ms_settings_container_nr)
+        self.layout().addWidget(self.ms_settings_container_samples)
         self.layout().addWidget(self.clustering_settings_container_scaler)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
@@ -280,7 +321,9 @@ class ClusteringWidget(QWidget):
                 self.standardization.value,
                 self.hdbscan_min_clusters_size.value,
                 self.hdbscan_min_nr_samples.value,
-                self.gmm_settings_container_nr.value
+                self.gmm_nr_clusters.value,
+                self.ms_quantile.value,
+                self.ms_n_samples.value
             )
 
         run_button.clicked.connect(run_clicked)
@@ -320,6 +363,15 @@ class ClusteringWidget(QWidget):
             == self.Options.GMM.value,
         )
         widgets_inactive(
+            self.ms_settings_container_nr,
+            self.ms_settings_container_samples,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.MS.value,
+        )
+
+
+
+        widgets_inactive(
             self.clustering_settings_container_scaler,
             active=(
                 self.clust_method_choice_list.current_choice
@@ -328,6 +380,8 @@ class ClusteringWidget(QWidget):
                 == self.Options.HDBSCAN.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.GMM.value
+                or self.clust_method_choice_list.current_choice
+                == self.Options.MS.value
             ),
         )
 
@@ -363,7 +417,9 @@ class ClusteringWidget(QWidget):
         standardize,
         min_cluster_size,
         min_nr_samples,
-        gmm_num_cluster
+        gmm_num_cluster,
+        ms_quantile, 
+        ms_n_samples
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -403,6 +459,15 @@ class ClusteringWidget(QWidget):
             add_column_to_layer_tabular_data(
                 labels_layer, "GMM_CLUSTER_ID_SCALER_" + str(standardize), y_pred
             )
+        elif selected_method == "Mean Shift (MS)":
+            y_pred = mean_shift(
+                standardize, selected_properties, ms_quantile, ms_n_samples
+            )
+            print("Mean Shift predictions finished.")
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(
+                labels_layer, "MS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+            )
         else:
             warnings.warn(
                 "Clustering unsuccessful. Please check again selected options."
@@ -413,6 +478,19 @@ class ClusteringWidget(QWidget):
         from ._utilities import show_table
 
         show_table(self.viewer, labels_layer)
+        
+        
+def mean_shift(standardize, measurements, quantile=0.2, n_samples=50):
+    from sklearn.cluster import MeanShift, estimate_bandwidth
+
+    if standardize:
+        measurements = standard_scale(measurements)
+
+    bandwidth = estimate_bandwidth(measurements, quantile=quantile, n_samples=n_samples)
+
+    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    return ms.fit_predict(measurements)
+
 
 def gaussian_mixture_model(standardize, measurements, cluster_number):
     from sklearn import mixture
