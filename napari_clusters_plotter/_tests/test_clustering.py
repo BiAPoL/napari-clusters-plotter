@@ -103,7 +103,7 @@ def test_gaussian_mixture_model():
     )
 
     assert len(np.unique(result)) == n_centers
-    assert np.array_equal(1 - true_class, result)
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
 
 
 def test_agglomerative_clustering():
@@ -132,7 +132,7 @@ def test_agglomerative_clustering():
     )
 
     assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result)
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
 
 
 def test_mean_shift():
@@ -159,7 +159,7 @@ def test_mean_shift():
     )
 
     assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result)
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
 
 
 
