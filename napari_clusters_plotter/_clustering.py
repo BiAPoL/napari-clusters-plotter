@@ -31,10 +31,10 @@ DEFAULTS = {
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
     "gmm_nr_clusters": 2,
-    "ms_quantile": 0.2, 
+    "ms_quantile": 0.2,
     "ms_n_samples": 50,
-    "ac_nr_clusters":2,
-    "ac_nr_neighbors":2,
+    "ac_nr_clusters": 2,
+    "ac_nr_neighbors": 2,
 }
 
 
@@ -130,9 +130,7 @@ class ClusteringWidget(QWidget):
         # selection of number of clusters
         self.gmm_settings_container_nr = QWidget()
         self.gmm_settings_container_nr.setLayout(QHBoxLayout())
-        self.gmm_settings_container_nr.layout().addWidget(
-            QLabel("Number of Clusters")
-        )
+        self.gmm_settings_container_nr.layout().addWidget(QLabel("Number of Clusters"))
         self.gmm_nr_clusters = create_widget(
             widget_type="SpinBox",
             name="gmm_nr_clusters",
@@ -140,19 +138,15 @@ class ClusteringWidget(QWidget):
             options={"min": 2, "step": 1},
         )
 
-        self.gmm_settings_container_nr.layout().addWidget(
-            self.gmm_nr_clusters.native
-        )
+        self.gmm_settings_container_nr.layout().addWidget(self.gmm_nr_clusters.native)
         self.gmm_settings_container_nr.setVisible(False)
 
-        # 
+        #
         # clustering options for Mean Shift
         # selection of quantile
         self.ms_settings_container_nr = QWidget()
         self.ms_settings_container_nr.setLayout(QHBoxLayout())
-        self.ms_settings_container_nr.layout().addWidget(
-            QLabel("Quantile")
-        )
+        self.ms_settings_container_nr.layout().addWidget(QLabel("Quantile"))
         self.ms_quantile = create_widget(
             widget_type="FloatSpinBox",
             name="ms_quantile",
@@ -160,9 +154,7 @@ class ClusteringWidget(QWidget):
             options={"min": 0, "step": 0.1, "max": 1},
         )
 
-        self.ms_settings_container_nr.layout().addWidget(
-            self.ms_quantile.native
-        )
+        self.ms_settings_container_nr.layout().addWidget(self.ms_quantile.native)
         self.ms_settings_container_nr.setVisible(False)
 
         # selection of number of samples
@@ -178,9 +170,7 @@ class ClusteringWidget(QWidget):
             options={"min": 2, "step": 1},
         )
 
-        self.ms_settings_container_samples.layout().addWidget(
-            self.ms_n_samples.native
-        )
+        self.ms_settings_container_samples.layout().addWidget(self.ms_n_samples.native)
         self.ms_settings_container_samples.setVisible(False)
 
         #
@@ -203,7 +193,6 @@ class ClusteringWidget(QWidget):
         )
         self.ac_settings_container_clusters.setVisible(False)
 
-
         # selection of number of clusters
         self.ac_settings_container_neighbors = QWidget()
         self.ac_settings_container_neighbors.setLayout(QHBoxLayout())
@@ -221,7 +210,6 @@ class ClusteringWidget(QWidget):
             self.ac_n_neighbors.native
         )
         self.ac_settings_container_neighbors.setVisible(False)
-
 
         # checkbox whether data should be standardized
         self.clustering_settings_container_scaler = QWidget()
@@ -370,7 +358,7 @@ class ClusteringWidget(QWidget):
                 self.ms_quantile.value,
                 self.ms_n_samples.value,
                 self.ac_n_clusters.value,
-                self.ac_n_neighbors.value
+                self.ac_n_neighbors.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -422,8 +410,6 @@ class ClusteringWidget(QWidget):
             == self.Options.AC.value,
         )
 
-
-
         widgets_inactive(
             self.clustering_settings_container_scaler,
             active=(
@@ -433,10 +419,8 @@ class ClusteringWidget(QWidget):
                 == self.Options.HDBSCAN.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.GMM.value
-                or self.clust_method_choice_list.current_choice
-                == self.Options.MS.value
-                or self.clust_method_choice_list.current_choice
-                == self.Options.AC.value
+                or self.clust_method_choice_list.current_choice == self.Options.MS.value
+                or self.clust_method_choice_list.current_choice == self.Options.AC.value
             ),
         )
 
@@ -473,10 +457,10 @@ class ClusteringWidget(QWidget):
         min_cluster_size,
         min_nr_samples,
         gmm_num_cluster,
-        ms_quantile, 
+        ms_quantile,
         ms_n_samples,
         ac_n_clusters,
-        ac_n_neighbors
+        ac_n_neighbors,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -490,6 +474,7 @@ class ClusteringWidget(QWidget):
         # perform standard scaling, if selected
         if standardize:
             from sklearn.preprocessing import StandardScaler
+
             selected_properties = StandardScaler().fit_transform(selected_properties)
 
         # perform clustering
@@ -499,9 +484,7 @@ class ClusteringWidget(QWidget):
             )
             print("KMeans predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "KMEANS_CLUSTER_ID", y_pred
-            )
+            add_column_to_layer_tabular_data(labels_layer, "KMEANS_CLUSTER_ID", y_pred)
 
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(
@@ -509,36 +492,24 @@ class ClusteringWidget(QWidget):
             )
             print("HDBSCAN predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "HDBSCAN_CLUSTER_ID", y_pred
-            )
+            add_column_to_layer_tabular_data(labels_layer, "HDBSCAN_CLUSTER_ID", y_pred)
         elif selected_method == "Gaussian Mixture Model (GMM)":
-            y_pred = gaussian_mixture_model(
-                selected_properties, gmm_num_cluster
-            )
+            y_pred = gaussian_mixture_model(selected_properties, gmm_num_cluster)
             print("Gaussian Mixture Model predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "GMM_CLUSTER_ID", y_pred
-            )
+            add_column_to_layer_tabular_data(labels_layer, "GMM_CLUSTER_ID", y_pred)
         elif selected_method == "Mean Shift (MS)":
-            y_pred = mean_shift(
-                selected_properties, ms_quantile, ms_n_samples
-            )
+            y_pred = mean_shift(selected_properties, ms_quantile, ms_n_samples)
             print("Mean Shift predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "MS_CLUSTER_ID", y_pred
-            )
+            add_column_to_layer_tabular_data(labels_layer, "MS_CLUSTER_ID", y_pred)
         elif selected_method == "Agglomerative Clustering (AC)":
             y_pred = agglomerative_clustering(
                 selected_properties, ac_n_clusters, ac_n_neighbors
             )
             print("Agglomerative Clustering predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "AC_CLUSTER_ID", y_pred
-            )
+            add_column_to_layer_tabular_data(labels_layer, "AC_CLUSTER_ID", y_pred)
         else:
             warnings.warn(
                 "Clustering unsuccessful. Please check again selected options."
@@ -549,11 +520,10 @@ class ClusteringWidget(QWidget):
         from ._utilities import show_table
 
         show_table(self.viewer, labels_layer)
-        
-        
+
+
 def mean_shift(measurements, quantile=0.2, n_samples=50):
     from sklearn.cluster import MeanShift, estimate_bandwidth
-
 
     bandwidth = estimate_bandwidth(measurements, quantile=quantile, n_samples=n_samples)
 
@@ -565,7 +535,7 @@ def gaussian_mixture_model(measurements, cluster_number):
     from sklearn import mixture
 
     # fit a Gaussian Mixture Model
-    gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type='full')
+    gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type="full")
 
     return gmm.fit_predict(measurements)
 
