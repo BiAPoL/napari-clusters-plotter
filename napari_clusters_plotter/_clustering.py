@@ -381,14 +381,9 @@ def kmeans_clustering(standardize, measurements, cluster_number, iterations):
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
     if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_measurements = StandardScaler().fit_transform(measurements)
-        # returning prediction as a list for generating clustering image
-        return km.fit_predict(scaled_measurements)
-
-    else:
-        return km.fit_predict(measurements)
+        measurements = standard_scale(measurements)
+        
+    return km.fit_predict(measurements)
 
 
 def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples):
@@ -401,11 +396,11 @@ def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples)
     )
 
     if standardize:
-        from sklearn.preprocessing import StandardScaler
+        measurements = standard_scale(measurements)
 
-        scaled_measurements = StandardScaler().fit_transform(measurements)
-        clustering_hdbscan.fit(scaled_measurements)
-        return clustering_hdbscan.fit_predict(scaled_measurements)
+    return clustering_hdbscan.fit_predict(measurements)
 
-    else:
-        return clustering_hdbscan.fit_predict(measurements)
+def standard_scale(data):
+    from sklearn.preprocessing import StandardScaler
+
+    return StandardScaler().fit_transform(measurements)
