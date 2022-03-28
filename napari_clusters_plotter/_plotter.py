@@ -243,11 +243,11 @@ class PlotterWidget(QWidget):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features[clustering_ID]
+                former_clusters = features.loc[:,clustering_ID]
                 former_clusters[inside] = np.max(former_clusters) + 1
                 features[clustering_ID] = former_clusters
             else:
-                features[clustering_ID] = inside
+                features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
                 self.analysed_layer, clustering_ID, features[clustering_ID]
             )
