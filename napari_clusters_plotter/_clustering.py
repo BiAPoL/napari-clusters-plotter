@@ -512,7 +512,7 @@ class ClusteringWidget(QWidget):
             add_column_to_layer_tabular_data(labels_layer, "AC_CLUSTER_ID", y_pred)
         else:
             warnings.warn(
-                "Clustering unsuccessful. Please check again selected options."
+                "Clustering unsuccessful. Please check selected options again."
             )
             return
 
