@@ -243,7 +243,7 @@ class PlotterWidget(QWidget):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features.loc[:,clustering_ID]
+                former_clusters = features.loc[:, clustering_ID]
                 former_clusters[inside] = np.max(former_clusters) + 1
                 features[clustering_ID] = former_clusters
             else:
