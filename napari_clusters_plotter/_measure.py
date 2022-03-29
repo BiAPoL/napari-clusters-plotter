@@ -361,7 +361,6 @@ def new_regprops(
         
     return reg_props[columns]
 
-
 def get_regprops_from_regprops_source(
     intensity_image,
     label_image,
@@ -446,7 +445,6 @@ def get_regprops_from_regprops_source(
             label_image, n_closest_points_list, reg_props
         )
 
-
 def region_props_with_neighborhood_data(
     label_image, 
     n_closest_points_list: list, 
@@ -457,11 +455,9 @@ def region_props_with_neighborhood_data(
 
     Parameters
     ----------
-    columns: list
-        list of names of regionproperties
-    label_image : numpy array
+    label_image : numpy array or dask array
         segmented image with background = 0 and labels >= 1
-    reg_props: dict
+    reg_props: Dataframe
         region properties to be combined with
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
