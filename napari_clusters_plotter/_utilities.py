@@ -1,5 +1,6 @@
 import pandas as pd
-
+import numpy as np
+import pyclesperanto_prototype as cle
 
 def widgets_inactive(*widgets, active):
     for widget in widgets:
@@ -38,6 +39,41 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
     if hasattr(layer, "features"):
         layer.features[column_name] = data
 
+def generate_cluster_image(label_image, predictionlist):
+    """
+    Returns a label image where each label value corresponds 
+    to the cluster identity defined by the predictionlist. 
+    it is assumed that len(predictionlist) == max(label_image)
+
+    Parameters
+    ----------
+    label_image: ndarray or dask array
+        Label image used for cluster predictions
+    predictionlist: array 
+        Array containing cluster identities for each label
+    """
+    # reforming the prediction list this is done to account 
+    # for cluster labels that start at 0 conviniently hdbscan 
+    # labelling starts at -1 for noise, removing these from 
+    # the labels
+    predictionlist_new = np.array(predictionlist) + 1
+    for i in range(int(np.min(label_image[np.nonzero(label_image)]))):
+        predictionlist_new = np.insert(predictionlist_new,i,0)    
+
+    # loading data into gpu
+    clelist = cle.push(predictionlist_new)
+    gpu_labelimage = cle.push(label_image)
+
+    #generation of cluster label image
+    parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
+    gpu_labelimage = None
+    clelist = None
+    
+    # retrieving the gpu image
+    output = cle.pull(parametric_image).astype('uint32')
+    parametric_image = None
+    
+    return output
 
 def get_nice_colormap():
     colours_w_old_colors = [
