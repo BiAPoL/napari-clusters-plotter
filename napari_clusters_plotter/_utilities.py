@@ -57,8 +57,7 @@ def generate_cluster_image(label_image, predictionlist):
     # labelling starts at -1 for noise, removing these from 
     # the labels
     predictionlist_new = np.array(predictionlist) + 1
-    for i in range(int(np.min(label_image[np.nonzero(label_image)]))):
-        predictionlist_new = np.insert(predictionlist_new,i,0)    
+    predictionlist_new = np.insert(predictionlist_new,0,0)    
 
     # loading data into gpu
     clelist = cle.push(predictionlist_new)
@@ -74,6 +73,23 @@ def generate_cluster_image(label_image, predictionlist):
     parametric_image = None
     
     return output
+
+def dask_cluster_image_timelapse(label_image, prediction_list_list):
+    from dask import delayed
+    import dask.array as da
+    
+    sample = label_image[0]
+    
+    lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
+    lazy_arrays = [lazy_cluster_image(frame,preds) for frame,preds in zip(label_image,prediction_list_list)]
+    dask_arrays = [
+        da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
+        for delayed_reader in lazy_arrays
+    ]
+    # Stack into one large dask.array
+    stack = da.stack(dask_arrays, axis=0)
+    
+    return stack
 
 def get_nice_colormap():
     colours_w_old_colors = [
