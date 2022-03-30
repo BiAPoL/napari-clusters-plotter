@@ -376,7 +376,6 @@ class ClusteringWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
-
         # hide widget for the selection of parameters unless specific method is chosen
         self.clust_method_choice_list.changed.connect(
             self.change_clustering_options_visibility
@@ -440,7 +439,6 @@ class ClusteringWidget(QWidget):
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
                     item.setSelected(True)
-
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
