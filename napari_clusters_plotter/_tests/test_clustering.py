@@ -47,7 +47,7 @@ def test_kmeans_clustering():
     # a tuple is returned, where the first item (returned[0]) is the name of
     # the clustering method, and the second one (returned[1]) is predictions
     assert len(np.unique(result[1])) == 2
-    assert np.array_equal(1-true_class, result[1])
+    assert np.array_equal(1 - true_class, result[1])
 
 
 def test_hdbscan_clustering():
