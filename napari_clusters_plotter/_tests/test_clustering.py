@@ -95,8 +95,8 @@ def test_gaussian_mixture_model():
 
     result = gaussian_mixture_model(measurements=measurements, cluster_number=2)
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
+    assert len(np.unique(result[1])) == n_centers
+    assert np.array_equal(true_class, (result[1])) or np.array_equal(1 - true_class, (result[1]))
 
 
 def test_agglomerative_clustering():
@@ -121,8 +121,8 @@ def test_agglomerative_clustering():
         measurements=measurements, cluster_number=2, n_neighbors=2
     )
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
+    assert len(np.unique((result[1]))) == n_centers
+    assert np.array_equal(true_class, (result[1])) or np.array_equal(1 - true_class, (result[1]))
 
 
 def test_mean_shift():
@@ -145,5 +145,5 @@ def test_mean_shift():
 
     result = mean_shift(measurements=measurements, quantile=0.5, n_samples=50)
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
+    assert len(np.unique((result[1]))) == n_centers
+    assert np.array_equal(true_class, (result[1])) or np.array_equal(1 - true_class, (result[1]))
