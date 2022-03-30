@@ -33,8 +33,8 @@ DEFAULTS = {
     "gmm_nr_clusters": 2,
     "ms_quantile": 0.2,
     "ms_n_samples": 50,
-    "ac_nr_clusters": 2,
-    "ac_nr_neighbors": 2,
+    "ac_n_clusters": 2,
+    "ac_n_neighbors": 2,
 }
 
 
@@ -183,8 +183,8 @@ class ClusteringWidget(QWidget):
         )
         self.ac_n_clusters = create_widget(
             widget_type="SpinBox",
-            name="ac_nr_clusters",
-            value=DEFAULTS["ac_nr_clusters"],
+            name="ac_n_clusters",
+            value=DEFAULTS["ac_n_clusters"],
             options={"min": 2, "step": 1},
         )
 
@@ -201,8 +201,8 @@ class ClusteringWidget(QWidget):
         )
         self.ac_n_neighbors = create_widget(
             widget_type="SpinBox",
-            name="ac_nr_neighbors",
-            value=DEFAULTS["ac_nr_neighbors"],
+            name="ac_n_neighbors",
+            value=DEFAULTS["ac_n_neighbors"],
             options={"min": 2, "step": 1},
         )
 
