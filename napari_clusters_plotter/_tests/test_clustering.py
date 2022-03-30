@@ -38,9 +38,7 @@ def test_kmeans_clustering():
 
     from napari_clusters_plotter._clustering import kmeans_clustering
 
-    # test without standardization
     result = kmeans_clustering(
-        standardize=False,
         measurements=measurements,
         cluster_number=n_centers,
         iterations=50,
@@ -48,31 +46,15 @@ def test_kmeans_clustering():
 
     # a tuple is returned, where the first item (returned[0]) is the name of
     # the clustering method, and the second one is predictions (returned[1])
-    assert len(np.unique(result[1])) == n_centers
-    assert np.array_equal(1 - true_class, result[1])
-
-    # test with standardization
-    result = kmeans_clustering(
-        standardize=True,
-        measurements=measurements,
-        cluster_number=n_centers,
-        iterations=50,
-    )
-
-    assert len(np.unique(result[1])) == n_centers
-    assert np.array_equal(1 - true_class, result[1])
+    assert len(np.unique(result[1])) == 2
+    assert np.array_equal(true_class, result[1])
 
 
 def test_hdbscan_clustering():
 
-    # viewer = napari.Viewer()
-    # widget_list = ncp.napari_experimental_provide_dock_widget()
-    # n_wdgts = len(viewer.window._dock_widgets)
-
     # create an example dataset
     n_samples = 100
     data = datasets.make_moons(n_samples=n_samples, random_state=1, noise=0.05)
-
     true_class = data[1]
     measurements = data[0]
 
@@ -81,9 +63,7 @@ def test_hdbscan_clustering():
     min_cluster_size = 5
     min_samples = 2  # number of samples that should be included in one cluster
 
-    # test without standardization
     result = hdbscan_clustering(
-        standardize=False,
         measurements=measurements,
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
@@ -94,18 +74,76 @@ def test_hdbscan_clustering():
     assert len(np.unique(result[1])) == 2
     assert np.array_equal(true_class, result[1])
 
-    # test with standardization
-    result = hdbscan_clustering(
-        standardize=True,
-        measurements=measurements,
-        min_cluster_size=min_cluster_size,
-        min_samples=min_samples,
+
+def test_gaussian_mixture_model():
+
+    # create an example dataset
+    n_samples = 20
+    n_centers = 2
+    data = datasets.make_blobs(
+        n_samples=n_samples,
+        random_state=1,
+        centers=n_centers,
+        cluster_std=0.3,
+        n_features=2,
     )
 
-    assert len(np.unique(result[1])) == 2
-    assert np.array_equal(true_class, result[1])
+    true_class = data[1]
+    measurements = data[0]
+
+    from napari_clusters_plotter._clustering import gaussian_mixture_model
+
+    result = gaussian_mixture_model(measurements=measurements, cluster_number=2)
+
+    assert len(np.unique(result)) == n_centers
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
 
 
-if __name__ == "__main__":
-    test_kmeans_clustering()
-    test_hdbscan_clustering()
+def test_agglomerative_clustering():
+
+    # create an example dataset
+    n_samples = 20
+    n_centers = 2
+    data = datasets.make_blobs(
+        n_samples=n_samples,
+        random_state=1,
+        centers=n_centers,
+        cluster_std=0.3,
+        n_features=2,
+    )
+
+    true_class = data[1]
+    measurements = data[0]
+
+    from napari_clusters_plotter._clustering import agglomerative_clustering
+
+    result = agglomerative_clustering(
+        measurements=measurements, cluster_number=2, n_neighbors=2
+    )
+
+    assert len(np.unique(result)) == n_centers
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
+
+
+def test_mean_shift():
+
+    # create an example dataset
+    n_samples = 20
+    n_centers = 2
+    data = datasets.make_blobs(
+        n_samples=n_samples,
+        random_state=1,
+        centers=n_centers,
+        cluster_std=0.3,
+        n_features=2,
+    )
+
+    true_class = data[1]
+    measurements = data[0]
+
+    from napari_clusters_plotter._clustering import mean_shift
+
+    result = mean_shift(measurements=measurements, quantile=0.5, n_samples=50)
+
+    assert len(np.unique(result)) == n_centers
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
