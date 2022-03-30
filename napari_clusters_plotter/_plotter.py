@@ -235,8 +235,8 @@ class PlotterWidget(QWidget):
 
         # noinspection PyPep8Naming
         def manual_clustering_method(inside):
-            inside = np.array(inside) # leads to errors sometimes otherwise
-            
+            inside = np.array(inside)  # leads to errors sometimes otherwise
+
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
