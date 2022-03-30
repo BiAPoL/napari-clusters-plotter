@@ -16,6 +16,7 @@ from qtpy.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QLineEdit
 )
 
 from ._utilities import (
@@ -37,6 +38,7 @@ DEFAULTS = {
     "ms_n_samples": 50,
     "ac_nr_clusters": 2,
     "ac_nr_neighbors": 2,
+    "custom_name": "Algorithm_Name",
 }
 
 
@@ -295,6 +297,21 @@ class ClusteringWidget(QWidget):
         self.hdbscan_settings_container_min_nr.layout().addWidget(help_min_nr_samples)
         self.hdbscan_settings_container_min_nr.setVisible(False)
 
+        # custom result column name field
+        self.custom_name_container = QWidget()
+        self.custom_name_container.setLayout(QHBoxLayout())
+        self.custom_name_container.layout().addWidget(
+            QLabel("Custom Results Name")
+        )
+        self.custom_name = QLineEdit()
+        self.custom_name_not_editable = QLineEdit()
+
+        self.custom_name_container.layout().addWidget(self.custom_name)
+        self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
+        self.custom_name.setText(DEFAULTS["custom_name"])
+        self.custom_name_not_editable.setText("_CLUSTER_ID")
+        self.custom_name_not_editable.setReadOnly(True)
+
         # Run button
         run_container = QWidget()
         run_container.setLayout(QHBoxLayout())
@@ -329,6 +346,7 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(self.ac_settings_container_clusters)
         self.layout().addWidget(self.ac_settings_container_neighbors)
         self.layout().addWidget(self.clustering_settings_container_scaler)
+        self.layout().addWidget(self.custom_name_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
@@ -361,6 +379,7 @@ class ClusteringWidget(QWidget):
                 self.ms_n_samples.value,
                 self.ac_n_clusters.value,
                 self.ac_n_neighbors.value,
+                self.custom_name.text(),
             )
 
         run_button.clicked.connect(run_clicked)
@@ -463,6 +482,7 @@ class ClusteringWidget(QWidget):
         ms_n_samples,
         ac_n_clusters,
         ac_n_neighbors,
+        custom_name,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -476,11 +496,15 @@ class ClusteringWidget(QWidget):
         # from a secondary thread a tuple is returned, where the first item (returned[0]) is the name of
         # the clustering method, and the second one (returned[1]) is predictions
         def result_of_clustering(returned):
-            print(returned[0] + " predictions finished.")
             # write result back to features/properties of the labels layer
+            if custom_name == DEFAULTS["custom_name"]:
+                result_column_name = returned[0]
+            else:
+                result_column_name = custom_name
+            print(result_column_name + " predictions finished.")
             add_column_to_layer_tabular_data(
                 labels_layer,
-                returned[0] + "_CLUSTER_ID",
+                result_column_name + "_CLUSTER_ID",
                 returned[1],
             )
             show_table(self.viewer, labels_layer)
@@ -492,7 +516,7 @@ class ClusteringWidget(QWidget):
             selected_properties = StandardScaler().fit_transform(selected_properties)
 
         # perform clustering
-        if selected_method == "KMeans":
+        if selected_method == self.Options.KMEANS.value:
             self.worker = create_worker(
                 kmeans_clustering,
                 measurements=selected_properties,
@@ -502,7 +526,7 @@ class ClusteringWidget(QWidget):
             )
             self.worker.returned.connect(result_of_clustering)
             self.worker.start()
-        elif selected_method == "HDBSCAN":
+        elif selected_method == self.Options.HDBSCAN.value:
             self.worker = create_worker(
                 hdbscan_clustering,
                 measurements=selected_properties,
@@ -512,7 +536,7 @@ class ClusteringWidget(QWidget):
             )
             self.worker.returned.connect(result_of_clustering)
             self.worker.start()
-        elif selected_method == "Gaussian Mixture Model (GMM)":
+        elif selected_method == self.Options.GMM.value:
             self.worker = create_worker(
                 gaussian_mixture_model,
                 measurements=selected_properties,
@@ -521,9 +545,9 @@ class ClusteringWidget(QWidget):
             )
             self.worker.returned.connect(result_of_clustering)
             self.worker.start()
-        elif selected_method == "Mean Shift (MS)":
+        elif selected_method == self.Options.MS.value:
             self.worker = create_worker(
-                gaussian_mixture_model,
+                mean_shift,
                 measurements=selected_properties,
                 quantile=ms_quantile,
                 n_samples=ms_n_samples,
@@ -531,9 +555,9 @@ class ClusteringWidget(QWidget):
             )
             self.worker.returned.connect(result_of_clustering)
             self.worker.start()
-        elif selected_method == "Agglomerative Clustering (AC)":
+        elif selected_method == self.Options.AC.value:
             self.worker = create_worker(
-                gaussian_mixture_model,
+                agglomerative_clustering,
                 measurements=selected_properties,
                 cluster_number=ac_n_clusters,
                 n_neighbors=ac_n_neighbors,
