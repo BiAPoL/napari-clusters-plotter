@@ -11,12 +11,12 @@ from qtpy.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QPushButton,
     QVBoxLayout,
     QWidget,
-    QLineEdit
 )
 
 from ._utilities import (
@@ -300,9 +300,7 @@ class ClusteringWidget(QWidget):
         # custom result column name field
         self.custom_name_container = QWidget()
         self.custom_name_container.setLayout(QHBoxLayout())
-        self.custom_name_container.layout().addWidget(
-            QLabel("Custom Results Name")
-        )
+        self.custom_name_container.layout().addWidget(QLabel("Custom Results Name"))
         self.custom_name = QLineEdit()
         self.custom_name_not_editable = QLineEdit()
 
