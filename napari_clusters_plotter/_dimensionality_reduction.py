@@ -13,7 +13,6 @@ from qtpy.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
-    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -45,6 +44,7 @@ class DimensionalityReductionWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
 
+        self.worker = None
         self.viewer = napari_viewer
 
         # QVBoxLayout - lines up widgets vertically
@@ -237,15 +237,6 @@ class DimensionalityReductionWidget(QWidget):
         defaults_button = QPushButton("Restore Defaults")
         defaults_container.layout().addWidget(defaults_button)
 
-        # Progress bar
-        progress_bar_container = QWidget()
-        progress_bar_container.setLayout(QHBoxLayout())
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(0)
-        self.progress_bar.hide()
-        progress_bar_container.layout().addWidget(self.progress_bar)
-
         def run_clicked():
 
             if self.labels_select.value is None:
@@ -273,7 +264,6 @@ class DimensionalityReductionWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        run_button.clicked.connect(self.show_progress_bar)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
@@ -301,8 +291,6 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
-        self.layout().addWidget(progress_bar_container)
-
         # hide widgets unless appropriate options are chosen
         self.algorithm_choice_list.currentIndexChanged.connect(
             self.change_pca_components
@@ -323,9 +311,6 @@ class DimensionalityReductionWidget(QWidget):
 
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
-
-    def show_progress_bar(self):
-        self.progress_bar.show()
 
     # toggle widgets visibility according to what is selected
     def change_umap_settings(self):
@@ -419,7 +404,6 @@ class DimensionalityReductionWidget(QWidget):
                 )
 
             show_table(viewer, labels_layer)
-            self.progress_bar.hide()
             print("Dimensionality reduction finished")
 
         def return_func_pca(embedding):
@@ -439,7 +423,6 @@ class DimensionalityReductionWidget(QWidget):
                 )
 
             show_table(viewer, labels_layer)
-            self.progress_bar.hide()
             print("Dimensionality reduction finished")
 
         if selected_algorithm == "UMAP":
