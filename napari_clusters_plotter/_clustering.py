@@ -306,8 +306,8 @@ class ClusteringWidget(QWidget):
 
         self.custom_name_container.layout().addWidget(self.custom_name)
         self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
-        self.custom_name.setText(DEFAULTS["custom_name"])
-        self.custom_name_not_editable.setText("_CLUSTER_ID")
+        self.custom_name.setPlaceholderText(DEFAULTS["custom_name"])
+        self.custom_name_not_editable.setPlaceholderText("_CLUSTER_ID")
         self.custom_name_not_editable.setReadOnly(True)
 
         # Run button
@@ -495,7 +495,7 @@ class ClusteringWidget(QWidget):
         # the clustering method, and the second one (returned[1]) is predictions
         def result_of_clustering(returned):
             # write result back to features/properties of the labels layer
-            if custom_name == DEFAULTS["custom_name"]:
+            if custom_name == "":
                 result_column_name = returned[0]
             else:
                 result_column_name = custom_name
