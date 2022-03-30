@@ -474,13 +474,13 @@ class ClusteringWidget(QWidget):
         selected_properties = features[selected_measurements_list]
 
         # from a secondary thread a tuple is returned, where the first item (returned[0]) is the name of
-        # the clustering method, and the second one is predictions (returned[1])
+        # the clustering method, and the second one (returned[1]) is predictions
         def result_of_clustering(returned):
             print(returned[0] + " predictions finished.")
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
                 labels_layer,
-                returned[1] + "_CLUSTER_ID_SCALER_" + str(standardize),
+                returned[1] + "_CLUSTER_ID",
                 returned[1],
             )
             show_table(self.viewer, labels_layer)
