@@ -480,7 +480,7 @@ class ClusteringWidget(QWidget):
             # write result back to features/properties of the labels layer
             add_column_to_layer_tabular_data(
                 labels_layer,
-                returned[1] + "_CLUSTER_ID",
+                returned[0] + "_CLUSTER_ID",
                 returned[1],
             )
             show_table(self.viewer, labels_layer)
