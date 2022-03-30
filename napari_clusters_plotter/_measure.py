@@ -14,7 +14,6 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -39,6 +38,7 @@ class MeasureWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
 
+        self.worker = None
         self.viewer = napari_viewer
         self.setLayout(QVBoxLayout())
 
@@ -111,15 +111,6 @@ class MeasureWidget(QWidget):
         run_button = QPushButton("Run")
         run_button_container.layout().addWidget(run_button)
 
-        # Progress bar
-        progress_bar_container = QWidget()
-        progress_bar_container.setLayout(QHBoxLayout())
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(0)
-        self.progress_bar.hide()
-        progress_bar_container.layout().addWidget(self.progress_bar)
-
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
         self.layout().addWidget(image_layer_selection_container)
@@ -159,7 +150,6 @@ class MeasureWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        run_button.clicked.connect(self.progress_bar_status)
 
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
@@ -167,14 +157,9 @@ class MeasureWidget(QWidget):
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
-        self.layout().addWidget(progress_bar_container)
-
         # hide widgets unless appropriate options are chosen
         self.reg_props_choice_list.changed.connect(self.change_reg_props_file)
         self.reg_props_choice_list.changed.connect(self.change_closest_points_list)
-
-    def progress_bar_status(self):
-        self.progress_bar.show()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -217,7 +202,6 @@ class MeasureWidget(QWidget):
             set_features(labels_layer, returned)
             print("Measured:", list(returned.keys()))
             show_table(self.viewer, labels_layer)
-            self.progress_bar.hide()
 
         # depending on settings,...
         if region_props_source == self.Choices.FILE.value:
@@ -237,7 +221,6 @@ class MeasureWidget(QWidget):
             else:
                 set_features(labels_layer, edited_reg_props)
             show_table(self.viewer, labels_layer)
-            self.progress_bar.hide()
 
         elif "Measure now" in region_props_source:
             if "shape" in region_props_source or "intensity" in region_props_source:

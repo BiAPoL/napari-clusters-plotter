@@ -11,9 +11,9 @@ from qtpy.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QProgressBar,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -33,6 +33,12 @@ DEFAULTS = {
     "standardization": False,
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
+    "gmm_nr_clusters": 2,
+    "ms_quantile": 0.2,
+    "ms_n_samples": 50,
+    "ac_n_clusters": 2,
+    "ac_n_neighbors": 2,
+    "custom_name": "Algorithm_Name",
 }
 
 
@@ -42,9 +48,13 @@ class ClusteringWidget(QWidget):
         EMPTY = ""
         KMEANS = "KMeans"
         HDBSCAN = "HDBSCAN"
+        GMM = "Gaussian Mixture Model (GMM)"
+        MS = "Mean Shift (MS)"
+        AC = "Agglomerative Clustering (AC)"
 
     def __init__(self, napari_viewer):
         super().__init__()
+        self.worker = None
         self.setLayout(QVBoxLayout())
         self.viewer = napari_viewer
 
@@ -120,6 +130,90 @@ class ClusteringWidget(QWidget):
             self.kmeans_nr_iterations.native
         )
         self.kmeans_settings_container_iter.setVisible(False)
+
+        # clustering options for Gaussian mixture model
+        # selection of number of clusters
+        self.gmm_settings_container_nr = QWidget()
+        self.gmm_settings_container_nr.setLayout(QHBoxLayout())
+        self.gmm_settings_container_nr.layout().addWidget(QLabel("Number of Clusters"))
+        self.gmm_nr_clusters = create_widget(
+            widget_type="SpinBox",
+            name="gmm_nr_clusters",
+            value=DEFAULTS["gmm_nr_clusters"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.gmm_settings_container_nr.layout().addWidget(self.gmm_nr_clusters.native)
+        self.gmm_settings_container_nr.setVisible(False)
+
+        # clustering options for Mean Shift
+        # selection of quantile
+        self.ms_settings_container_nr = QWidget()
+        self.ms_settings_container_nr.setLayout(QHBoxLayout())
+        self.ms_settings_container_nr.layout().addWidget(QLabel("Quantile"))
+        self.ms_quantile = create_widget(
+            widget_type="FloatSpinBox",
+            name="ms_quantile",
+            value=DEFAULTS["ms_quantile"],
+            options={"min": 0, "step": 0.1, "max": 1},
+        )
+
+        self.ms_settings_container_nr.layout().addWidget(self.ms_quantile.native)
+        self.ms_settings_container_nr.setVisible(False)
+
+        # selection of number of samples
+        self.ms_settings_container_samples = QWidget()
+        self.ms_settings_container_samples.setLayout(QHBoxLayout())
+        self.ms_settings_container_samples.layout().addWidget(
+            QLabel("Number of samples")
+        )
+        self.ms_n_samples = create_widget(
+            widget_type="SpinBox",
+            name="ms_n_samples",
+            value=DEFAULTS["ms_n_samples"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ms_settings_container_samples.layout().addWidget(self.ms_n_samples.native)
+        self.ms_settings_container_samples.setVisible(False)
+
+        #
+        # clustering options for Agglomerative Clustering
+        # selection of number of clusters
+        self.ac_settings_container_clusters = QWidget()
+        self.ac_settings_container_clusters.setLayout(QHBoxLayout())
+        self.ac_settings_container_clusters.layout().addWidget(
+            QLabel("Number of clusters")
+        )
+        self.ac_n_clusters = create_widget(
+            widget_type="SpinBox",
+            name="ac_n_clusters",
+            value=DEFAULTS["ac_n_clusters"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ac_settings_container_clusters.layout().addWidget(
+            self.ac_n_clusters.native
+        )
+        self.ac_settings_container_clusters.setVisible(False)
+
+        # selection of number of clusters
+        self.ac_settings_container_neighbors = QWidget()
+        self.ac_settings_container_neighbors.setLayout(QHBoxLayout())
+        self.ac_settings_container_neighbors.layout().addWidget(
+            QLabel("Number of neighbors")
+        )
+        self.ac_n_neighbors = create_widget(
+            widget_type="SpinBox",
+            name="ac_n_neighbors",
+            value=DEFAULTS["ac_n_neighbors"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ac_settings_container_neighbors.layout().addWidget(
+            self.ac_n_neighbors.native
+        )
+        self.ac_settings_container_neighbors.setVisible(False)
 
         # checkbox whether data should be standardized
         self.clustering_settings_container_scaler = QWidget()
@@ -203,6 +297,19 @@ class ClusteringWidget(QWidget):
         self.hdbscan_settings_container_min_nr.layout().addWidget(help_min_nr_samples)
         self.hdbscan_settings_container_min_nr.setVisible(False)
 
+        # custom result column name field
+        self.custom_name_container = QWidget()
+        self.custom_name_container.setLayout(QHBoxLayout())
+        self.custom_name_container.layout().addWidget(QLabel("Custom Results Name"))
+        self.custom_name = QLineEdit()
+        self.custom_name_not_editable = QLineEdit()
+
+        self.custom_name_container.layout().addWidget(self.custom_name)
+        self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
+        self.custom_name.setPlaceholderText(DEFAULTS["custom_name"])
+        self.custom_name_not_editable.setPlaceholderText("_CLUSTER_ID")
+        self.custom_name_not_editable.setReadOnly(True)
+
         # Run button
         run_container = QWidget()
         run_container.setLayout(QHBoxLayout())
@@ -221,15 +328,6 @@ class ClusteringWidget(QWidget):
         defaults_button = QPushButton("Restore Defaults")
         defaults_container.layout().addWidget(defaults_button)
 
-        # Progress bar
-        progress_bar_container = QWidget()
-        progress_bar_container.setLayout(QHBoxLayout())
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMinimum(0)
-        self.progress_bar.setMaximum(0)
-        self.progress_bar.hide()
-        progress_bar_container.layout().addWidget(self.progress_bar)
-
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
         self.layout().addWidget(labels_layer_selection_container)
@@ -240,7 +338,13 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(self.kmeans_settings_container_iter)
         self.layout().addWidget(self.hdbscan_settings_container_size)
         self.layout().addWidget(self.hdbscan_settings_container_min_nr)
+        self.layout().addWidget(self.gmm_settings_container_nr)
+        self.layout().addWidget(self.ms_settings_container_nr)
+        self.layout().addWidget(self.ms_settings_container_samples)
+        self.layout().addWidget(self.ac_settings_container_clusters)
+        self.layout().addWidget(self.ac_settings_container_neighbors)
         self.layout().addWidget(self.clustering_settings_container_scaler)
+        self.layout().addWidget(self.custom_name_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
@@ -268,10 +372,15 @@ class ClusteringWidget(QWidget):
                 self.standardization.value,
                 self.hdbscan_min_clusters_size.value,
                 self.hdbscan_min_nr_samples.value,
+                self.gmm_nr_clusters.value,
+                self.ms_quantile.value,
+                self.ms_n_samples.value,
+                self.ac_n_clusters.value,
+                self.ac_n_neighbors.value,
+                self.custom_name.text(),
             )
 
         run_button.clicked.connect(run_clicked)
-        run_button.clicked.connect(self.show_progress_bar)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
@@ -283,8 +392,6 @@ class ClusteringWidget(QWidget):
             item = self.layout().itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
-
-        self.layout().addWidget(progress_bar_container)
 
         # hide widget for the selection of parameters unless specific method is chosen
         self.clust_method_choice_list.changed.connect(
@@ -305,12 +412,34 @@ class ClusteringWidget(QWidget):
             == self.Options.HDBSCAN.value,
         )
         widgets_inactive(
+            self.gmm_settings_container_nr,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.GMM.value,
+        )
+        widgets_inactive(
+            self.ms_settings_container_nr,
+            self.ms_settings_container_samples,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.MS.value,
+        )
+        widgets_inactive(
+            self.ac_settings_container_clusters,
+            self.ac_settings_container_neighbors,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.AC.value,
+        )
+
+        widgets_inactive(
             self.clustering_settings_container_scaler,
             active=(
                 self.clust_method_choice_list.current_choice
                 == self.Options.KMEANS.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.HDBSCAN.value
+                or self.clust_method_choice_list.current_choice
+                == self.Options.GMM.value
+                or self.clust_method_choice_list.current_choice == self.Options.MS.value
+                or self.clust_method_choice_list.current_choice == self.Options.AC.value
             ),
         )
 
@@ -327,9 +456,6 @@ class ClusteringWidget(QWidget):
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
                     item.setSelected(True)
-
-    def show_progress_bar(self):
-        self.progress_bar.show()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -349,6 +475,12 @@ class ClusteringWidget(QWidget):
         standardize,
         min_cluster_size,
         min_nr_samples,
+        gmm_num_cluster,
+        ms_quantile,
+        ms_n_samples,
+        ac_n_clusters,
+        ac_n_neighbors,
+        custom_name,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -360,23 +492,31 @@ class ClusteringWidget(QWidget):
         selected_properties = features[selected_measurements_list]
 
         # from a secondary thread a tuple is returned, where the first item (returned[0]) is the name of
-        # the clustering method, and the second one is predictions (returned[1])
+        # the clustering method, and the second one (returned[1]) is predictions
         def result_of_clustering(returned):
-            print(returned[0] + " predictions finished.")
             # write result back to features/properties of the labels layer
+            if custom_name == "":
+                result_column_name = returned[0]
+            else:
+                result_column_name = custom_name
+            print(result_column_name + " predictions finished.")
             add_column_to_layer_tabular_data(
                 labels_layer,
-                returned[1] + "_CLUSTER_ID_SCALER_" + str(standardize),
+                result_column_name + "_CLUSTER_ID",
                 returned[1],
             )
             show_table(self.viewer, labels_layer)
-            self.progress_bar.hide()
+
+        # perform standard scaling, if selected
+        if standardize:
+            from sklearn.preprocessing import StandardScaler
+
+            selected_properties = StandardScaler().fit_transform(selected_properties)
 
         # perform clustering
-        if selected_method == "KMeans":
+        if selected_method == self.Options.KMEANS.value:
             self.worker = create_worker(
                 kmeans_clustering,
-                standardize=standardize,
                 measurements=selected_properties,
                 cluster_number=num_clusters,
                 iterations=num_iterations,
@@ -384,11 +524,9 @@ class ClusteringWidget(QWidget):
             )
             self.worker.returned.connect(result_of_clustering)
             self.worker.start()
-
-        elif selected_method == "HDBSCAN":
+        elif selected_method == self.Options.HDBSCAN.value:
             self.worker = create_worker(
                 hdbscan_clustering,
-                standardize=standardize,
                 measurements=selected_properties,
                 min_cluster_size=min_cluster_size,
                 min_samples=min_nr_samples,
@@ -396,50 +534,92 @@ class ClusteringWidget(QWidget):
             )
             self.worker.returned.connect(result_of_clustering)
             self.worker.start()
-
+        elif selected_method == self.Options.GMM.value:
+            self.worker = create_worker(
+                gaussian_mixture_model,
+                measurements=selected_properties,
+                cluster_number=gmm_num_cluster,
+                _progress=True,
+            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+        elif selected_method == self.Options.MS.value:
+            self.worker = create_worker(
+                mean_shift,
+                measurements=selected_properties,
+                quantile=ms_quantile,
+                n_samples=ms_n_samples,
+                _progress=True,
+            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+        elif selected_method == self.Options.AC.value:
+            self.worker = create_worker(
+                agglomerative_clustering,
+                measurements=selected_properties,
+                cluster_number=ac_n_clusters,
+                n_neighbors=ac_n_neighbors,
+                _progress=True,
+            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
         else:
             warnings.warn(
-                "Clustering unsuccessful. Please check again selected options."
+                "Clustering unsuccessful. Please check selected options again."
             )
             return
 
 
-def kmeans_clustering(standardize, measurements, cluster_number, iterations):
-    from sklearn.cluster import KMeans
+def mean_shift(measurements, quantile=0.2, n_samples=50):
+    from sklearn.cluster import MeanShift, estimate_bandwidth
 
-    print("KMeans predictions started (standardize: " + str(standardize) + ")...")
+    bandwidth = estimate_bandwidth(measurements, quantile=quantile, n_samples=n_samples)
+
+    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    return "MS", ms.fit_predict(measurements)
+
+
+def gaussian_mixture_model(measurements, cluster_number):
+    from sklearn import mixture
+
+    # fit a Gaussian Mixture Model
+    gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type="full")
+
+    return "GMM", gmm.fit_predict(measurements)
+
+
+def kmeans_clustering(measurements, cluster_number, iterations):
+    from sklearn.cluster import KMeans
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
-    if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_measurements = StandardScaler().fit_transform(measurements)
-        # returning prediction as a list for generating clustering image
-        return "KMEANS", km.fit_predict(scaled_measurements)
-
-    else:
-        return "KMEANS", km.fit_predict(measurements)
+    return "KMEANS", km.fit_predict(measurements)
 
 
-def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples):
+def agglomerative_clustering(measurements, cluster_number, n_neighbors):
+    from sklearn.cluster import AgglomerativeClustering
+    from sklearn.neighbors import kneighbors_graph
+
+    # source: https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
+    # connectivity matrix for structured Ward
+    connectivity = kneighbors_graph(
+        measurements, n_neighbors=n_neighbors, include_self=False
+    )
+    # make connectivity symmetric
+    connectivity = 0.5 * (connectivity + connectivity.T)
+
+    ac = AgglomerativeClustering(
+        n_clusters=cluster_number, linkage="ward", connectivity=connectivity
+    )
+
+    return "AC", ac.fit_predict(measurements)
+
+
+def hdbscan_clustering(measurements, min_cluster_size, min_samples):
     import hdbscan
-
-    print("HDBSCAN predictions started (standardize: " + str(standardize) + ")...")
 
     clustering_hdbscan = hdbscan.HDBSCAN(
         min_cluster_size=min_cluster_size, min_samples=min_samples
     )
 
-    if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_measurements = StandardScaler().fit_transform(measurements)
-        clustering_hdbscan.fit(scaled_measurements)
-        return "HDBSCAN", clustering_hdbscan.fit_predict(scaled_measurements)
-
-    else:
-        return (
-            "HDBSCAN",
-            clustering_hdbscan.fit_predict(measurements),
-        )
+    return "HDBSCAN", clustering_hdbscan.fit_predict(measurements)
