@@ -15,6 +15,7 @@ from qtpy.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QLineEdit
 )
 
 from ._utilities import (
@@ -30,6 +31,7 @@ DEFAULTS = {
     "standardization": False,
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
+    "custom_name": "Algorithm_Name",
 }
 
 
@@ -200,6 +202,21 @@ class ClusteringWidget(QWidget):
         self.hdbscan_settings_container_min_nr.layout().addWidget(help_min_nr_samples)
         self.hdbscan_settings_container_min_nr.setVisible(False)
 
+        # custom result column name field
+        self.custom_name_container = QWidget()
+        self.custom_name_container.setLayout(QHBoxLayout())
+        self.custom_name_container.layout().addWidget(
+            QLabel("Custom Results Name")
+        )
+        self.custom_name = QLineEdit()
+        self.custom_name_not_editable = QLineEdit()
+
+        self.custom_name_container.layout().addWidget(self.custom_name)
+        self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
+        self.custom_name.setText(DEFAULTS["custom_name"])
+        self.custom_name_not_editable.setText("_CLUSTER_ID")
+        self.custom_name_not_editable.setReadOnly(True)
+
         # Run button
         run_container = QWidget()
         run_container.setLayout(QHBoxLayout())
@@ -229,6 +246,7 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(self.hdbscan_settings_container_size)
         self.layout().addWidget(self.hdbscan_settings_container_min_nr)
         self.layout().addWidget(self.clustering_settings_container_scaler)
+        self.layout().addWidget(self.custom_name_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
@@ -256,6 +274,7 @@ class ClusteringWidget(QWidget):
                 self.standardization.value,
                 self.hdbscan_min_clusters_size.value,
                 self.hdbscan_min_nr_samples.value,
+                self.custom_name.text(),
             )
 
         run_button.clicked.connect(run_clicked)
@@ -331,6 +350,7 @@ class ClusteringWidget(QWidget):
         standardize,
         min_cluster_size,
         min_nr_samples,
+        custom_name,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -347,10 +367,16 @@ class ClusteringWidget(QWidget):
                 standardize, selected_properties, num_clusters, num_iterations
             )
             print("KMeans predictions finished.")
+
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
+            if custom_name == "":
+                add_column_to_layer_tabular_data(
+                    labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+                )
+            else:
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
+                )
 
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(
@@ -358,9 +384,15 @@ class ClusteringWidget(QWidget):
             )
             print("HDBSCAN predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
+            if custom_name == "":
+                add_column_to_layer_tabular_data(
+                    labels_layer, "HDBSCAN_CLUSTER_ID", y_pred
+                )
+            else:
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
+                )
+
         else:
             warnings.warn(
                 "Clustering unsuccessful. Please check again selected options."
