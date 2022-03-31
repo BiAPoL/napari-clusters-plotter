@@ -47,17 +47,20 @@ def catch_NaNs(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        reg_props = args[0].copy()  # this should be a DataFrame
-        non_nan_entries = reg_props.dropna().index
+        measurements = args[0].copy()  # this should be a DataFrame
+
+        if isinstance(measurements, np.ndarray):
+            measurements = pd.DataFrame(measurements)
+        non_nan_entries = measurements.dropna().index
 
         new_args = list(args)
-        new_args[0] = reg_props.dropna()
+        new_args[0] = measurements.dropna()
         embedded = func(*new_args, **kwargs)
 
         result = pd.DataFrame(embedded, index=non_nan_entries)
-        result = result.reindex(np.arange(len(reg_props)))
+        result = result.reindex(np.arange(len(measurements)))
 
-        return result.to_numpy()
+        return result.to_numpy().squeeze()
 
     return wrapper
 
