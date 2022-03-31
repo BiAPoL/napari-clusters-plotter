@@ -31,7 +31,6 @@ def test_bad_measurements(make_napari_viewer):
     from napari_clusters_plotter._dimensionality_reduction import (
         DimensionalityReductionWidget,
     )
-    from napari_clusters_plotter._measure import get_regprops_from_regprops_source
     from napari_clusters_plotter._utilities import set_features
 
     label = np.array(
@@ -49,8 +48,13 @@ def test_bad_measurements(make_napari_viewer):
     viewer = make_napari_viewer()
     labels_layer = viewer.add_labels(label)
 
-    image = np.random.random(label.shape)
-    measurements = get_regprops_from_regprops_source(image, label, "shape + intensity")
+    # Add NaNs to data
+    measurements = measure.regionprops_table(
+        label, properties=(["label", "area", "perimeter"])
+    )
+    for key in list(measurements.keys())[1:]:
+        measurements[key] = measurements[key].astype(float)
+        measurements[key][4] = np.nan
     set_features(labels_layer, measurements)
 
     widget = DimensionalityReductionWidget(napari_viewer=viewer)
@@ -198,5 +202,5 @@ if __name__ == "__main__":
     # test_clustering_widget()
     import napari
 
-    test_call_to_function(napari.Viewer)
+    test_bad_measurements(napari.Viewer)
     # test_umap()
