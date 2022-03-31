@@ -137,7 +137,7 @@ def test_call_to_function(make_napari_viewer):
         standardize=False,
         n_components=2,
         explained_variance=95.0,
-        pca_components=0,
+        pca_components=2,
     )
 
     result = get_layer_tabular_data(label_layer)
@@ -196,5 +196,7 @@ if __name__ == "__main__":
     pass
 
     # test_clustering_widget()
-    # test_bad_measurements(napari.Viewer)
+    import napari
+
+    test_call_to_function(napari.Viewer)
     # test_umap()
