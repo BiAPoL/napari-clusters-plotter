@@ -38,7 +38,7 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
     if hasattr(layer, "features"):
-        layer.features[column_name] = data
+        layer.features.loc[:, column_name] = data
 
 
 def get_nice_colormap():
