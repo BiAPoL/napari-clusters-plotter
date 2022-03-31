@@ -13,8 +13,8 @@ from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import QTimer
-from qtpy.QtGui import QIcon
+from qtpy.QtCore import Qt, QTimer
+from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -24,7 +24,11 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ._utilities import get_layer_tabular_data, get_nice_colormap
+from ._utilities import (
+    add_column_to_layer_tabular_data,
+    get_layer_tabular_data,
+    get_nice_colormap,
+)
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 
@@ -231,12 +235,24 @@ class PlotterWidget(QWidget):
 
         # noinspection PyPep8Naming
         def manual_clustering_method(inside):
+            inside = np.array(inside)  # leads to errors sometimes otherwise
+
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
 
             features = get_layer_tabular_data(self.analysed_layer)
-            features[clustering_ID] = inside
+
+            modifiers = QGuiApplication.keyboardModifiers()
+            if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
+                former_clusters = features.loc[:, clustering_ID]
+                former_clusters[inside] = np.max(former_clusters) + 1
+                features[clustering_ID] = former_clusters
+            else:
+                features[clustering_ID] = inside.astype(int)
+            add_column_to_layer_tabular_data(
+                self.analysed_layer, clustering_ID, features[clustering_ID]
+            )
 
             # redraw the whole plot
             self.run(
