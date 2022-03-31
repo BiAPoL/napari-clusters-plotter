@@ -248,7 +248,7 @@ class PlotterWidget(QWidget):
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
                 former_clusters = features[clustering_ID].to_numpy()
                 former_clusters[inside] = np.max(former_clusters) + 1
-                features.update(pd.DataFrame(former_clusters,columns = [clustering_ID])) 
+                features.update(pd.DataFrame(former_clusters, columns=[clustering_ID]))
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
