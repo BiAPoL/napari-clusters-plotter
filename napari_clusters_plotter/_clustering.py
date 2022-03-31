@@ -30,6 +30,11 @@ DEFAULTS = {
     "standardization": False,
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
+    "gmm_nr_clusters": 2,
+    "ms_quantile": 0.2,
+    "ms_n_samples": 50,
+    "ac_n_clusters": 2,
+    "ac_n_neighbors": 2,
 }
 
 
@@ -39,6 +44,9 @@ class ClusteringWidget(QWidget):
         EMPTY = ""
         KMEANS = "KMeans"
         HDBSCAN = "HDBSCAN"
+        GMM = "Gaussian Mixture Model (GMM)"
+        MS = "Mean Shift (MS)"
+        AC = "Agglomerative Clustering (AC)"
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -117,6 +125,91 @@ class ClusteringWidget(QWidget):
             self.kmeans_nr_iterations.native
         )
         self.kmeans_settings_container_iter.setVisible(False)
+
+        # clustering options for Gaussian mixture model
+        # selection of number of clusters
+        self.gmm_settings_container_nr = QWidget()
+        self.gmm_settings_container_nr.setLayout(QHBoxLayout())
+        self.gmm_settings_container_nr.layout().addWidget(QLabel("Number of Clusters"))
+        self.gmm_nr_clusters = create_widget(
+            widget_type="SpinBox",
+            name="gmm_nr_clusters",
+            value=DEFAULTS["gmm_nr_clusters"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.gmm_settings_container_nr.layout().addWidget(self.gmm_nr_clusters.native)
+        self.gmm_settings_container_nr.setVisible(False)
+
+        #
+        # clustering options for Mean Shift
+        # selection of quantile
+        self.ms_settings_container_nr = QWidget()
+        self.ms_settings_container_nr.setLayout(QHBoxLayout())
+        self.ms_settings_container_nr.layout().addWidget(QLabel("Quantile"))
+        self.ms_quantile = create_widget(
+            widget_type="FloatSpinBox",
+            name="ms_quantile",
+            value=DEFAULTS["ms_quantile"],
+            options={"min": 0, "step": 0.1, "max": 1},
+        )
+
+        self.ms_settings_container_nr.layout().addWidget(self.ms_quantile.native)
+        self.ms_settings_container_nr.setVisible(False)
+
+        # selection of number of samples
+        self.ms_settings_container_samples = QWidget()
+        self.ms_settings_container_samples.setLayout(QHBoxLayout())
+        self.ms_settings_container_samples.layout().addWidget(
+            QLabel("Number of samples")
+        )
+        self.ms_n_samples = create_widget(
+            widget_type="SpinBox",
+            name="ms_n_samples",
+            value=DEFAULTS["ms_n_samples"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ms_settings_container_samples.layout().addWidget(self.ms_n_samples.native)
+        self.ms_settings_container_samples.setVisible(False)
+
+        #
+        # clustering options for Agglomerative Clustering
+        # selection of number of clusters
+        self.ac_settings_container_clusters = QWidget()
+        self.ac_settings_container_clusters.setLayout(QHBoxLayout())
+        self.ac_settings_container_clusters.layout().addWidget(
+            QLabel("Number of clusters")
+        )
+        self.ac_n_clusters = create_widget(
+            widget_type="SpinBox",
+            name="ac_n_clusters",
+            value=DEFAULTS["ac_n_clusters"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ac_settings_container_clusters.layout().addWidget(
+            self.ac_n_clusters.native
+        )
+        self.ac_settings_container_clusters.setVisible(False)
+
+        # selection of number of clusters
+        self.ac_settings_container_neighbors = QWidget()
+        self.ac_settings_container_neighbors.setLayout(QHBoxLayout())
+        self.ac_settings_container_neighbors.layout().addWidget(
+            QLabel("Number of neighbors")
+        )
+        self.ac_n_neighbors = create_widget(
+            widget_type="SpinBox",
+            name="ac_n_neighbors",
+            value=DEFAULTS["ac_n_neighbors"],
+            options={"min": 2, "step": 1},
+        )
+
+        self.ac_settings_container_neighbors.layout().addWidget(
+            self.ac_n_neighbors.native
+        )
+        self.ac_settings_container_neighbors.setVisible(False)
 
         # checkbox whether data should be standardized
         self.clustering_settings_container_scaler = QWidget()
@@ -228,6 +321,11 @@ class ClusteringWidget(QWidget):
         self.layout().addWidget(self.kmeans_settings_container_iter)
         self.layout().addWidget(self.hdbscan_settings_container_size)
         self.layout().addWidget(self.hdbscan_settings_container_min_nr)
+        self.layout().addWidget(self.gmm_settings_container_nr)
+        self.layout().addWidget(self.ms_settings_container_nr)
+        self.layout().addWidget(self.ms_settings_container_samples)
+        self.layout().addWidget(self.ac_settings_container_clusters)
+        self.layout().addWidget(self.ac_settings_container_neighbors)
         self.layout().addWidget(self.clustering_settings_container_scaler)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
@@ -256,6 +354,11 @@ class ClusteringWidget(QWidget):
                 self.standardization.value,
                 self.hdbscan_min_clusters_size.value,
                 self.hdbscan_min_nr_samples.value,
+                self.gmm_nr_clusters.value,
+                self.ms_quantile.value,
+                self.ms_n_samples.value,
+                self.ac_n_clusters.value,
+                self.ac_n_neighbors.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -290,12 +393,34 @@ class ClusteringWidget(QWidget):
             == self.Options.HDBSCAN.value,
         )
         widgets_inactive(
+            self.gmm_settings_container_nr,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.GMM.value,
+        )
+        widgets_inactive(
+            self.ms_settings_container_nr,
+            self.ms_settings_container_samples,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.MS.value,
+        )
+        widgets_inactive(
+            self.ac_settings_container_clusters,
+            self.ac_settings_container_neighbors,
+            active=self.clust_method_choice_list.current_choice
+            == self.Options.AC.value,
+        )
+
+        widgets_inactive(
             self.clustering_settings_container_scaler,
             active=(
                 self.clust_method_choice_list.current_choice
                 == self.Options.KMEANS.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.HDBSCAN.value
+                or self.clust_method_choice_list.current_choice
+                == self.Options.GMM.value
+                or self.clust_method_choice_list.current_choice == self.Options.MS.value
+                or self.clust_method_choice_list.current_choice == self.Options.AC.value
             ),
         )
 
@@ -331,6 +456,11 @@ class ClusteringWidget(QWidget):
         standardize,
         min_cluster_size,
         min_nr_samples,
+        gmm_num_cluster,
+        ms_quantile,
+        ms_n_samples,
+        ac_n_clusters,
+        ac_n_neighbors,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -341,29 +471,48 @@ class ClusteringWidget(QWidget):
         # only select the columns the user requested
         selected_properties = features[selected_measurements_list]
 
+        # perform standard scaling, if selected
+        if standardize:
+            from sklearn.preprocessing import StandardScaler
+
+            selected_properties = StandardScaler().fit_transform(selected_properties)
+
         # perform clustering
         if selected_method == "KMeans":
             y_pred = kmeans_clustering(
-                standardize, selected_properties, num_clusters, num_iterations
+                selected_properties, num_clusters, num_iterations
             )
             print("KMeans predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "KMEANS_CLUSTER_ID_SCALER_" + str(standardize), y_pred
-            )
+            add_column_to_layer_tabular_data(labels_layer, "KMEANS_CLUSTER_ID", y_pred)
 
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(
-                standardize, selected_properties, min_cluster_size, min_nr_samples
+                selected_properties, min_cluster_size, min_nr_samples
             )
             print("HDBSCAN predictions finished.")
             # write result back to features/properties of the labels layer
-            add_column_to_layer_tabular_data(
-                labels_layer, "HDBSCAN_CLUSTER_ID_SCALER_" + str(standardize), y_pred
+            add_column_to_layer_tabular_data(labels_layer, "HDBSCAN_CLUSTER_ID", y_pred)
+        elif selected_method == "Gaussian Mixture Model (GMM)":
+            y_pred = gaussian_mixture_model(selected_properties, gmm_num_cluster)
+            print("Gaussian Mixture Model predictions finished.")
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(labels_layer, "GMM_CLUSTER_ID", y_pred)
+        elif selected_method == "Mean Shift (MS)":
+            y_pred = mean_shift(selected_properties, ms_quantile, ms_n_samples)
+            print("Mean Shift predictions finished.")
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(labels_layer, "MS_CLUSTER_ID", y_pred)
+        elif selected_method == "Agglomerative Clustering (AC)":
+            y_pred = agglomerative_clustering(
+                selected_properties, ac_n_clusters, ac_n_neighbors
             )
+            print("Agglomerative Clustering predictions finished.")
+            # write result back to features/properties of the labels layer
+            add_column_to_layer_tabular_data(labels_layer, "AC_CLUSTER_ID", y_pred)
         else:
             warnings.warn(
-                "Clustering unsuccessful. Please check again selected options."
+                "Clustering unsuccessful. Please check selected options again."
             )
             return
 
@@ -373,39 +522,56 @@ class ClusteringWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
-def kmeans_clustering(standardize, measurements, cluster_number, iterations):
-    from sklearn.cluster import KMeans
+def mean_shift(measurements, quantile=0.2, n_samples=50):
+    from sklearn.cluster import MeanShift, estimate_bandwidth
 
-    print("KMeans predictions started (standardize: " + str(standardize) + ")...")
+    bandwidth = estimate_bandwidth(measurements, quantile=quantile, n_samples=n_samples)
+
+    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    return ms.fit_predict(measurements)
+
+
+def gaussian_mixture_model(measurements, cluster_number):
+    from sklearn import mixture
+
+    # fit a Gaussian Mixture Model
+    gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type="full")
+
+    return gmm.fit_predict(measurements)
+
+
+def kmeans_clustering(measurements, cluster_number, iterations):
+    from sklearn.cluster import KMeans
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
-    if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_measurements = StandardScaler().fit_transform(measurements)
-        # returning prediction as a list for generating clustering image
-        return km.fit_predict(scaled_measurements)
-
-    else:
-        return km.fit_predict(measurements)
+    return km.fit_predict(measurements)
 
 
-def hdbscan_clustering(standardize, measurements, min_cluster_size, min_samples):
+def agglomerative_clustering(measurements, cluster_number, n_neighbors):
+    from sklearn.cluster import AgglomerativeClustering
+    from sklearn.neighbors import kneighbors_graph
+
+    # source: https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
+    # connectivity matrix for structured Ward
+    connectivity = kneighbors_graph(
+        measurements, n_neighbors=n_neighbors, include_self=False
+    )
+    # make connectivity symmetric
+    connectivity = 0.5 * (connectivity + connectivity.T)
+
+    ac = AgglomerativeClustering(
+        n_clusters=cluster_number, linkage="ward", connectivity=connectivity
+    )
+
+    return ac.fit_predict(measurements)
+
+
+def hdbscan_clustering(measurements, min_cluster_size, min_samples):
     import hdbscan
-
-    print("HDBSCAN predictions started (standardize: " + str(standardize) + ")...")
 
     clustering_hdbscan = hdbscan.HDBSCAN(
         min_cluster_size=min_cluster_size, min_samples=min_samples
     )
 
-    if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_measurements = StandardScaler().fit_transform(measurements)
-        clustering_hdbscan.fit(scaled_measurements)
-        return clustering_hdbscan.fit_predict(scaled_measurements)
-
-    else:
-        return clustering_hdbscan.fit_predict(measurements)
+    return clustering_hdbscan.fit_predict(measurements)
