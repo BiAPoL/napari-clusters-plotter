@@ -127,14 +127,6 @@ def test_gaussian_mixture_model():
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    data = datasets.make_blobs(
-        n_samples=n_samples,
-        random_state=1,
-        centers=n_centers,
-        cluster_std=0.3,
-        n_features=2,
-    )
-
     result = gaussian_mixture_model(measurements, cluster_number=2)
 
     assert np.isnan(result[n_samples // 2])
