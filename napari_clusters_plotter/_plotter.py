@@ -4,6 +4,7 @@ from pathlib import Path as PathL
 
 import matplotlib
 import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -245,9 +246,9 @@ class PlotterWidget(QWidget):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features.loc[:, clustering_ID]
+                former_clusters = features[clustering_ID].to_numpy()
                 former_clusters[inside] = np.max(former_clusters) + 1
-                features[clustering_ID] = former_clusters
+                features.update(pd.DataFrame(former_clusters,columns = [clustering_ID])) 
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
