@@ -187,14 +187,18 @@ class FeatureSelectionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.method_choice_list.currentIndexChanged.connect(self.change_analyse_button)
+        self.method_choice_list.currentIndexChanged.connect(
+            self.change_analyse_button
+        )
         self.method_choice_list.currentIndexChanged.connect(
             self.change_correlation_threshold
         )
         self.method_choice_list.currentIndexChanged.connect(
             self.change_correlation_boxes
         )
-        self.analyse_correlation_button.clicked.connect(self.change_correlation_boxes)
+        self.analyse_correlation_button.clicked.connect(
+            self.change_correlation_boxes
+        )
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
