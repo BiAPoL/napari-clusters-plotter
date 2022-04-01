@@ -130,7 +130,11 @@ def test_gaussian_mixture_model():
     result = gaussian_mixture_model(measurements, cluster_number=2)
 
     assert np.isnan(result[n_samples // 2])
-    assert np.array_equal(result[~np.isnan(result)], 1 - true_class[~np.isnan(result)])
+
+    true_result = true_class[~np.isnan(result)].astype(bool)
+    result = result[~np.isnan(result)].astype(bool)
+
+    assert np.array_equal(result, 1 - true_result)
 
 
 def test_agglomerative_clustering():
@@ -201,4 +205,4 @@ def test_mean_shift():
 
 
 if __name__ == "__main__":
-    test_hdbscan_clustering()
+    test_gaussian_mixture_model()
