@@ -5,7 +5,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-clusters-plotter.svg?color=green)](https://python.org)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/napari-clusters-plotter/badges/version.svg)](https://anaconda.org/conda-forge/napari-clusters-plotter)
 [![tests](https://github.com/lazigu/napari-clusters-plotter/workflows/tests/badge.svg)](https://github.com/lazigu/napari-clusters-plotter/actions)
-[![codecov](https://codecov.io/gh/lazigu/napari-clusters-plotter/branch/master/graph/badge.svg)](https://codecov.io/gh/lazigu/napari-clusters-plotter)
+[![codecov](https://codecov.io/gh/BiAPoL/napari-clusters-plotter/branch/main/graph/badge.svg?token=R6W2KO1NJ8)](https://codecov.io/gh/BiAPoL/napari-clusters-plotter)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/napari-clusters-plotter.svg)](https://pypistats.org/packages/napari-clusters-plotter)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clusters-plotter)](https://www.napari-hub.org/plugins/napari-clusters-plotter)
@@ -60,6 +60,10 @@ visualization in the image, turn off the visibility of the analysed labels layer
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
+Hold down the SHIFT key while annotating regions in the plot to manually select multiple clusters.
+
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
+
 You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
 mode in napari and see which data point in the plot it corresponds to.
 
@@ -83,10 +87,14 @@ need to save them for usage in other widgets unless you wish to do so.
 
 Afterwards, you can again save and/or close the table. Also, close the Dimensionality Reduction widget.
 
-### Clustering: k-means or HDBSCAN
-If manual clustering, as shown above, is not an option, you can automatically cluster your data, e.g. using the
-[k-means clustering algorithm](https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
-or [HDBSCAN](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html).
+### Clustering
+If manual clustering, as shown above, is not an option, you can automatically cluster your data, using these implemented algorithms:
+* [k-means clustering (KMEANS)](https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
+* [Hierarchical Density-Based Spatial Clustering of Applications with Noise (HDBSCAN)](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html)
+* [Gaussian Mixture Model (GMM)](https://scikit-learn.org/stable/modules/mixture.html)
+* [Mean Shift (MS)](https://scikit-learn.org/stable/auto_examples/cluster/plot_mean_shift.html#sphx-glr-auto-examples-cluster-plot-mean-shift-py)
+* [Agglomerative clustering (AC)](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html)
+
 Therefore, click the menu `Tools > Measurement > Clustering (ncp)`,
 again, select the analysed labels layer.
 This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
@@ -163,6 +171,14 @@ Similar to the above-described error, this error can occur when importing hdbsca
 ```bash
 conda install -c conda-forge napari pyopencl hdbscan
 pip install napari-clusters-plotter
+```
+
+- `WARNING: No ICDs were found` or `LogicError: clGetPlatformIDs failed: PLATFORM_NOT_FOUND_KHR`
+
+Make your system-wide implementation visible by installing ocl-icd-system conda package:
+
+```
+conda install -c conda-forge ocl-icd-system
 ```
 
 ## Contributing

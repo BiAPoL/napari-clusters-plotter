@@ -1,6 +1,8 @@
 import warnings
 from functools import partial
 
+import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
@@ -19,6 +21,7 @@ from qtpy.QtWidgets import (
 
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     set_features,
@@ -91,8 +94,9 @@ class DimensionalityReductionWidget(QWidget):
 
         help_n_neighbors.setToolTip(
             "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold "
-            "approximation. Larger values result in more global views of the manifold, while smaller values should be "
-            "in the range 2 to 100. Click on the question mark to read more."
+            "approximation. Larger values result in more global views of the manifold, while smaller values "
+            "result in more local data being preserved. In general, it should be in the range 2 to 100. Click on the "
+            "question mark to read more."
         )
 
         self.n_neighbors.native.setMaximumWidth(70)
@@ -153,7 +157,21 @@ class DimensionalityReductionWidget(QWidget):
             options=dict(min=0, step=1),
         )  # TODO , max=len(self.properties_list)
 
+        help_pca_components = QLabel()
+        help_pca_components.setOpenExternalLinks(True)
+        help_pca_components.setText(
+            '<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+
+        help_pca_components.setToolTip(
+            "The number of components sets the number of principal components to be included after the transformation. "
+            "When set to 0 the number of components that are selected is determined by the explained variance "
+            "threshold. Click on the question mark to read more."
+        )
+
         self.pca_components_container.layout().addWidget(self.pca_components.native)
+        self.pca_components_container.layout().addWidget(help_pca_components)
         self.pca_components_container.setVisible(False)
 
         # Minimum percentage of variance explained by kept PCA components,
@@ -170,9 +188,24 @@ class DimensionalityReductionWidget(QWidget):
             options=dict(min=1, max=100, step=1),
         )
 
+        help_explained_variance = QLabel()
+        help_explained_variance.setOpenExternalLinks(True)
+        help_explained_variance.setText(
+            '<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+
+        help_explained_variance.setToolTip(
+            "The explained variance threshold sets the amount of variance in the dataset that can minimally be "
+            "represented by the principal components. The closer the threshold is to 100% ,the more the variance in "
+            "the dataset can be accounted for by the chosen principal components (and the less dimensionality "
+            "reduction will be perfomed as a result). Click on the question mark to read more."
+        )
+
         self.explained_variance_container.layout().addWidget(
             self.explained_variance.native
         )
+        self.explained_variance_container.layout().addWidget(help_explained_variance)
         self.explained_variance_container.setVisible(False)
         # checkbox whether data should be standardized
         self.settings_container_scaler = QWidget()
@@ -326,7 +359,13 @@ class DimensionalityReductionWidget(QWidget):
             if features is not None:
                 self.properties_list.clear()
                 for p in list(features.keys()):
-                    if "label" in p or "CLUSTER_ID" in p or "UMAP" in p or "t-SNE" in p:
+                    if (
+                        "label" in p
+                        or "CLUSTER_ID" in p
+                        or "UMAP" in p
+                        or "t-SNE" in p
+                        or "index" in p
+                    ):
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
@@ -420,7 +459,10 @@ class DimensionalityReductionWidget(QWidget):
         print("Dimensionality reduction finished")
 
 
-def umap(reg_props, n_neigh, n_components, standardize):
+@catch_NaNs
+def umap(
+    reg_props: pd.DataFrame, n_neigh: int, n_components: int, standardize: bool
+) -> np.ndarray:
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
@@ -436,7 +478,10 @@ def umap(reg_props, n_neigh, n_components, standardize):
         return reducer.fit_transform(reg_props)
 
 
-def tsne(reg_props, perplexity, n_components, standardize):
+@catch_NaNs
+def tsne(
+    reg_props: pd.DataFrame, perplexity: float, n_components: int, standardize: bool
+) -> np.ndarray:
     from sklearn.manifold import TSNE
 
     reducer = TSNE(
@@ -456,7 +501,10 @@ def tsne(reg_props, perplexity, n_components, standardize):
         return reducer.fit_transform(reg_props)
 
 
-def pca(reg_props, explained_variance_threshold, n_components):
+@catch_NaNs
+def pca(
+    reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
+) -> np.ndarray:
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
 
