@@ -469,7 +469,8 @@ class PlotterWidget(QWidget):
         self.analysed_layer = self.labels_select.value
 
         self.graphics_widget.reset()
-
+        number_of_points = len(features)
+        spot_size = min(5,(max(0.01,500/number_of_points)))
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -485,9 +486,9 @@ class PlotterWidget(QWidget):
                 self.data_y,
                 c=[colors[int(x) % len(colors)] for x in self.cluster_ids],
                 cmap="Spectral",
-                # here spot size is set differentially: larger (5) for all clustered datapoints (id >=0)
-                # and smaller (2.5) for the noise points with id = -1
-                s=[5 if id >= 0 else 2.5 for id in self.cluster_ids],
+                # here spot size is set differentially: larger for all clustered datapoints (id >=0)
+                # and smaller for the noise points with id = -1
+                s=[spot_size if id >= 0 else spot_size/2 for id in self.cluster_ids],
                 # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
                 # and lower (0.3) for the noise points with id = -1
                 alpha=[0.7 if id >= 0 else 0.3 for id in self.cluster_ids],
@@ -557,7 +558,13 @@ class PlotterWidget(QWidget):
 
         else:
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x, self.data_y, color="#BABABA", s=5
+                self.data_x, self.data_y, color="#BABABA",
+                # here spot size is set differentially: larger for all clustered datapoints (id >=0)
+                # and smaller for the noise points with id = -1
+                s=spot_size,
+                # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
+                # and lower (0.3) for the noise points with id = -1
+                alpha=0.7,
             )
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
