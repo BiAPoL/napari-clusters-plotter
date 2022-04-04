@@ -10,12 +10,12 @@ from qtpy.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QListWidget,
     QListWidgetItem,
     QPushButton,
     QVBoxLayout,
     QWidget,
-    QLineEdit
 )
 
 from ._utilities import (
