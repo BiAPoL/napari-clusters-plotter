@@ -1,3 +1,6 @@
+from functools import wraps
+
+import numpy as np
 import pandas as pd
 
 
@@ -37,6 +40,29 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
         layer.properties[column_name] = data
     if hasattr(layer, "features"):
         layer.features.loc[:, column_name] = data
+
+
+def catch_NaNs(func):
+    "Remove NaNs from array for processing and put result to correct location."
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        measurements = args[0].copy()  # this should be a DataFrame
+
+        if isinstance(measurements, np.ndarray):
+            measurements = pd.DataFrame(measurements)
+        non_nan_entries = measurements.dropna().index
+
+        new_args = list(args)
+        new_args[0] = measurements.dropna()
+        embedded = func(*new_args, **kwargs)
+
+        result = pd.DataFrame(embedded, index=non_nan_entries)
+        result = result.reindex(np.arange(len(measurements)))
+
+        return result.to_numpy().squeeze()
+
+    return wrapper
 
 
 def get_nice_colormap():

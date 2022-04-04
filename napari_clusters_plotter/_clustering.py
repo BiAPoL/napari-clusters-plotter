@@ -20,6 +20,7 @@ from qtpy.QtWidgets import (
 
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     widgets_inactive,
@@ -563,6 +564,7 @@ class ClusteringWidget(QWidget):
         show_table(self.viewer, labels_layer)
 
 
+@catch_NaNs
 def mean_shift(measurements, quantile=0.2, n_samples=50):
     from sklearn.cluster import MeanShift, estimate_bandwidth
 
@@ -572,6 +574,7 @@ def mean_shift(measurements, quantile=0.2, n_samples=50):
     return ms.fit_predict(measurements)
 
 
+@catch_NaNs
 def gaussian_mixture_model(measurements, cluster_number):
     from sklearn import mixture
 
@@ -581,6 +584,7 @@ def gaussian_mixture_model(measurements, cluster_number):
     return gmm.fit_predict(measurements)
 
 
+@catch_NaNs
 def kmeans_clustering(measurements, cluster_number, iterations):
     from sklearn.cluster import KMeans
 
@@ -589,6 +593,7 @@ def kmeans_clustering(measurements, cluster_number, iterations):
     return km.fit_predict(measurements)
 
 
+@catch_NaNs
 def agglomerative_clustering(measurements, cluster_number, n_neighbors):
     from sklearn.cluster import AgglomerativeClustering
     from sklearn.neighbors import kneighbors_graph
@@ -608,6 +613,7 @@ def agglomerative_clustering(measurements, cluster_number, n_neighbors):
     return ac.fit_predict(measurements)
 
 
+@catch_NaNs
 def hdbscan_clustering(measurements, min_cluster_size, min_samples):
     import hdbscan
 

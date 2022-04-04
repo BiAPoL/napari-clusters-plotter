@@ -464,7 +464,9 @@ class PlotterWidget(QWidget):
             and plot_cluster_name != "label"
             and plot_cluster_name in list(features.keys())
         ):
-            self.cluster_ids = features[plot_cluster_name]
+            # fill all prediction nan values with -1 -> turns them
+            # into noise points
+            self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
             # get long colormap from function
             colors = get_nice_colormap()

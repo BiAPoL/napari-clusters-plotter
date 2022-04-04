@@ -1,6 +1,8 @@
 import warnings
 from functools import partial
 
+import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
@@ -19,6 +21,7 @@ from qtpy.QtWidgets import (
 
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     set_features,
@@ -456,7 +459,10 @@ class DimensionalityReductionWidget(QWidget):
         print("Dimensionality reduction finished")
 
 
-def umap(reg_props, n_neigh, n_components, standardize):
+@catch_NaNs
+def umap(
+    reg_props: pd.DataFrame, n_neigh: int, n_components: int, standardize: bool
+) -> np.ndarray:
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
@@ -472,7 +478,10 @@ def umap(reg_props, n_neigh, n_components, standardize):
         return reducer.fit_transform(reg_props)
 
 
-def tsne(reg_props, perplexity, n_components, standardize):
+@catch_NaNs
+def tsne(
+    reg_props: pd.DataFrame, perplexity: float, n_components: int, standardize: bool
+) -> np.ndarray:
     from sklearn.manifold import TSNE
 
     reducer = TSNE(
@@ -492,7 +501,10 @@ def tsne(reg_props, perplexity, n_components, standardize):
         return reducer.fit_transform(reg_props)
 
 
-def pca(reg_props, explained_variance_threshold, n_components):
+@catch_NaNs
+def pca(
+    reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
+) -> np.ndarray:
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
 
