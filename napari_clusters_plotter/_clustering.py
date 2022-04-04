@@ -299,9 +299,7 @@ class ClusteringWidget(QWidget):
         # custom result column name field
         self.custom_name_container = QWidget()
         self.custom_name_container.setLayout(QHBoxLayout())
-        self.custom_name_container.layout().addWidget(
-            QLabel("Custom Results Name")
-        )
+        self.custom_name_container.layout().addWidget(QLabel("Custom Results Name"))
         self.custom_name = QLineEdit()
         self.custom_name_not_editable = QLineEdit()
 
@@ -508,7 +506,9 @@ class ClusteringWidget(QWidget):
             if custom_name == "":
                 add_column_to_layer_tabular_data(labels_layer, "KMEANS_CLUSTER", y_pred)
             else:
-                add_column_to_layer_tabular_data(labels_layer, custom_name + "_CLUSTER_ID", y_pred)
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
+                )
 
         elif selected_method == "HDBSCAN":
             y_pred = hdbscan_clustering(
@@ -517,9 +517,13 @@ class ClusteringWidget(QWidget):
             print("HDBSCAN predictions finished.")
             # write result back to features/properties of the labels layer
             if custom_name == "":
-                add_column_to_layer_tabular_data(labels_layer, "HDBSCAN_CLUSTER_ID", y_pred)
+                add_column_to_layer_tabular_data(
+                    labels_layer, "HDBSCAN_CLUSTER_ID", y_pred
+                )
             else:
-                add_column_to_layer_tabular_data(labels_layer, custom_name + "_CLUSTER_ID", y_pred)
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
+                )
 
         elif selected_method == "Gaussian Mixture Model (GMM)":
             y_pred = gaussian_mixture_model(selected_properties, gmm_num_cluster)
@@ -528,7 +532,9 @@ class ClusteringWidget(QWidget):
             if custom_name == "":
                 add_column_to_layer_tabular_data(labels_layer, "GMM_CLUSTER_ID", y_pred)
             else:
-                add_column_to_layer_tabular_data(labels_layer, custom_name + "GMM_CLUSTER_ID", y_pred)
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "GMM_CLUSTER_ID", y_pred
+                )
 
         elif selected_method == "Mean Shift (MS)":
             y_pred = mean_shift(selected_properties, ms_quantile, ms_n_samples)
@@ -537,7 +543,9 @@ class ClusteringWidget(QWidget):
             if custom_name == "":
                 add_column_to_layer_tabular_data(labels_layer, "MS_CLUSTER_ID", y_pred)
             else:
-                add_column_to_layer_tabular_data(labels_layer, custom_name + "MS_CLUSTER_ID", y_pred)
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "MS_CLUSTER_ID", y_pred
+                )
 
         elif selected_method == "Agglomerative Clustering (AC)":
             y_pred = agglomerative_clustering(
@@ -548,7 +556,9 @@ class ClusteringWidget(QWidget):
             if custom_name == "":
                 add_column_to_layer_tabular_data(labels_layer, "AC_CLUSTER_ID", y_pred)
             else:
-                add_column_to_layer_tabular_data(labels_layer, custom_name + "AC_CLUSTER_ID", y_pred)
+                add_column_to_layer_tabular_data(
+                    labels_layer, custom_name + "AC_CLUSTER_ID", y_pred
+                )
 
         else:
             warnings.warn(
