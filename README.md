@@ -183,7 +183,7 @@ conda install -c conda-forge ocl-icd-system
 
 ## Contributing
 
-Contributions are very welcome. Tests can be run with [tox], please ensure
+Contributions are very welcome. Tests can be run with [pytest], please ensure
 the coverage at least stays the same before you submit a pull request.
 
 ## License
@@ -208,6 +208,6 @@ with a detailed description.
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
 
 [napari]: https://github.com/napari/napari
-[tox]: https://tox.readthedocs.io/en/latest/
+[pytest]: https://docs.pytest.org/en/7.0.x/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
