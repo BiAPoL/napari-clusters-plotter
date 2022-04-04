@@ -281,7 +281,7 @@ def new_regprops(
     print("Shape of the intensity image: " + str(intensity_image.shape))
     print("Shape of the labels image: " + str(label_image.shape))
 
-    # and select columns, depending on if intensities, neighborhood 
+    # and select columns, depending on if intensities, neighborhood
     # and/or shape were selected
     columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
     intensity_columns = [
@@ -316,8 +316,8 @@ def new_regprops(
 
             if "neighborhood" in region_props_source:
                 reg_props_single_t = region_props_with_neighborhood_data(
-                    label_image[timepoint], 
-                    n_closest_points_list, 
+                    label_image[timepoint],
+                    n_closest_points_list,
                     all_reg_props_single_t[columns]
                 )
             else:
@@ -341,8 +341,9 @@ def new_regprops(
         return region_props_with_neighborhood_data(
                     label_image, n_closest_points_list, reg_props[columns]
                 )
-        
+
     return reg_props[columns]
+
 
 def get_regprops_from_regprops_source(
     intensity_image,
@@ -367,6 +368,7 @@ def get_regprops_from_regprops_source(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
+
     print("Shape of the intensity image: " + str(intensity_image.shape))
     print("Shape of the labels image: " + str(label_image.shape))
 
@@ -413,28 +415,29 @@ def get_regprops_from_regprops_source(
         reg_props = pd.concat(reg_props_all)
         print("Reg props measured for each timepoint.")
         return reg_props
-    
+
     else:
         reg_props = cle.statistics_of_labelled_pixels(intensity_image, label_image)
         print("Reg props measured not for a timelapse.")
 
     if "shape" in region_props_source or "intensity" in region_props_source:
-        return {
+        return pd.DataFrame({
             column: value for column, value in reg_props.items() if column in columns
-        }
+        })
 
     if "neighborhood" in region_props_source:
         return region_props_with_neighborhood_data(
             label_image, n_closest_points_list, reg_props
         )
 
+
 def region_props_with_neighborhood_data(
-    label_image, 
-    n_closest_points_list: list, 
+    label_image,
+    n_closest_points_list: list,
     reg_props: pd.DataFrame
 ) -> pd.DataFrame:
     """
-    Calculate neighborhood regionproperties and combine with other regionproperties
+    Calculate neighborhood region properties and combine with other region properties
 
     Parameters
     ----------
@@ -445,10 +448,11 @@ def region_props_with_neighborhood_data(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
+
     neighborhood_properties = {}
     if isinstance(label_image, da.core.Array):
         label_image = np.asarray(label_image)
-    
+
     # get the lowest label index to adjust sizes of measurement arrays
     min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
@@ -494,5 +498,5 @@ def region_props_with_neighborhood_data(
     # addition to the regionprops dictionary
     neighborhood_properties["touching neighbor count"] = touching_neighbor_count_formatted
     return pd.concat(
-        [reg_props,pd.DataFrame(neighborhood_properties)],axis = 1
+        [reg_props, pd.DataFrame(neighborhood_properties)], axis = 1
         )

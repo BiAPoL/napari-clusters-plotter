@@ -25,11 +25,11 @@ from qtpy.QtWidgets import (
 )
 
 from ._utilities import (
-    get_layer_tabular_data, 
-    get_nice_colormap,
-    generate_cluster_image,
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
+    generate_cluster_image,
+    get_layer_tabular_data,
+    get_nice_colormap,
 )
 
 ICON_ROOT = PathL(__file__).parent / "icons"
@@ -520,23 +520,23 @@ class PlotterWidget(QWidget):
 
                 print('timelapse data') # TODO remove
                 prediction_lists_per_timepoint = [
-                    features.loc[features[POINTER] == i][plot_cluster_name].tolist() 
+                    features.loc[features[POINTER] == i][plot_cluster_name].tolist()
                     for i in range(max_timepoint)
                     ]
-                
+
                 cluster_image = dask_cluster_image_timelapse(
                     self.analysed_layer.data,
                     prediction_lists_per_timepoint
                 )
-                
+
             elif len(self.analysed_layer.data.shape) <= 3:
                 cluster_image = generate_cluster_image(
-                    self.analysed_layer.data, 
+                    self.analysed_layer.data,
                     self.cluster_ids
                 )
             else:
                 print('Warning: Image dimensions too high for processing')
-            
+
 
             if (
                 self.visualized_labels_layer is None
