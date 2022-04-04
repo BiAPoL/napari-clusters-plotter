@@ -307,8 +307,8 @@ class ClusteringWidget(QWidget):
 
         self.custom_name_container.layout().addWidget(self.custom_name)
         self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
-        self.custom_name.setText(DEFAULTS["custom_name"])
-        self.custom_name_not_editable.setText("_CLUSTER_ID")
+        self.custom_name.setPlaceholderText(DEFAULTS["custom_name"])
+        self.custom_name_not_editable.setPlaceholderText("_CLUSTER_ID")
         self.custom_name_not_editable.setReadOnly(True)
 
         # Run button
