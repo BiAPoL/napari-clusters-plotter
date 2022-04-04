@@ -134,7 +134,9 @@ def test_gaussian_mixture_model():
     true_result = true_class[~np.isnan(result)].astype(bool)
     result = result[~np.isnan(result)].astype(bool)
 
-    assert np.array_equal(result, 1 - true_result)
+    assert np.array_equal(result, 1 - true_result) or np.array_equal(
+        result, true_result
+    )
 
 
 def test_agglomerative_clustering():
