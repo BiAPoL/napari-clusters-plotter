@@ -32,7 +32,6 @@ DEFAULTS = {
     "standardization": False,
     "hdbscan_min_clusters_size": 5,
     "hdbscan_min_nr_samples": 5,
-
     "gmm_nr_clusters": 2,
     "ms_quantile": 0.2,
     "ms_n_samples": 50,
@@ -505,7 +504,6 @@ class ClusteringWidget(QWidget):
                 selected_properties, num_clusters, num_iterations
             )
             print("KMeans predictions finished.")
-
             # write result back to features/properties of the labels layer
             if custom_name == "":
                 add_column_to_layer_tabular_data(labels_layer, "KMEANS_CLUSTER", y_pred)
