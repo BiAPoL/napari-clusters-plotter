@@ -37,7 +37,7 @@ DEFAULTS = {
     "ms_n_samples": 50,
     "ac_n_clusters": 2,
     "ac_n_neighbors": 2,
-    "custom_name": "Algorithm_Name",
+    "custom_name": "",
 }
 
 
@@ -305,7 +305,7 @@ class ClusteringWidget(QWidget):
 
         self.custom_name_container.layout().addWidget(self.custom_name)
         self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
-        self.custom_name.setPlaceholderText(DEFAULTS["custom_name"])
+        self.custom_name.setPlaceholderText("Algorithm_name")
         self.custom_name_not_editable.setPlaceholderText("_CLUSTER_ID")
         self.custom_name_not_editable.setReadOnly(True)
 
