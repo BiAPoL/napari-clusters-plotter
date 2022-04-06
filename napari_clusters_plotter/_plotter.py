@@ -471,6 +471,7 @@ class PlotterWidget(QWidget):
         self.graphics_widget.reset()
         number_of_points = len(features)
         spot_size = min(5,(max(0.05,1000/number_of_points)))
+        alpha_factor = min(1,(max(0.5,8000/number_of_points)))
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -490,7 +491,7 @@ class PlotterWidget(QWidget):
                 s=[spot_size if id >= 0 else spot_size/2 for id in self.cluster_ids],
                 # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
                 # and lower (0.3) for the noise points with id = -1
-                alpha=[0.7 if id >= 0 else 0.3 for id in self.cluster_ids],
+                alpha=[0.7*alpha_factor if id >= 0 else 0.3*alpha_factor for id in self.cluster_ids],
             )
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(
@@ -561,7 +562,7 @@ class PlotterWidget(QWidget):
                 s=spot_size,
                 # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
                 # and lower (0.3) for the noise points with id = -1
-                alpha=0.7,
+                alpha=0.7*alpha_factor,
             )
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,

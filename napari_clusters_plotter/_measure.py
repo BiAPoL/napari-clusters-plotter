@@ -278,8 +278,7 @@ def new_regprops(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-    print("Shape of the intensity image: " + str(intensity_image.shape))
-    print("Shape of the labels image: " + str(label_image.shape))
+
     n_closest_points_list = list(n_closest_points_list)
     # and select columns, depending on if intensities, neighborhood
     # and/or shape were selected
@@ -361,7 +360,6 @@ def region_props_with_neighborhood_data(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-    print(f'n closest points list: {n_closest_points_list}')
     neighborhood_properties = {}
     if isinstance(label_image, da.core.Array):
         label_image = np.asarray(label_image)
