@@ -485,7 +485,6 @@ class PlotterWidget(QWidget):
                 self.data_x,
                 self.data_y,
                 c=[colors[int(x) % len(colors)] for x in self.cluster_ids],
-                cmap="Spectral",
                 # here spot size is set differentially: larger for all clustered datapoints (id >=0)
                 # and smaller for the noise points with id = -1
                 s=[spot_size if id >= 0 else spot_size/2 for id in self.cluster_ids],
@@ -502,23 +501,22 @@ class PlotterWidget(QWidget):
 
             # get colormap as rgba array
             from vispy.color import Color
-
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
-            # generate dictionary mapping each label to the color of the cluster
+            # generate dictionary mapping each prediction to its respective color
             # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
-            cluster_id_dict = {
-                i: (cmap[int(color) % len(cmap)] if color >= 0 else [0, 0, 0, 0])
-                for i, color in zip(features['label'], self.cluster_ids)
+            cmap_dict = {
+                int(prediction + 1): (cmap[int(prediction) % len(cmap)] if prediction >= 0 else [0, 0, 0, 0])
+                for prediction in self.cluster_ids
             }
+            # take care of background label
+            cmap_dict[0] = [0, 0, 0, 0]
 
             keep_selection = list(self.viewer.layers.selection)
-
 
             if len(self.analysed_layer.data.shape) == 4:
                 max_timepoint = features[POINTER].max()+1
 
-                print('timelapse data') # TODO remove
                 prediction_lists_per_timepoint = [
                     features.loc[features[POINTER] == i][plot_cluster_name].tolist()
                     for i in range(max_timepoint)
@@ -535,21 +533,20 @@ class PlotterWidget(QWidget):
                     self.cluster_ids
                 )
             else:
-                print('Warning: Image dimensions too high for processing')
-
+                warnings.warn('Image dimensions too high for processing!')
 
             if (
                 self.visualized_labels_layer is None
                 or self.visualized_labels_layer not in self.viewer.layers
             ):
-                # instead of visualising cluster image, visualise label image with dictionary mapping
+                # visualising cluster image
                 self.visualized_labels_layer = self.viewer.add_labels(
                     cluster_image, # self.analysed_layer.data
-                    #color= cmap, #cluster_id_dict
+                    color= cmap_dict, #cluster_id_dict
                     name="cluster_ids_in_space",
                 )
             else:
-                # instead of updating data, update colormap
+                # updating data
                 self.visualized_labels_layer.data = cluster_image
 
             self.viewer.layers.selection.clear()
