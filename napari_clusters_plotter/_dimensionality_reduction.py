@@ -507,13 +507,15 @@ def pca(
     reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
 ) -> tuple[str, np.ndarray]:
     from sklearn.decomposition import PCA
+    from sklearn.preprocessing import StandardScaler
 
     if n_components == 0 or n_components > len(reg_props.columns):
         pca_object = PCA()
     else:
         pca_object = PCA(n_components=n_components)
 
-    pca_transformed_props = pca_object.fit_transform(reg_props)
+    scaled_regionprops = StandardScaler().fit_transform(reg_props)
+    pca_transformed_props = pca_object.fit_transform(scaled_regionprops)
 
     if n_components == 0:
         explained_variance = pca_object.explained_variance_ratio_
