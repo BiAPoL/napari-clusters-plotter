@@ -404,7 +404,7 @@ class DimensionalityReductionWidget(QWidget):
 
         # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
         def return_func_dim_reduction(result):
-            print("Result writing to the table started...")
+
             if result[0] == "PCA":
                 # check if principle components are already present
                 # and remove them by overwriting the features
