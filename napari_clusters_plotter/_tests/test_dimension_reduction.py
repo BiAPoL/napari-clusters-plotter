@@ -73,7 +73,7 @@ def test_bad_measurements(make_napari_viewer):
     )
 
 
-def test_call_to_function(make_napari_viewer):
+def test_call_to_function(qtbot, make_napari_viewer):
 
     viewer = make_napari_viewer()
 
@@ -114,8 +114,6 @@ def test_call_to_function(make_napari_viewer):
     )
 
     # waiting till the thread worker finished
-    from pytest import qtbot
-
     blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
     # additional waiting so the return_func_umap gets the returned embedding
@@ -177,7 +175,7 @@ def test_umap():
     X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     n_comp = 2
 
-    # umap returns tuple[str, np.ndarray], where the first item is algorithm name
+    # umap returns (str, np.ndarray), where the first item is algorithm name
     result = umap(pd.DataFrame(X), n_neigh=2, n_components=n_comp)
 
     assert result[1].shape[-1] == n_comp

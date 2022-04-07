@@ -38,7 +38,7 @@ def test_kmeans_clustering():
 
     from napari_clusters_plotter._clustering import kmeans_clustering
 
-    # kmeans_clustering returns tuple[str, np.ndarray], where the first item is algorithm name
+    # kmeans_clustering returns (str, np.ndarray), where the first item is algorithm name
     result = kmeans_clustering(
         measurements,
         cluster_number=n_centers,
@@ -76,7 +76,7 @@ def test_hdbscan_clustering():
     min_cluster_size = 5
     min_samples = 2  # number of samples that should be included in one cluster
 
-    # hdbscan_clustering returns tuple[str, np.ndarray], where the first item is algorithm name
+    # hdbscan_clustering returns (str, np.ndarray), where the first item is algorithm name
     result = hdbscan_clustering(
         measurements,
         min_cluster_size=min_cluster_size,
@@ -119,7 +119,7 @@ def test_gaussian_mixture_model():
 
     from napari_clusters_plotter._clustering import gaussian_mixture_model
 
-    # gaussian_mixture_model returns tuple[str, np.ndarray], where the first item is algorithm name
+    # gaussian_mixture_model returns (str, np.ndarray), where the first item is algorithm name
     result = gaussian_mixture_model(measurements, cluster_number=2)
     print(result)
 
