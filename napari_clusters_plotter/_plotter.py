@@ -31,6 +31,11 @@ from ._utilities import (
     get_layer_tabular_data,
     get_nice_colormap,
 )
+from ._plotter_utilities import(
+    clustered_plot_parameters,
+    unclustered_plot_parameters
+)
+
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
@@ -515,8 +520,6 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
-        spot_size = min(5,(max(0.05,1000/number_of_points))) * 2
-        alpha_factor = min(1,(max(0.5,8000/number_of_points)))
         
         if (
             plot_cluster_name is not None
@@ -524,33 +527,23 @@ class PlotterWidget(QWidget):
             and plot_cluster_name in list(features.keys())
         ):
             self.cluster_ids = features[plot_cluster_name]
-
             # get long colormap from function
             colors = get_nice_colormap()
 
-            # determine what the alphas are depending on the current frame
-            # and if they are clustered
-            alphas = []
-            for id, tp in zip(self.cluster_ids, features[POINTER].tolist()):
-                multiplier = 0.3
-                if tp == self.frame:
-                    multiplier = 1
-                if id >= 0:
-                    alphas.append(multiplier*alpha_factor*0.7)
-                else:
-                    alphas.append(multiplier*alpha_factor*0.1)
-
+            a,sizes,colors_plot = clustered_plot_parameters( 
+                cluster_id=self.cluster_ids,
+                frame_id=features[POINTER].tolist(),
+                current_frame=self.frame,
+                n_datapoints=number_of_points,
+                color_hex_list=colors,
+            )
 
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[colors[int(x) % len(colors)] for x in self.cluster_ids],
-                # here spot size is set differentially: larger for all clustered datapoints (id >=0)
-                # and smaller for the noise points with id = -1
-                s=[spot_size if id >= 0 else spot_size/2 for id in self.cluster_ids],
-                # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
-                # and lower (0.3) for the noise points with id = -1
-                alpha = alphas,
+                c=colors_plot,
+                s=sizes,
+                alpha=a,
             )
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(
@@ -614,21 +607,25 @@ class PlotterWidget(QWidget):
                 else:
                     # updating data
                     self.visualized_labels_layer.data = cluster_image
-                    self.visualized_labels_layer
+                    self.visualized_labels_layer.color= cmap_dict
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
 
         else:
+            a, sizes, colors_plot = unclustered_plot_parameters(
+                frame_id=features[POINTER].tolist(),
+                current_frame=self.frame,
+                n_datapoints=number_of_points,
+            )
+            
+            # Potting
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x, self.data_y, color="#BABABA",
-                # here spot size is set differentially: larger for all clustered datapoints (id >=0)
-                # and smaller for the noise points with id = -1
-                s=spot_size,
-                # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
-                # and lower (0.3) for the noise points with id = -1
-                alpha=0.7*alpha_factor,
+                self.data_x, self.data_y, 
+                color=colors_plot,
+                s=sizes,
+                alpha= a,
             )
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
@@ -646,3 +643,5 @@ class PlotterWidget(QWidget):
                 layer.mouse_drag_callbacks.remove(self.clicked_label_in_view)
 
         self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
+
+
