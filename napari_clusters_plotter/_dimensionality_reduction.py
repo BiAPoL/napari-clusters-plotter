@@ -399,6 +399,7 @@ class DimensionalityReductionWidget(QWidget):
         # perform standard scaling, if selected
         if standardize:
             from sklearn.preprocessing import StandardScaler
+
             properties_to_reduce = StandardScaler().fit_transform(properties_to_reduce)
 
         # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
@@ -470,7 +471,9 @@ class DimensionalityReductionWidget(QWidget):
 
 
 @catch_NaNs
-def umap(reg_props: pd.DataFrame, n_neigh: int, n_components: int) -> tuple[str, np.ndarray]:
+def umap(
+    reg_props: pd.DataFrame, n_neigh: int, n_components: int
+) -> tuple[str, np.ndarray]:
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
@@ -484,7 +487,9 @@ def umap(reg_props: pd.DataFrame, n_neigh: int, n_components: int) -> tuple[str,
 
 
 @catch_NaNs
-def tsne(reg_props: pd.DataFrame, perplexity: float, n_components: int) -> tuple[str, np.ndarray]:
+def tsne(
+    reg_props: pd.DataFrame, perplexity: float, n_components: int
+) -> tuple[str, np.ndarray]:
     from sklearn.manifold import TSNE
 
     reducer = TSNE(
@@ -499,7 +504,7 @@ def tsne(reg_props: pd.DataFrame, perplexity: float, n_components: int) -> tuple
 
 @catch_NaNs
 def pca(
-        reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
+    reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
 ) -> tuple[str, np.ndarray]:
     from sklearn.decomposition import PCA
 
