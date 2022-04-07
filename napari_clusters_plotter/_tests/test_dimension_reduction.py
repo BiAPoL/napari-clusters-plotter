@@ -115,6 +115,7 @@ def test_call_to_function(make_napari_viewer):
 
     # waiting till the thread worker finished
     from pytest import qtbot
+
     blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
     # additional waiting so the return_func_umap gets the returned embedding

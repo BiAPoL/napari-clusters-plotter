@@ -58,7 +58,9 @@ def test_kmeans_clustering():
     )
 
     assert np.isnan(result[1][n_samples // 2])
-    assert np.array_equal(result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])])
+    assert np.array_equal(
+        result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])]
+    )
 
 
 def test_hdbscan_clustering():
@@ -94,7 +96,9 @@ def test_hdbscan_clustering():
     )
 
     assert np.isnan(result[1][n_samples // 2])
-    assert np.array_equal(result[1][~np.isnan(result[1])], true_class[~np.isnan(result[1])])
+    assert np.array_equal(
+        result[1][~np.isnan(result[1])], true_class[~np.isnan(result[1])]
+    )
 
 
 def test_gaussian_mixture_model():
