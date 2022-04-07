@@ -34,7 +34,7 @@ from ._utilities import (
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
-POINTER = 'timepoint'
+POINTER = 'frame'
 matplotlib.use("Qt5Agg")
 
 
@@ -472,6 +472,7 @@ class PlotterWidget(QWidget):
         number_of_points = len(features)
         spot_size = min(5,(max(0.05,1000/number_of_points)))
         alpha_factor = min(1,(max(0.5,8000/number_of_points)))
+        
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
