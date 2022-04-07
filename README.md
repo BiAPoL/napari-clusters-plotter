@@ -60,10 +60,6 @@ visualization in the image, turn off the visibility of the analysed labels layer
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
-Hold down the SHIFT key while annotating regions in the plot to manually select multiple clusters.
-
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
-
 You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
 mode in napari and see which data point in the plot it corresponds to.
 

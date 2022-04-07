@@ -31,10 +31,7 @@ def test_feature_setting(make_napari_viewer):
     some_features = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
     set_features(label_layer, some_features)
 
-    if hasattr(label_layer, "features"):
-        assert isinstance(label_layer.features, pd.DataFrame)
-    elif hasattr(label_layer, "properties"):
-        assert isinstance(label_layer.properties, dict)
+    assert isinstance(label_layer.features, pd.DataFrame)
 
     some_features = get_layer_tabular_data(label_layer)
     assert isinstance(some_features, pd.DataFrame)
@@ -45,6 +42,4 @@ def test_feature_setting(make_napari_viewer):
 
 
 if __name__ == "__main__":
-    import napari
-
-    test_feature_setting(napari.Viewer)
+    test_feature_setting()

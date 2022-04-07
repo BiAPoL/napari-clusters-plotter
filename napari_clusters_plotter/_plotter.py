@@ -4,7 +4,6 @@ from pathlib import Path as PathL
 
 import matplotlib
 import numpy as np
-import pandas as pd
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -14,8 +13,8 @@ from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt, QTimer
-from qtpy.QtGui import QGuiApplication, QIcon
+from qtpy.QtCore import QTimer
+from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -239,21 +238,12 @@ class PlotterWidget(QWidget):
 
         # noinspection PyPep8Naming
         def manual_clustering_method(inside):
-            inside = np.array(inside)  # leads to errors sometimes otherwise
-
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
 
             features = get_layer_tabular_data(self.analysed_layer)
-
-            modifiers = QGuiApplication.keyboardModifiers()
-            if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features[clustering_ID].to_numpy()
-                former_clusters[inside] = np.max(former_clusters) + 1
-                features.update(pd.DataFrame(former_clusters, columns=[clustering_ID]))
-            else:
-                features[clustering_ID] = inside.astype(int)
+            features[clustering_ID] = np.array(inside).astype(int)
             add_column_to_layer_tabular_data(
                 self.analysed_layer, clustering_ID, features[clustering_ID]
             )
@@ -488,9 +478,7 @@ class PlotterWidget(QWidget):
             and plot_cluster_name != "label"
             and plot_cluster_name in list(features.keys())
         ):
-            # fill all prediction nan values with -1 -> turns them
-            # into noise points
-            self.cluster_ids = features[plot_cluster_name].fillna(-1)
+            self.cluster_ids = features[plot_cluster_name]
 
             # get long colormap from function
             colors = get_nice_colormap()
