@@ -518,7 +518,7 @@ class ClusteringWidget(QWidget):
         if selected_method == self.Options.KMEANS.value:
             self.worker = create_worker(
                 kmeans_clustering,
-                measurements=selected_properties,
+                reg_props=selected_properties,
                 cluster_number=num_clusters,
                 iterations=num_iterations,
                 _progress=True,
@@ -528,7 +528,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.HDBSCAN.value:
             self.worker = create_worker(
                 hdbscan_clustering,
-                measurements=selected_properties,
+                reg_props=selected_properties,
                 min_cluster_size=min_cluster_size,
                 min_samples=min_nr_samples,
                 _progress=True,
@@ -538,7 +538,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.GMM.value:
             self.worker = create_worker(
                 gaussian_mixture_model,
-                measurements=selected_properties,
+                reg_props=selected_properties,
                 cluster_number=gmm_num_cluster,
                 _progress=True,
             )
@@ -547,7 +547,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.MS.value:
             self.worker = create_worker(
                 mean_shift,
-                measurements=selected_properties,
+                reg_props=selected_properties,
                 quantile=ms_quantile,
                 n_samples=ms_n_samples,
                 _progress=True,
@@ -557,7 +557,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.AC.value:
             self.worker = create_worker(
                 agglomerative_clustering,
-                measurements=selected_properties,
+                reg_props=selected_properties,
                 cluster_number=ac_n_clusters,
                 n_neighbors=ac_n_neighbors,
                 _progress=True,
@@ -572,43 +572,43 @@ class ClusteringWidget(QWidget):
 
 
 @catch_NaNs
-def mean_shift(measurements, quantile=0.2, n_samples=50):
+def mean_shift(reg_props, quantile=0.2, n_samples=50):
     from sklearn.cluster import MeanShift, estimate_bandwidth
 
-    bandwidth = estimate_bandwidth(measurements, quantile=quantile, n_samples=n_samples)
+    bandwidth = estimate_bandwidth(reg_props, quantile=quantile, n_samples=n_samples)
 
     ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
-    return "MS", ms.fit_predict(measurements)
+    return "MS", ms.fit_predict(reg_props)
 
 
 @catch_NaNs
-def gaussian_mixture_model(measurements, cluster_number):
+def gaussian_mixture_model(reg_props, cluster_number):
     from sklearn import mixture
 
     # fit a Gaussian Mixture Model
     gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type="full")
 
-    return "GMM", gmm.fit_predict(measurements)
+    return "GMM", gmm.fit_predict(reg_props)
 
 
 @catch_NaNs
-def kmeans_clustering(measurements, cluster_number, iterations):
+def kmeans_clustering(reg_props, cluster_number, iterations):
     from sklearn.cluster import KMeans
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
-    return "KMEANS", km.fit_predict(measurements)
+    return "KMEANS", km.fit_predict(reg_props)
 
 
 @catch_NaNs
-def agglomerative_clustering(measurements, cluster_number, n_neighbors):
+def agglomerative_clustering(reg_props, cluster_number, n_neighbors):
     from sklearn.cluster import AgglomerativeClustering
     from sklearn.neighbors import kneighbors_graph
 
     # source: https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
     # connectivity matrix for structured Ward
     connectivity = kneighbors_graph(
-        measurements, n_neighbors=n_neighbors, include_self=False
+        reg_props, n_neighbors=n_neighbors, include_self=False
     )
     # make connectivity symmetric
     connectivity = 0.5 * (connectivity + connectivity.T)
@@ -617,15 +617,15 @@ def agglomerative_clustering(measurements, cluster_number, n_neighbors):
         n_clusters=cluster_number, linkage="ward", connectivity=connectivity
     )
 
-    return "AC", ac.fit_predict(measurements)
+    return "AC", ac.fit_predict(reg_props)
 
 
 @catch_NaNs
-def hdbscan_clustering(measurements, min_cluster_size, min_samples):
+def hdbscan_clustering(reg_props, min_cluster_size, min_samples):
     import hdbscan
 
     clustering_hdbscan = hdbscan.HDBSCAN(
         min_cluster_size=min_cluster_size, min_samples=min_samples
     )
 
-    return "HDBSCAN", clustering_hdbscan.fit_predict(measurements)
+    return "HDBSCAN", clustering_hdbscan.fit_predict(reg_props)
