@@ -34,7 +34,7 @@ from ._utilities import (
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
-POINTER = 'timepoint'
+POINTER = 'frame'
 matplotlib.use("Qt5Agg")
 
 
@@ -504,8 +504,7 @@ class PlotterWidget(QWidget):
         plot_y_axis_name, 
         plot_cluster_name=None, 
         redraw_cluster_image = True,
-    ):  
-        FRAME_NAME = 'timepoint'
+    ):
 
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
@@ -530,7 +529,7 @@ class PlotterWidget(QWidget):
             # determine what the alphas are depending on the current frame
             # and if they are clustered
             alphas = []
-            for id, tp in zip(self.cluster_ids, features[FRAME_NAME].tolist()):
+            for id, tp in zip(self.cluster_ids, features[POINTER].tolist()):
                 multiplier = 0.3
                 if tp == self.frame:
                     multiplier = 1

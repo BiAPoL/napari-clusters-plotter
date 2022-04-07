@@ -324,7 +324,7 @@ def new_regprops(
                 reg_props_single_t = all_reg_props_single_t[columns]
             
             timepoint_column = pd.DataFrame(
-                {"timepoint":np.full(len(reg_props_single_t),t)}
+                {"frame":np.full(len(reg_props_single_t),t)}
                 )
             reg_props_with_tp_column = pd.concat(
                 [reg_props_single_t,timepoint_column], axis = 1
@@ -480,7 +480,7 @@ def get_regprops_from_regprops_source(
                 )
             else:
                 reg_props_single_t = reg_props_single_t[columns]
-            reg_props_single_t["timepoint"] = t
+            reg_props_single_t["frame"] = t
             reg_props_all.append(reg_props_single_t)
 
         reg_props = pd.concat(reg_props_all)
