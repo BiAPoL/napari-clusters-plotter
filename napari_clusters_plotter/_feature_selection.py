@@ -18,14 +18,11 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ._utilities import (
-    restore_defaults, 
-    widgets_inactive, 
-    get_layer_tabular_data
-)
+from ._utilities import get_layer_tabular_data, restore_defaults, widgets_inactive
 
 DEFAULTS = dict(correlation_threshold=0.95)
-NON_DATA_COLUMN_NAMES = ['label', 'frame', 'index']
+NON_DATA_COLUMN_NAMES = ["label", "frame", "index"]
+
 
 @register_dock_widget(menu="Measurement > Feature selection (ncp)")
 class FeatureSelectionWidget(QWidget):
@@ -131,8 +128,6 @@ class FeatureSelectionWidget(QWidget):
             # measure correlation properties
             self.analyse_correlation()
 
-            
-
         run_button.clicked.connect(run_clicked)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
@@ -163,18 +158,14 @@ class FeatureSelectionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.method_choice_list.currentIndexChanged.connect(
-            self.change_analyse_button
-        )
+        self.method_choice_list.currentIndexChanged.connect(self.change_analyse_button)
         self.method_choice_list.currentIndexChanged.connect(
             self.change_correlation_threshold
         )
         self.method_choice_list.currentIndexChanged.connect(
             self.change_correlation_boxes
         )
-        self.analyse_correlation_button.clicked.connect(
-            self.change_correlation_boxes
-        )
+        self.analyse_correlation_button.clicked.connect(self.change_correlation_boxes)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -213,7 +204,7 @@ class FeatureSelectionWidget(QWidget):
         self.update_properties_list()
         labels_layer = self.labels_select.value
 
-        # 
+        #
         df_regprops = get_layer_tabular_data(labels_layer)
 
         # Actually finding the correlating features with pandas
@@ -333,7 +324,7 @@ class FeatureSelectionWidget(QWidget):
 def agglomerate_corr_feats(correlating_features_sets):
     """
     Returns sets of features which all correlate (if A and B correlate as well
-    as B and C the group of ABC is returned as a set.) when given pairs of 
+    as B and C the group of ABC is returned as a set.) when given pairs of
     correlating features in the form of sets
     """
 
