@@ -518,7 +518,7 @@ class ClusteringWidget(QWidget):
         if selected_method == self.Options.KMEANS.value:
             self.worker = create_worker(
                 kmeans_clustering,
-                reg_props=selected_properties,
+                selected_properties,
                 cluster_number=num_clusters,
                 iterations=num_iterations,
                 _progress=True,
@@ -528,7 +528,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.HDBSCAN.value:
             self.worker = create_worker(
                 hdbscan_clustering,
-                reg_props=selected_properties,
+                selected_properties,
                 min_cluster_size=min_cluster_size,
                 min_samples=min_nr_samples,
                 _progress=True,
@@ -538,7 +538,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.GMM.value:
             self.worker = create_worker(
                 gaussian_mixture_model,
-                reg_props=selected_properties,
+                selected_properties,
                 cluster_number=gmm_num_cluster,
                 _progress=True,
             )
@@ -547,7 +547,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.MS.value:
             self.worker = create_worker(
                 mean_shift,
-                reg_props=selected_properties,
+                selected_properties,
                 quantile=ms_quantile,
                 n_samples=ms_n_samples,
                 _progress=True,
@@ -557,7 +557,7 @@ class ClusteringWidget(QWidget):
         elif selected_method == self.Options.AC.value:
             self.worker = create_worker(
                 agglomerative_clustering,
-                reg_props=selected_properties,
+                selected_properties,
                 cluster_number=ac_n_clusters,
                 n_neighbors=ac_n_neighbors,
                 _progress=True,

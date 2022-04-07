@@ -439,7 +439,7 @@ class DimensionalityReductionWidget(QWidget):
         if selected_algorithm == "UMAP":
             self.worker = create_worker(
                 umap,
-                reg_props=properties_to_reduce,
+                properties_to_reduce,
                 n_neigh=n_neighbours,
                 n_components=n_components,
                 _progress=True,
@@ -450,7 +450,7 @@ class DimensionalityReductionWidget(QWidget):
         elif selected_algorithm == "t-SNE":
             self.worker = create_worker(
                 tsne,
-                reg_props=properties_to_reduce,
+                properties_to_reduce,
                 perplexity=perplexity,
                 n_components=n_components,
                 _progress=True,
@@ -461,7 +461,7 @@ class DimensionalityReductionWidget(QWidget):
         elif selected_algorithm == "PCA":
             self.worker = create_worker(
                 pca,
-                reg_props=properties_to_reduce,
+                properties_to_reduce,
                 explained_variance_threshold=explained_variance,
                 n_components=pca_components,
                 _progress=True,
