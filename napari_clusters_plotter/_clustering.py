@@ -2,6 +2,8 @@ import warnings
 from enum import Enum
 from functools import partial
 
+import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari.qt.threading import create_worker
@@ -572,7 +574,7 @@ class ClusteringWidget(QWidget):
 
 
 @catch_NaNs
-def mean_shift(reg_props, quantile=0.2, n_samples=50):
+def mean_shift(reg_props: pd.DataFrame, quantile: float = 0.2, n_samples: int = 50) -> tuple[str, np.ndarray]:
     from sklearn.cluster import MeanShift, estimate_bandwidth
 
     bandwidth = estimate_bandwidth(reg_props, quantile=quantile, n_samples=n_samples)
@@ -582,7 +584,7 @@ def mean_shift(reg_props, quantile=0.2, n_samples=50):
 
 
 @catch_NaNs
-def gaussian_mixture_model(reg_props, cluster_number):
+def gaussian_mixture_model(reg_props: pd.DataFrame, cluster_number: int) -> tuple[str, np.ndarray]:
     from sklearn import mixture
 
     # fit a Gaussian Mixture Model
@@ -592,7 +594,7 @@ def gaussian_mixture_model(reg_props, cluster_number):
 
 
 @catch_NaNs
-def kmeans_clustering(reg_props, cluster_number, iterations):
+def kmeans_clustering(reg_props: pd.DataFrame, cluster_number: int, iterations: int) -> tuple[str, np.ndarray]:
     from sklearn.cluster import KMeans
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
@@ -601,7 +603,7 @@ def kmeans_clustering(reg_props, cluster_number, iterations):
 
 
 @catch_NaNs
-def agglomerative_clustering(reg_props, cluster_number, n_neighbors):
+def agglomerative_clustering(reg_props: pd.DataFrame, cluster_number: int, n_neighbors: int) -> tuple[str, np.ndarray]:
     from sklearn.cluster import AgglomerativeClustering
     from sklearn.neighbors import kneighbors_graph
 
@@ -621,7 +623,7 @@ def agglomerative_clustering(reg_props, cluster_number, n_neighbors):
 
 
 @catch_NaNs
-def hdbscan_clustering(reg_props, min_cluster_size, min_samples):
+def hdbscan_clustering(reg_props: pd.DataFrame, min_cluster_size: int, min_samples: int) -> tuple[str, np.ndarray]:
     import hdbscan
 
     clustering_hdbscan = hdbscan.HDBSCAN(
