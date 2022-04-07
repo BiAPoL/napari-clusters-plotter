@@ -494,8 +494,7 @@ class ClusteringWidget(QWidget):
         # only select the columns the user requested
         selected_properties = features[selected_measurements_list]
 
-        # from a secondary thread a tuple is returned, where the first item (returned[0]) is the name of
-        # the clustering method, and the second one (returned[1]) is predictions
+        # from a secondary thread a tuple (str, np.ndarray) is returned, where str is the name of the clustering method
         def result_of_clustering(returned):
             # write result back to features/properties of the labels layer
             if custom_name == DEFAULTS["custom_name"]:
