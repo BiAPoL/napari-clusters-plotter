@@ -515,7 +515,7 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
-        spot_size = min(5,(max(0.05,1000/number_of_points)))
+        spot_size = min(5,(max(0.05,1000/number_of_points))) * 2
         alpha_factor = min(1,(max(0.5,8000/number_of_points)))
         
         if (
