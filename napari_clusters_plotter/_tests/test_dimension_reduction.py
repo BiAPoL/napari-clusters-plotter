@@ -2,7 +2,6 @@ import sys
 import time
 
 import numpy as np
-from pytestqt import qtbot
 from skimage import measure
 
 sys.path.append("../")
@@ -115,6 +114,7 @@ def test_call_to_function(make_napari_viewer):
     )
 
     # waiting till the thread worker finished
+    from pytest import qtbot
     blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
     # additional waiting so the return_func_umap gets the returned embedding
@@ -176,12 +176,9 @@ def test_umap():
     X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     n_comp = 2
 
-    result = umap(pd.DataFrame(X), n_neigh=2, n_components=n_comp, standardize=True)
-    # a tuple is returned, where the first item (result[0]) is the name of
-    # the dimensionality reduction method, and the second one is the embedding (result[1])
-    assert result[1].shape[-1] == n_comp
+    # umap returns tuple[str, np.ndarray], where the first item is algorithm name
+    result = umap(pd.DataFrame(X), n_neigh=2, n_components=n_comp)
 
-    result = umap(pd.DataFrame(X), n_neigh=2, n_components=n_comp, standardize=False)
     assert result[1].shape[-1] == n_comp
 
 
@@ -194,10 +191,7 @@ def test_tsne():
 
     from napari_clusters_plotter._dimensionality_reduction import tsne
 
-    result = tsne(pd.DataFrame(X), perplexity=5, n_components=2, standardize=False)
-    assert result[1].shape[-1] == n_comp
-
-    result = tsne(pd.DataFrame(X), perplexity=5, n_components=2, standardize=True)
+    result = tsne(pd.DataFrame(X), perplexity=5, n_components=2)
     assert result[1].shape[-1] == n_comp
 
 
@@ -211,10 +205,10 @@ def test_pca():
     from napari_clusters_plotter._dimensionality_reduction import pca
 
     result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
-    assert result.shape[-1] == n_comp
+    assert result[1].shape[-1] == n_comp
 
     result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
-    assert result.shape[-1] == n_comp
+    assert result[1].shape[-1] == n_comp
 
 
 if __name__ == "__main__":
