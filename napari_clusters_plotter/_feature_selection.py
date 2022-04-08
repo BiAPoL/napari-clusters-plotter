@@ -19,11 +19,11 @@ from qtpy.QtWidgets import (
 )
 
 from ._utilities import (
-    get_layer_tabular_data, 
-    restore_defaults, 
-    widgets_inactive, 
+    get_layer_tabular_data,
+    restore_defaults,
     set_features,
     show_table,
+    widgets_inactive,
 )
 
 DEFAULTS = dict(correlation_threshold=0.95)
@@ -133,8 +133,8 @@ class FeatureSelectionWidget(QWidget):
 
             # measure correlation properties
             self.analyse_correlation(
-                labels_layer = self.labels_select.value,
-                threshold = self.correlation_threshold.value
+                labels_layer=self.labels_select.value,
+                threshold=self.correlation_threshold.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -174,9 +174,7 @@ class FeatureSelectionWidget(QWidget):
         self.method_choice_list.currentIndexChanged.connect(
             self.change_correlation_boxes
         )
-        self.analyse_correlation_button.clicked.connect(
-            self.change_correlation_boxes
-        )
+        self.analyse_correlation_button.clicked.connect(self.change_correlation_boxes)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -239,20 +237,20 @@ class FeatureSelectionWidget(QWidget):
         labels_layer,
         threshold,
     ):
-        import numpy as np
+        pass
+
         # get newest properties
         self.update_properties_list()
 
         # retrieve regionprops from labels_layer
         df_regprops = get_layer_tabular_data(labels_layer)
 
-        correlating_keys = get_correlating_keys(
-            df_regprops, 
-            threshold=threshold)
+        correlating_keys = get_correlating_keys(df_regprops, threshold=threshold)
 
         # remove label key and save correlating keys into self variable for later recall
         self.correlating_keys = [
-            [key for key in keygroup if key not in NON_DATA_COLUMN_NAMES] for keygroup in correlating_keys
+            [key for key in keygroup if key not in NON_DATA_COLUMN_NAMES]
+            for keygroup in correlating_keys
         ]
 
         # adding widgets TODO figure out what todo if there is no room
@@ -285,8 +283,6 @@ class FeatureSelectionWidget(QWidget):
                 self.layout().addWidget(container)
             self.layout().setSpacing(0)
 
-    
-
     # this function runs after the run button is clicked
     def run(self, labels_layer):
 
@@ -298,16 +294,20 @@ class FeatureSelectionWidget(QWidget):
             resulting_df = get_uncorrelating_subselection(
                 reg_props,
                 self.correlating_keys,
-                [[i.text() for i in widget.selectedItems()] 
-                for widget in self.correlation_key_lists])
+                [
+                    [i.text() for i in widget.selectedItems()]
+                    for widget in self.correlation_key_lists
+                ],
+            )
 
             # replace previous table with new table containing only uncorrelating features
-            set_features(labels_layer,resulting_df)
+            set_features(labels_layer, resulting_df)
         self.inactivate_correlation_boxes()
-        
+
         show_table(self.viewer, labels_layer)
 
         print("Feature selection finished")
+
 
 # TODO description of parameters
 def get_uncorrelating_subselection(df_regprops, correlating_keys, kept_keys):
@@ -325,6 +325,7 @@ def get_uncorrelating_subselection(df_regprops, correlating_keys, kept_keys):
     resulting_df = df_regprops.drop(dropkeys, axis=1)
 
     return resulting_df
+
 
 def get_correlating_keys(df_regprops, threshold):
     """
@@ -353,6 +354,7 @@ def get_correlating_keys(df_regprops, threshold):
     correlating_keys = [keys[ind].tolist() for ind in corr_ind_list]
 
     return correlating_keys
+
 
 # TODO parameter description
 def agglomerate_corr_feats(correlating_features_sets):
