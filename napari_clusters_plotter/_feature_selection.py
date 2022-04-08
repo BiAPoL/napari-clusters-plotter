@@ -1,7 +1,6 @@
 import warnings
 from functools import partial
 
-import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
@@ -286,7 +285,6 @@ class FeatureSelectionWidget(QWidget):
             self.correlation_key_lists = None
             self.correlation_containers = None
 
-
     # this function runs after the run button is clicked
     def run(self, labels_layer):
         reg_props = get_layer_tabular_data(labels_layer)
@@ -294,18 +292,18 @@ class FeatureSelectionWidget(QWidget):
         if self.method_choice_list.currentText() == "Correlation Filter":
             kept_keys = []
             for widget in self.correlation_key_lists:
-                kept_keys += [i.text() for i in widget.selectedItems()] 
-            print(f'kept keys: {kept_keys}')
+                kept_keys += [i.text() for i in widget.selectedItems()]
+            print(f"kept keys: {kept_keys}")
 
             resulting_df = get_uncorrelating_subselection(
                 reg_props,
                 self.correlating_keys,
                 kept_keys,
-                )
+            )
 
             # replace previous table with new table containing only uncorrelating features
-            set_features(labels_layer,resulting_df)
-            #self.inactivate_correlation_boxes()
+            set_features(labels_layer, resulting_df)
+            # self.inactivate_correlation_boxes()
 
         print("Feature selection finished")
         show_table(self.viewer, labels_layer)
