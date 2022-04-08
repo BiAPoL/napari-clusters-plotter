@@ -284,30 +284,35 @@ class FeatureSelectionWidget(QWidget):
             for container in self.correlation_containers:
                 self.layout().addWidget(container)
             self.layout().setSpacing(0)
+        else:
+            self.correlation_key_lists = None
+            self.correlation_containers = None
+
 
     
 
     # this function runs after the run button is clicked
     def run(self, labels_layer):
-
-        # Turn properties from layer into a dataframe
-        properties = labels_layer.properties
-        reg_props = pd.DataFrame(properties)
+        reg_props = get_layer_tabular_data(labels_layer)
 
         if self.method_choice_list.currentText() == "Correlation Filter":
+            kept_keys = []
+            for widget in self.correlation_key_lists:
+                kept_keys += [i.text() for i in widget.selectedItems()] 
+            print(f'kept keys: {kept_keys}')
+
             resulting_df = get_uncorrelating_subselection(
                 reg_props,
                 self.correlating_keys,
-                [[i.text() for i in widget.selectedItems()] 
-                for widget in self.correlation_key_lists])
+                kept_keys,
+                )
 
             # replace previous table with new table containing only uncorrelating features
             set_features(labels_layer,resulting_df)
-        self.inactivate_correlation_boxes()
-        
-        show_table(self.viewer, labels_layer)
+            #self.inactivate_correlation_boxes()
 
         print("Feature selection finished")
+        show_table(self.viewer, labels_layer)
 
 # TODO description of parameters
 def get_uncorrelating_subselection(df_regprops, correlating_keys, kept_keys):
