@@ -223,8 +223,6 @@ class FeatureSelectionWidget(QWidget):
                     if (
                         "label" in p
                         or "CLUSTER_ID" in p
-                        or "UMAP" in p
-                        or "t-SNE" in p
                         or "index" in p
                     ):
                         continue
