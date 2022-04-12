@@ -24,6 +24,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._utilities import (
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
@@ -31,11 +32,6 @@ from ._utilities import (
     get_layer_tabular_data,
     get_nice_colormap,
 )
-from ._plotter_utilities import(
-    clustered_plot_parameters,
-    unclustered_plot_parameters
-)
-
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
@@ -379,7 +375,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
             )
-        
+
         # takes care of case where this isn't set yet directly after init
         self.plot_cluster_name = None
         self.old_frame = None
@@ -406,7 +402,7 @@ class PlotterWidget(QWidget):
                         "Update Axes Selection Boxes"
                     )
                     return
-                
+
                 self.frame = frame
 
                 self.run(
@@ -503,11 +499,11 @@ class PlotterWidget(QWidget):
 
     # this function runs after the run button is clicked
     def run(
-        self, 
-        features, 
-        plot_x_axis_name, 
-        plot_y_axis_name, 
-        plot_cluster_name=None, 
+        self,
+        features,
+        plot_x_axis_name,
+        plot_y_axis_name,
+        plot_cluster_name=None,
         redraw_cluster_image = True,
     ):
 
@@ -520,7 +516,7 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
-        
+
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -530,7 +526,7 @@ class PlotterWidget(QWidget):
             # get long colormap from function
             colors = get_nice_colormap()
 
-            a,sizes,colors_plot = clustered_plot_parameters( 
+            a,sizes,colors_plot = clustered_plot_parameters(
                 cluster_id=self.cluster_ids,
                 frame_id=features[POINTER].tolist(),
                 current_frame=self.frame,
@@ -569,7 +565,7 @@ class PlotterWidget(QWidget):
 
             # Generating the cluster image
             if redraw_cluster_image:
-                # depending on the dimensionality of the data 
+                # depending on the dimensionality of the data
                 # generate the cluster image
                 if len(self.analysed_layer.data.shape) == 4:
                     max_timepoint = features[POINTER].max()+1
@@ -619,10 +615,10 @@ class PlotterWidget(QWidget):
                 current_frame=self.frame,
                 n_datapoints=number_of_points,
             )
-            
+
             # Potting
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x, self.data_y, 
+                self.data_x, self.data_y,
                 color=colors_plot,
                 s=sizes,
                 alpha= a,
@@ -643,5 +639,3 @@ class PlotterWidget(QWidget):
                 layer.mouse_drag_callbacks.remove(self.clicked_label_in_view)
 
         self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
-
-

@@ -321,7 +321,7 @@ def new_regprops(
                 )
             else:
                 reg_props_single_t = all_reg_props_single_t[columns]
-            
+
             timepoint_column = pd.DataFrame(
                 {"frame":np.full(len(reg_props_single_t),t)}
                 )
@@ -396,7 +396,7 @@ def region_props_with_neighborhood_data(
         )[0]
 
         # addition to the regionprops dictionary
-        
+
         neighborhood_properties[
             f"avg distance of {i} closest points"
         ] = distance_of_n_closest_points

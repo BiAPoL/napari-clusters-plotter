@@ -26,7 +26,7 @@ def clustered_plot_parameters(
     n_datapoints,
     color_hex_list,
 ):
-    a = alphas_clustered( 
+    a = alphas_clustered(
                 cluster_id,
                 frame_id,
                 current_frame,
@@ -45,17 +45,17 @@ def clustered_plot_parameters(
         color_hex_list,
     )
     return a,s,c
-    
+
 
 def alphas_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     """
-    Returns a tuple of two alpha values, the first a list of alphas that depend 
+    Returns a tuple of two alpha values, the first a list of alphas that depend
     on the current frame and cluster identity
     """
     initial_alpha, noise_alpha = initial_and_noise_alpha()
     alpha_f = alpha_factor(n_datapoints)
     alphas_clustered = []
-    
+
     for id, tp in zip(cluster_id, frame_id):
         multiplier = 0.3
         if tp == current_frame:
@@ -70,16 +70,16 @@ def alphas_clustered(cluster_id, frame_id, current_frame, n_datapoints):
 
 def alphas_unclustered(frame_id, current_frame, n_datapoints):
     """
-    Returns a tuple of two alpha values, the first a list of alphas that depend 
+    Returns a tuple of two alpha values, the first a list of alphas that depend
     on the current frame
     """
     initial_alpha, nothing = initial_and_noise_alpha()
     alpha_f = alpha_factor(n_datapoints)
 
     alphas_unclustered = [
-        alpha_f*initial_alpha 
-        if tp == current_frame 
-        else alpha_f*initial_alpha*0.3 
+        alpha_f*initial_alpha
+        if tp == current_frame
+        else alpha_f*initial_alpha*0.3
         for tp in frame_id
     ]
 
@@ -105,7 +105,7 @@ def spot_size_unclustered(frame_id, current_frame, n_datapoints):
     size = gen_spot_size(n_datapoints)
     sizes = [
         size*frame_spot_factor()
-        if tp == current_frame 
+        if tp == current_frame
         else size
         for tp in frame_id
     ]
@@ -115,8 +115,8 @@ def spot_size_unclustered(frame_id, current_frame, n_datapoints):
 def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
     highlight = gen_highlight()
     colors = [
-        highlight if tp == current_frame 
-        else color_hex_list[int(x) % len(color_hex_list)] 
+        highlight if tp == current_frame
+        else color_hex_list[int(x) % len(color_hex_list)]
         for x, tp in zip(cluster_id,frame_id)
     ]
     return colors
@@ -143,4 +143,3 @@ def gen_spot_size(n_datapoints):
 
 def gen_highlight():
     return "#FFFFFF"
-
