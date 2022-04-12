@@ -1,3 +1,4 @@
+from tkinter import Scrollbar
 import warnings
 from functools import partial
 
@@ -15,7 +16,10 @@ from qtpy.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QScrollArea,
 )
+
+
 
 from ._utilities import (
     get_layer_tabular_data,
@@ -30,7 +34,17 @@ NON_DATA_COLUMN_NAMES = ["label", "frame", "index"]
 
 
 @register_dock_widget(menu="Measurement > Feature selection (ncp)")
-class FeatureSelectionWidget(QWidget):
+class FeatureSelectionWidget(QScrollArea):
+     def __init__(self, napari_viewer):
+        super().__init__()
+        widget = FeatureWidget(napari_viewer=napari_viewer)
+        self.setWidget(widget)
+        self.setWidgetResizable(True)
+        self.setLayout(QVBoxLayout())
+        self.layout().setSpacing(0)
+
+
+class FeatureWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -149,10 +163,11 @@ class FeatureSelectionWidget(QWidget):
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(method_container)
         self.layout().addWidget(self.correlation_threshold_container)
-        self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
-        self.layout().addWidget(run_widget)
+        self.layout().addWidget(update_container)
         self.layout().addWidget(self.analyse_correlation_container)
+        self.layout().addWidget(run_widget)
+
 
         if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             for container in self.correlation_containers:
@@ -205,12 +220,14 @@ class FeatureSelectionWidget(QWidget):
                 )
 
     def inactivate_correlation_boxes(self):
-        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
+        try:
             for widget in self.correlation_containers:
                 widgets_inactive(
                     widget,
                     active=False,
                 )
+        except AttributeError:
+            pass
 
     def update_properties_list(self):
         selected_layer = self.labels_select.value
@@ -234,23 +251,26 @@ class FeatureSelectionWidget(QWidget):
         labels_layer,
         threshold,
     ):
-        pass
-
         # get newest properties
         self.update_properties_list()
 
         # retrieve regionprops from labels_layer
         df_regprops = get_layer_tabular_data(labels_layer)
-
-        correlating_keys = get_correlating_keys(df_regprops, threshold=threshold)
-
+        feature_keys = [key for key in df_regprops.keys() if key not in NON_DATA_COLUMN_NAMES]
+        df_regprops_only_features = df_regprops[feature_keys]
+        correlating_keys = get_correlating_keys(df_regprops_only_features, threshold=threshold)
+        print(f'correlating keys after analysis {correlating_keys}')
         # remove label key and save correlating keys into self variable for later recall
         self.correlating_keys = [
-            [key for key in keygroup if key not in NON_DATA_COLUMN_NAMES]
+            [key for key in keygroup]
             for keygroup in correlating_keys
         ]
-
-        # adding widgets TODO figure out what todo if there is no room
+        print(f'self.correlating keys after analysis {self.correlating_keys}')
+        self.inactivate_correlation_boxes()
+        self.correlation_containers = None
+        self.correlation_key_lists = None
+        
+        # adding widgets for correlating features
         if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             self.correlation_key_lists = [
                 QListWidget() for correlations in self.correlating_keys
@@ -279,9 +299,6 @@ class FeatureSelectionWidget(QWidget):
             for container in self.correlation_containers:
                 self.layout().addWidget(container)
             self.layout().setSpacing(0)
-        else:
-            self.correlation_key_lists = None
-            self.correlation_containers = None
 
     # this function runs after the run button is clicked
     def run(self, labels_layer):
