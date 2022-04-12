@@ -13,12 +13,10 @@ from qtpy.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
-    QScrollArea,
 )
-
-
 
 from ._utilities import (
     get_layer_tabular_data,
@@ -34,7 +32,7 @@ NON_DATA_COLUMN_NAMES = ["label", "frame", "index"]
 
 @register_dock_widget(menu="Measurement > Feature selection (ncp)")
 class FeatureSelectionWidget(QScrollArea):
-     def __init__(self, napari_viewer):
+    def __init__(self, napari_viewer):
         super().__init__()
         widget = FeatureWidget(napari_viewer=napari_viewer)
         self.setWidget(widget)
@@ -167,7 +165,6 @@ class FeatureWidget(QWidget):
         self.layout().addWidget(self.analyse_correlation_container)
         self.layout().addWidget(run_widget)
 
-
         if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             for container in self.correlation_containers:
                 self.layout().addWidget(container)
@@ -251,20 +248,23 @@ class FeatureWidget(QWidget):
 
         # retrieve regionprops from labels_layer
         df_regprops = get_layer_tabular_data(labels_layer)
-        feature_keys = [key for key in df_regprops.keys() if key not in NON_DATA_COLUMN_NAMES]
+        feature_keys = [
+            key for key in df_regprops.keys() if key not in NON_DATA_COLUMN_NAMES
+        ]
         df_regprops_only_features = df_regprops[feature_keys]
-        correlating_keys = get_correlating_keys(df_regprops_only_features, threshold=threshold)
-        print(f'correlating keys after analysis {correlating_keys}')
+        correlating_keys = get_correlating_keys(
+            df_regprops_only_features, threshold=threshold
+        )
+        print(f"correlating keys after analysis {correlating_keys}")
         # remove label key and save correlating keys into self variable for later recall
         self.correlating_keys = [
-            [key for key in keygroup]
-            for keygroup in correlating_keys
+            [key for key in keygroup] for keygroup in correlating_keys
         ]
-        print(f'self.correlating keys after analysis {self.correlating_keys}')
+        print(f"self.correlating keys after analysis {self.correlating_keys}")
         self.inactivate_correlation_boxes()
         self.correlation_containers = None
         self.correlation_key_lists = None
-        
+
         # adding widgets for correlating features
         if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             self.correlation_key_lists = [
