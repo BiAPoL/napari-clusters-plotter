@@ -1,4 +1,3 @@
-from tkinter import Scrollbar
 import warnings
 from functools import partial
 
