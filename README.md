@@ -128,7 +128,13 @@ Example of k-means clustering results:
 conda create --name ncp-env python=3.9
 ```
 
-* Activate the new environment and install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
+* Activate the new environment via conda:
+
+```
+conda activate ncp-env
+```
+
+* Install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
 
 ```
 conda install -c conda-forge pyopencl
