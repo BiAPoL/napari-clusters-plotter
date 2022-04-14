@@ -34,9 +34,9 @@ from ._utilities import (
     get_nice_colormap,
 )
 
-ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
 POINTER = "frame"
+ICON_ROOT = PathL(__file__).parent / "icons"
 
 
 # Class below was based upon matplotlib lasso selection example:
