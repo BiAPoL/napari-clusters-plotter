@@ -2,7 +2,6 @@ import os
 import warnings
 from pathlib import Path as PathL
 
-import matplotlib
 import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
