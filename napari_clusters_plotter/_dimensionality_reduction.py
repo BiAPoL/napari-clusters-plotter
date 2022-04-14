@@ -409,9 +409,10 @@ class DimensionalityReductionWidget(QWidget):
             show_table(viewer, labels_layer)
             print("Dimensionality reduction finished")
 
-        def return_func_pca(embedding):
+        def return_func_pca(result):
             # check if principle components are already present
             # and remove them by overwriting the features
+            embedding = result[1]
             tabular_data = get_layer_tabular_data(labels_layer)
             dropkeys = [
                 column for column in tabular_data.keys() if column.startswith("PC_")
@@ -539,6 +540,6 @@ def pca(
             if j >= explained_variance_threshold / 100:
                 pca_cum_var_idx = i
                 break
-        return pca_transformed_props.T[: pca_cum_var_idx + 1].T
+        return "PCA", pca_transformed_props.T[: pca_cum_var_idx + 1].T
     else:
-        return pca_transformed_props
+        return "PCA", pca_transformed_props
