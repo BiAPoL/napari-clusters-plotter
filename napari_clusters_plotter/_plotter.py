@@ -37,7 +37,6 @@ from ._utilities import (
 ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
 POINTER = "frame"
-matplotlib.use("Qt5Agg")
 
 
 # Class below was based upon matplotlib lasso selection example:
