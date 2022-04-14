@@ -75,7 +75,6 @@ def test_bad_measurements(make_napari_viewer):
 
 def test_call_to_function(make_napari_viewer):
 
-
     viewer = make_napari_viewer()
 
     label = np.array(

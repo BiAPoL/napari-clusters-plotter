@@ -199,7 +199,9 @@ def test_mean_shift():
     result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
     assert len(np.unique(result[1])) == n_centers
-    assert np.array_equal(true_class, result[1]) or np.array_equal(1 - true_class, result[1])
+    assert np.array_equal(true_class, result[1]) or np.array_equal(
+        1 - true_class, result[1]
+    )
 
     # Test bad data
     true_class[n_samples // 2] = -1
@@ -207,9 +209,10 @@ def test_mean_shift():
     result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
     assert np.isnan(result[1][n_samples // 2])
-    assert np.array_equal(result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])])
+    assert np.array_equal(
+        result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])]
+    )
 
 
 if __name__ == "__main__":
     test_gaussian_mixture_model()
-

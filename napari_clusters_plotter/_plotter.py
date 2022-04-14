@@ -36,7 +36,7 @@ from ._utilities import (
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 # can be changed to frame or whatever we decide to use
-POINTER = 'frame'
+POINTER = "frame"
 matplotlib.use("Qt5Agg")
 
 
@@ -420,7 +420,7 @@ class PlotterWidget(QWidget):
                     self.plot_x_axis.currentText(),
                     self.plot_y_axis.currentText(),
                     self.plot_cluster_name,
-                    redraw_cluster_image=False
+                    redraw_cluster_image=False,
                 )
             self.old_frame = frame
 
@@ -434,6 +434,7 @@ class PlotterWidget(QWidget):
         run_button.clicked.connect(run_clicked)
 
         self.viewer.dims.events.current_step.connect(frame_changed)
+
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
@@ -514,7 +515,7 @@ class PlotterWidget(QWidget):
         plot_x_axis_name,
         plot_y_axis_name,
         plot_cluster_name=None,
-        redraw_cluster_image = True,
+        redraw_cluster_image=True,
     ):
 
         self.data_x = features[plot_x_axis_name]
@@ -539,7 +540,7 @@ class PlotterWidget(QWidget):
             # get long colormap from function
             colors = get_nice_colormap()
 
-            a,sizes,colors_plot = clustered_plot_parameters(
+            a, sizes, colors_plot = clustered_plot_parameters(
                 cluster_id=self.cluster_ids,
                 frame_id=features[POINTER].tolist(),
                 current_frame=self.frame,
@@ -563,12 +564,17 @@ class PlotterWidget(QWidget):
 
             # get colormap as rgba array
             from vispy.color import Color
+
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
             # generate dictionary mapping each prediction to its respective color
             # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
             cmap_dict = {
-                int(prediction + 1): (cmap[int(prediction) % len(cmap)] if prediction >= 0 else [0, 0, 0, 0])
+                int(prediction + 1): (
+                    cmap[int(prediction) % len(cmap)]
+                    if prediction >= 0
+                    else [0, 0, 0, 0]
+                )
                 for prediction in self.cluster_ids
             }
             # take care of background label
@@ -581,25 +587,23 @@ class PlotterWidget(QWidget):
                 # depending on the dimensionality of the data
                 # generate the cluster image
                 if len(self.analysed_layer.data.shape) == 4:
-                    max_timepoint = features[POINTER].max()+1
+                    max_timepoint = features[POINTER].max() + 1
 
                     prediction_lists_per_timepoint = [
                         features.loc[features[POINTER] == i][plot_cluster_name].tolist()
                         for i in range(max_timepoint)
-                        ]
+                    ]
 
                     cluster_image = dask_cluster_image_timelapse(
-                        self.analysed_layer.data,
-                        prediction_lists_per_timepoint
+                        self.analysed_layer.data, prediction_lists_per_timepoint
                     )
 
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_image = generate_cluster_image(
-                        self.analysed_layer.data,
-                        self.cluster_ids
+                        self.analysed_layer.data, self.cluster_ids
                     )
                 else:
-                    warnings.warn('Image dimensions too high for processing!')
+                    warnings.warn("Image dimensions too high for processing!")
 
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
@@ -609,14 +613,14 @@ class PlotterWidget(QWidget):
                 ):
                     # visualising cluster image
                     self.visualized_labels_layer = self.viewer.add_labels(
-                        cluster_image, # self.analysed_layer.data
-                        color= cmap_dict, #cluster_id_dict
+                        cluster_image,  # self.analysed_layer.data
+                        color=cmap_dict,  # cluster_id_dict
                         name="cluster_ids_in_space",
                     )
                 else:
                     # updating data
                     self.visualized_labels_layer.data = cluster_image
-                    self.visualized_labels_layer.color= cmap_dict
+                    self.visualized_labels_layer.color = cmap_dict
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
@@ -631,10 +635,11 @@ class PlotterWidget(QWidget):
 
             # Potting
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x, self.data_y,
+                self.data_x,
+                self.data_y,
                 color=colors_plot,
                 s=sizes,
-                alpha= a,
+                alpha=a,
             )
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,

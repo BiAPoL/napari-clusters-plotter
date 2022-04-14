@@ -255,13 +255,14 @@ class MeasureWidget(QWidget):
             warnings.warn("No measurements.")
             return
 
+
 def new_regprops(
     intensity_image,
     label_image,
     region_props_source: str,
     timelapse: bool,
     n_closest_points_list: list = [2, 3, 4],
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """
     Calculate Region properties based on the region properties source string
 
@@ -284,18 +285,18 @@ def new_regprops(
     # and/or shape were selected
     columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
     intensity_columns = [
-            "min_intensity",
-            "max_intensity",
-            "sum_intensity",
-            "mean_intensity",
-            "standard_deviation_intensity",
-        ]
+        "min_intensity",
+        "max_intensity",
+        "sum_intensity",
+        "mean_intensity",
+        "standard_deviation_intensity",
+    ]
     shape_columns = [
-            "area",
-            "mean_distance_to_centroid",
-            "max_distance_to_centroid",
-            "mean_max_distance_to_centroid_ratio",
-        ]
+        "area",
+        "mean_distance_to_centroid",
+        "max_distance_to_centroid",
+        "mean_max_distance_to_centroid_ratio",
+    ]
     if "intensity" in region_props_source:
         columns += intensity_columns
     if "shape" in region_props_source:
@@ -317,36 +318,37 @@ def new_regprops(
                 reg_props_single_t = region_props_with_neighborhood_data(
                     label_image[timepoint],
                     n_closest_points_list,
-                    all_reg_props_single_t[columns]
+                    all_reg_props_single_t[columns],
                 )
             else:
                 reg_props_single_t = all_reg_props_single_t[columns]
 
             timepoint_column = pd.DataFrame(
-                {"frame":np.full(len(reg_props_single_t),t)}
-                )
+                {"frame": np.full(len(reg_props_single_t), t)}
+            )
             reg_props_with_tp_column = pd.concat(
-                [reg_props_single_t,timepoint_column], axis = 1
-                )
+                [reg_props_single_t, timepoint_column], axis=1
+            )
             reg_props_all.append(reg_props_with_tp_column)
 
         reg_props = pd.concat(reg_props_all)
         print("Reg props measured for each timepoint.")
         return reg_props
 
-    reg_props = pd.DataFrame(cle.statistics_of_labelled_pixels(intensity_image, label_image))
+    reg_props = pd.DataFrame(
+        cle.statistics_of_labelled_pixels(intensity_image, label_image)
+    )
     print("Reg props not measured for a timelapse.")
     if "neighborhood" in region_props_source:
         return region_props_with_neighborhood_data(
-                    label_image, n_closest_points_list, reg_props[columns]
-                )
+            label_image, n_closest_points_list, reg_props[columns]
+        )
 
     return reg_props[columns]
 
+
 def region_props_with_neighborhood_data(
-    label_image,
-    n_closest_points_list: list,
-    reg_props: pd.DataFrame
+    label_image, n_closest_points_list: list, reg_props: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Calculate neighborhood region properties and combine with other region properties
@@ -408,10 +410,11 @@ def region_props_with_neighborhood_data(
     )
 
     # addition to the regionprops dictionary
-    neighborhood_properties["touching neighbor count"] = touching_neighbor_count_formatted
-    return pd.concat(
-        [reg_props, pd.DataFrame(neighborhood_properties)], axis = 1
-        )
+    neighborhood_properties[
+        "touching neighbor count"
+    ] = touching_neighbor_count_formatted
+    return pd.concat([reg_props, pd.DataFrame(neighborhood_properties)], axis=1)
+
 
 # old regionprops function
 def get_regprops_from_regprops_source(
@@ -490,9 +493,9 @@ def get_regprops_from_regprops_source(
         print("Reg props measured not for a timelapse.")
 
     if "shape" in region_props_source or "intensity" in region_props_source:
-        return pd.DataFrame({
-            column: value for column, value in reg_props.items() if column in columns
-        })
+        return pd.DataFrame(
+            {column: value for column, value in reg_props.items() if column in columns}
+        )
 
     if "neighborhood" in region_props_source:
         return region_props_with_neighborhood_data(

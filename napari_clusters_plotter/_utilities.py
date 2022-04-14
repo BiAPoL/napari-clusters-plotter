@@ -1,4 +1,5 @@
 from functools import wraps
+
 import numpy as np
 import pandas as pd
 import pyclesperanto_prototype as cle
@@ -66,6 +67,7 @@ def catch_NaNs(func):
 
     return wrapper
 
+
 def generate_cluster_image(label_image, predictionlist):
     """
     Returns a label image where each label value corresponds
@@ -84,22 +86,23 @@ def generate_cluster_image(label_image, predictionlist):
     # labelling starts at -1 for noise, removing these from
     # the labels
     predictionlist_new = np.array(predictionlist) + 1
-    predictionlist_new = np.insert(predictionlist_new,0,0)
+    predictionlist_new = np.insert(predictionlist_new, 0, 0)
 
     # loading data into gpu
     clelist = cle.push(predictionlist_new)
     gpu_labelimage = cle.push(label_image)
 
-    #generation of cluster label image
+    # generation of cluster label image
     parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
     gpu_labelimage = None
     clelist = None
 
     # retrieving the gpu image
-    output = cle.pull(parametric_image).astype('uint32')
+    output = cle.pull(parametric_image).astype("uint32")
     parametric_image = None
 
     return output
+
 
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
     import dask.array as da
@@ -108,7 +111,10 @@ def dask_cluster_image_timelapse(label_image, prediction_list_list):
     sample = label_image[0]
 
     lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
-    lazy_arrays = [lazy_cluster_image(frame,preds) for frame,preds in zip(label_image,prediction_list_list)]
+    lazy_arrays = [
+        lazy_cluster_image(frame, preds)
+        for frame, preds in zip(label_image, prediction_list_list)
+    ]
     dask_arrays = [
         da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
         for delayed_reader in lazy_arrays
@@ -117,6 +123,7 @@ def dask_cluster_image_timelapse(label_image, prediction_list_list):
     stack = da.stack(dask_arrays, axis=0)
 
     return stack
+
 
 def get_nice_colormap():
     colours_w_old_colors = [
