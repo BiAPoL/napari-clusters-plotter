@@ -32,6 +32,7 @@ from ._utilities import (
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 
+
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
 class SelectFromCollection:
