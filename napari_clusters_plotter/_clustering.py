@@ -1,3 +1,4 @@
+from typing import Tuple
 import warnings
 from enum import Enum
 from functools import partial
@@ -575,7 +576,7 @@ class ClusteringWidget(QWidget):
 @catch_NaNs
 def mean_shift(
     reg_props: pd.DataFrame, quantile: float = 0.2, n_samples: int = 50
-) -> (str, np.ndarray):
+) -> Tuple(str, np.ndarray):
     from sklearn.cluster import MeanShift, estimate_bandwidth
 
     bandwidth = estimate_bandwidth(reg_props, quantile=quantile, n_samples=n_samples)
@@ -587,7 +588,7 @@ def mean_shift(
 @catch_NaNs
 def gaussian_mixture_model(
     reg_props: pd.DataFrame, cluster_number: int
-) -> (str, np.ndarray):
+) -> Tuple(str, np.ndarray):
     from sklearn import mixture
 
     # fit a Gaussian Mixture Model
@@ -599,7 +600,7 @@ def gaussian_mixture_model(
 @catch_NaNs
 def kmeans_clustering(
     reg_props: pd.DataFrame, cluster_number: int, iterations: int
-) -> (str, np.ndarray):
+) -> Tuple(str, np.ndarray):
     from sklearn.cluster import KMeans
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
@@ -610,7 +611,7 @@ def kmeans_clustering(
 @catch_NaNs
 def agglomerative_clustering(
     reg_props: pd.DataFrame, cluster_number: int, n_neighbors: int
-) -> (str, np.ndarray):
+) -> Tuple(str, np.ndarray):
     from sklearn.cluster import AgglomerativeClustering
     from sklearn.neighbors import kneighbors_graph
 
@@ -632,7 +633,7 @@ def agglomerative_clustering(
 @catch_NaNs
 def hdbscan_clustering(
     reg_props: pd.DataFrame, min_cluster_size: int, min_samples: int
-) -> (str, np.ndarray):
+) -> Tuple(str, np.ndarray):
     import hdbscan
 
     clustering_hdbscan = hdbscan.HDBSCAN(
