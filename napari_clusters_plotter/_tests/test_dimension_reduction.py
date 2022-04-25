@@ -203,10 +203,14 @@ def test_pca():
 
     from napari_clusters_plotter._dimensionality_reduction import pca
 
-    nothing, result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
+    nothing, result = pca(
+        pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0
+    )
     assert result.shape[-1] == n_comp
 
-    nothing, result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
+    nothing, result = pca(
+        pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0
+    )
     assert result.shape[-1] == n_comp
 
 

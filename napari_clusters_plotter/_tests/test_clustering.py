@@ -156,7 +156,9 @@ def test_agglomerative_clustering():
 
     from napari_clusters_plotter._clustering import agglomerative_clustering
 
-    nothing, result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
+    nothing, result = agglomerative_clustering(
+        measurements, cluster_number=2, n_neighbors=2
+    )
 
     assert len(np.unique(result)) == n_centers
     assert np.array_equal(true_class, (result)) or np.array_equal(
@@ -167,7 +169,9 @@ def test_agglomerative_clustering():
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    nothing, result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
+    nothing, result = agglomerative_clustering(
+        measurements, cluster_number=2, n_neighbors=2
+    )
 
     assert np.isnan(result[n_samples // 2])
 
