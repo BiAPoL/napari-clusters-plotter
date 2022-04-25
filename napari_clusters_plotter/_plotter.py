@@ -2,7 +2,6 @@ import os
 import warnings
 from pathlib import Path as PathL
 
-import matplotlib
 import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
@@ -32,8 +31,6 @@ from ._utilities import (
 )
 
 ICON_ROOT = PathL(__file__).parent / "icons"
-
-matplotlib.use("Qt5Agg")
 
 
 # Class below was based upon matplotlib lasso selection example:
