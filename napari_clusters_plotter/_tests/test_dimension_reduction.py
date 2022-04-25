@@ -11,7 +11,7 @@ def test_clustering_widget(make_napari_viewer):
 
     import napari_clusters_plotter as ncp
 
-    viewer = make_napari_viewer()
+    viewer = make_napari_viewer(strict_qt=True)
     widget_list = ncp.napari_experimental_provide_dock_widget()
     n_wdgts = len(viewer.window._dock_widgets)
 
@@ -27,7 +27,7 @@ def test_clustering_widget(make_napari_viewer):
     assert len(viewer.window._dock_widgets) == n_wdgts + 1
 
 
-def test_bad_measurements(make_napari_viewer):
+def test_bad_measurements(qtbot, make_napari_viewer):
 
     from napari_clusters_plotter._dimensionality_reduction import (
         DimensionalityReductionWidget,
@@ -46,7 +46,7 @@ def test_bad_measurements(make_napari_viewer):
         ]
     )
 
-    viewer = make_napari_viewer()
+    viewer = make_napari_viewer(strict_qt=True)
     labels_layer = viewer.add_labels(label)
 
     # Add NaNs to data
@@ -72,10 +72,13 @@ def test_bad_measurements(make_napari_viewer):
         pca_components=0,
     )
 
+    blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
+    blocker.wait()
+
 
 def test_call_to_function(qtbot, make_napari_viewer):
 
-    viewer = make_napari_viewer()
+    viewer = make_napari_viewer(strict_qt=True)
 
     label = np.array(
         [
@@ -217,4 +220,5 @@ if __name__ == "__main__":
     import napari
 
     test_bad_measurements(napari.Viewer)
+    test_call_to_function(napari.Viewer)
     # test_umap()
