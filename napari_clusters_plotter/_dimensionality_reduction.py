@@ -471,7 +471,9 @@ class DimensionalityReductionWidget(QWidget):
 
 
 @catch_NaNs
-def umap(reg_props: pd.DataFrame, n_neigh: int, n_components: int) -> tuple[str, np.ndarray]:
+def umap(
+    reg_props: pd.DataFrame, n_neigh: int, n_components: int
+) -> tuple[str, np.ndarray]:
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
