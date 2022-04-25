@@ -38,28 +38,29 @@ def test_kmeans_clustering():
 
     from napari_clusters_plotter._clustering import kmeans_clustering
 
+    # kmeans_clustering returns (str, np.ndarray), where the first item is algorithm name
     result = kmeans_clustering(
         measurements,
         cluster_number=n_centers,
         iterations=50,
     )
 
-    # a tuple is returned, where the first item (returned[0]) is the name of
-    # the clustering method, and the second one (returned[1]) is predictions
     assert len(np.unique(result[1])) == 2
     assert np.array_equal(1 - true_class, result[1])
 
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    nothing, result = kmeans_clustering(
+    result = kmeans_clustering(
         measurements,
         cluster_number=n_centers,
         iterations=50,
     )
 
-    assert np.isnan(result[n_samples // 2])
-    assert np.array_equal(result[~np.isnan(result)], 1 - true_class[~np.isnan(result)])
+    assert np.isnan(result[1][n_samples // 2])
+    assert np.array_equal(
+        result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])]
+    )
 
 
 def test_hdbscan_clustering():
@@ -75,26 +76,29 @@ def test_hdbscan_clustering():
     min_cluster_size = 5
     min_samples = 2  # number of samples that should be included in one cluster
 
-    nothin, result = hdbscan_clustering(
+    # hdbscan_clustering returns (str, np.ndarray), where the first item is algorithm name
+    result = hdbscan_clustering(
         measurements,
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
     )
 
-    assert len(np.unique(result)) == 2
-    assert np.array_equal(true_class, result)
+    assert len(np.unique(result[1])) == 2
+    assert np.array_equal(true_class, result[1])
 
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    nothing, result = hdbscan_clustering(
+    result = hdbscan_clustering(
         measurements,
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
     )
 
-    assert np.isnan(result[n_samples // 2])
-    assert np.array_equal(result[~np.isnan(result)], true_class[~np.isnan(result)])
+    assert np.isnan(result[1][n_samples // 2])
+    assert np.array_equal(
+        result[1][~np.isnan(result[1])], true_class[~np.isnan(result[1])]
+    )
 
 
 def test_gaussian_mixture_model():
@@ -115,23 +119,25 @@ def test_gaussian_mixture_model():
 
     from napari_clusters_plotter._clustering import gaussian_mixture_model
 
-    nothing, result = gaussian_mixture_model(measurements, cluster_number=2)
+    # gaussian_mixture_model returns (str, np.ndarray), where the first item is algorithm name
+    result = gaussian_mixture_model(measurements, cluster_number=2)
+    print(result[1])
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, (result)) or np.array_equal(
-        1 - true_class, (result)
+    assert len(np.unique(result[1])) == n_centers
+    assert np.array_equal(true_class, (result[1])) or np.array_equal(
+        1 - true_class, (result[1])
     )
 
     # Test bad data
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    nothing, result = gaussian_mixture_model(measurements, cluster_number=2)
+    result = gaussian_mixture_model(measurements, cluster_number=2)
 
-    assert np.isnan(result[n_samples // 2])
+    assert np.isnan(result[1][n_samples // 2])
 
-    true_result = true_class[~np.isnan(result)].astype(bool)
-    result = result[~np.isnan(result)].astype(bool)
+    true_result = true_class[~np.isnan(result[1])].astype(bool)
+    result = result[1][~np.isnan(result[1])].astype(bool)
 
     assert np.array_equal(result, 1 - true_result) or np.array_equal(
         result, true_result
@@ -156,27 +162,27 @@ def test_agglomerative_clustering():
 
     from napari_clusters_plotter._clustering import agglomerative_clustering
 
-    nothing, result = agglomerative_clustering(
+    result = agglomerative_clustering(
         measurements, cluster_number=2, n_neighbors=2
     )
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, (result)) or np.array_equal(
-        1 - true_class, (result)
+    assert len(np.unique(result[1])) == n_centers
+    assert np.array_equal(true_class, (result[1])) or np.array_equal(
+        1 - true_class, (result[1])
     )
 
     # Test bad data
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    nothing, result = agglomerative_clustering(
+    result = agglomerative_clustering(
         measurements, cluster_number=2, n_neighbors=2
     )
 
-    assert np.isnan(result[n_samples // 2])
+    assert np.isnan(result[1][n_samples // 2])
 
-    true_class = true_class[~np.isnan(result)]
-    result = result[~np.isnan(result)]
+    true_class = true_class[~np.isnan(result[1])]
+    result = result[1][~np.isnan(result[1])]
     assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
 
 
@@ -198,18 +204,22 @@ def test_mean_shift():
 
     from napari_clusters_plotter._clustering import mean_shift
 
-    nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
+    result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
-    assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
+    assert len(np.unique(result[1])) == n_centers
+    assert np.array_equal(true_class, result[1]) or np.array_equal(
+        1 - true_class, result[1]
+    )
 
     # Test bad data
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
-    nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
+    result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
-    assert np.isnan(result[n_samples // 2])
-    assert np.array_equal(result[~np.isnan(result)], 1 - true_class[~np.isnan(result)])
+    assert np.isnan(result[1][n_samples // 2])
+    assert np.array_equal(
+        result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])]
+    )
 
 
 if __name__ == "__main__":

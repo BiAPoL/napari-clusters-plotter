@@ -20,7 +20,7 @@ def restore_defaults(widget, defaults: dict):
     for item, val in defaults.items():
         getattr(widget, item).value = val
         if item == "custom_name":
-            widget.custom_name.setText(defaults["custom_name"])
+            widget.custom_name.clear()
 
 
 def set_features(layer, tabular_data):
