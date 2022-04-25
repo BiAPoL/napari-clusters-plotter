@@ -81,15 +81,13 @@ def test_hdbscan_clustering():
         min_samples=min_samples,
     )
 
-    # a tuple is returned, where the first item (returned[0]) is the name of
-    # the clustering method, and the second one is predictions (returned[1])
-    assert len(np.unique(result[1])) == 2
-    assert np.array_equal(true_class, result[1])
+    assert len(np.unique(result)) == 2
+    assert np.array_equal(true_class, result)
 
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    result = hdbscan_clustering(
+    nothing, result = hdbscan_clustering(
         measurements,
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
@@ -119,16 +117,16 @@ def test_gaussian_mixture_model():
 
     nothing, result = gaussian_mixture_model(measurements, cluster_number=2)
 
-    assert len(np.unique(result[1])) == n_centers
-    assert np.array_equal(true_class, (result[1])) or np.array_equal(
-        1 - true_class, (result[1])
+    assert len(np.unique(result)) == n_centers
+    assert np.array_equal(true_class, (result)) or np.array_equal(
+        1 - true_class, (result)
     )
 
     # Test bad data
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    result = gaussian_mixture_model(measurements, cluster_number=2)
+    nothing, result = gaussian_mixture_model(measurements, cluster_number=2)
 
     assert np.isnan(result[n_samples // 2])
 
@@ -160,9 +158,9 @@ def test_agglomerative_clustering():
 
     nothing, result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
 
-    assert len(np.unique(result[1])) == n_centers
-    assert np.array_equal(true_class, (result[1])) or np.array_equal(
-        1 - true_class, (result[1])
+    assert len(np.unique(result)) == n_centers
+    assert np.array_equal(true_class, (result)) or np.array_equal(
+        1 - true_class, (result)
     )
 
     # Test bad data
@@ -198,19 +196,19 @@ def test_mean_shift():
 
     nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
-    assert len(np.unique(result[1])) == n_centers
-    assert np.array_equal(true_class, result[1]) or np.array_equal(
-        1 - true_class, result[1]
+    assert len(np.unique(result)) == n_centers
+    assert np.array_equal(true_class, result) or np.array_equal(
+        1 - true_class, result
     )
 
     # Test bad data
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
-    result = mean_shift(measurements, quantile=0.5, n_samples=50)
+    nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
-    assert np.isnan(result[1][n_samples // 2])
+    assert np.isnan(result[n_samples // 2])
     assert np.array_equal(
-        result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])]
+        result[~np.isnan(result)], 1 - true_class[~np.isnan(result)]
     )
 
 
