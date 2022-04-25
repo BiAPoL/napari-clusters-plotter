@@ -201,9 +201,7 @@ def test_mean_shift():
     nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
     assert len(np.unique(result)) == n_centers
-    assert np.array_equal(true_class, result) or np.array_equal(
-        1 - true_class, result
-    )
+    assert np.array_equal(true_class, result) or np.array_equal(1 - true_class, result)
 
     # Test bad data
     true_class[n_samples // 2] = -1
@@ -211,9 +209,7 @@ def test_mean_shift():
     nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
     assert np.isnan(result[n_samples // 2])
-    assert np.array_equal(
-        result[~np.isnan(result)], 1 - true_class[~np.isnan(result)]
-    )
+    assert np.array_equal(result[~np.isnan(result)], 1 - true_class[~np.isnan(result)])
 
 
 if __name__ == "__main__":

@@ -175,7 +175,9 @@ def test_umap():
     X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     n_comp = 2
 
-    nothing, result = umap(pd.DataFrame(X), n_neigh=2, n_components=n_comp, standardize=False)
+    nothing, result = umap(
+        pd.DataFrame(X), n_neigh=2, n_components=n_comp, standardize=False
+    )
     # a tuple is returned, where result[0] is the name of
     # the dimensionality reduction method, and the result[1] is the embedding
     assert result.shape[-1] == n_comp
@@ -190,7 +192,9 @@ def test_tsne():
 
     from napari_clusters_plotter._dimensionality_reduction import tsne
 
-    nothing, result = tsne(pd.DataFrame(X), perplexity=5, n_components=2, standardize=False)
+    nothing, result = tsne(
+        pd.DataFrame(X), perplexity=5, n_components=2, standardize=False
+    )
     assert result.shape[-1] == n_comp
 
 
