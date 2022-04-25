@@ -1,5 +1,6 @@
 import warnings
 from functools import partial
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -473,7 +474,7 @@ class DimensionalityReductionWidget(QWidget):
 @catch_NaNs
 def umap(
     reg_props: pd.DataFrame, n_neigh: int, n_components: int
-) -> tuple[str, np.ndarray]:
+) -> Tuple(str, np.ndarray):
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
@@ -489,7 +490,7 @@ def umap(
 @catch_NaNs
 def tsne(
     reg_props: pd.DataFrame, perplexity: float, n_components: int
-) -> tuple[str, np.ndarray]:
+) -> Tuple(str, np.ndarray):
     from sklearn.manifold import TSNE
 
     reducer = TSNE(
@@ -505,7 +506,7 @@ def tsne(
 @catch_NaNs
 def pca(
     reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
-) -> tuple[str, np.ndarray]:
+) -> Tuple(str, np.ndarray):
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
 
