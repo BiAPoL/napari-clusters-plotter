@@ -52,7 +52,7 @@ def test_kmeans_clustering():
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    result = kmeans_clustering(
+    nothing, result = kmeans_clustering(
         measurements,
         cluster_number=n_centers,
         iterations=50,
@@ -75,7 +75,7 @@ def test_hdbscan_clustering():
     min_cluster_size = 5
     min_samples = 2  # number of samples that should be included in one cluster
 
-    result = hdbscan_clustering(
+    nothin, result = hdbscan_clustering(
         measurements,
         min_cluster_size=min_cluster_size,
         min_samples=min_samples,
@@ -117,7 +117,7 @@ def test_gaussian_mixture_model():
 
     from napari_clusters_plotter._clustering import gaussian_mixture_model
 
-    result = gaussian_mixture_model(measurements, cluster_number=2)
+    nothing, result = gaussian_mixture_model(measurements, cluster_number=2)
 
     assert len(np.unique(result[1])) == n_centers
     assert np.array_equal(true_class, (result[1])) or np.array_equal(
@@ -158,7 +158,7 @@ def test_agglomerative_clustering():
 
     from napari_clusters_plotter._clustering import agglomerative_clustering
 
-    result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
+    nothing, result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
 
     assert len(np.unique(result[1])) == n_centers
     assert np.array_equal(true_class, (result[1])) or np.array_equal(
@@ -169,7 +169,7 @@ def test_agglomerative_clustering():
     true_class[n_samples // 2] = -1
     measurements[n_samples // 2, :] = np.NaN
 
-    result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
+    nothing, result = agglomerative_clustering(measurements, cluster_number=2, n_neighbors=2)
 
     assert np.isnan(result[n_samples // 2])
 
@@ -196,7 +196,7 @@ def test_mean_shift():
 
     from napari_clusters_plotter._clustering import mean_shift
 
-    result = mean_shift(measurements, quantile=0.5, n_samples=50)
+    nothing, result = mean_shift(measurements, quantile=0.5, n_samples=50)
 
     assert len(np.unique(result[1])) == n_centers
     assert np.array_equal(true_class, result[1]) or np.array_equal(
