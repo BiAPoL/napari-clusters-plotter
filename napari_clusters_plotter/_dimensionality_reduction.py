@@ -406,7 +406,7 @@ class DimensionalityReductionWidget(QWidget):
         def return_func_dim_reduction(result):
 
             if result[0] == "PCA":
-                # check if principle components are already present
+                # check if principal components are already present
                 # and remove them by overwriting the features
                 tabular_data = get_layer_tabular_data(labels_layer)
                 dropkeys = [
