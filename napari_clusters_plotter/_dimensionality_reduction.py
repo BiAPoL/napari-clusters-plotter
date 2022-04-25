@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
+from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
@@ -25,6 +26,7 @@ from ._utilities import (
     get_layer_tabular_data,
     restore_defaults,
     set_features,
+    show_table,
     widgets_inactive,
 )
 
@@ -45,6 +47,7 @@ class DimensionalityReductionWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
 
+        self.worker = None
         self.viewer = napari_viewer
 
         # QVBoxLayout - lines up widgets vertically
@@ -252,6 +255,7 @@ class DimensionalityReductionWidget(QWidget):
                 return
 
             self.run(
+                self.viewer,
                 self.labels_select.value,
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value,
@@ -291,8 +295,6 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        # self.algorithm_choice_list.currentIndexChanged.connect(self.change_neighbours_list)
-        # self.algorithm_choice_list.currentIndexChanged.connect(self.change_perplexity)
         self.algorithm_choice_list.currentIndexChanged.connect(
             self.change_pca_components
         )
@@ -374,6 +376,7 @@ class DimensionalityReductionWidget(QWidget):
     # this function runs after the run button is clicked
     def run(
         self,
+        viewer,
         labels_layer,
         selected_measurements_list,
         n_neighbours,
@@ -382,8 +385,9 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
-        n_components=2,
+        n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
     ):
+
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
@@ -392,96 +396,98 @@ class DimensionalityReductionWidget(QWidget):
         # only select the columns the user requested
         properties_to_reduce = features[selected_measurements_list]
 
-        if selected_algorithm == "UMAP":
-            print(
-                "Dimensionality reduction started ("
-                + str(selected_algorithm)
-                + ", standardize: "
-                + str(standardize)
-                + ")..."
-            )
-            # reduce dimensionality
-            embedding = umap(
-                properties_to_reduce, n_neighbours, n_components, standardize
-            )
+        # perform standard scaling, if selected
+        if standardize:
+            from sklearn.preprocessing import StandardScaler
 
-            # write result back to features/properties
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "UMAP_" + str(i), embedding[:, i]
-                )
+            properties_to_reduce = StandardScaler().fit_transform(properties_to_reduce)
+
+        # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
+        def return_func_dim_reduction(result):
+
+            if result[0] == "PCA":
+                # check if principal components are already present
+                # and remove them by overwriting the features
+                tabular_data = get_layer_tabular_data(labels_layer)
+                dropkeys = [
+                    column for column in tabular_data.keys() if column.startswith("PC_")
+                ]
+                df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
+                set_features(labels_layer, df_principal_components_removed)
+
+                # write result back to properties
+                for i in range(0, len(result[1].T)):
+                    add_column_to_layer_tabular_data(
+                        labels_layer, "PC_" + str(i), result[1][:, i]
+                    )
+
+            elif result[0] == "UMAP" or result[0] == "t-SNE":
+                # write result back to properties
+                for i in range(0, n_components):
+                    add_column_to_layer_tabular_data(
+                        labels_layer, result[0] + "_" + str(i), result[1][:, i]
+                    )
+
+            else:
+                "Dimensionality reduction not successful. Please try again"
+                return
+
+            show_table(viewer, labels_layer)
+            print("Dimensionality reduction finished")
+
+        # depending on the selected dim reduction algorithm start a secondary thread
+        if selected_algorithm == "UMAP":
+            self.worker = create_worker(
+                umap,
+                properties_to_reduce,
+                n_neigh=n_neighbours,
+                n_components=n_components,
+                _progress=True,
+            )
+            self.worker.returned.connect(return_func_dim_reduction)
+            self.worker.start()
 
         elif selected_algorithm == "t-SNE":
-            print(
-                "Dimensionality reduction started ("
-                + str(selected_algorithm)
-                + ", standardize: "
-                + str(standardize)
-                + ")..."
+            self.worker = create_worker(
+                tsne,
+                properties_to_reduce,
+                perplexity=perplexity,
+                n_components=n_components,
+                _progress=True,
             )
-            # reduce dimensionality
-            embedding = tsne(
-                properties_to_reduce, perplexity, n_components, standardize
-            )
-
-            # write result back to features/properties
-            for i in range(0, n_components):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "t-SNE_" + str(i), embedding[:, i]
-                )
+            self.worker.returned.connect(return_func_dim_reduction)
+            self.worker.start()
 
         elif selected_algorithm == "PCA":
-            print(
-                "Dimensionality reduction started (" + str(selected_algorithm) + ")..."
+            self.worker = create_worker(
+                pca,
+                properties_to_reduce,
+                explained_variance_threshold=explained_variance,
+                n_components=pca_components,
+                _progress=True,
             )
-            # reduce dimensionality
-            embedding = pca(properties_to_reduce, explained_variance, pca_components)
-
-            # check if principle components are already present
-            # and remove them by overwriting the features
-            tabular_data = get_layer_tabular_data(labels_layer)
-            dropkeys = [
-                column for column in tabular_data.keys() if column.startswith("PC_")
-            ]
-            df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
-            set_features(labels_layer, df_principal_components_removed)
-
-            # write result back to properties
-            for i in range(0, len(embedding.T)):
-                add_column_to_layer_tabular_data(
-                    labels_layer, "PC_" + str(i), embedding[:, i]
-                )
-
-        from ._utilities import show_table
-
-        show_table(self.viewer, labels_layer)
-
-        print("Dimensionality reduction finished")
+            self.worker.returned.connect(return_func_dim_reduction)
+            self.worker.start()
 
 
 @catch_NaNs
-def umap(
-    reg_props: pd.DataFrame, n_neigh: int, n_components: int, standardize: bool
-) -> np.ndarray:
+def umap(reg_props: pd.DataFrame, n_neigh: int, n_components: int) -> (str, np.ndarray):
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
-        random_state=133, n_components=n_components, n_neighbors=n_neigh
+        random_state=133,
+        n_components=n_components,
+        n_neighbors=n_neigh,
+        verbose=True,
+        tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
-
-    if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_regionprops = StandardScaler().fit_transform(reg_props)
-        return reducer.fit_transform(scaled_regionprops)
-    else:
-        return reducer.fit_transform(reg_props)
+    return "UMAP", reducer.fit_transform(reg_props)
 
 
 @catch_NaNs
 def tsne(
-    reg_props: pd.DataFrame, perplexity: float, n_components: int, standardize: bool
-) -> np.ndarray:
+    reg_props: pd.DataFrame, perplexity: float, n_components: int
+) -> (str, np.ndarray):
     from sklearn.manifold import TSNE
 
     reducer = TSNE(
@@ -491,20 +497,13 @@ def tsne(
         init="pca",
         random_state=42,
     )
-
-    if standardize:
-        from sklearn.preprocessing import StandardScaler
-
-        scaled_regionprops = StandardScaler().fit_transform(reg_props)
-        return reducer.fit_transform(scaled_regionprops)
-    else:
-        return reducer.fit_transform(reg_props)
+    return "t-SNE", reducer.fit_transform(reg_props)
 
 
 @catch_NaNs
 def pca(
     reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
-) -> np.ndarray:
+) -> (str, np.ndarray):
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
 
@@ -525,6 +524,6 @@ def pca(
             if j >= explained_variance_threshold / 100:
                 pca_cum_var_idx = i
                 break
-        return pca_transformed_props.T[: pca_cum_var_idx + 1].T
+        return "PCA", pca_transformed_props.T[: pca_cum_var_idx + 1].T
     else:
-        return pca_transformed_props
+        return "PCA", pca_transformed_props

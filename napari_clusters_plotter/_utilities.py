@@ -19,7 +19,7 @@ def restore_defaults(widget, defaults: dict):
     for item, val in defaults.items():
         getattr(widget, item).value = val
         if item == "custom_name":
-            widget.custom_name.setText(defaults["custom_name"])
+            widget.custom_name.clear()
 
 
 def set_features(layer, tabular_data):
@@ -59,10 +59,10 @@ def catch_NaNs(func):
         new_args[0] = measurements.dropna()
         embedded = func(*new_args, **kwargs)
 
-        result = pd.DataFrame(embedded, index=non_nan_entries)
+        result = pd.DataFrame(embedded[1], index=non_nan_entries)
         result = result.reindex(np.arange(len(measurements)))
 
-        return result.to_numpy().squeeze()
+        return embedded[0], result.to_numpy().squeeze()
 
     return wrapper
 

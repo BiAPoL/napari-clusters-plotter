@@ -2,8 +2,11 @@ import warnings
 from enum import Enum
 from functools import partial
 
+import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
+from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
@@ -23,6 +26,7 @@ from ._utilities import (
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
+    show_table,
     widgets_inactive,
 )
 
@@ -53,6 +57,7 @@ class ClusteringWidget(QWidget):
 
     def __init__(self, napari_viewer):
         super().__init__()
+        self.worker = None
         self.setLayout(QVBoxLayout())
         self.viewer = napari_viewer
 
@@ -144,7 +149,6 @@ class ClusteringWidget(QWidget):
         self.gmm_settings_container_nr.layout().addWidget(self.gmm_nr_clusters.native)
         self.gmm_settings_container_nr.setVisible(False)
 
-        #
         # clustering options for Mean Shift
         # selection of quantile
         self.ms_settings_container_nr = QWidget()
@@ -490,6 +494,21 @@ class ClusteringWidget(QWidget):
         # only select the columns the user requested
         selected_properties = features[selected_measurements_list]
 
+        # from a secondary thread a tuple (str, np.ndarray) is returned, where str is the name of the clustering method
+        def result_of_clustering(returned):
+            # write result back to features/properties of the labels layer
+            if custom_name == DEFAULTS["custom_name"]:
+                result_column_name = returned[0]
+            else:
+                result_column_name = custom_name
+            print(result_column_name + " predictions finished.")
+            add_column_to_layer_tabular_data(
+                labels_layer,
+                result_column_name + "_CLUSTER_ID",
+                returned[1],
+            )
+            show_table(self.viewer, labels_layer)
+
         # perform standard scaling, if selected
         if standardize:
             from sklearn.preprocessing import StandardScaler
@@ -497,119 +516,108 @@ class ClusteringWidget(QWidget):
             selected_properties = StandardScaler().fit_transform(selected_properties)
 
         # perform clustering
-        if selected_method == "KMeans":
-            y_pred = kmeans_clustering(
-                selected_properties, num_clusters, num_iterations
+        if selected_method == self.Options.KMEANS.value:
+            self.worker = create_worker(
+                kmeans_clustering,
+                selected_properties,
+                cluster_number=num_clusters,
+                iterations=num_iterations,
+                _progress=True,
             )
-            print("KMeans predictions finished.")
-            # write result back to features/properties of the labels layer
-            if custom_name == DEFAULTS["custom_name"]:
-                add_column_to_layer_tabular_data(labels_layer, "KMEANS_CLUSTER", y_pred)
-            else:
-                add_column_to_layer_tabular_data(
-                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
-                )
-
-        elif selected_method == "HDBSCAN":
-            y_pred = hdbscan_clustering(
-                selected_properties, min_cluster_size, min_nr_samples
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+        elif selected_method == self.Options.HDBSCAN.value:
+            self.worker = create_worker(
+                hdbscan_clustering,
+                selected_properties,
+                min_cluster_size=min_cluster_size,
+                min_samples=min_nr_samples,
+                _progress=True,
             )
-            print("HDBSCAN predictions finished.")
-            # write result back to features/properties of the labels layer
-            if custom_name == DEFAULTS["custom_name"]:
-                add_column_to_layer_tabular_data(
-                    labels_layer, "HDBSCAN_CLUSTER_ID", y_pred
-                )
-            else:
-                add_column_to_layer_tabular_data(
-                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
-                )
-
-        elif selected_method == "Gaussian Mixture Model (GMM)":
-            y_pred = gaussian_mixture_model(selected_properties, gmm_num_cluster)
-            print("Gaussian Mixture Model predictions finished.")
-            # write result back to features/properties of the labels layer
-            if custom_name == DEFAULTS["custom_name"]:
-                add_column_to_layer_tabular_data(labels_layer, "GMM_CLUSTER_ID", y_pred)
-            else:
-                add_column_to_layer_tabular_data(
-                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
-                )
-
-        elif selected_method == "Mean Shift (MS)":
-            y_pred = mean_shift(selected_properties, ms_quantile, ms_n_samples)
-            print("Mean Shift predictions finished.")
-            # write result back to features/properties of the labels layer
-            if custom_name == DEFAULTS["custom_name"]:
-                add_column_to_layer_tabular_data(labels_layer, "MS_CLUSTER_ID", y_pred)
-            else:
-                add_column_to_layer_tabular_data(
-                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
-                )
-
-        elif selected_method == "Agglomerative Clustering (AC)":
-            y_pred = agglomerative_clustering(
-                selected_properties, ac_n_clusters, ac_n_neighbors
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+        elif selected_method == self.Options.GMM.value:
+            self.worker = create_worker(
+                gaussian_mixture_model,
+                selected_properties,
+                cluster_number=gmm_num_cluster,
+                _progress=True,
             )
-            print("Agglomerative Clustering predictions finished.")
-            # write result back to features/properties of the labels layer
-            if custom_name == DEFAULTS["custom_name"]:
-                add_column_to_layer_tabular_data(labels_layer, "AC_CLUSTER_ID", y_pred)
-            else:
-                add_column_to_layer_tabular_data(
-                    labels_layer, custom_name + "_CLUSTER_ID", y_pred
-                )
-
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+        elif selected_method == self.Options.MS.value:
+            self.worker = create_worker(
+                mean_shift,
+                selected_properties,
+                quantile=ms_quantile,
+                n_samples=ms_n_samples,
+                _progress=True,
+            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
+        elif selected_method == self.Options.AC.value:
+            self.worker = create_worker(
+                agglomerative_clustering,
+                selected_properties,
+                cluster_number=ac_n_clusters,
+                n_neighbors=ac_n_neighbors,
+                _progress=True,
+            )
+            self.worker.returned.connect(result_of_clustering)
+            self.worker.start()
         else:
             warnings.warn(
                 "Clustering unsuccessful. Please check selected options again."
             )
             return
 
-        # show region properties table as a new widget
-        from ._utilities import show_table
-
-        show_table(self.viewer, labels_layer)
-
 
 @catch_NaNs
-def mean_shift(measurements, quantile=0.2, n_samples=50):
+def mean_shift(
+    reg_props: pd.DataFrame, quantile: float = 0.2, n_samples: int = 50
+) -> (str, np.ndarray):
     from sklearn.cluster import MeanShift, estimate_bandwidth
 
-    bandwidth = estimate_bandwidth(measurements, quantile=quantile, n_samples=n_samples)
+    bandwidth = estimate_bandwidth(reg_props, quantile=quantile, n_samples=n_samples)
 
     ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
-    return ms.fit_predict(measurements)
+    return "MS", ms.fit_predict(reg_props)
 
 
 @catch_NaNs
-def gaussian_mixture_model(measurements, cluster_number):
+def gaussian_mixture_model(
+    reg_props: pd.DataFrame, cluster_number: int
+) -> (str, np.ndarray):
     from sklearn import mixture
 
     # fit a Gaussian Mixture Model
     gmm = mixture.GaussianMixture(n_components=cluster_number, covariance_type="full")
 
-    return gmm.fit_predict(measurements)
+    return "GMM", gmm.fit_predict(reg_props)
 
 
 @catch_NaNs
-def kmeans_clustering(measurements, cluster_number, iterations):
+def kmeans_clustering(
+    reg_props: pd.DataFrame, cluster_number: int, iterations: int
+) -> (str, np.ndarray):
     from sklearn.cluster import KMeans
 
     km = KMeans(n_clusters=cluster_number, max_iter=iterations, random_state=1000)
 
-    return km.fit_predict(measurements)
+    return "KMEANS", km.fit_predict(reg_props)
 
 
 @catch_NaNs
-def agglomerative_clustering(measurements, cluster_number, n_neighbors):
+def agglomerative_clustering(
+    reg_props: pd.DataFrame, cluster_number: int, n_neighbors: int
+) -> (str, np.ndarray):
     from sklearn.cluster import AgglomerativeClustering
     from sklearn.neighbors import kneighbors_graph
 
     # source: https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html
     # connectivity matrix for structured Ward
     connectivity = kneighbors_graph(
-        measurements, n_neighbors=n_neighbors, include_self=False
+        reg_props, n_neighbors=n_neighbors, include_self=False
     )
     # make connectivity symmetric
     connectivity = 0.5 * (connectivity + connectivity.T)
@@ -618,15 +626,17 @@ def agglomerative_clustering(measurements, cluster_number, n_neighbors):
         n_clusters=cluster_number, linkage="ward", connectivity=connectivity
     )
 
-    return ac.fit_predict(measurements)
+    return "AC", ac.fit_predict(reg_props)
 
 
 @catch_NaNs
-def hdbscan_clustering(measurements, min_cluster_size, min_samples):
+def hdbscan_clustering(
+    reg_props: pd.DataFrame, min_cluster_size: int, min_samples: int
+) -> (str, np.ndarray):
     import hdbscan
 
     clustering_hdbscan = hdbscan.HDBSCAN(
         min_cluster_size=min_cluster_size, min_samples=min_samples
     )
 
-    return clustering_hdbscan.fit_predict(measurements)
+    return "HDBSCAN", clustering_hdbscan.fit_predict(reg_props)
