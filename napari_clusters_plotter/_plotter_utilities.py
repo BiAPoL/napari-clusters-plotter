@@ -59,7 +59,7 @@ def alphas_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     initial_alpha, noise_alpha = initial_and_noise_alpha()
     alpha_f = alpha_factor(n_datapoints)
 
-    if (frame_id == None) and (current_frame == None):
+    if (frame_id is None) and (current_frame is None):
         alphas_clustered=[
             0.3 * alpha_f * initial_alpha if id >= 0 
             else 0.3 *  alpha_f * noise_alpha 
@@ -87,7 +87,7 @@ def alphas_unclustered(frame_id, current_frame, n_datapoints):
     initial_alpha, nothing = initial_and_noise_alpha()
     alpha_f = alpha_factor(n_datapoints)
 
-    if (frame_id == None) and (current_frame == None):
+    if (frame_id is None) and (current_frame is None):
         return alpha_f * initial_alpha
 
     alphas_unclustered = [
@@ -103,7 +103,7 @@ def alphas_unclustered(frame_id, current_frame, n_datapoints):
 def spot_size_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     size = gen_spot_size(n_datapoints)
     
-    if (frame_id == None) and (current_frame == None):
+    if (frame_id is None) and (current_frame is None):
         spot_sizes = [
             size if id>= 0 else size/2 for id in cluster_id
         ]
@@ -126,7 +126,7 @@ def spot_size_clustered(cluster_id, frame_id, current_frame, n_datapoints):
 def spot_size_unclustered(frame_id, current_frame, n_datapoints):
     size = gen_spot_size(n_datapoints)
 
-    if (frame_id == None) and (current_frame == None):
+    if (frame_id is None) and (current_frame is None):
         return size
 
     sizes = [
@@ -136,7 +136,7 @@ def spot_size_unclustered(frame_id, current_frame, n_datapoints):
 
 
 def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
-    if (frame_id == None) and (current_frame == None):
+    if (frame_id is None) and (current_frame is None):
         colors = [
             color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id
         ]
@@ -154,7 +154,7 @@ def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
 
 def colors_unclustered(frame_id, current_frame):
     grey = "#9A9A9A"
-    if (frame_id == None) and (current_frame == None):
+    if (frame_id is None) and (current_frame is None):
         return grey
     
     highlight = gen_highlight()
