@@ -542,7 +542,7 @@ class PlotterWidget(QWidget):
             if len(self.analysed_layer.data.shape) == 4:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <=3:
+            elif len(self.analysed_layer.data.shape) <= 3:
                 frame_id = None
                 current_frame = None
             else:
@@ -555,7 +555,6 @@ class PlotterWidget(QWidget):
                 n_datapoints=number_of_points,
                 color_hex_list=colors,
             )
-            
 
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
@@ -641,7 +640,7 @@ class PlotterWidget(QWidget):
             if len(self.analysed_layer.data.shape) == 4:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <=3:
+            elif len(self.analysed_layer.data.shape) <= 3:
                 frame_id = None
                 current_frame = None
             else:

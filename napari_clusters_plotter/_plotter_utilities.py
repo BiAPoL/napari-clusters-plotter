@@ -1,4 +1,3 @@
-import numpy as np
 # TODO Docstrings
 
 def unclustered_plot_parameters(
@@ -65,8 +64,8 @@ def alphas_clustered(cluster_id, frame_id, current_frame, n_datapoints):
             else 0.3 *  alpha_f * noise_alpha 
             for id in cluster_id
         ]
-        return alphas_clustered   
-  
+        return alphas_clustered
+
     alphas_clustered = []
     for id, tp in zip(cluster_id, frame_id):
         multiplier = 0.3
@@ -156,11 +155,9 @@ def colors_unclustered(frame_id, current_frame):
     grey = "#9A9A9A"
     if (frame_id is None) and (current_frame is None):
         return grey
-    
+
     highlight = gen_highlight()
-    colors = [
-        highlight if tp == current_frame else grey for tp in frame_id
-        ]
+    colors = [highlight if tp == current_frame else grey for tp in frame_id]
     return colors
 
 
