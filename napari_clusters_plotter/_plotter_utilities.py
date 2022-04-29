@@ -1,5 +1,6 @@
 # TODO Docstrings
 
+
 def unclustered_plot_parameters(
     frame_id,
     current_frame,
@@ -59,9 +60,8 @@ def alphas_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     alpha_f = alpha_factor(n_datapoints)
 
     if (frame_id is None) and (current_frame is None):
-        alphas_clustered=[
-            0.3 * alpha_f * initial_alpha if id >= 0 
-            else 0.3 *  alpha_f * noise_alpha 
+        alphas_clustered = [
+            0.3 * alpha_f * initial_alpha if id >= 0 else 0.3 * alpha_f * noise_alpha
             for id in cluster_id
         ]
         return alphas_clustered
@@ -101,11 +101,9 @@ def alphas_unclustered(frame_id, current_frame, n_datapoints):
 
 def spot_size_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     size = gen_spot_size(n_datapoints)
-    
+
     if (frame_id is None) and (current_frame is None):
-        spot_sizes = [
-            size if id>= 0 else size/2 for id in cluster_id
-        ]
+        spot_sizes = [size if id >= 0 else size / 2 for id in cluster_id]
         return spot_sizes
 
     spot_sizes = []
@@ -136,9 +134,7 @@ def spot_size_unclustered(frame_id, current_frame, n_datapoints):
 
 def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
     if (frame_id is None) and (current_frame is None):
-        colors = [
-            color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id
-        ]
+        colors = [color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id]
         return colors
 
     highlight = gen_highlight()
