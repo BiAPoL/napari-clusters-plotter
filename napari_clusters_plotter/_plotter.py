@@ -13,7 +13,7 @@ from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt, QTimer
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QComboBox,
@@ -609,4 +609,3 @@ class PlotterWidget(QWidget):
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-
