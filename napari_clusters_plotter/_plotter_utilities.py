@@ -1,3 +1,6 @@
+import numpy as np
+# TODO Docstrings
+
 def unclustered_plot_parameters(
     frame_id,
     current_frame,
@@ -55,18 +58,24 @@ def alphas_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     """
     initial_alpha, noise_alpha = initial_and_noise_alpha()
     alpha_f = alpha_factor(n_datapoints)
-    alphas_clustered = []
 
+    if (frame_id == None) and (current_frame == None):
+        alphas_clustered=[
+            0.3 * alpha_f * initial_alpha if id >= 0 
+            else 0.3 *  alpha_f * noise_alpha 
+            for id in cluster_id
+        ]
+        return alphas_clustered   
+  
+    alphas_clustered = []
     for id, tp in zip(cluster_id, frame_id):
         multiplier = 0.3
         if tp == current_frame:
             multiplier = 1
-
         if id >= 0:
             alphas_clustered.append(multiplier * alpha_f * initial_alpha)
         else:
             alphas_clustered.append(multiplier * alpha_f * noise_alpha)
-
     return alphas_clustered
 
 
@@ -77,6 +86,9 @@ def alphas_unclustered(frame_id, current_frame, n_datapoints):
     """
     initial_alpha, nothing = initial_and_noise_alpha()
     alpha_f = alpha_factor(n_datapoints)
+
+    if (frame_id == None) and (current_frame == None):
+        return alpha_f * initial_alpha
 
     alphas_unclustered = [
         alpha_f * initial_alpha
@@ -90,8 +102,14 @@ def alphas_unclustered(frame_id, current_frame, n_datapoints):
 
 def spot_size_clustered(cluster_id, frame_id, current_frame, n_datapoints):
     size = gen_spot_size(n_datapoints)
-    spot_sizes = []
+    
+    if (frame_id == None) and (current_frame == None):
+        spot_sizes = [
+            size if id>= 0 else size/2 for id in cluster_id
+        ]
+        return spot_sizes
 
+    spot_sizes = []
     for id, tp in zip(cluster_id, frame_id):
         multiplier = 1
         if tp == current_frame:
@@ -107,14 +125,23 @@ def spot_size_clustered(cluster_id, frame_id, current_frame, n_datapoints):
 
 def spot_size_unclustered(frame_id, current_frame, n_datapoints):
     size = gen_spot_size(n_datapoints)
+
+    if (frame_id == None) and (current_frame == None):
+        return size
+
     sizes = [
         size * frame_spot_factor() if tp == current_frame else size for tp in frame_id
     ]
-
     return sizes
 
 
 def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
+    if (frame_id == None) and (current_frame == None):
+        colors = [
+            color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id
+        ]
+        return colors
+
     highlight = gen_highlight()
     colors = [
         highlight
@@ -126,12 +153,19 @@ def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
 
 
 def colors_unclustered(frame_id, current_frame):
-    highlight = gen_highlight()
     grey = "#9A9A9A"
-    colors = [highlight if tp == current_frame else grey for tp in frame_id]
+    if (frame_id == None) and (current_frame == None):
+        return grey
+    
+    highlight = gen_highlight()
+    colors = [
+        highlight if tp == current_frame else grey for tp in frame_id
+        ]
     return colors
 
 
+# These functions generate values used by other functions
+#  which determine what the visualisation looks like
 def initial_and_noise_alpha():
     initial_alpha = 0.7
     noise_alpha = 0.3

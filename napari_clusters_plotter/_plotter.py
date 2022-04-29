@@ -390,6 +390,8 @@ class PlotterWidget(QWidget):
         self.frame = self.viewer.dims.current_step[0]
 
         def frame_changed(event):
+            if self.viewer.dims.ndim <= 3:
+                return
             frame = event.value[0]
             if (not self.old_frame) or (self.old_frame != frame):
                 if self.labels_select.value is None:
@@ -537,14 +539,23 @@ class PlotterWidget(QWidget):
 
             # get long colormap from function
             colors = get_nice_colormap()
+            if len(self.analysed_layer.data.shape) == 4:
+                frame_id = features[POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <=3:
+                frame_id = None
+                current_frame = None
+            else:
+                warnings.warn("Image dimensions too high for processing!")
 
             a, sizes, colors_plot = clustered_plot_parameters(
                 cluster_id=self.cluster_ids,
-                frame_id=features[POINTER].tolist(),
-                current_frame=self.frame,
+                frame_id=frame_id,
+                current_frame=current_frame,
                 n_datapoints=number_of_points,
                 color_hex_list=colors,
             )
+            
 
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
@@ -583,7 +594,8 @@ class PlotterWidget(QWidget):
             # Generating the cluster image
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
-                # generate the cluster image
+                # generate the cluster image -> TODO change so possible
+                # with 2D timelapse data
                 if len(self.analysed_layer.data.shape) == 4:
                     max_timepoint = features[POINTER].max() + 1
 
@@ -602,6 +614,7 @@ class PlotterWidget(QWidget):
                     )
                 else:
                     warnings.warn("Image dimensions too high for processing!")
+                    return
 
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
@@ -625,9 +638,18 @@ class PlotterWidget(QWidget):
                 self.viewer.layers.selection.add(s)
 
         else:
+            if len(self.analysed_layer.data.shape) == 4:
+                frame_id = features[POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <=3:
+                frame_id = None
+                current_frame = None
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+
             a, sizes, colors_plot = unclustered_plot_parameters(
-                frame_id=features[POINTER].tolist(),
-                current_frame=self.frame,
+                frame_id=frame_id,
+                current_frame=current_frame,
                 n_datapoints=number_of_points,
             )
 

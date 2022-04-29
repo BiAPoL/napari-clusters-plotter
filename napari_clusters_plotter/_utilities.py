@@ -103,7 +103,7 @@ def generate_cluster_image(label_image, predictionlist):
 
     return output
 
-
+# TODO docstring
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
     import dask.array as da
     from dask import delayed
@@ -123,6 +123,14 @@ def dask_cluster_image_timelapse(label_image, prediction_list_list):
     stack = da.stack(dask_arrays, axis=0)
 
     return stack
+
+def reshape_2D_timelapse(timelapse_2d):
+    """
+    Given a 2D timelapse of shape (t,y,x) returns a modified 
+    array of shape (t,z=1,y,x)
+    """
+    return timelapse_2d[:,np.newaxis,:,:]
+
 
 
 def get_nice_colormap():
