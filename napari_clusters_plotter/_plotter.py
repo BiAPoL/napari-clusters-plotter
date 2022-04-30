@@ -13,7 +13,7 @@ from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt, QTimer
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QComboBox,
@@ -442,45 +442,6 @@ class PlotterWidget(QWidget):
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
 
-    def clicked_label_in_view(self, event, event1):
-        # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
-        QTimer.singleShot(200, self.after_clicked_label_in_view)
-
-    def after_clicked_label_in_view(self):
-        clustering_ID = "MANUAL_CLUSTER_ID"
-        features = get_layer_tabular_data(self.analysed_layer)
-
-        # save manual clustering; select only the label that's currently selected on the layer
-        if features["label"].size > self.analysed_layer.data.max():
-            print(True)
-            inside = np.ones(features["label"].size)
-            print(f"Inside length: {len(inside)}")
-            selected_label = self.analysed_layer.selected_label
-            for i, label in enumerate(features["label"]):
-                if label == selected_label:
-                    inside[i] = 0
-                    print(
-                        "i = "
-                        + str(i)
-                        + "; label = "
-                        + str(label)
-                        + " has been set to 0."
-                    )
-            features[clustering_ID] = inside
-
-        else:
-            inside = np.ones(self.analysed_layer.data.max())
-            inside[self.analysed_layer.selected_label - 1] = 0
-            features[clustering_ID] = inside
-
-        self.run(
-            features,
-            self.plot_x_axis_name,
-            self.plot_y_axis_name,
-            plot_cluster_name=clustering_ID,
-        )
-        self.graphics_widget.draw()
-
     def update_axes_list(self):
         selected_layer = self.labels_select.value
 
@@ -669,10 +630,3 @@ class PlotterWidget(QWidget):
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-
-        # remove interaction from all label layers, just in case
-        for layer in self.viewer.layers:
-            if self.clicked_label_in_view in layer.mouse_drag_callbacks:
-                layer.mouse_drag_callbacks.remove(self.clicked_label_in_view)
-
-        self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
