@@ -4,6 +4,7 @@ from ._clustering import ClusteringWidget
 from ._dimensionality_reduction import DimensionalityReductionWidget
 from ._measure import MeasureWidget
 from ._plotter import PlotterWidget
+from ._annotation_to_clusters import annotation_to_cluster_id
 
 
 @napari_hook_implementation
@@ -13,4 +14,5 @@ def napari_experimental_provide_dock_widget():
         PlotterWidget,
         DimensionalityReductionWidget,
         ClusteringWidget,
+        annotation_to_cluster_id,
     ]
