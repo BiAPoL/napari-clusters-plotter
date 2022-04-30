@@ -121,7 +121,7 @@ def test_gaussian_mixture_model():
 
     # gaussian_mixture_model returns (str, np.ndarray), where the first item is algorithm name
     result = gaussian_mixture_model(measurements, cluster_number=2)
-    print(result)
+    print(result[1])
 
     assert len(np.unique(result[1])) == n_centers
     assert np.array_equal(true_class, (result[1])) or np.array_equal(
