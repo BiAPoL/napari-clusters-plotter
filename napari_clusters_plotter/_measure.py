@@ -18,6 +18,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from tqdm import tqdm
 
 from ._utilities import set_features, show_table, widgets_inactive
 
@@ -93,6 +94,17 @@ class MeasureWidget(QWidget):
         self.closest_points_list.setText("2, 3, 4")
         self.closest_points_container.setVisible(False)
 
+        # checkbox whether image is a timelapse
+        self.timelapse_container = QWidget()
+        self.timelapse_container.setLayout(QHBoxLayout())
+        self.timelapse = create_widget(
+            widget_type="CheckBox",
+            name="Timelapse",
+            value=False,
+        )
+
+        self.timelapse_container.layout().addWidget(self.timelapse.native)
+
         # Run button
         run_button_container = QWidget()
         run_button_container.setLayout(QHBoxLayout())
@@ -106,6 +118,7 @@ class MeasureWidget(QWidget):
         self.layout().addWidget(reg_props_container)
         self.layout().addWidget(self.reg_props_file_widget)
         self.layout().addWidget(self.closest_points_container)
+        self.layout().addWidget(self.timelapse_container)
         self.layout().addWidget(run_button_container)
         self.layout().setSpacing(0)
 
@@ -117,6 +130,14 @@ class MeasureWidget(QWidget):
             if self.image_select.value is None:
                 warnings.warn("No image was selected!")
                 return
+
+            if (
+                not self.timelapse.value
+                and len(self.image_select.value.data.shape) == 4
+            ):
+                warnings.warn("Please check that timelapse checkbox is checked!")
+                return
+
             self.run(
                 self.image_select.value,
                 self.labels_select.value,
@@ -125,6 +146,7 @@ class MeasureWidget(QWidget):
                 .replace("\\", "/")
                 .replace("//", "/"),
                 self.closest_points_list.text(),
+                self.timelapse.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -168,12 +190,15 @@ class MeasureWidget(QWidget):
         region_props_source,
         reg_props_file,
         n_closest_points_str,
+        timelapse,
     ):
         print("Measurement running")
         print("Region properties source: " + str(region_props_source))
 
         def result_of_get_regprops(returned):
             # saving measurement results into the properties or features of the analysed labels layer
+            # df = pd.DataFrame(returned)
+            # df_without_bg = df.drop([0])
             set_features(labels_layer, returned)
             print("Measured:", list(returned.keys()))
             show_table(self.viewer, labels_layer)
@@ -199,11 +224,11 @@ class MeasureWidget(QWidget):
 
         elif "Measure now" in region_props_source:
             if "shape" in region_props_source or "intensity" in region_props_source:
-
                 self.worker = create_worker(
                     get_regprops_from_regprops_source,
                     intensity_image=image_layer.data,
                     label_image=labels_layer.data,
+                    timelapse=timelapse,
                     region_props_source=region_props_source,
                     _progress=True,
                 )
@@ -219,6 +244,7 @@ class MeasureWidget(QWidget):
                     intensity_image=image_layer.data,
                     label_image=labels_layer.data,
                     region_props_source=region_props_source,
+                    timelapse=timelapse,
                     n_closest_points_list=n_closest_points_list,
                     _progress=True,
                 )
@@ -231,13 +257,19 @@ class MeasureWidget(QWidget):
 
 
 def get_regprops_from_regprops_source(
-    intensity_image, label_image, region_props_source, n_closest_points_list=[2, 3, 4]
-):
+    intensity_image,
+    label_image,
+    region_props_source: str,
+    timelapse: bool,
+    n_closest_points_list: list = [2, 3, 4],
+) -> pd.DataFrame:
     """
     Calculate Region properties based on the region properties source string
 
     Parameters
     ----------
+    timelapse : bool
+        true if original image is a timelapse
     intensity_image : numpy array
         original image from which the labels were generated
     label_image : numpy array
@@ -247,77 +279,95 @@ def get_regprops_from_regprops_source(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-    # and select columns, depending on if intensities and/or shape were selected
+
+    n_closest_points_list = list(n_closest_points_list)
+    # and select columns, depending on if intensities, neighborhood
+    # and/or shape were selected
     columns = ["label", "centroid_x", "centroid_y", "centroid_z"]
-
-    if "intensity" in region_props_source:
-        columns = columns + [
-            "min_intensity",
-            "max_intensity",
-            "sum_intensity",
-            "mean_intensity",
-            "standard_deviation_intensity",
-        ]
-
-    if "shape" in region_props_source:
-        columns = columns + [
-            "area",
-            "mean_distance_to_centroid",
-            "max_distance_to_centroid",
-            "mean_max_distance_to_centroid_ratio",
-        ]
-
-    # Determine Region properties using clEsperanto
-    reg_props = cle.statistics_of_labelled_pixels(intensity_image, label_image)
-
-    if "shape" in region_props_source or "intensity" in region_props_source:
-        return {
-            column: value for column, value in reg_props.items() if column in columns
-        }
-
-    if "neighborhood" in region_props_source:
-        return region_props_with_neighborhood_data(
-            columns, label_image, n_closest_points_list, reg_props
-        )
-
-
-def region_props_with_neighborhood_data(
-    columns, label_image, n_closest_points_list, reg_props
-):
-    """
-    Calculate neighborhood regionproperties and combine with other regionproperties
-
-    Parameters
-    ----------
-    columns: list
-        list of names of regionproperties
-    label_image : numpy array
-        segmented image with background = 0 and labels >= 1
-    reg_props: dict
-        region properties to be combined with
-    n_closest_points_list: list
-        number of closest neighbors for which neighborhood properties will be calculated
-    """
-    if isinstance(label_image, da.core.Array):
-        label_image = np.asarray(label_image)
-    # get the lowest label index to adjust sizes of measurement arrays
-    min_label = int(np.min(label_image[np.nonzero(label_image)]))
-
-    columns = columns + [
+    intensity_columns = [
         "min_intensity",
         "max_intensity",
         "sum_intensity",
         "mean_intensity",
         "standard_deviation_intensity",
+    ]
+    shape_columns = [
         "area",
         "mean_distance_to_centroid",
         "max_distance_to_centroid",
         "mean_max_distance_to_centroid_ratio",
     ]
+    if "intensity" in region_props_source:
+        columns += intensity_columns
+    if "shape" in region_props_source:
+        columns += shape_columns
+    if "neighborhood" in region_props_source:
+        columns += shape_columns
+        columns += intensity_columns
 
-    region_props = {
-        column: value for column, value in reg_props.items() if column in columns
-    }
+    if timelapse:
+        reg_props_all = []
+        for t, timepoint in enumerate(tqdm(range(intensity_image.shape[0]))):
+            all_reg_props_single_t = pd.DataFrame(
+                cle.statistics_of_labelled_pixels(
+                    intensity_image[timepoint], label_image[timepoint]
+                )
+            )
+
+            if "neighborhood" in region_props_source:
+                reg_props_single_t = region_props_with_neighborhood_data(
+                    label_image[timepoint],
+                    n_closest_points_list,
+                    all_reg_props_single_t[columns],
+                )
+            else:
+                reg_props_single_t = all_reg_props_single_t[columns]
+
+            timepoint_column = pd.DataFrame(
+                {"frame": np.full(len(reg_props_single_t), t)}
+            )
+            reg_props_with_tp_column = pd.concat(
+                [reg_props_single_t, timepoint_column], axis=1
+            )
+            reg_props_all.append(reg_props_with_tp_column)
+
+        reg_props = pd.concat(reg_props_all)
+        print("Reg props measured for each timepoint.")
+        return reg_props
+
+    reg_props = pd.DataFrame(
+        cle.statistics_of_labelled_pixels(intensity_image, label_image)
+    )
+    print("Reg props not measured for a timelapse.")
+    if "neighborhood" in region_props_source:
+        return region_props_with_neighborhood_data(
+            label_image, n_closest_points_list, reg_props[columns]
+        )
+
+    return reg_props[columns]
+
+
+def region_props_with_neighborhood_data(
+    label_image, n_closest_points_list: list, reg_props: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Calculate neighborhood region properties and combine with other region properties
+
+    Parameters
+    ----------
+    label_image : numpy array or dask array
+        segmented image with background = 0 and labels >= 1
+    reg_props: Dataframe
+        region properties to be combined with
+    n_closest_points_list: list
+        number of closest neighbors for which neighborhood properties will be calculated
+    """
+    neighborhood_properties = {}
+    if isinstance(label_image, da.core.Array):
+        label_image = np.asarray(label_image)
+
+    # get the lowest label index to adjust sizes of measurement arrays
+    min_label = int(np.min(label_image[np.nonzero(label_image)]))
 
     # determine neighbors of cells
     touch_matrix = cle.generate_touch_matrix(label_image)
@@ -348,7 +398,8 @@ def region_props_with_neighborhood_data(
         )[0]
 
         # addition to the regionprops dictionary
-        region_props[
+
+        neighborhood_properties[
             f"avg distance of {i} closest points"
         ] = distance_of_n_closest_points
 
@@ -359,7 +410,7 @@ def region_props_with_neighborhood_data(
     )
 
     # addition to the regionprops dictionary
-    region_props["touching neighbor count"] = touching_neighbor_count_formatted
-    print("Measurements Completed.")
-
-    return region_props
+    neighborhood_properties[
+        "touching neighbor count"
+    ] = touching_neighbor_count_formatted
+    return pd.concat([reg_props, pd.DataFrame(neighborhood_properties)], axis=1)
