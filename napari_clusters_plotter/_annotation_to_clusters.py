@@ -3,6 +3,7 @@ from napari.types import LabelsData
 from napari_tools_menu import register_function
 from skimage.measure import regionprops_table
 import numpy as np
+import warnings
 
 from ._utilities import add_column_to_layer_tabular_data
 
@@ -14,6 +15,7 @@ def Annotation_to_Cluster_ID(
     Unannotated_Objects_Clustered: bool = True, 
     viewer: Viewer = None
 ) -> None:
+    print(label_image.shape)
     if len(label_image.shape) <= 3:
         regionproperties = regionprops_table(
             label_image, intensity_image=annotation, properties=("label", "intensity_max")
@@ -22,10 +24,14 @@ def Annotation_to_Cluster_ID(
     elif len(label_image.shape) == 4:
         regp_list = [
             regionprops_table(
-            label, intensity_image=anno, properties=("label", "intensity_max")
-            ) for label,anno in zip(label_image,annotation)
+                label, intensity_image=anno, properties=("label", "intensity_max")
+            ) 
+            for label,anno in zip(label_image,annotation)
         ]
         intensities = np.concatenate([regp['intensity_max'] for regp in regp_list])
+    else:
+        warnings.warn("Image dimensions too high for processing!")
+        return
 
 
     if Unannotated_Objects_Clustered:
