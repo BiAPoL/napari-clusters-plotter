@@ -7,13 +7,20 @@ from ._utilities import add_column_to_layer_tabular_data
 
 
 @register_function(menu="Measurement > Convert annotation to cluster ID (ncp)")
-def annotation_to_cluster_id(
-    label_image: LabelsData, annotation: LabelsData, viewer: Viewer = None
+def Annotation_to_Cluster_ID(
+    label_image: LabelsData, 
+    annotation: LabelsData, 
+    Unannotated_Objects_Clustered: bool = True, 
+    viewer: Viewer = None
 ) -> None:
     regionproperties = regionprops_table(
         label_image, intensity_image=annotation, properties=("label", "intensity_max")
     )
-    data = regionproperties["intensity_max"]
+    if Unannotated_Objects_Clustered:
+        data = regionproperties['intensity_max']
+    else:
+        data = regionproperties['intensity_max']-1
+    
 
     if viewer is not None:
         # store the layer for saving results later
