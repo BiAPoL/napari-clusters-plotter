@@ -2,6 +2,7 @@ from napari import Viewer
 from napari.types import LabelsData
 from napari_tools_menu import register_function
 from skimage.measure import regionprops_table
+import numpy as np
 
 from ._utilities import add_column_to_layer_tabular_data
 
@@ -13,13 +14,24 @@ def Annotation_to_Cluster_ID(
     Unannotated_Objects_Clustered: bool = True, 
     viewer: Viewer = None
 ) -> None:
-    regionproperties = regionprops_table(
-        label_image, intensity_image=annotation, properties=("label", "intensity_max")
-    )
+    if len(label_image.shape) <= 3:
+        regionproperties = regionprops_table(
+            label_image, intensity_image=annotation, properties=("label", "intensity_max")
+        )
+        intensities = regionproperties['intensity_max']
+    elif len(label_image.shape) == 4:
+        regp_list = [
+            regionprops_table(
+            label, intensity_image=anno, properties=("label", "intensity_max")
+            ) for label,anno in zip(label_image,annotation)
+        ]
+        intensities = np.concatenate([regp['intensity_max'] for regp in regp_list])
+
+
     if Unannotated_Objects_Clustered:
-        data = regionproperties['intensity_max']
+        data = intensities
     else:
-        data = regionproperties['intensity_max']-1
+        data = intensities-1
     
 
     if viewer is not None:
