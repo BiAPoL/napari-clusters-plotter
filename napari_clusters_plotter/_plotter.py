@@ -1,3 +1,4 @@
+from cmath import nan
 import os
 import warnings
 from pathlib import Path as PathL
@@ -32,10 +33,12 @@ from ._utilities import (
     get_layer_tabular_data,
     get_nice_colormap,
 )
-
+from ._annotation_to_clusters import ANNOTATION_ID
 # can be changed to frame or whatever we decide to use
 POINTER = "frame"
 ICON_ROOT = PathL(__file__).parent / "icons"
+MANUAL_CLUSTER_ID = "MANUAL_CLUSTER_ID"
+
 
 
 # Class below was based upon matplotlib lasso selection example:
@@ -242,19 +245,18 @@ class PlotterWidget(QWidget):
 
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
-            clustering_ID = "MANUAL_CLUSTER_ID"
 
             features = get_layer_tabular_data(self.analysed_layer)
 
             modifiers = QGuiApplication.keyboardModifiers()
-            if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features[clustering_ID].to_numpy()
+            if modifiers == Qt.ShiftModifier and MANUAL_CLUSTER_ID in features.keys():
+                former_clusters = features[MANUAL_CLUSTER_ID].to_numpy()
                 former_clusters[inside] = np.max(former_clusters) + 1
-                features.update(pd.DataFrame(former_clusters, columns=[clustering_ID]))
+                features.update(pd.DataFrame(former_clusters, columns=[MANUAL_CLUSTER_ID]))
             else:
-                features[clustering_ID] = inside.astype(int)
+                features[MANUAL_CLUSTER_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
-                self.analysed_layer, clustering_ID, features[clustering_ID]
+                self.analysed_layer, MANUAL_CLUSTER_ID, features[MANUAL_CLUSTER_ID]
             )
 
             # redraw the whole plot
@@ -262,7 +264,7 @@ class PlotterWidget(QWidget):
                 features,
                 self.plot_x_axis_name,
                 self.plot_y_axis_name,
-                plot_cluster_name=clustering_ID,
+                plot_cluster_name=MANUAL_CLUSTER_ID,
             )
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
@@ -496,7 +498,12 @@ class PlotterWidget(QWidget):
         ):
             # fill all prediction nan values with -1 -> turns them
             # into noise points
-            self.cluster_ids = features[plot_cluster_name].fillna(-1)
+            nan_removed_cl_id = features[plot_cluster_name].fillna(-1)
+            modify_cluster_ids = plot_cluster_name == ANNOTATION_ID or plot_cluster_name == MANUAL_CLUSTER_ID
+            if modify_cluster_ids:
+                self.cluster_ids = nan_removed_cl_id.to_numpy() -1
+            else:
+                self.cluster_ids = nan_removed_cl_id
 
             # get long colormap from function
             colors = get_nice_colormap()
@@ -560,7 +567,8 @@ class PlotterWidget(QWidget):
                     max_timepoint = features[POINTER].max() + 1
 
                     prediction_lists_per_timepoint = [
-                        features.loc[features[POINTER] == i][plot_cluster_name].tolist()
+                        features.loc[features[POINTER] == i][plot_cluster_name].to_numpy() -1
+                        if modify_cluster_ids else features.loc[features[POINTER] == i][plot_cluster_name].to_numpy()
                         for i in range(max_timepoint)
                     ]
 
