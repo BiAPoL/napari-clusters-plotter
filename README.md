@@ -181,10 +181,11 @@ pip install napari-clusters-plotter
 
 - `WARNING: No ICDs were found` or `LogicError: clGetPlatformIDs failed: PLATFORM_NOT_FOUND_KHR`
 
-Make your system-wide implementation visible by installing ocl-icd-system conda package:
+Make your system-wide implementation visible by installing either of the following conda packages:
 
 ```
 conda install -c conda-forge ocl-icd-system
+conda install -c conda-forge ocl_icd_wrapper_apple
 ```
 
 ## Contributing
