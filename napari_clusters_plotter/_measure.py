@@ -279,7 +279,6 @@ def get_regprops_from_regprops_source(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-
     n_closest_points_list = list(n_closest_points_list)
     # and select columns, depending on if intensities, neighborhood
     # and/or shape were selected
