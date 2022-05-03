@@ -37,6 +37,9 @@ A table with the measurements will open:
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/measure.png)
 
+If you have 3D timelapse data this will automatically be detected. In case you have 2D timelapse data you need to
+convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D timelapse (time-slicer)`, 
+which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
 Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
 interact with labels and see which row of the table corresponds to which labelled object. For this, use the Pick mode
 in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
