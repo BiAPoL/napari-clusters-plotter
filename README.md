@@ -39,7 +39,10 @@ A table with the measurements will open:
 
 If you have 3D timelapse data this will automatically be detected. In case you have 2D timelapse data you need to
 convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D timelapse (time-slicer)`, 
-which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
+which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer). 
+Note that tables for timelapse data will include an additional column named "frame", which indicates which slice in
+time the given row refers to. If you want to import your own csv files for timelapse data make sure to include this column!
+
 Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
 interact with labels and see which row of the table corresponds to which labelled object. For this, use the Pick mode
 in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
@@ -73,10 +76,11 @@ mode in napari and see which data point in the plot it corresponds to.
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.gif)
 
 
-### Dimensionality reduction: UMAP or t-SNE
+### Dimensionality reduction: UMAP, t-SNE or PCA
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
-using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/) or [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html).
+using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/), [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
+or [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
 To apply it to your data use the menu `Tools > Measurement > Dimensionality reduction (ncp)`.
 Select the label image that was analysed and in the list below, select all measurements that should be
 dimensionality reduced. By default, all measurements are selected in the box. If you cannot see any measurements, but
