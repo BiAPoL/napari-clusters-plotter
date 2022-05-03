@@ -38,8 +38,8 @@ A table with the measurements will open:
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/measure.png)
 
 If you have 3D timelapse data this will automatically be detected. In case you have 2D timelapse data you need to
-convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D timelapse (time-slicer)`, 
-which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer). 
+convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D timelapse (time-slicer)`,
+which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
 Note that tables for timelapse data will include an additional column named "frame", which indicates which slice in
 time the given row refers to. If you want to import your own csv files for timelapse data make sure to include this column!
 

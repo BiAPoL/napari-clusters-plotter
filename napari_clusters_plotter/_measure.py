@@ -20,8 +20,8 @@ from qtpy.QtWidgets import (
 )
 from tqdm import tqdm
 
-from ._utilities import set_features, show_table, widgets_inactive
 from ._plotter import POINTER
+from ._utilities import set_features, show_table, widgets_inactive
 
 
 @register_dock_widget(
@@ -119,7 +119,6 @@ class MeasureWidget(QWidget):
             if self.image_select.value is None:
                 warnings.warn("No image was selected!")
                 return
-
 
             self.run(
                 self.image_select.value,
@@ -255,7 +254,7 @@ def get_regprops_from_regprops_source(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-    timelapse = (len(intensity_image.shape) == 4)
+    timelapse = len(intensity_image.shape) == 4
     n_closest_points_list = list(n_closest_points_list)
     # and select columns, depending on if intensities, neighborhood
     # and/or shape were selected
