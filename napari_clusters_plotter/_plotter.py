@@ -427,7 +427,7 @@ class PlotterWidget(QWidget):
         # update axes combo boxes once a new label layer is selected
         self.labels_select.changed.connect(self.update_axes_list)
 
-        # update axes combo boxes automatically if features of 
+        # update axes combo boxes automatically if features of
         # layer are changed
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)

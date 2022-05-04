@@ -270,7 +270,6 @@ class DimensionalityReductionWidget(QWidget):
         run_button.clicked.connect(run_clicked)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
-        
 
         # update measurements list when a new labels layer is selected
         self.labels_select.changed.connect(self.update_properties_list)
@@ -380,7 +379,9 @@ class DimensionalityReductionWidget(QWidget):
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
-            self.last_connected.events.properties.disconnect(self.update_properties_list)
+            self.last_connected.events.properties.disconnect(
+                self.update_properties_list
+            )
         self.labels_select.value.events.properties.connect(self.update_properties_list)
         self.last_connected = self.labels_select.value
 
