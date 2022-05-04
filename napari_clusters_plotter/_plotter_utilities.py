@@ -166,11 +166,11 @@ def initial_and_noise_alpha():
 
 
 def alpha_factor(n_datapoints):
-    return min(1, (max(0.5, 8000 / n_datapoints)))
+    return min(1, (max(0.1,8000 / n_datapoints)))
 
 
 def frame_spot_factor():
-    return 2
+    return 5
 
 
 def gen_spot_size(n_datapoints):
