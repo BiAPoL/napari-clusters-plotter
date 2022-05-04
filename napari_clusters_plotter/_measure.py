@@ -20,6 +20,7 @@ from qtpy.QtWidgets import (
 )
 from tqdm import tqdm
 
+from ._plotter import POINTER
 from ._utilities import set_features, show_table, widgets_inactive
 
 
@@ -94,17 +95,6 @@ class MeasureWidget(QWidget):
         self.closest_points_list.setText("2, 3, 4")
         self.closest_points_container.setVisible(False)
 
-        # checkbox whether image is a timelapse
-        self.timelapse_container = QWidget()
-        self.timelapse_container.setLayout(QHBoxLayout())
-        self.timelapse = create_widget(
-            widget_type="CheckBox",
-            name="Timelapse",
-            value=False,
-        )
-
-        self.timelapse_container.layout().addWidget(self.timelapse.native)
-
         # Run button
         run_button_container = QWidget()
         run_button_container.setLayout(QHBoxLayout())
@@ -118,7 +108,6 @@ class MeasureWidget(QWidget):
         self.layout().addWidget(reg_props_container)
         self.layout().addWidget(self.reg_props_file_widget)
         self.layout().addWidget(self.closest_points_container)
-        self.layout().addWidget(self.timelapse_container)
         self.layout().addWidget(run_button_container)
         self.layout().setSpacing(0)
 
@@ -131,13 +120,6 @@ class MeasureWidget(QWidget):
                 warnings.warn("No image was selected!")
                 return
 
-            if (
-                not self.timelapse.value
-                and len(self.image_select.value.data.shape) == 4
-            ):
-                warnings.warn("Please check that timelapse checkbox is checked!")
-                return
-
             self.run(
                 self.image_select.value,
                 self.labels_select.value,
@@ -146,7 +128,6 @@ class MeasureWidget(QWidget):
                 .replace("\\", "/")
                 .replace("//", "/"),
                 self.closest_points_list.text(),
-                self.timelapse.value,
             )
 
         run_button.clicked.connect(run_clicked)
@@ -190,7 +171,6 @@ class MeasureWidget(QWidget):
         region_props_source,
         reg_props_file,
         n_closest_points_str,
-        timelapse,
     ):
         print("Measurement running")
         print("Region properties source: " + str(region_props_source))
@@ -228,7 +208,6 @@ class MeasureWidget(QWidget):
                     get_regprops_from_regprops_source,
                     intensity_image=image_layer.data,
                     label_image=labels_layer.data,
-                    timelapse=timelapse,
                     region_props_source=region_props_source,
                     _progress=True,
                 )
@@ -244,7 +223,6 @@ class MeasureWidget(QWidget):
                     intensity_image=image_layer.data,
                     label_image=labels_layer.data,
                     region_props_source=region_props_source,
-                    timelapse=timelapse,
                     n_closest_points_list=n_closest_points_list,
                     _progress=True,
                 )
@@ -260,7 +238,6 @@ def get_regprops_from_regprops_source(
     intensity_image,
     label_image,
     region_props_source: str,
-    timelapse: bool,
     n_closest_points_list: list = [2, 3, 4],
 ) -> pd.DataFrame:
     """
@@ -268,8 +245,6 @@ def get_regprops_from_regprops_source(
 
     Parameters
     ----------
-    timelapse : bool
-        true if original image is a timelapse
     intensity_image : numpy array
         original image from which the labels were generated
     label_image : numpy array
@@ -279,7 +254,7 @@ def get_regprops_from_regprops_source(
     n_closest_points_list: list
         number of closest neighbors for which neighborhood properties will be calculated
     """
-
+    timelapse = len(intensity_image.shape) == 4
     n_closest_points_list = list(n_closest_points_list)
     # and select columns, depending on if intensities, neighborhood
     # and/or shape were selected
@@ -324,7 +299,7 @@ def get_regprops_from_regprops_source(
                 reg_props_single_t = all_reg_props_single_t[columns]
 
             timepoint_column = pd.DataFrame(
-                {"frame": np.full(len(reg_props_single_t), t)}
+                {POINTER: np.full(len(reg_props_single_t), t)}
             )
             reg_props_with_tp_column = pd.concat(
                 [reg_props_single_t, timepoint_column], axis=1
