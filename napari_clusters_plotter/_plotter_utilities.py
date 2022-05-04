@@ -174,7 +174,7 @@ def frame_spot_factor():
 
 
 def gen_spot_size(n_datapoints):
-    return min(5, (max(0.05, 1000 / n_datapoints))) * 2
+    return min(10, (max(0.1, 8000 / n_datapoints))) * 2
 
 
 def gen_highlight():
