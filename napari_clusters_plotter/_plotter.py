@@ -427,6 +427,11 @@ class PlotterWidget(QWidget):
         # update axes combo boxes once a new label layer is selected
         self.labels_select.changed.connect(self.update_axes_list)
 
+        # update axes combo boxes automatically if features of 
+        # layer are changed
+        self.last_connected = None
+        self.labels_select.changed.connect(self.activate_property_autoupdate)
+
         # update axes combo boxes once update button is clicked
         update_button.clicked.connect(self.update_axes_list)
 
@@ -441,6 +446,12 @@ class PlotterWidget(QWidget):
 
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
+
+    def activate_property_autoupdate(self):
+        if self.last_connected is not None:
+            self.last_connected.events.properties.disconnect(self.update_axes_list)
+        self.labels_select.value.events.properties.connect(self.update_axes_list)
+        self.last_connected = self.labels_select.value
 
     def update_axes_list(self):
         selected_layer = self.labels_select.value
