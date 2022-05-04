@@ -70,12 +70,6 @@ Hold down the SHIFT key while annotating regions in the plot to manually select 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
 
-You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
-mode in napari and see which data point in the plot it corresponds to.
-
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.gif)
-
-
 ### Dimensionality reduction: UMAP, t-SNE or PCA
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
