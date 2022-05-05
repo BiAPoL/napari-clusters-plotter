@@ -21,6 +21,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from ._plotter import POINTER
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
@@ -371,6 +372,7 @@ class DimensionalityReductionWidget(QWidget):
                         or "UMAP" in p
                         or "t-SNE" in p
                         or "index" in p
+                        or POINTER in p
                     ):
                         continue
                     item = QListWidgetItem(p)

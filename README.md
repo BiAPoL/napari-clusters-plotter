@@ -24,30 +24,27 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 ### Starting point
 For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and a label image
 representing a segmentation of objects. For segmenting objects, you can for example use the
-[Voronoi-Otsu-labeling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labeling)
+[Voronoi-Otsu-labelling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labelling)
 in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://www.napari-hub.org/plugins/napari-segment-blobs-and-things-with-membranes).
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
 
 ### Measurements
-The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
+The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
 You can use the menu `Tools > Measurement > Measure intensity, shape and neighbor counts (ncp)` for that.
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 A table with the measurements will open:
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/measure.png)
 
-If you have 3D timelapse data this will automatically be detected. In case you have 2D timelapse data you need to
-convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D timelapse (time-slicer)`,
+Afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
+
+#### Time-Lapse Measurements
+If you have 3D time-lapse data this will automatically be detected. In case you have 2D time-lapse data you need to
+convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
-Note that tables for timelapse data will include an additional column named "frame", which indicates which slice in
-time the given row refers to. If you want to import your own csv files for timelapse data make sure to include this column!
-
-Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
-interact with labels and see which row of the table corresponds to which labelled object. For this, use the Pick mode
-in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
-appropriate label is displayed (make sure that `show selected` checkbox is selected).
-
+Note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
+time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
 
 ### Plotting
 
@@ -69,6 +66,17 @@ visualization in the image, turn off the visibility of the analysed labels layer
 Hold down the SHIFT key while annotating regions in the plot to manually select multiple clusters.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
+
+#### Time-Lapse Plotting
+When you plot your time-lapse datasets you will notice that the plots look slightly different.
+Datapoints of the current time frame are highlighted in white and you can see the datapoints move through the plot if you press play:
+
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plotting_time-lapse_data_as_movie.gif)
+
+You can also manually select groups using the lasso tool and plot a measurement per frame and see how the group behaves in time.
+Furthermore, you could also select a group in time and see where the datapoints lie in a different feature space:
+
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse_manual_clustering_tips.gif)
 
 ### Dimensionality reduction: UMAP, t-SNE or PCA
 
