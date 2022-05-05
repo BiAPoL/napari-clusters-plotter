@@ -31,6 +31,8 @@ from ._utilities import (
     widgets_inactive,
 )
 
+from ._plotter import POINTER
+
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
 
@@ -371,6 +373,7 @@ class DimensionalityReductionWidget(QWidget):
                         or "UMAP" in p
                         or "t-SNE" in p
                         or "index" in p
+                        or POINTER in p
                     ):
                         continue
                     item = QListWidgetItem(p)
