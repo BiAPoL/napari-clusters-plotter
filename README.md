@@ -71,12 +71,12 @@ Hold down the SHIFT key while annotating regions in the plot to manually select 
 When you plot your time-lapse datasets you will notice that the plots look slightly different. 
 Datapoints of the current time frame are highlighted in white and you can see the datapoints move through the plot if you press play:
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plotting time-lapse data as movie.gif)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plotting_time-lapse_data_as_movie.gif)
 
 You can also manually select groups using the lasso tool and plot a measurement per frame and see how the group behaves in time. 
 Furthermore, you could also select a group in time and see where the datapoints lie in a different feature space:
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse manual clustering tips.gif)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse_manual_clustering_tips.gif)
 
 ### Dimensionality reduction: UMAP, t-SNE or PCA
 
