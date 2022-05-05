@@ -21,6 +21,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from ._plotter import POINTER
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
@@ -30,8 +31,6 @@ from ._utilities import (
     show_table,
     widgets_inactive,
 )
-
-from ._plotter import POINTER
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
