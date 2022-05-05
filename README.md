@@ -39,7 +39,7 @@ A table with the measurements will open:
 
 Afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
 
-## Time-Lapse Measurements
+#### Time-Lapse Measurements
 If you have 3D time-lapse data this will automatically be detected. In case you have 2D time-lapse data you need to
 convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
@@ -67,7 +67,7 @@ Hold down the SHIFT key while annotating regions in the plot to manually select 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
 
-## Time-Lapse Plotting
+#### Time-Lapse Plotting
 When you plot your time-lapse datasets you will notice that the plots look slightly different. 
 Datapoints of the current time frame are highlighted in white and you can see the datapoints move through the plot if you press play:
 
