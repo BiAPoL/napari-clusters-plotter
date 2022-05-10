@@ -391,6 +391,11 @@ class ClusteringWidget(QWidget):
         # update measurements list when a new labels layer is selected
         self.labels_select.changed.connect(self.update_properties_list)
 
+        # update axes combo boxes automatically if features of
+        # layer are changed
+        self.last_connected = None
+        self.labels_select.changed.connect(self.activate_property_autoupdate)
+
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
             item = self.layout().itemAt(i).widget()
@@ -460,6 +465,14 @@ class ClusteringWidget(QWidget):
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
                     item.setSelected(True)
+
+    def activate_property_autoupdate(self):
+        if self.last_connected is not None:
+            self.last_connected.events.properties.disconnect(
+                self.update_properties_list
+            )
+        self.labels_select.value.events.properties.connect(self.update_properties_list)
+        self.last_connected = self.labels_select.value
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
