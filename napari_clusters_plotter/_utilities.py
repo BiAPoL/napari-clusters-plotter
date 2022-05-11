@@ -1,8 +1,10 @@
 from functools import wraps
 
 import numpy as np
+from numpy import array
 import pandas as pd
 import pyclesperanto_prototype as cle
+from vispy.color import Color
 
 BACKGROUND_LABEL = -1
 
@@ -67,18 +69,6 @@ def catch_NaNs(func):
 
     return wrapper
 
-def generate_label_to_cluster_color_mapping(
-    label_list, 
-    predictionlist, 
-    colormap_dict
-):
-    predictionlist_new = np.array(predictionlist) + 1
-    mapping = {0: [0,0,0,0]}
-    for label,prediction in zip(label_list,predictionlist_new):
-        mapping[label] = colormap_dict[prediction]
-        
-    return mapping
-
 # TODO maybe remove
 def reshape_2D_timelapse(timelapse_2d):
     """
@@ -86,6 +76,46 @@ def reshape_2D_timelapse(timelapse_2d):
     array of shape (t,z=1,y,x)
     """
     return timelapse_2d[:, np.newaxis, :, :]
+
+def generate_label_to_cluster_color_mapping(
+    label_list, 
+    predictionlist, 
+    colormap_dict
+):
+    predictionlist_new = np.array(predictionlist) + 1
+    mapping = {0: array([0.,0.,0.,0.])}
+    for label,prediction in zip(label_list,predictionlist_new):
+        mapping[label] = colormap_dict[prediction]
+        
+    return mapping
+
+# get colormap as rgba array
+def generate_cmap_dict(colors: list,prediction_list) -> dict:
+    """
+    Creates a dictionary mapping predictions to colors. 
+    prediction of 0 is mapped to the background
+
+    Parameters
+    ----------
+    """
+    colors
+    cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
+
+    # generate dictionary mapping each prediction to its respective color
+    # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
+    cmap_dict = {
+    int(prediction): (
+        cmap[int(prediction-1) % len(cmap)]
+        if prediction > 0
+        else [0, 0, 0, 0]
+    )
+    for prediction in set(prediction_list)
+    }
+
+    # take care of background label
+    cmap_dict[0] = array([0., 0., 0., 0.])
+
+    return cmap_dict
 
 def get_nice_colormap():
     colours_w_old_colors = [

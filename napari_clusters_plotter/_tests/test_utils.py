@@ -1,12 +1,17 @@
 import sys
 
 import numpy as np
+from numpy import array
 import pandas as pd
+from vispy.color import Color
 
 from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
     get_layer_tabular_data,
     set_features,
+    get_nice_colormap,
+    generate_cmap_dict,
+    generate_label_to_cluster_color_mapping,
 )
 
 sys.path.append("../")
@@ -43,6 +48,48 @@ def test_feature_setting(make_napari_viewer):
     some_features = get_layer_tabular_data(label_layer)
     assert "C" in some_features.columns
 
+def test_colormaps_and_mappings():
+    colors = get_nice_colormap()
+    assert colors[3] == "#d62728"
+
+    predictions = [
+        0,1,0,0,2,0
+    ]
+
+    labels = [
+        1,2,3,4,5,6
+    ]
+
+    cmap_dict = generate_cmap_dict(colors=colors,prediction_list=predictions)
+
+    result_cmap = {
+        0: array([0., 0., 0., 0.]),
+        1: array([1.        , 0.49803922, 0.05490196, 1.        ]),
+        2: array([0.12156863, 0.46666667, 0.70588235, 1.        ])
+    }
+
+    for i in cmap_dict.keys():
+        assert np.allclose(cmap_dict[i], result_cmap[i])
+
+    mapping = generate_label_to_cluster_color_mapping(
+        label_list=labels,
+        predictionlist=np.asarray(predictions) - 1,
+        colormap_dict=cmap_dict
+    )
+    mapping_result = {
+        0: array([0., 0., 0., 0.]),
+        1: array([0., 0., 0., 0.]),
+        2: array([1.        , 0.49803922, 0.05490196, 1.        ]),
+        3: array([0., 0., 0., 0.]),
+        4: array([0., 0., 0., 0.]),
+        5: array([0.12156863, 0.46666667, 0.70588235, 1.        ]),
+        6: array([0., 0., 0., 0.])
+    }
+
+    for key in mapping.keys():
+        assert np.allclose(mapping[key],mapping_result[key])
+
+    # TODO test mapping per timepoint
 
 if __name__ == "__main__":
     import napari
