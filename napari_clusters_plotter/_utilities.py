@@ -23,7 +23,6 @@ def restore_defaults(widget, defaults: dict):
         if item == "custom_name":
             widget.custom_name.clear()
 
-
 def set_features(layer, tabular_data):
     if hasattr(layer, "properties"):
         layer.properties = tabular_data
@@ -80,72 +79,13 @@ def generate_label_to_cluster_color_mapping(
         
     return mapping
 
-
-def generate_cluster_image(label_image, predictionlist):
-    """
-    Returns a label image where each label value corresponds
-    to the cluster identity defined by the predictionlist.
-    it is assumed that len(predictionlist) == max(label_image)
-
-    Parameters
-    ----------
-    label_image: ndarray or dask array
-        Label image used for cluster predictions
-    predictionlist: array
-        Array containing cluster identities for each label
-    """
-    # reforming the prediction list this is done to account
-    # for cluster labels that start at 0 conviniently hdbscan
-    # labelling starts at -1 for noise, removing these from
-    # the labels
-    predictionlist_new = np.array(predictionlist) + 1
-    predictionlist_new = np.insert(predictionlist_new, 0, 0)
-
-    # loading data into gpu
-    clelist = cle.push(predictionlist_new)
-    gpu_labelimage = cle.push(label_image)
-
-    # generation of cluster label image
-    parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
-    gpu_labelimage = None
-    clelist = None
-
-    # retrieving the gpu image
-    output = cle.pull(parametric_image).astype("uint32")
-    parametric_image = None
-
-    return output
-
-
-# TODO docstring
-def dask_cluster_image_timelapse(label_image, prediction_list_list):
-    import dask.array as da
-    from dask import delayed
-
-    sample = label_image[0]
-
-    lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
-    lazy_arrays = [
-        lazy_cluster_image(frame, preds)
-        for frame, preds in zip(label_image, prediction_list_list)
-    ]
-    dask_arrays = [
-        da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
-        for delayed_reader in lazy_arrays
-    ]
-    # Stack into one large dask.array
-    stack = da.stack(dask_arrays, axis=0)
-
-    return stack
-
-
+# TODO maybe remove
 def reshape_2D_timelapse(timelapse_2d):
     """
     Given a 2D timelapse of shape (t,y,x) returns a modified
     array of shape (t,z=1,y,x)
     """
     return timelapse_2d[:, np.newaxis, :, :]
-
 
 def get_nice_colormap():
     colours_w_old_colors = [
@@ -407,3 +347,59 @@ def get_nice_colormap():
     ]
 
     return colours_w_old_colors
+
+# old functions kept for backwards compatibility
+def generate_cluster_image(label_image, predictionlist):
+    """
+    Returns a label image where each label value corresponds
+    to the cluster identity defined by the predictionlist.
+    it is assumed that len(predictionlist) == max(label_image)
+
+    Parameters
+    ----------
+    label_image: ndarray or dask array
+        Label image used for cluster predictions
+    predictionlist: array
+        Array containing cluster identities for each label
+    """
+    # reforming the prediction list this is done to account
+    # for cluster labels that start at 0 conviniently hdbscan
+    # labelling starts at -1 for noise, removing these from
+    # the labels
+    predictionlist_new = np.array(predictionlist) + 1
+    predictionlist_new = np.insert(predictionlist_new, 0, 0)
+
+    # loading data into gpu
+    clelist = cle.push(predictionlist_new)
+    gpu_labelimage = cle.push(label_image)
+
+    # generation of cluster label image
+    parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
+    gpu_labelimage = None
+    clelist = None
+
+    # retrieving the gpu image
+    output = cle.pull(parametric_image).astype("uint32")
+    parametric_image = None
+
+    return output
+
+def dask_cluster_image_timelapse(label_image, prediction_list_list):
+    import dask.array as da
+    from dask import delayed
+
+    sample = label_image[0]
+
+    lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
+    lazy_arrays = [
+        lazy_cluster_image(frame, preds)
+        for frame, preds in zip(label_image, prediction_list_list)
+    ]
+    dask_arrays = [
+        da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
+        for delayed_reader in lazy_arrays
+    ]
+    # Stack into one large dask.array
+    stack = da.stack(dask_arrays, axis=0)
+
+    return stack

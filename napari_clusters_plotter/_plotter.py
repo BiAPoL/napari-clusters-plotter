@@ -570,7 +570,9 @@ class PlotterWidget(QWidget):
                 mapping = generate_label_to_cluster_color_mapping(labels,prediction,cmap_dict)
 
             elif len(self.analysed_layer.data.shape) <= 3:
-                mapping = generate_label_to_cluster_color_mapping(features['label'].to_numpy(), self.cluster_ids, cmap_dict)
+                mapping = generate_label_to_cluster_color_mapping(
+                    features['label'].to_numpy(), self.cluster_ids, cmap_dict
+                )
             else:
                 warnings.warn("Image dimensions too high for processing!")
                 return
