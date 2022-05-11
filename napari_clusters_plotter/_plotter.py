@@ -555,7 +555,7 @@ class PlotterWidget(QWidget):
                     if prediction >= 0
                     else [0, 0, 0, 0]
                 )
-                for prediction in self.cluster_ids
+                for prediction in set(self.cluster_ids)
             }
             # take care of background label
             cmap_dict[0] = [0, 0, 0, 0]
