@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pyclesperanto_prototype as cle
 
+BACKGROUND_LABEL = -1
 
 def widgets_inactive(*widgets, active):
     for widget in widgets:
@@ -66,6 +67,18 @@ def catch_NaNs(func):
         return embedded[0], result.to_numpy().squeeze()
 
     return wrapper
+
+def generate_label_to_cluster_color_mapping(
+    label_list, 
+    predictionlist, 
+    colormap_dict
+):
+    predictionlist_new = np.array(predictionlist) + 1
+    mapping = {0: [0,0,0,0]}
+    for label,prediction in zip(label_list,predictionlist_new):
+        mapping[label] = colormap_dict[prediction]
+        
+    return mapping
 
 
 def generate_cluster_image(label_image, predictionlist):

@@ -27,10 +27,10 @@ from qtpy.QtWidgets import (
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._utilities import (
     add_column_to_layer_tabular_data,
-    dask_cluster_image_timelapse,
-    generate_cluster_image,
+    generate_label_to_cluster_color_mapping,
     get_layer_tabular_data,
     get_nice_colormap,
+    BACKGROUND_LABEL,
 )
 
 # can be changed to frame or whatever we decide to use
@@ -420,7 +420,6 @@ class PlotterWidget(QWidget):
                     self.plot_x_axis.currentText(),
                     self.plot_y_axis.currentText(),
                     self.plot_cluster_name,
-                    redraw_cluster_image=False,
                 )
             self.old_frame = frame
 
@@ -487,7 +486,6 @@ class PlotterWidget(QWidget):
         plot_x_axis_name,
         plot_y_axis_name,
         plot_cluster_name=None,
-        redraw_cluster_image=True,
     ):
 
         self.data_x = features[plot_x_axis_name]
@@ -563,46 +561,35 @@ class PlotterWidget(QWidget):
             keep_selection = list(self.viewer.layers.selection)
 
             # Generating the cluster image
-            if redraw_cluster_image:
-                # depending on the dimensionality of the data
-                # generate the cluster image -> TODO change so possible
-                # with 2D timelapse data
-                if len(self.analysed_layer.data.shape) == 4:
-                    max_timepoint = features[POINTER].max() + 1
+            # depending on the dimensionality of the data generate
+            # the right mapping between labels and cluster identity
+            if len(self.analysed_layer.data.shape) == 4:
+                prediction = features.loc[features[POINTER] == current_frame][plot_cluster_name].fillna(BACKGROUND_LABEL).to_numpy()
+                labels =     features.loc[features[POINTER] == current_frame]['label'].fillna(BACKGROUND_LABEL).to_numpy()
 
-                    prediction_lists_per_timepoint = [
-                        features.loc[features[POINTER] == i][plot_cluster_name].tolist()
-                        for i in range(max_timepoint)
-                    ]
+                mapping = generate_label_to_cluster_color_mapping(labels,prediction,cmap_dict)
 
-                    cluster_image = dask_cluster_image_timelapse(
-                        self.analysed_layer.data, prediction_lists_per_timepoint
-                    )
+            elif len(self.analysed_layer.data.shape) <= 3:
+                mapping = generate_label_to_cluster_color_mapping(features['label'].to_numpy(), self.cluster_ids, cmap_dict)
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+                return
 
-                elif len(self.analysed_layer.data.shape) <= 3:
-                    cluster_image = generate_cluster_image(
-                        self.analysed_layer.data, self.cluster_ids
-                    )
-                else:
-                    warnings.warn("Image dimensions too high for processing!")
-                    return
-
-                # if the cluster image layer doesn't yet exist make it
-                # otherwise just update it
-                if (
-                    self.visualized_labels_layer is None
-                    or self.visualized_labels_layer not in self.viewer.layers
-                ):
-                    # visualising cluster image
-                    self.visualized_labels_layer = self.viewer.add_labels(
-                        cluster_image,  # self.analysed_layer.data
-                        color=cmap_dict,  # cluster_id_dict
-                        name="cluster_ids_in_space",
-                    )
-                else:
-                    # updating data
-                    self.visualized_labels_layer.data = cluster_image
-                    self.visualized_labels_layer.color = cmap_dict
+            # if the cluster image layer doesn't yet exist make it
+            # otherwise just update it
+            if (
+                self.visualized_labels_layer is None
+                or self.visualized_labels_layer not in self.viewer.layers
+            ):
+                # visualising cluster image
+                self.visualized_labels_layer = self.viewer.add_labels(
+                    self.analysed_layer.data,  # self.analysed_layer.data
+                    color=mapping,  # cluster_id_dict
+                    name="cluster_ids_in_space",
+                )
+            else:
+                # updating data
+                self.visualized_labels_layer.color = mapping
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
