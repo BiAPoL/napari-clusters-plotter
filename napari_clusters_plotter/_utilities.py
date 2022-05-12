@@ -69,14 +69,6 @@ def catch_NaNs(func):
 
     return wrapper
 
-# TODO maybe remove
-def reshape_2D_timelapse(timelapse_2d):
-    """
-    Given a 2D timelapse of shape (t,y,x) returns a modified
-    array of shape (t,z=1,y,x)
-    """
-    return timelapse_2d[:, np.newaxis, :, :]
-
 def generate_label_to_cluster_color_mapping(
     label_list, 
     predictionlist, 
@@ -377,6 +369,14 @@ def get_nice_colormap():
     ]
 
     return colours_w_old_colors
+
+# TODO maybe remove
+def reshape_2D_timelapse(timelapse_2d):
+    """
+    Given a 2D timelapse of shape (t,y,x) returns a modified
+    array of shape (t,z=1,y,x)
+    """
+    return timelapse_2d[:, np.newaxis, :, :]
 
 # old functions kept for backwards compatibility
 def generate_cluster_image(label_image, predictionlist):
