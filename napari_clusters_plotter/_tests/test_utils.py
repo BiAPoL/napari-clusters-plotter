@@ -7,7 +7,6 @@ from numpy import array
 from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
-    generate_cluster_image,
     generate_cmap_dict,
     generate_label_to_cluster_color_mapping,
     get_layer_tabular_data,
@@ -123,7 +122,7 @@ def test_old_functions():
 
     # just call them
     # generate_cluster_image(time_lapse_2d[0],predictions[0])
-    dask_cluster_image_timelapse(reshaped_time_lapse,predictions)
+    dask_cluster_image_timelapse(reshaped_time_lapse, predictions)
 
 
 if __name__ == "__main__":
