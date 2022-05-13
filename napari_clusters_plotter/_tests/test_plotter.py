@@ -121,5 +121,6 @@ def test_plotter_utilities():
     uc_plot_params = unclustered_plot_parameters(frame_ids,current_frame,n_datapoints)
     assert uc_plot_params == (result_au,result_su,result_cu)
 
+
 if __name__ == "__main__":
     test_plotting()
