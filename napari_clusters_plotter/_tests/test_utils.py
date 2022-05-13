@@ -12,6 +12,10 @@ from napari_clusters_plotter._utilities import (
     get_nice_colormap,
     generate_cmap_dict,
     generate_label_to_cluster_color_mapping,
+    generate_cluster_image,
+    dask_cluster_image_timelapse,
+    reshape_2D_timelapse,
+
 )
 
 sys.path.append("../")
@@ -89,7 +93,42 @@ def test_colormaps_and_mappings():
     for key in mapping.keys():
         assert np.allclose(mapping[key],mapping_result[key])
 
-    # TODO test mapping per timepoint
+def test_old_functions():
+    label_1 = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 0, 2, 2],
+            [0, 0, 0, 0, 2, 2, 2],
+            [3, 3, 0, 0, 0, 0, 0],
+            [0, 0, 4, 4, 0, 5, 5],
+            [6, 6, 6, 6, 0, 5, 0],
+            [0, 7, 7, 0, 0, 0, 0],
+        ]
+    )
+
+    label_2 = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 2, 0, 0, 0, 0],
+            [0, 2, 2, 2, 0, 0, 0],
+        ]
+    )
+
+    time_lapse_2d = np.array([label_1,label_2])
+
+    reshaped_time_lapse = reshape_2D_timelapse(time_lapse_2d)
+
+    assert reshaped_time_lapse.shape == (2, 1, 7, 7)
+    predictions = [[0,0,1,0,1,0,0],[0,1]]
+
+    # just call them
+    cluster_image = generate_cluster_image(time_lapse_2d[0],predictions[0])
+    dask_image = dask_cluster_image_timelapse(reshaped_time_lapse,predictions)
+
 
 if __name__ == "__main__":
     import napari
