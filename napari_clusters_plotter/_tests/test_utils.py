@@ -1,21 +1,19 @@
 import sys
 
 import numpy as np
-from numpy import array
 import pandas as pd
-from vispy.color import Color
+from numpy import array
 
 from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
-    get_layer_tabular_data,
-    set_features,
-    get_nice_colormap,
+    dask_cluster_image_timelapse,
+    generate_cluster_image,
     generate_cmap_dict,
     generate_label_to_cluster_color_mapping,
-    generate_cluster_image,
-    dask_cluster_image_timelapse,
+    get_layer_tabular_data,
+    get_nice_colormap,
     reshape_2D_timelapse,
-
+    set_features,
 )
 
 sys.path.append("../")
@@ -52,24 +50,21 @@ def test_feature_setting(make_napari_viewer):
     some_features = get_layer_tabular_data(label_layer)
     assert "C" in some_features.columns
 
+
 def test_colormaps_and_mappings():
     colors = get_nice_colormap()
     assert colors[3] == "#d62728"
 
-    predictions = [
-        0,1,0,0,2,0
-    ]
+    predictions = [0, 1, 0, 0, 2, 0]
 
-    labels = [
-        1,2,3,4,5,6
-    ]
+    labels = [1, 2, 3, 4, 5, 6]
 
-    cmap_dict = generate_cmap_dict(colors=colors,prediction_list=predictions)
+    cmap_dict = generate_cmap_dict(colors=colors, prediction_list=predictions)
 
     result_cmap = {
-        0: array([0., 0., 0., 0.]),
-        1: array([1.        , 0.49803922, 0.05490196, 1.        ]),
-        2: array([0.12156863, 0.46666667, 0.70588235, 1.        ])
+        0: array([0.0, 0.0, 0.0, 0.0]),
+        1: array([1.0, 0.49803922, 0.05490196, 1.0]),
+        2: array([0.12156863, 0.46666667, 0.70588235, 1.0]),
     }
 
     for i in cmap_dict.keys():
@@ -78,20 +73,21 @@ def test_colormaps_and_mappings():
     mapping = generate_label_to_cluster_color_mapping(
         label_list=labels,
         predictionlist=np.asarray(predictions) - 1,
-        colormap_dict=cmap_dict
+        colormap_dict=cmap_dict,
     )
     mapping_result = {
-        0: array([0., 0., 0., 0.]),
-        1: array([0., 0., 0., 0.]),
-        2: array([1.        , 0.49803922, 0.05490196, 1.        ]),
-        3: array([0., 0., 0., 0.]),
-        4: array([0., 0., 0., 0.]),
-        5: array([0.12156863, 0.46666667, 0.70588235, 1.        ]),
-        6: array([0., 0., 0., 0.])
+        0: array([0.0, 0.0, 0.0, 0.0]),
+        1: array([0.0, 0.0, 0.0, 0.0]),
+        2: array([1.0, 0.49803922, 0.05490196, 1.0]),
+        3: array([0.0, 0.0, 0.0, 0.0]),
+        4: array([0.0, 0.0, 0.0, 0.0]),
+        5: array([0.12156863, 0.46666667, 0.70588235, 1.0]),
+        6: array([0.0, 0.0, 0.0, 0.0]),
     }
 
     for key in mapping.keys():
-        assert np.allclose(mapping[key],mapping_result[key])
+        assert np.allclose(mapping[key], mapping_result[key])
+
 
 def test_old_functions():
     label_1 = np.array(
@@ -118,12 +114,12 @@ def test_old_functions():
         ]
     )
 
-    time_lapse_2d = np.array([label_1,label_2])
+    time_lapse_2d = np.array([label_1, label_2])
 
     reshaped_time_lapse = reshape_2D_timelapse(time_lapse_2d)
 
     assert reshaped_time_lapse.shape == (2, 1, 7, 7)
-    predictions = [[0,0,1,0,1,0,0],[0,1]]
+    predictions = [[0, 0, 1, 0, 1, 0, 0], [0, 1]]
 
     # just call them
     generate_cluster_image(time_lapse_2d[0],predictions[0])
