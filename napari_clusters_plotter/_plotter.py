@@ -26,12 +26,12 @@ from qtpy.QtWidgets import (
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._utilities import (
+    BACKGROUND_LABEL,
     add_column_to_layer_tabular_data,
+    generate_cmap_dict,
     generate_label_to_cluster_color_mapping,
     get_layer_tabular_data,
     get_nice_colormap,
-    generate_cmap_dict,
-    BACKGROUND_LABEL,
 )
 
 # can be changed to frame or whatever we decide to use
@@ -542,8 +542,7 @@ class PlotterWidget(QWidget):
             )
 
             cmap_dict = generate_cmap_dict(
-                get_nice_colormap(),  
-                np.asarray(self.cluster_ids) + 1
+                get_nice_colormap(), np.asarray(self.cluster_ids) + 1
             )
 
             keep_selection = list(self.viewer.layers.selection)
@@ -552,14 +551,24 @@ class PlotterWidget(QWidget):
             # depending on the dimensionality of the data generate
             # the right mapping between labels and cluster identity
             if len(self.analysed_layer.data.shape) == 4:
-                prediction = features.loc[features[POINTER] == current_frame][plot_cluster_name].fillna(BACKGROUND_LABEL).to_numpy()
-                labels =     features.loc[features[POINTER] == current_frame]['label'].fillna(BACKGROUND_LABEL).to_numpy()
+                prediction = (
+                    features.loc[features[POINTER] == current_frame][plot_cluster_name]
+                    .fillna(BACKGROUND_LABEL)
+                    .to_numpy()
+                )
+                labels = (
+                    features.loc[features[POINTER] == current_frame]["label"]
+                    .fillna(BACKGROUND_LABEL)
+                    .to_numpy()
+                )
 
-                mapping = generate_label_to_cluster_color_mapping(labels,prediction,cmap_dict)
+                mapping = generate_label_to_cluster_color_mapping(
+                    labels, prediction, cmap_dict
+                )
 
             elif len(self.analysed_layer.data.shape) <= 3:
                 mapping = generate_label_to_cluster_color_mapping(
-                    features['label'].to_numpy(), self.cluster_ids, cmap_dict
+                    features["label"].to_numpy(), self.cluster_ids, cmap_dict
                 )
             else:
                 warnings.warn("Image dimensions too high for processing!")
