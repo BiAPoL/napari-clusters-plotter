@@ -126,8 +126,8 @@ def test_old_functions():
     predictions = [[0,0,1,0,1,0,0],[0,1]]
 
     # just call them
-    cluster_image = generate_cluster_image(time_lapse_2d[0],predictions[0])
-    dask_image = dask_cluster_image_timelapse(reshaped_time_lapse,predictions)
+    generate_cluster_image(time_lapse_2d[0],predictions[0])
+    dask_cluster_image_timelapse(reshaped_time_lapse,predictions)
 
 
 if __name__ == "__main__":
