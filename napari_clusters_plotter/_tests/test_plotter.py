@@ -83,13 +83,13 @@ def test_plotter_utilities():
 
     alpha_clustered = alphas_clustered(predicts,frame_ids,current_frame,n_datapoints)
 
-    result = [init_alpha * 0.3 if pred>=0 else noise_alpha*0.3 for pred in predicts]
-    result_ac = [result[i] if frame != current_frame else init_alpha for i,frame in enumerate(frame_ids)]
+    result = [alpha_f * init_alpha * 0.3 if pred>=0 else alpha_f * noise_alpha*0.3 for pred in predicts]
+    result_ac = [result[i] if frame != current_frame else alpha_f * init_alpha for i,frame in enumerate(frame_ids)]
 
     assert alpha_clustered == result_ac
 
     alpha_unclustered = alphas_unclustered(frame_ids,current_frame,n_datapoints)
-    result_au = [init_alpha*0.3 if frame != current_frame else init_alpha for frame in frame_ids ]
+    result_au = [alpha_f * init_alpha*0.3 if frame != current_frame else alpha_f * init_alpha for frame in frame_ids ]
 
     assert alpha_unclustered == result_au
 
