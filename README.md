@@ -22,35 +22,20 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 ----------------------------------
 
 Jump to:
-- [Usage]
-  - [Starting point]
-  - [Measurements]
-  - [Time-Lapse Measurements]
-  - [Plotting]
-  - [Time-Lapse Plotting]
-  - [Dimensionality reduction: UMAP, t-SNE or PCA]
-  - [Clustering]
-  - [Plotting clustering results]
-- [Installation]
-- [Troubleshooting installation]
-- [Contributing]
-- [License]
-- [Acknowledgements]
-
-[Usage]: README.md#usage
-[Starting point]: README.md#starting-point
-[Measurements]: README.md#measurements
-[Time-Lapse Measurements]: README.md#time-lapse-measurements
-[Plotting]: README.md#plotting
-[Time-Lapse Plotting]: README.md#time-lapse-plotting
-[Dimensionality reduction: UMAP, t-SNE or PCA]: README.md#dimensionality-reduction-umap-t-sne-or-pca
-[Clustering]: README.md#clustering
-[Plotting clustering results]: README.md#plotting-clustering-results
-[Installation]: README.md#installation
-[Troubleshooting installation]: README.md#troubleshooting-installation
-[Contributing]: README.md#contributing
-[License]: README.md#license
-[Acknowledgements]: README.md#acknowledgements
+- [Usage](#usage)
+  - [Starting point](#starting-point)
+  - [Measurements](#measurements)
+  - [Time-Lapse Measurements](#time-lapse-measurements)
+  - [Plotting](#plotting)
+  - [Time-Lapse Plotting](#time-lapse-plotting)
+  - [Dimensionality reduction: UMAP, t-SNE or PCA](#dimensionality-reduction-umap-t-sne-or-pca)
+  - [Clustering](#clustering)
+  - [Plotting clustering results](#plotting-clustering-results)
+- [Installation](#installation)
+- [Troubleshooting installation](#troubleshooting-installation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
 
 
 ## Usage
