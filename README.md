@@ -19,6 +19,40 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif)
 
+----------------------------------
+
+Jump to:
+- [Usage]
+- [Starting point]
+  - [Measurements]
+  - [Time-Lapse Measurements]
+  - [Plotting]
+  - [Time-Lapse Plotting]
+  - [Dimensionality reduction: UMAP, t-SNE or PCA]
+  - [Clustering]
+  - [Plotting clustering results]
+- [Installation]
+- [Troubleshooting installation]
+- [Contributing]
+- [License]
+- [Acknowledgements]
+
+[Usage]: https://github.com/BiAPoL/napari-clusters-plotter#usage
+[Starting point]: https://github.com/BiAPoL/napari-clusters-plotter#starting-point
+[Measurements]: https://github.com/BiAPoL/napari-clusters-plotter#measurements
+[Time-Lapse Measurements]: https://github.com/BiAPoL/napari-clusters-plotter#time-lapse-measurements
+[Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#plotting
+[Time-Lapse Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#plotting
+[Dimensionality reduction: UMAP, t-SNE or PCA]: https://github.com/BiAPoL/napari-clusters-plotter#dimensionality-reduction-umap-t-sne-or-pca
+[Clustering]: https://github.com/BiAPoL/napari-clusters-plotter#clustering
+[Plotting clustering results]: https://github.com/BiAPoL/napari-clusters-plotter#plotting-clustering-results
+[Installation]: https://github.com/BiAPoL/napari-clusters-plotter#installation
+[Troubleshooting installation]: https://github.com/BiAPoL/napari-clusters-plotter#troubleshooting-installation
+[Contributing]: https://github.com/BiAPoL/napari-clusters-plotter#contributing
+[License]: https://github.com/BiAPoL/napari-clusters-plotter#license
+[Acknowledgements]: https://github.com/BiAPoL/napari-clusters-plotter#acknowledgements
+
+
 ## Usage
 
 ### Starting point
