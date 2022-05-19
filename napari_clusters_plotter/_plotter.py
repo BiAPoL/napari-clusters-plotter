@@ -16,13 +16,13 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,
     QWidget,
-    QCheckBox,
 )
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
@@ -391,7 +391,7 @@ class PlotterWidget(QWidget):
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
-                tracking_data=self.tracking_checkbox.checkState()
+                tracking_data=self.tracking_checkbox.checkState(),
             )
 
         # takes care of case where this isn't set yet directly after init
@@ -499,7 +499,7 @@ class PlotterWidget(QWidget):
         plot_y_axis_name,
         plot_cluster_name=None,
         redraw_cluster_image=True,
-        tracking_data = False,
+        tracking_data=False,
     ):
 
         self.data_x = features[plot_x_axis_name]
@@ -584,8 +584,9 @@ class PlotterWidget(QWidget):
                         max_timepoint = features[POINTER].max() + 1
 
                         prediction_lists_per_timepoint = [
-                            features.loc[features[POINTER] == i][plot_cluster_name].tolist() 
-
+                            features.loc[features[POINTER] == i][
+                                plot_cluster_name
+                            ].tolist()
                             for i in range(max_timepoint)
                         ]
                     else:
@@ -595,8 +596,8 @@ class PlotterWidget(QWidget):
                         ]
 
                     cluster_image = dask_cluster_image_timelapse(
-                            self.analysed_layer.data, prediction_lists_per_timepoint
-                        )
+                        self.analysed_layer.data, prediction_lists_per_timepoint
+                    )
 
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_image = generate_cluster_image(
