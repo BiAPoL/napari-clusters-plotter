@@ -23,7 +23,7 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 
 Jump to:
 - [Usage]
-- [Starting point]
+  - [Starting point]
   - [Measurements]
   - [Time-Lapse Measurements]
   - [Plotting]
