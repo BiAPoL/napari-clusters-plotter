@@ -37,20 +37,20 @@ Jump to:
 - [License]
 - [Acknowledgements]
 
-[Usage]: https://github.com/BiAPoL/napari-clusters-plotter#usage
-[Starting point]: https://github.com/BiAPoL/napari-clusters-plotter#starting-point
-[Measurements]: https://github.com/BiAPoL/napari-clusters-plotter#measurements
-[Time-Lapse Measurements]: https://github.com/BiAPoL/napari-clusters-plotter#time-lapse-measurements
-[Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#plotting
-[Time-Lapse Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#time-lapse-plotting
-[Dimensionality reduction: UMAP, t-SNE or PCA]: https://github.com/BiAPoL/napari-clusters-plotter#dimensionality-reduction-umap-t-sne-or-pca
-[Clustering]: https://github.com/BiAPoL/napari-clusters-plotter#clustering
-[Plotting clustering results]: https://github.com/BiAPoL/napari-clusters-plotter#plotting-clustering-results
-[Installation]: https://github.com/BiAPoL/napari-clusters-plotter#installation
-[Troubleshooting installation]: https://github.com/BiAPoL/napari-clusters-plotter#troubleshooting-installation
-[Contributing]: https://github.com/BiAPoL/napari-clusters-plotter#contributing
-[License]: https://github.com/BiAPoL/napari-clusters-plotter#license
-[Acknowledgements]: https://github.com/BiAPoL/napari-clusters-plotter#acknowledgements
+[Usage]: README.md#usage
+[Starting point]: README.md#starting-point
+[Measurements]: README.md#measurements
+[Time-Lapse Measurements]: README.md#time-lapse-measurements
+[Plotting]: README.md#plotting
+[Time-Lapse Plotting]: README.md#time-lapse-plotting
+[Dimensionality reduction: UMAP, t-SNE or PCA]: README.md#dimensionality-reduction-umap-t-sne-or-pca
+[Clustering]: README.md#clustering
+[Plotting clustering results]: README.md#plotting-clustering-results
+[Installation]: README.md#installation
+[Troubleshooting installation]: README.md#troubleshooting-installation
+[Contributing]: README.md#contributing
+[License]: README.md#license
+[Acknowledgements]: README.md#acknowledgements
 
 
 ## Usage
