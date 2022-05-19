@@ -42,7 +42,7 @@ Jump to:
 [Measurements]: https://github.com/BiAPoL/napari-clusters-plotter#measurements
 [Time-Lapse Measurements]: https://github.com/BiAPoL/napari-clusters-plotter#time-lapse-measurements
 [Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#plotting
-[Time-Lapse Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#plotting
+[Time-Lapse Plotting]: https://github.com/BiAPoL/napari-clusters-plotter#time-lapse-plotting
 [Dimensionality reduction: UMAP, t-SNE or PCA]: https://github.com/BiAPoL/napari-clusters-plotter#dimensionality-reduction-umap-t-sne-or-pca
 [Clustering]: https://github.com/BiAPoL/napari-clusters-plotter#clustering
 [Plotting clustering results]: https://github.com/BiAPoL/napari-clusters-plotter#plotting-clustering-results
