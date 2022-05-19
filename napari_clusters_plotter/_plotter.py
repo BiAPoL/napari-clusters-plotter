@@ -22,6 +22,7 @@ from qtpy.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
+    QCheckBox,
 )
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
@@ -263,6 +264,7 @@ class PlotterWidget(QWidget):
                 self.plot_x_axis_name,
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
+                tracking_data=self.tracking_checkbox.checkState(),
             )
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
@@ -333,6 +335,12 @@ class PlotterWidget(QWidget):
         update_button = QPushButton("Update Axes/Clustering Selection Boxes")
         update_container.layout().addWidget(update_button)
 
+        # Update measurements button
+        tracking_container = QWidget()
+        tracking_container.setLayout(QHBoxLayout())
+        self.tracking_checkbox = QCheckBox("Tracking Data")
+        update_container.layout().addWidget(self.tracking_checkbox)
+
         # Run button
         run_widget = QWidget()
         run_widget.setLayout(QHBoxLayout())
@@ -345,6 +353,7 @@ class PlotterWidget(QWidget):
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
         self.layout().addWidget(update_container)
+        self.layout().addWidget(tracking_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
 
@@ -382,6 +391,7 @@ class PlotterWidget(QWidget):
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
+                tracking_data=self.tracking_checkbox.checkState()
             )
 
         # takes care of case where this isn't set yet directly after init
@@ -421,6 +431,7 @@ class PlotterWidget(QWidget):
                     self.plot_y_axis.currentText(),
                     self.plot_cluster_name,
                     redraw_cluster_image=False,
+                    tracking_data=self.tracking_checkbox.checkState(),
                 )
             self.old_frame = frame
 
@@ -488,6 +499,7 @@ class PlotterWidget(QWidget):
         plot_y_axis_name,
         plot_cluster_name=None,
         redraw_cluster_image=True,
+        tracking_data = False,
     ):
 
         self.data_x = features[plot_x_axis_name]
@@ -511,10 +523,10 @@ class PlotterWidget(QWidget):
 
             # get long colormap from function
             colors = get_nice_colormap()
-            if len(self.analysed_layer.data.shape) == 4:
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3:
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
                 frame_id = None
                 current_frame = None
             else:
@@ -568,16 +580,23 @@ class PlotterWidget(QWidget):
                 # generate the cluster image -> TODO change so possible
                 # with 2D timelapse data
                 if len(self.analysed_layer.data.shape) == 4:
-                    max_timepoint = features[POINTER].max() + 1
+                    if not tracking_data:
+                        max_timepoint = features[POINTER].max() + 1
 
-                    prediction_lists_per_timepoint = [
-                        features.loc[features[POINTER] == i][plot_cluster_name].tolist()
-                        for i in range(max_timepoint)
-                    ]
+                        prediction_lists_per_timepoint = [
+                            features.loc[features[POINTER] == i][plot_cluster_name].tolist() 
+
+                            for i in range(max_timepoint)
+                        ]
+                    else:
+                        prediction_lists_per_timepoint = [
+                            features[plot_cluster_name].tolist()
+                            for i in range(self.analysed_layer.data.shape[0])
+                        ]
 
                     cluster_image = dask_cluster_image_timelapse(
-                        self.analysed_layer.data, prediction_lists_per_timepoint
-                    )
+                            self.analysed_layer.data, prediction_lists_per_timepoint
+                        )
 
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_image = generate_cluster_image(
@@ -609,10 +628,10 @@ class PlotterWidget(QWidget):
                 self.viewer.layers.selection.add(s)
 
         else:
-            if len(self.analysed_layer.data.shape) == 4:
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3:
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
                 frame_id = None
                 current_frame = None
             else:
