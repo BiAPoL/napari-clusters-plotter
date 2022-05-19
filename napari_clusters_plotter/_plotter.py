@@ -585,7 +585,6 @@ class PlotterWidget(QWidget):
 
                         prediction_lists_per_timepoint = [
                             features.loc[features[POINTER] == i][plot_cluster_name].tolist() 
-
                             for i in range(max_timepoint)
                         ]
                     else:
