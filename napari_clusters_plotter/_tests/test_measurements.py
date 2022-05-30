@@ -1,9 +1,9 @@
 # import numpy as np
+# import time
+# import napari_clusters_plotter as ncp
 
-import napari_clusters_plotter as ncp
-
-
-def test_measurements(make_napari_viewer):
+"""
+def test_measurements(qtbot, make_napari_viewer):
 
     viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
@@ -31,8 +31,14 @@ def test_measurements(make_napari_viewer):
             break
 
     viewer.window.add_dock_widget(_widget)
-    """"
+
     _widget.run(image_layer, label_layer, "Measure now intensity", None, None)
+    # measuring function runs in a secondary thread, therefore a blocker is needed
+    blocker = qtbot.waitSignal(_widget.worker.finished, timeout=1000000)
+    blocker.wait()
+    # additional waiting so the return function that gets the value from the secondary thread can be executed,
+    # and write the results into properties/features of the labels layer
+    time.sleep(7)
     data = label_layer.features
     assert "max_intensity" in data.columns
     assert "sum_intensity" in data.columns
@@ -42,6 +48,9 @@ def test_measurements(make_napari_viewer):
     assert data["max_intensity"].max() == 7 * 1.5
 
     _widget.run(image_layer, label_layer, "Measure now shape", None, None)
+    blocker = qtbot.waitSignal(_widget.worker.finished, timeout=1000000)
+    blocker.wait()
+    time.sleep(7)
     data = label_layer.features
     assert "area" in data.columns
     assert "mean_distance_to_centroid" in data.columns
@@ -51,14 +60,17 @@ def test_measurements(make_napari_viewer):
     assert data["area"].max() == 5
 
     _widget.run(image_layer, label_layer, "Measure now neighborhood", None, "2, 3, 4")
+    blocker = qtbot.waitSignal(_widget.worker.finished, timeout=1000000)
+    blocker.wait()
+    time.sleep(7)
     data = label_layer.features
     assert "avg distance of 2 closest points" in data.columns
     assert "avg distance of 3 closest points" in data.columns
     assert "avg distance of 4 closest points" in data.columns
     assert "touching neighbor count" in data.columns
     assert data["touching neighbor count"].loc[5] == 2
-    """
 
 
 if __name__ == "__main__":
     test_measurements()
+"""
