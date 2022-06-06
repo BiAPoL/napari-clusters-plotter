@@ -16,7 +16,6 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
-    QCheckBox,
     QComboBox,
     QHBoxLayout,
     QLabel,
@@ -500,8 +499,9 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
-        tracking_data = len(self.analysed_layer.data.shape) == 4 and 'frame' not in features.keys()
-        
+        tracking_data = (
+            len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
+        )
 
         if (
             plot_cluster_name is not None
