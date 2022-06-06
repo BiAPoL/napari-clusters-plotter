@@ -264,7 +264,6 @@ class PlotterWidget(QWidget):
                 self.plot_x_axis_name,
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
-                tracking_data=self.tracking_checkbox.checkState(),
             )
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
@@ -335,12 +334,6 @@ class PlotterWidget(QWidget):
         update_button = QPushButton("Update Axes/Clustering Selection Boxes")
         update_container.layout().addWidget(update_button)
 
-        # Update measurements button
-        tracking_container = QWidget()
-        tracking_container.setLayout(QHBoxLayout())
-        self.tracking_checkbox = QCheckBox("Tracking Data")
-        update_container.layout().addWidget(self.tracking_checkbox)
-
         # Run button
         run_widget = QWidget()
         run_widget.setLayout(QHBoxLayout())
@@ -353,7 +346,6 @@ class PlotterWidget(QWidget):
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
         self.layout().addWidget(update_container)
-        self.layout().addWidget(tracking_container)
         self.layout().addWidget(run_widget)
         self.layout().setSpacing(0)
 
@@ -391,7 +383,6 @@ class PlotterWidget(QWidget):
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
-                tracking_data=self.tracking_checkbox.checkState(),
             )
 
         # takes care of case where this isn't set yet directly after init
@@ -431,7 +422,6 @@ class PlotterWidget(QWidget):
                     self.plot_y_axis.currentText(),
                     self.plot_cluster_name,
                     redraw_cluster_image=False,
-                    tracking_data=self.tracking_checkbox.checkState(),
                 )
             self.old_frame = frame
 
@@ -499,7 +489,6 @@ class PlotterWidget(QWidget):
         plot_y_axis_name,
         plot_cluster_name=None,
         redraw_cluster_image=True,
-        tracking_data=False,
     ):
 
         self.data_x = features[plot_x_axis_name]
@@ -511,6 +500,8 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
+        tracking_data = len(self.analysed_layer.data.shape) == 4 and 'frame' not in features.keys()
+        
 
         if (
             plot_cluster_name is not None
