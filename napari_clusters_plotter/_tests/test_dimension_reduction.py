@@ -220,5 +220,5 @@ if __name__ == "__main__":
     import napari
 
     test_bad_measurements(napari.Viewer)
-    test_call_to_function(napari.Viewer)
+    # test_call_to_function(napari.Viewer)
     # test_umap()
