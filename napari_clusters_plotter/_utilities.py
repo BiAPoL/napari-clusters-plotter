@@ -1,9 +1,9 @@
-from functools import wraps
+from functools import wraps, lru_cache
 
 import numpy as np
 import pandas as pd
 import pyclesperanto_prototype as cle
-
+from napari_tools_menu import register_function
 
 def widgets_inactive(*widgets, active):
     for widget in widgets:
@@ -133,7 +133,34 @@ def reshape_2D_timelapse(timelapse_2d):
     """
     return timelapse_2d[:, np.newaxis, :, :]
 
+@register_function(menu="Utilities > Apply clusters-plotter's colormap (ncp)")
+def apply_clusters_plotter_colormap(labels: "napari.layers.Labels", number_of_labels: int = 2):
+    labels.color = get_nice_color_map_rgba_dict(number_of_labels)
 
+@lru_cache(maxsize=16)
+def get_nice_color_map_rgba_dict(num_labels: int = 2):
+    """
+    Produce a napari-compatible colormap for label images
+    """
+    colors = get_nice_colormap()
+
+    # get colormap as rgba array
+    from vispy.color import Color
+
+    cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
+
+    # generate dictionary mapping each prediction to its respective color
+    # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
+    cmap_dict = {
+        i+1: cmap[i % len(cmap)]
+        for i in range( num_labels + 1)
+    }
+    # take care of background label
+    cmap_dict[0] = [0, 0, 0, 0]
+
+    return cmap_dict
+
+@lru_cache(maxsize=1)
 def get_nice_colormap():
     colours_w_old_colors = [
         "#ff7f0e",

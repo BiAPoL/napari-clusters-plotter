@@ -31,6 +31,7 @@ from ._utilities import (
     generate_cluster_image,
     get_layer_tabular_data,
     get_nice_colormap,
+    get_nice_color_map_rgba_dict,
 )
 
 # can be changed to frame or whatever we decide to use
@@ -548,23 +549,7 @@ class PlotterWidget(QWidget):
                 self.graphics_widget.pts,
             )
 
-            # get colormap as rgba array
-            from vispy.color import Color
-
-            cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
-
-            # generate dictionary mapping each prediction to its respective color
-            # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
-            cmap_dict = {
-                int(prediction + 1): (
-                    cmap[int(prediction) % len(cmap)]
-                    if prediction >= 0
-                    else [0, 0, 0, 0]
-                )
-                for prediction in self.cluster_ids
-            }
-            # take care of background label
-            cmap_dict[0] = [0, 0, 0, 0]
+            cmap_dict = get_nice_color_map_rgba_dict(max(self.cluster_ids))
 
             keep_selection = list(self.viewer.layers.selection)
 
@@ -655,3 +640,4 @@ class PlotterWidget(QWidget):
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+
