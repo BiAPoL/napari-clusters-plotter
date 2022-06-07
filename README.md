@@ -19,6 +19,25 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif)
 
+----------------------------------
+
+Jump to:
+- [Usage](#usage)
+  - [Starting point](#starting-point)
+  - [Measurements](#measurements)
+  - [Time-Lapse Measurements](#time-lapse-measurements)
+  - [Plotting](#plotting)
+  - [Time-Lapse Plotting](#time-lapse-plotting)
+  - [Dimensionality reduction: UMAP, t-SNE or PCA](#dimensionality-reduction-umap-t-sne-or-pca)
+  - [Clustering](#clustering)
+  - [Plotting clustering results](#plotting-clustering-results)
+- [Installation](#installation)
+- [Troubleshooting installation](#troubleshooting-installation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+
+
 ## Usage
 
 ### Starting point
