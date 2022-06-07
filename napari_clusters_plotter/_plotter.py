@@ -30,8 +30,8 @@ from ._utilities import (
     dask_cluster_image_timelapse,
     generate_cluster_image,
     get_layer_tabular_data,
-    get_nice_colormap,
     get_nice_color_map_rgba_dict,
+    get_nice_colormap,
 )
 
 # can be changed to frame or whatever we decide to use
@@ -640,4 +640,3 @@ class PlotterWidget(QWidget):
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-
