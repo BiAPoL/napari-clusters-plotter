@@ -58,7 +58,7 @@ A table with the measurements will open:
 
 Afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
 If you are uploading your own measurements make sure that there is a column that specifies the which measurement belongs to which label
-by adding a column with the name "label". If you don't specify this column it will be assumed that measurements start at 1 and each 
+by adding a column with the name "label". If you don't specify this column it will be assumed that measurements start at 1 and each
 column describes the next label.
 
 #### Time-Lapse Measurements
@@ -67,7 +67,7 @@ convert it into a suitable shape using the function: `Tools > Utilities > Conver
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
 Note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
 time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
-If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point, 
+If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
 this column must not be added.
 
 ### Plotting
