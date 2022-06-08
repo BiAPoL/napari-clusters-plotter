@@ -549,7 +549,10 @@ class PlotterWidget(QWidget):
                 self.graphics_widget.pts,
             )
 
-            cmap_dict = get_nice_color_map_rgba_dict(max(self.cluster_ids))
+            cmap_dict_short = get_nice_color_map_rgba_dict()
+            cmap_dict = {
+                i : cmap_dict_short[i%255] for i in range(max(self.cluster_ids)+2)
+            }
 
             keep_selection = list(self.viewer.layers.selection)
 
