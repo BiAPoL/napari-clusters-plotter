@@ -489,6 +489,9 @@ class PlotterWidget(QWidget):
         plot_cluster_name=None,
         redraw_cluster_image=True,
     ):
+        if not self.isVisible():
+            # don't redraw in case the plot is invisible anyway
+            return
 
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
@@ -499,6 +502,9 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
+        tracking_data = (
+            len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
+        )
 
         if (
             plot_cluster_name is not None
@@ -511,10 +517,10 @@ class PlotterWidget(QWidget):
 
             # get long colormap from function
             colors = get_nice_colormap()
-            if len(self.analysed_layer.data.shape) == 4:
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3:
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
                 frame_id = None
                 current_frame = None
             else:
@@ -568,12 +574,20 @@ class PlotterWidget(QWidget):
                 # generate the cluster image -> TODO change so possible
                 # with 2D timelapse data
                 if len(self.analysed_layer.data.shape) == 4:
-                    max_timepoint = features[POINTER].max() + 1
+                    if not tracking_data:
+                        max_timepoint = features[POINTER].max() + 1
 
-                    prediction_lists_per_timepoint = [
-                        features.loc[features[POINTER] == i][plot_cluster_name].tolist()
-                        for i in range(max_timepoint)
-                    ]
+                        prediction_lists_per_timepoint = [
+                            features.loc[features[POINTER] == i][
+                                plot_cluster_name
+                            ].tolist()
+                            for i in range(int(max_timepoint))
+                        ]
+                    else:
+                        prediction_lists_per_timepoint = [
+                            features[plot_cluster_name].tolist()
+                            for i in range(self.analysed_layer.data.shape[0])
+                        ]
 
                     cluster_image = dask_cluster_image_timelapse(
                         self.analysed_layer.data, prediction_lists_per_timepoint
@@ -609,10 +623,10 @@ class PlotterWidget(QWidget):
                 self.viewer.layers.selection.add(s)
 
         else:
-            if len(self.analysed_layer.data.shape) == 4:
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3:
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
                 frame_id = None
                 current_frame = None
             else:
