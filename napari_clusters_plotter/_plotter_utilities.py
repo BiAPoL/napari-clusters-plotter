@@ -170,7 +170,7 @@ def alpha_factor(n_datapoints):
 
 
 def frame_spot_factor():
-    return 5
+    return 1
 
 
 def gen_spot_size(n_datapoints):
