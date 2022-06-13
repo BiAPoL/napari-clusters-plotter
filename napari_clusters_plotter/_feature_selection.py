@@ -1,5 +1,7 @@
 import warnings
 from functools import partial
+import pandas as pd
+import numpy as np
 
 from magicgui.widgets import create_widget
 from napari.layers import Labels
@@ -13,7 +15,6 @@ from qtpy.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -25,23 +26,13 @@ from ._utilities import (
     show_table,
     widgets_inactive,
 )
-
+from._plotter import POINTER
 DEFAULTS = dict(correlation_threshold=0.95)
-NON_DATA_COLUMN_NAMES = ["label", "frame", "index"]
+NON_DATA_COLUMN_NAMES = ["label", POINTER, "index"]
 
 
 @register_dock_widget(menu="Measurement > Feature selection (ncp)")
-class FeatureSelectionWidget(QScrollArea):
-    def __init__(self, napari_viewer):
-        super().__init__()
-        widget = FeatureWidget(napari_viewer=napari_viewer)
-        self.setWidget(widget)
-        self.setWidgetResizable(True)
-        self.setLayout(QVBoxLayout())
-        self.layout().setSpacing(0)
-
-
-class FeatureWidget(QWidget):
+class FeatureSelectionWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -88,10 +79,15 @@ class FeatureWidget(QWidget):
         self.correlation_threshold_container.setVisible(False)
 
         # get all properties to be able to perform feature selection
+        choose_properties_container = QWidget()
         self.properties_list = QListWidget()
         self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.properties_list.setGeometry(QRect(10, 10, 101, 291))
         self.update_properties_list()
+
+        choose_properties_container.setLayout(QVBoxLayout())
+        choose_properties_container.layout().addWidget(QLabel("Measurements"))
+        choose_properties_container.layout().addWidget(self.properties_list)
 
         # Run button
         run_widget = QWidget()
@@ -104,15 +100,6 @@ class FeatureWidget(QWidget):
         update_container.setLayout(QHBoxLayout())
         update_button = QPushButton("Update Measurements")
         update_container.layout().addWidget(update_button)
-
-        # Analyse Correlation Button
-        self.analyse_correlation_container = QWidget()
-        self.analyse_correlation_container.setLayout(QHBoxLayout())
-        self.analyse_correlation_button = QPushButton("Analyse Correlation")
-        self.analyse_correlation_container.layout().addWidget(
-            self.analyse_correlation_button
-        )
-        self.analyse_correlation_container.setVisible(False)
 
         # Defaults button
         defaults_container = QWidget()
@@ -136,39 +123,24 @@ class FeatureWidget(QWidget):
 
             self.run(self.labels_select.value)
 
-        def analyse_clicked():
-            if self.labels_select.value is None:
-                warnings.warn("No labels image was selected!")
-                return
-
-            # measure correlation properties
-            self.analyse_correlation(
-                labels_layer=self.labels_select.value,
-                threshold=self.correlation_threshold.value,
-            )
-
         run_button.clicked.connect(run_clicked)
         update_button.clicked.connect(self.update_properties_list)
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
-        self.analyse_correlation_button.clicked.connect(analyse_clicked)
-
-        # making sure checking before assignment doesn't lead to problems
-        self.correlating_keys = None
+        
+        self.labels_select.changed.connect(self.update_properties_list)        
+        self.last_connected = None
+        self.labels_select.changed.connect(self.activate_property_autoupdate)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(method_container)
         self.layout().addWidget(self.correlation_threshold_container)
+        self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(update_container)
-        self.layout().addWidget(self.analyse_correlation_container)
         self.layout().addWidget(run_widget)
 
-        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
-            for container in self.correlation_containers:
-                self.layout().addWidget(container)
-            self.layout().setSpacing(0)
 
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
@@ -177,14 +149,9 @@ class FeatureWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.method_choice_list.currentIndexChanged.connect(self.change_analyse_button)
         self.method_choice_list.currentIndexChanged.connect(
             self.change_correlation_threshold
         )
-        self.method_choice_list.currentIndexChanged.connect(
-            self.change_correlation_boxes
-        )
-        self.analyse_correlation_button.clicked.connect(self.change_correlation_boxes)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -200,30 +167,6 @@ class FeatureWidget(QWidget):
             active=self.method_choice_list.currentText() == "Correlation Filter",
         )
 
-    def change_analyse_button(self):
-        widgets_inactive(
-            self.analyse_correlation_container,
-            active=self.method_choice_list.currentText() == "Correlation Filter",
-        )
-
-    def change_correlation_boxes(self):
-        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
-            for widget in self.correlation_containers:
-                widgets_inactive(
-                    widget,
-                    active=self.method_choice_list.currentText()
-                    == "Correlation Filter",
-                )
-
-    def inactivate_correlation_boxes(self):
-        try:
-            for widget in self.correlation_containers:
-                widgets_inactive(
-                    widget,
-                    active=False,
-                )
-        except AttributeError:
-            pass
 
     def update_properties_list(self):
         selected_layer = self.labels_select.value
@@ -232,84 +175,32 @@ class FeatureWidget(QWidget):
             if features is not None:
                 self.properties_list.clear()
                 for p in list(features.keys()):
-                    if "label" in p or "CLUSTER_ID" in p or "index" in p:
+                    if (
+                        "label" in p
+                        or "CLUSTER_ID" in p
+                        or "index" in p
+                        or POINTER in p
+                    ):
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
                     item.setSelected(True)
-
-    def analyse_correlation(
-        self,
-        labels_layer,
-        threshold,
-    ):
-        # get newest properties
-        self.update_properties_list()
-
-        # retrieve regionprops from labels_layer
-        df_regprops = get_layer_tabular_data(labels_layer)
-        feature_keys = [
-            key for key in df_regprops.keys() if key not in NON_DATA_COLUMN_NAMES
-        ]
-        df_regprops_only_features = df_regprops[feature_keys]
-        correlating_keys = get_correlating_keys(
-            df_regprops_only_features, threshold=threshold
-        )
-        print(f"correlating keys after analysis {correlating_keys}")
-        # remove label key and save correlating keys into self variable for later recall
-        self.correlating_keys = [
-            [key for key in keygroup] for keygroup in correlating_keys
-        ]
-        print(f"self.correlating keys after analysis {self.correlating_keys}")
-        self.inactivate_correlation_boxes()
-        self.correlation_containers = None
-        self.correlation_key_lists = None
-
-        # adding widgets for correlating features
-        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
-            self.correlation_key_lists = [
-                QListWidget() for correlations in self.correlating_keys
-            ]
-            for widget, key_list in zip(
-                self.correlation_key_lists, self.correlating_keys
-            ):
-                widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-                widget.setGeometry(QRect(10, 10, 101, 291))
-                for i, p in enumerate(key_list):
-                    item = QListWidgetItem(p)
-                    widget.addItem(item)
-
-                    if i == 0:
-                        item.setSelected(True)
-
-            self.correlation_containers = [
-                QWidget() for correlations in self.correlating_keys
-            ]
-            for i, widget in enumerate(self.correlation_containers):
-                widget.setLayout(QVBoxLayout())
-                widget.layout().addWidget(QLabel(f"Correlating Group #{i + 1}"))
-                widget.layout().addWidget(self.correlation_key_lists[i])
-                widget.setVisible(False)
-
-            for container in self.correlation_containers:
-                self.layout().addWidget(container)
-            self.layout().setSpacing(0)
+    
+    def activate_property_autoupdate(self):
+        if self.last_connected is not None:
+            self.last_connected.events.properties.disconnect(
+                self.update_properties_list
+            )
+        self.labels_select.value.events.properties.connect(self.update_properties_list)
+        self.last_connected = self.labels_select.value
 
     # this function runs after the run button is clicked
     def run(self, labels_layer):
         reg_props = get_layer_tabular_data(labels_layer)
 
         if self.method_choice_list.currentText() == "Correlation Filter":
-            kept_keys = []
-            for widget in self.correlation_key_lists:
-                kept_keys += [i.text() for i in widget.selectedItems()]
-            print(f"kept keys: {kept_keys}")
+            resulting_df = correlation_filter(reg_props, self.correlation_threshold.value)
 
-            resulting_df = get_uncorrelating_subselection(
-                reg_props,
-                self.correlating_keys,
-                kept_keys,
-            )
 
             # replace previous table with new table containing only uncorrelating features
             set_features(labels_layer, resulting_df)
@@ -393,3 +284,15 @@ def agglomerate_corr_feats(correlating_features_sets):
         return new_sets
     else:
         return agglomerate_corr_feats(new_sets)
+
+def correlation_filter(region_properties: pd.DataFrame, correlation_threshold):
+    correlation_matrix = region_properties.corr().abs()
+    upper_triangle = correlation_matrix.where(
+        np.triu(
+            np.ones(correlation_matrix.shape)
+            ,k=1
+        ).astype(np.bool)
+    )
+    to_drop = [column for column in upper_triangle.columns if any(upper_triangle[column] > correlation_threshold)]
+
+    return region_properties.drop(to_drop, axis= 1)
