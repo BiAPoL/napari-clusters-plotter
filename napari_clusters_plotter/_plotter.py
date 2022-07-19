@@ -34,6 +34,7 @@ from ._Qt_code import(
     MplCanvas,
     MyNavigationToolbar,
     SelectFromCollection,
+    button,
 )
 
 # can be changed to frame or whatever we decide to use
@@ -137,17 +138,9 @@ class PlotterWidget(QWidget):
         self.plot_cluster_id = QComboBox()
         cluster_container.layout().addWidget(self.plot_cluster_id)
 
-        # Update measurements button
-        update_container = QWidget()
-        update_container.setLayout(QHBoxLayout())
-        update_button = QPushButton("Update Axes/Clustering Selection Boxes")
-        update_container.layout().addWidget(update_button)
-
-        # Run button
-        run_widget = QWidget()
-        run_widget.setLayout(QHBoxLayout())
-        run_button = QPushButton("Run")
-        run_widget.layout().addWidget(run_button)
+        # making buttons
+        run_container,run_button = button("Run")
+        update_container,update_button = button("Update Measurements")
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
@@ -155,7 +148,7 @@ class PlotterWidget(QWidget):
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
         self.layout().addWidget(update_container)
-        self.layout().addWidget(run_widget)
+        self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
 
         # go through all widgets and change spacing

@@ -88,6 +88,12 @@ def int_sbox_containter_and_selection(
 
     return container,selection
 
+def button(name):
+    widget = QWidget()
+    widget.setLayout(QHBoxLayout())
+    button = QPushButton(name)
+    widget.layout().addWidget(button)
+    return widget,button
 
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html

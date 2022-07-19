@@ -33,6 +33,7 @@ from ._Qt_code import (
     labels_container_and_selection,
     title,
     int_sbox_containter_and_selection,
+    button,
 )
 
 DEFAULTS = {
@@ -236,23 +237,10 @@ class ClusteringWidget(QWidget):
         self.custom_name_not_editable.setPlaceholderText(ID_NAME)
         self.custom_name_not_editable.setReadOnly(True)
 
-        # Run button
-        run_container = QWidget()
-        run_container.setLayout(QHBoxLayout())
-        run_button = QPushButton("Run")
-        run_container.layout().addWidget(run_button)
-
-        # Update measurements button
-        update_container = QWidget()
-        update_container.setLayout(QHBoxLayout())
-        update_button = QPushButton("Update Measurements")
-        update_container.layout().addWidget(update_button)
-
-        # Defaults button
-        defaults_container = QWidget()
-        defaults_container.setLayout(QHBoxLayout())
-        defaults_button = QPushButton("Restore Defaults")
-        defaults_container.layout().addWidget(defaults_button)
+        # making buttons
+        run_container,run_button = button("Run")
+        update_container,update_button = button("Update Measurements")
+        defaults_container,defaults_button = button("Restore Defaults")
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)

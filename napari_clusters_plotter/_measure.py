@@ -26,6 +26,7 @@ from ._Qt_code import (
     labels_container_and_selection,
     image_container_and_selection,
     title,
+    button,
 )
 
 @register_dock_widget(
@@ -90,10 +91,7 @@ class MeasureWidget(QWidget):
         self.closest_points_container.setVisible(False)
 
         # Run button
-        run_button_container = QWidget()
-        run_button_container.setLayout(QHBoxLayout())
-        run_button = QPushButton("Run")
-        run_button_container.layout().addWidget(run_button)
+        run_container,run_button = button("Run")
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
@@ -102,7 +100,7 @@ class MeasureWidget(QWidget):
         self.layout().addWidget(reg_props_container)
         self.layout().addWidget(self.reg_props_file_widget)
         self.layout().addWidget(self.closest_points_container)
-        self.layout().addWidget(run_button_container)
+        self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
 
         def run_clicked():

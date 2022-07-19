@@ -34,6 +34,7 @@ from ._Qt_code import (
     measurements_container_and_list,
     labels_container_and_selection,
     title,
+    button,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -214,23 +215,10 @@ class DimensionalityReductionWidget(QWidget):
         self.settings_container_scaler.layout().addWidget(self.standardization.native)
         self.settings_container_scaler.setVisible(False)
 
-        # Run button
-        run_widget = QWidget()
-        run_widget.setLayout(QHBoxLayout())
-        run_button = QPushButton("Run")
-        run_widget.layout().addWidget(run_button)
-
-        # Update measurements button
-        update_container = QWidget()
-        update_container.setLayout(QHBoxLayout())
-        update_button = QPushButton("Update Measurements")
-        update_container.layout().addWidget(update_button)
-
-        # Defaults button
-        defaults_container = QWidget()
-        defaults_container.setLayout(QHBoxLayout())
-        defaults_button = QPushButton("Restore Defaults")
-        defaults_container.layout().addWidget(defaults_button)
+        # making buttons
+        run_container,run_button = button("Run")
+        update_container,update_button = button("Update Measurements")
+        defaults_container,defaults_button = button("Restore Defaults")
 
         def run_clicked():
 
@@ -280,7 +268,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
-        self.layout().addWidget(run_widget)
+        self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
 
         # go through all widgets and change spacing
