@@ -12,8 +12,6 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidgetItem,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -34,7 +32,8 @@ from ._Qt_code import (
     title,
     int_sbox_containter_and_selection,
     button,
-    checkbox
+    checkbox,
+    algorithm_choice,
 )
 
 DEFAULTS = {
@@ -77,18 +76,11 @@ class ClusteringWidget(QWidget):
         choose_properties_container,self.properties_list = measurements_container_and_list()
 
         # selection of the clustering methods
-        self.clust_method_container = QWidget()
-        self.clust_method_container.setLayout(QHBoxLayout())
-        self.clust_method_container.layout().addWidget(QLabel("Clustering Method"))
-        self.clust_method_choice_list = create_widget(
-            widget_type="ComboBox",
+        self.clust_method_container,self.clust_method_choice_list = algorithm_choice(
             name="Clustering_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
-        )
-
-        self.clust_method_container.layout().addWidget(
-            self.clust_method_choice_list.native
+            label="Clustering Method",
         )
 
         # clustering options for KMeans

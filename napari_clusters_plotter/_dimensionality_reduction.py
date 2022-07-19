@@ -1,6 +1,7 @@
 import warnings
 from functools import partial
 from typing import Tuple
+from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -11,8 +12,6 @@ from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
-    QListWidgetItem,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -35,7 +34,8 @@ from ._Qt_code import (
     labels_container_and_selection,
     title,
     button,
-    checkbox
+    checkbox,
+    algorithm_choice,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -52,6 +52,12 @@ EXCLUDE = [ID_NAME,POINTER,"UMAP","t-SNE"]
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
 class DimensionalityReductionWidget(QWidget):
+    class Options(Enum):
+        EMPTY = ""
+        UMAP = "UMAP"
+        TSNE = "t-SNE"
+        PCA = "PCA"
+
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -66,14 +72,12 @@ class DimensionalityReductionWidget(QWidget):
         labels_layer_selection_container, self.labels_select= labels_container_and_selection()
 
         # selection of dimension reduction algorithm
-        algorithm_container = QWidget()
-        algorithm_container.setLayout(QHBoxLayout())
-        algorithm_container.layout().addWidget(
-            QLabel("Dimensionality Reduction Algorithm")
+        algorithm_container,self.algorithm_choice_list = algorithm_choice(
+            name="Clustering_method",
+            value=self.Options.EMPTY.value,
+            options={"choices": [e.value for e in self.Options]},
+            label="Clustering Method",
         )
-        self.algorithm_choice_list = QComboBox()
-        self.algorithm_choice_list.addItems(["", "UMAP", "t-SNE", "PCA"])
-        algorithm_container.layout().addWidget(self.algorithm_choice_list)
 
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
         # used for manifold approximation. Larger values result in more global views of the manifold, while smaller
@@ -226,7 +230,7 @@ class DimensionalityReductionWidget(QWidget):
                 warnings.warn("Please select some measurements!")
                 return
 
-            if self.algorithm_choice_list.currentText() == "":
+            if self.algorithm_choice_list.current_choice == self.Options.EMPTY.value:
                 warnings.warn("Please select dimensionality reduction algorithm.")
                 return
 
@@ -236,7 +240,7 @@ class DimensionalityReductionWidget(QWidget):
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value,
                 self.perplexity.value,
-                self.algorithm_choice_list.currentText(),
+                self.algorithm_choice_list.current_choice,
                 self.standardization.value,
                 self.explained_variance.value,
                 self.pca_components.value,
@@ -274,7 +278,7 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.algorithm_choice_list.currentIndexChanged.connect(
+        self.algorithm_choice_list.changed.connect(
             self.change_settings_visibility
         )
 
@@ -289,26 +293,32 @@ class DimensionalityReductionWidget(QWidget):
     def change_settings_visibility(self):
         widgets_inactive(
             self.n_neighbors_container,
-            active=self.algorithm_choice_list.currentText() == "UMAP",
+            active=self.algorithm_choice_list.current_choice 
+            == self.Options.UMAP.value,
         )
         widgets_inactive(
             self.settings_container_scaler,
             active=(
-                self.algorithm_choice_list.currentText() == "UMAP"
-                or self.algorithm_choice_list.currentText() == "t-SNE"
+                self.algorithm_choice_list.current_choice 
+                == self.Options.UMAP.value
+                or self.algorithm_choice_list.current_choice 
+                == self.Options.TSNE.value
             ),
         )
         widgets_inactive(
             self.perplexity_container,
-            active=self.algorithm_choice_list.currentText() == "t-SNE",
+            active=self.algorithm_choice_list.current_choice 
+            == self.Options.TSNE.value,
         )
         widgets_inactive(
             self.pca_components_container,
-            active=self.algorithm_choice_list.currentText() == "PCA",
+            active=self.algorithm_choice_list.current_choice
+            == self.Options.PCA.value,
         )
         widgets_inactive(
             self.explained_variance_container,
-            active=self.algorithm_choice_list.currentText() == "PCA",
+            active=self.algorithm_choice_list.current_choice
+            == self.Options.PCA.value,
         )
         
 
@@ -383,7 +393,7 @@ class DimensionalityReductionWidget(QWidget):
             print("Dimensionality reduction finished")
 
         # depending on the selected dim reduction algorithm start a secondary thread
-        if selected_algorithm == "UMAP":
+        if selected_algorithm == self.Options.UMAP.value:
             self.worker = create_worker(
                 umap,
                 properties_to_reduce,
@@ -394,7 +404,7 @@ class DimensionalityReductionWidget(QWidget):
             self.worker.returned.connect(return_func_dim_reduction)
             self.worker.start()
 
-        elif selected_algorithm == "t-SNE":
+        elif selected_algorithm == self.Options.TSNE.value:
             self.worker = create_worker(
                 tsne,
                 properties_to_reduce,
@@ -405,7 +415,7 @@ class DimensionalityReductionWidget(QWidget):
             self.worker.returned.connect(return_func_dim_reduction)
             self.worker.start()
 
-        elif selected_algorithm == "PCA":
+        elif selected_algorithm == self.Options.PCA.value:
             self.worker = create_worker(
                 pca,
                 properties_to_reduce,

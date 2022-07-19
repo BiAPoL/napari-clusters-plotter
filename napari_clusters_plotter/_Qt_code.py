@@ -1,3 +1,4 @@
+from matplotlib import container
 from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -108,6 +109,22 @@ def checkbox(name:str, value, visible:bool= False):
     container.setVisible(visible)
 
     return container, selection
+
+def algorithm_choice(name:str,value,options:dict,label:str):
+    # selection of the clustering methods
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    container.layout().addWidget(QLabel(label))
+    choice_list = create_widget(
+        widget_type="ComboBox",
+        name=name,
+        value=value,
+        options=options,
+    )
+    container.layout().addWidget(
+        choice_list.native
+    )
+    return container,choice_list
 
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
