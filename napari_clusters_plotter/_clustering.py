@@ -344,8 +344,10 @@ class ClusteringWidget(QWidget):
                 == self.Options.HDBSCAN.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.GMM.value
-                or self.clust_method_choice_list.current_choice == self.Options.MS.value
-                or self.clust_method_choice_list.current_choice == self.Options.AC.value
+                or self.clust_method_choice_list.current_choice 
+                == self.Options.MS.value
+                or self.clust_method_choice_list.current_choice 
+                == self.Options.AC.value
             ),
         )
 
