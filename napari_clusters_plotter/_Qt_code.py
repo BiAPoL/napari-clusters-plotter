@@ -69,6 +69,7 @@ def int_sbox_containter_and_selection(
     value:int,
     min:int = 2,
     label:str="Number of Clusters",
+    visible:bool=False
 ):
     container = QWidget()
     container.setLayout(QHBoxLayout())
@@ -84,7 +85,7 @@ def int_sbox_containter_and_selection(
     container.layout().addWidget(
         selection.native
     )
-    container.setVisible(False)
+    container.setVisible(visible)
 
     return container,selection
 
@@ -94,6 +95,19 @@ def button(name):
     button = QPushButton(name)
     widget.layout().addWidget(button)
     return widget,button
+
+def checkbox(name:str, value, visible:bool= False):
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    selection = create_widget(
+        widget_type="CheckBox",
+        name=name,
+        value=value,
+    )
+    container.layout().addWidget(selection.native)
+    container.setVisible(visible)
+
+    return container, selection
 
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html

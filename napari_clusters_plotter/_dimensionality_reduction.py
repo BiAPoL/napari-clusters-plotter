@@ -35,6 +35,7 @@ from ._Qt_code import (
     labels_container_and_selection,
     title,
     button,
+    checkbox
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -203,17 +204,12 @@ class DimensionalityReductionWidget(QWidget):
         )
         self.explained_variance_container.layout().addWidget(help_explained_variance)
         self.explained_variance_container.setVisible(False)
+
         # checkbox whether data should be standardized
-        self.settings_container_scaler = QWidget()
-        self.settings_container_scaler.setLayout(QHBoxLayout())
-        self.standardization = create_widget(
-            widget_type="CheckBox",
+        self.settings_container_scaler,self.standardization= checkbox(
             name="Standardize Features",
             value=DEFAULTS["standardization"],
         )
-
-        self.settings_container_scaler.layout().addWidget(self.standardization.native)
-        self.settings_container_scaler.setVisible(False)
 
         # making buttons
         run_container,run_button = button("Run")

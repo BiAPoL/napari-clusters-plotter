@@ -34,6 +34,7 @@ from ._Qt_code import (
     title,
     int_sbox_containter_and_selection,
     button,
+    checkbox
 )
 
 DEFAULTS = {
@@ -147,18 +148,10 @@ class ClusteringWidget(QWidget):
         )
 
         # checkbox whether data should be standardized
-        self.clustering_settings_container_scaler = QWidget()
-        self.clustering_settings_container_scaler.setLayout(QHBoxLayout())
-        self.standardization = create_widget(
-            widget_type="CheckBox",
+        self.clustering_settings_container_scaler,self.standardization = checkbox(
             name="Standardize Features",
             value=DEFAULTS["standardization"],
         )
-
-        self.clustering_settings_container_scaler.layout().addWidget(
-            self.standardization.native
-        )
-        self.clustering_settings_container_scaler.setVisible(False)
 
         # Clustering options for HDBSCAN
         # selection of the minimum size of clusters
