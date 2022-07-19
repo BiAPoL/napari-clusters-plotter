@@ -18,6 +18,7 @@ from qtpy.QtWidgets import (
 )
 
 from ._plotter import POINTER
+from ._clustering import ID_NAME
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
@@ -26,6 +27,7 @@ from ._utilities import (
     set_features,
     show_table,
     widgets_inactive,
+    update_properties_list,
 )
 
 from ._Qt_code import (
@@ -44,7 +46,7 @@ DEFAULTS = {
     "pca_components": 0,
     "explained_variance": 95.0,
 }
-
+EXCLUDE = [ID_NAME,POINTER,"UMAP","t-SNE"]
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
 class DimensionalityReductionWidget(QWidget):
@@ -257,11 +259,11 @@ class DimensionalityReductionWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(self.update_properties_list)
+        update_button.clicked.connect(partial(update_properties_list,self,EXCLUDE))
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(self.update_properties_list)
+        self.labels_select.changed.connect(partial(update_properties_list,self,EXCLUDE))
 
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)
@@ -347,32 +349,12 @@ class DimensionalityReductionWidget(QWidget):
             active=self.algorithm_choice_list.currentText() == "PCA",
         )
 
-    def update_properties_list(self):
-        selected_layer = self.labels_select.value
-        if selected_layer is not None:
-            features = get_layer_tabular_data(selected_layer)
-            if features is not None:
-                self.properties_list.clear()
-                for p in list(features.keys()):
-                    if (
-                        "label" in p
-                        or "CLUSTER_ID" in p
-                        or "UMAP" in p
-                        or "t-SNE" in p
-                        or "index" in p
-                        or POINTER in p
-                    ):
-                        continue
-                    item = QListWidgetItem(p)
-                    self.properties_list.addItem(item)
-                    item.setSelected(True)
-
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             self.last_connected.events.properties.disconnect(
-                self.update_properties_list
+                partial(update_properties_list,self,EXCLUDE)
             )
-        self.labels_select.value.events.properties.connect(self.update_properties_list)
+        self.labels_select.value.events.properties.connect(partial(update_properties_list,self,EXCLUDE))
         self.last_connected = self.labels_select.value
 
     # this function runs after the run button is clicked

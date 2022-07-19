@@ -64,25 +64,29 @@ def title(name: str):
 
     return title_container
 
-def n_clusters_containter_and_selection(name:str,value:int,label:str="Number of Clusters"):
-    cluster_n_container = QWidget()
-    cluster_n_container.setLayout(QHBoxLayout())
-    cluster_n_container.layout().addWidget(
+def int_sbox_containter_and_selection(
+    name:str,
+    value:int,
+    min:int = 2,
+    label:str="Number of Clusters",
+):
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    container.layout().addWidget(
         QLabel(label)
     )
-    cluster_n_selection = create_widget(
+    selection = create_widget(
         widget_type="SpinBox",
         name=name,
         value=value,
-        options={"min": 2, "step": 1},
+        options={"min": min, "step": 1},
     )
-
-    cluster_n_container.layout().addWidget(
-        cluster_n_selection.native
+    container.layout().addWidget(
+        selection.native
     )
-    cluster_n_container.setVisible(False)
+    container.setVisible(False)
 
-    return cluster_n_container,cluster_n_selection
+    return container,selection
 
 
 # Class below was based upon matplotlib lasso selection example:
