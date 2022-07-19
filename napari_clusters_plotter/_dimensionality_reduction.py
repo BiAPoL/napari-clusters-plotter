@@ -32,6 +32,11 @@ from ._utilities import (
     widgets_inactive,
 )
 
+from ._Qt_code import (
+    measurements_container_and_list,
+    labels_selction_container_and_selection,
+)
+
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
 
@@ -59,12 +64,7 @@ class DimensionalityReductionWidget(QWidget):
         label_container.layout().addWidget(QLabel("<b>Dimensionality reduction</b>"))
 
         # widget for the selection of labels layer
-        labels_layer_selection_container = QWidget()
-        labels_layer_selection_container.setLayout(QHBoxLayout())
-        labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-        self.labels_select = create_widget(annotation=Labels, label="labels_layer")
-
-        labels_layer_selection_container.layout().addWidget(self.labels_select.native)
+        labels_layer_selection_container, self.labels_select= labels_selction_container_and_selection()
 
         # selection of dimension reduction algorithm
         algorithm_container = QWidget()
@@ -141,14 +141,7 @@ class DimensionalityReductionWidget(QWidget):
         self.perplexity_container.setVisible(False)
 
         # select properties of which to produce a dimensionality reduced version
-        choose_properties_container = QWidget()
-        self.properties_list = QListWidget()
-        self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.properties_list.setGeometry(QRect(10, 10, 101, 291))
-
-        choose_properties_container.setLayout(QVBoxLayout())
-        choose_properties_container.layout().addWidget(QLabel("Measurements"))
-        choose_properties_container.layout().addWidget(self.properties_list)
+        choose_properties_container,self.properties_list = measurements_container_and_list()
 
         # selection of the number of components to keep after PCA transformation,
         # values above 0 will override explained variance option

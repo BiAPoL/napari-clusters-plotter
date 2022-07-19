@@ -31,6 +31,11 @@ from ._utilities import (
     widgets_inactive,
 )
 
+from ._Qt_code import (
+    measurements_container_and_list,
+    labels_selction_container_and_selection,
+)
+
 DEFAULTS = {
     "kmeans_nr_clusters": 2,
     "kmeans_nr_iterations": 300,
@@ -67,21 +72,10 @@ class ClusteringWidget(QWidget):
         title_container.layout().addWidget(QLabel("<b>Clustering</b>"))
 
         # widget for the selection of labels layer
-        labels_layer_selection_container = QWidget()
-        labels_layer_selection_container.setLayout(QHBoxLayout())
-        labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-        self.labels_select = create_widget(annotation=Labels, label="labels_layer")
-
-        labels_layer_selection_container.layout().addWidget(self.labels_select.native)
+        labels_layer_selection_container,self.labels_select= labels_selction_container_and_selection()
 
         # widget for the selection of properties to perform clustering
-        choose_properties_container = QWidget()
-        choose_properties_container.setLayout(QVBoxLayout())
-        choose_properties_container.layout().addWidget(QLabel("Measurements"))
-        self.properties_list = QListWidget()
-        self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.properties_list.setGeometry(QRect(10, 10, 101, 291))
-        choose_properties_container.layout().addWidget(self.properties_list)
+        choose_properties_container,self.properties_list = measurements_container_and_list()
 
         # selection of the clustering methods
         self.clust_method_container = QWidget()
