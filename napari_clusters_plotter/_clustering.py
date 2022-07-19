@@ -6,16 +6,12 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
-from napari.layers import Labels
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
-    QAbstractItemView,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QListWidget,
     QListWidgetItem,
     QPushButton,
     QVBoxLayout,
@@ -33,7 +29,9 @@ from ._utilities import (
 
 from ._Qt_code import (
     measurements_container_and_list,
-    labels_selction_container_and_selection,
+    labels_container_and_selection,
+    title,
+    n_clusters_containter_and_selection,
 )
 
 DEFAULTS = {
@@ -67,12 +65,10 @@ class ClusteringWidget(QWidget):
         self.setLayout(QVBoxLayout())
         self.viewer = napari_viewer
 
-        title_container = QWidget()
-        title_container.setLayout(QVBoxLayout())
-        title_container.layout().addWidget(QLabel("<b>Clustering</b>"))
+        title_container = title("<b>Clustering</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container,self.labels_select= labels_selction_container_and_selection()
+        labels_layer_selection_container,self.labels_select= labels_container_and_selection()
 
         # widget for the selection of properties to perform clustering
         choose_properties_container,self.properties_list = measurements_container_and_list()
@@ -94,22 +90,10 @@ class ClusteringWidget(QWidget):
 
         # clustering options for KMeans
         # selection of number of clusters
-        self.kmeans_settings_container_nr = QWidget()
-        self.kmeans_settings_container_nr.setLayout(QHBoxLayout())
-        self.kmeans_settings_container_nr.layout().addWidget(
-            QLabel("Number of Clusters")
-        )
-        self.kmeans_nr_clusters = create_widget(
-            widget_type="SpinBox",
+        self.kmeans_settings_container_nr,self.kmeans_nr_clusters = n_clusters_containter_and_selection(
             name="kmeans_nr_clusters",
-            value=DEFAULTS["kmeans_nr_clusters"],
-            options={"min": 2, "step": 1},
+            value=DEFAULTS["kmeans_nr_clusters"]
         )
-
-        self.kmeans_settings_container_nr.layout().addWidget(
-            self.kmeans_nr_clusters.native
-        )
-        self.kmeans_settings_container_nr.setVisible(False)
 
         # selection of number of iterations
         self.kmeans_settings_container_iter = QWidget()
@@ -131,18 +115,10 @@ class ClusteringWidget(QWidget):
 
         # clustering options for Gaussian mixture model
         # selection of number of clusters
-        self.gmm_settings_container_nr = QWidget()
-        self.gmm_settings_container_nr.setLayout(QHBoxLayout())
-        self.gmm_settings_container_nr.layout().addWidget(QLabel("Number of Clusters"))
-        self.gmm_nr_clusters = create_widget(
-            widget_type="SpinBox",
+        self.gmm_settings_container_nr,self.gmm_nr_clusters= n_clusters_containter_and_selection(
             name="gmm_nr_clusters",
             value=DEFAULTS["gmm_nr_clusters"],
-            options={"min": 2, "step": 1},
         )
-
-        self.gmm_settings_container_nr.layout().addWidget(self.gmm_nr_clusters.native)
-        self.gmm_settings_container_nr.setVisible(False)
 
         # clustering options for Mean Shift
         # selection of quantile
@@ -178,22 +154,10 @@ class ClusteringWidget(QWidget):
         #
         # clustering options for Agglomerative Clustering
         # selection of number of clusters
-        self.ac_settings_container_clusters = QWidget()
-        self.ac_settings_container_clusters.setLayout(QHBoxLayout())
-        self.ac_settings_container_clusters.layout().addWidget(
-            QLabel("Number of clusters")
-        )
-        self.ac_n_clusters = create_widget(
-            widget_type="SpinBox",
+        self.ac_settings_container_clusters,self.ac_n_clusters= n_clusters_containter_and_selection(
             name="ac_n_clusters",
             value=DEFAULTS["ac_n_clusters"],
-            options={"min": 2, "step": 1},
         )
-
-        self.ac_settings_container_clusters.layout().addWidget(
-            self.ac_n_clusters.native
-        )
-        self.ac_settings_container_clusters.setVisible(False)
 
         # selection of number of clusters
         self.ac_settings_container_neighbors = QWidget()

@@ -5,16 +5,12 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
-from napari.layers import Labels
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
-    QAbstractItemView,
     QComboBox,
     QHBoxLayout,
     QLabel,
-    QListWidget,
     QListWidgetItem,
     QPushButton,
     QVBoxLayout,
@@ -34,7 +30,8 @@ from ._utilities import (
 
 from ._Qt_code import (
     measurements_container_and_list,
-    labels_selction_container_and_selection,
+    labels_container_and_selection,
+    title,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -59,12 +56,10 @@ class DimensionalityReductionWidget(QWidget):
 
         # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
-        label_container = QWidget()
-        label_container.setLayout(QVBoxLayout())
-        label_container.layout().addWidget(QLabel("<b>Dimensionality reduction</b>"))
+        label_container = title("<b>Dimensionality reduction</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container, self.labels_select= labels_selction_container_and_selection()
+        labels_layer_selection_container, self.labels_select= labels_container_and_selection()
 
         # selection of dimension reduction algorithm
         algorithm_container = QWidget()

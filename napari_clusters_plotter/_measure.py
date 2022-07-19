@@ -7,7 +7,6 @@ import pandas as pd
 import pyclesperanto_prototype as cle
 from magicgui.types import FileDialogMode
 from magicgui.widgets import FileEdit, create_widget
-from napari.layers import Image, Labels
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import (
@@ -23,6 +22,11 @@ from tqdm import tqdm
 from ._plotter import POINTER
 from ._utilities import set_features, show_table, widgets_inactive
 
+from ._Qt_code import (
+    labels_container_and_selection,
+    image_container_and_selection,
+    title,
+)
 
 @register_dock_widget(
     menu="Measurement > Measure intensity, shape and neighbor counts (ncp)"
@@ -43,24 +47,14 @@ class MeasureWidget(QWidget):
         self.viewer = napari_viewer
         self.setLayout(QVBoxLayout())
 
-        title_container = QWidget()
-        title_container.setLayout(QVBoxLayout())
-        title_container.layout().addWidget(QLabel("<b>Measurement</b>"))
-
-        self.image_select = create_widget(annotation=Image, label="image_layer")
-        self.labels_select = create_widget(annotation=Labels, label="labels_layer")
+        title_container = title("<b>Measurement</b>")
+  
 
         # widget for the selection of image layer
-        image_layer_selection_container = QWidget()
-        image_layer_selection_container.setLayout(QHBoxLayout())
-        image_layer_selection_container.layout().addWidget(QLabel("Image layer"))
-        image_layer_selection_container.layout().addWidget(self.image_select.native)
+        image_layer_selection_container, self.image_select = image_container_and_selection()
 
         # widget for the selection of labels layer
-        labels_layer_selection_container = QWidget()
-        labels_layer_selection_container.setLayout(QHBoxLayout())
-        labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-        labels_layer_selection_container.layout().addWidget(self.labels_select.native)
+        labels_layer_selection_container,self.labels_select= labels_container_and_selection()
 
         # selection if region properties should be measured now or uploaded from file
         reg_props_container = QWidget()
