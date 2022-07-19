@@ -182,8 +182,8 @@ class ClusteringWidget(QWidget):
             'style="text-decoration:none; color:white"><b>?</b></a>'
         )
         help_min_clusters_size.setToolTip(
-            "The minimum size of clusters; single linkage splits that contain fewer points than this will be "
-            "considered points falling out of a cluster rather than a cluster splitting into two new clusters. "
+            "The minimum size of clusters; single linkage splits that contain fewer points than this will be\n"
+            "considered points falling out of a cluster rather than a cluster splitting into two new clusters.\n"
             " Click on question mark to read more."
         )
         self.hdbscan_min_clusters_size.native.setMaximumWidth(70)
@@ -213,8 +213,8 @@ class ClusteringWidget(QWidget):
             'style="text-decoration:none; color:white"><b>?</b></a>'
         )
         help_min_nr_samples.setToolTip(
-            "The number of samples in a neighbourhood for a point to be considered a core "
-            "point. By default it is equal to the minimum cluster size. Click on the "
+            "The number of samples in a neighbourhood for a point to be considered a core\n"
+            "point. By default it is equal to the minimum cluster size. Click on the\n"
             "question mark to read more."
         )
         self.hdbscan_min_nr_samples.native.setMaximumWidth(70)

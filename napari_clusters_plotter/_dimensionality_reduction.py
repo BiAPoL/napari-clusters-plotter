@@ -96,9 +96,9 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         help_n_neighbors.setToolTip(
-            "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold "
-            "approximation. Larger values result in more global views of the manifold, while smaller values "
-            "result in more local data being preserved. In general, it should be in the range 2 to 100. Click on the "
+            "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold\n"
+            "approximation. Larger values result in more global views of the manifold, while smaller values\n"
+            "result in more local data being preserved. In general, it should be in the range 2 to 100. Click on the\n"
             "question mark to read more."
         )
 
@@ -127,9 +127,9 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         help_perplexity.setToolTip(
-            "The perplexity is related to the number of nearest neighbors that is used in other manifold learning "
-            "algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5 and "
-            "50. Different values can result in significantly different results. "
+            "The perplexity is related to the number of nearest neighbors that is used in other manifold learning\n"
+            "algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5 and\n"
+            "50. Different values can result in significantly different results.\n"
             "Click on the question mark to read more."
         )
 
@@ -161,8 +161,8 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         help_pca_components.setToolTip(
-            "The number of components sets the number of principal components to be included after the transformation. "
-            "When set to 0 the number of components that are selected is determined by the explained variance "
+            "The number of components sets the number of principal components to be included after the transformation.\n"
+            "When set to 0 the number of components that are selected is determined by the explained variance\n"
             "threshold. Click on the question mark to read more."
         )
 
@@ -192,9 +192,9 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         help_explained_variance.setToolTip(
-            "The explained variance threshold sets the amount of variance in the dataset that can minimally be "
-            "represented by the principal components. The closer the threshold is to 100% ,the more the variance in "
-            "the dataset can be accounted for by the chosen principal components (and the less dimensionality "
+            "The explained variance threshold sets the amount of variance in the dataset that can minimally be\n"
+            "represented by the principal components. The closer the threshold is to 100% ,the more the variance in\n"
+            "the dataset can be accounted for by the chosen principal components (and the less dimensionality\n"
             "reduction will be perfomed as a result). Click on the question mark to read more."
         )
 
@@ -279,16 +279,7 @@ class DimensionalityReductionWidget(QWidget):
 
         # hide widgets unless appropriate options are chosen
         self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_pca_components
-        )
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_explained_variance
-        )
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_umap_settings
-        )
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_tsne_settings
+            self.change_settings_visibility
         )
 
     def showEvent(self, event) -> None:
@@ -299,7 +290,7 @@ class DimensionalityReductionWidget(QWidget):
         self.labels_select.reset_choices(event)
 
     # toggle widgets visibility according to what is selected
-    def change_umap_settings(self):
+    def change_settings_visibility(self):
         widgets_inactive(
             self.n_neighbors_container,
             active=self.algorithm_choice_list.currentText() == "UMAP",
@@ -311,31 +302,19 @@ class DimensionalityReductionWidget(QWidget):
                 or self.algorithm_choice_list.currentText() == "t-SNE"
             ),
         )
-
-    def change_tsne_settings(self):
         widgets_inactive(
             self.perplexity_container,
             active=self.algorithm_choice_list.currentText() == "t-SNE",
         )
         widgets_inactive(
-            self.settings_container_scaler,
-            active=(
-                self.algorithm_choice_list.currentText() == "UMAP"
-                or self.algorithm_choice_list.currentText() == "t-SNE"
-            ),
-        )
-
-    def change_pca_components(self):
-        widgets_inactive(
             self.pca_components_container,
             active=self.algorithm_choice_list.currentText() == "PCA",
         )
-
-    def change_explained_variance(self):
         widgets_inactive(
             self.explained_variance_container,
             active=self.algorithm_choice_list.currentText() == "PCA",
         )
+        
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
