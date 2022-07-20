@@ -28,6 +28,7 @@ import os
 from qtpy.QtGui import QIcon
 
 ICON_ROOT = PathL(__file__).parent / "icons"
+MAX_WIDTH = 100
 
 def measurements_container_and_list():
     properties_container = QWidget()
@@ -70,25 +71,94 @@ def int_sbox_containter_and_selection(
     value:int,
     min:int = 2,
     label:str="Number of Clusters",
-    visible:bool=False
+    visible:bool=False,
+    max_width: int = MAX_WIDTH,
+    tool_tip:str = None,
+    tool_link:str =None,
 ):
     container = QWidget()
     container.setLayout(QHBoxLayout())
     container.layout().addWidget(
         QLabel(label)
     )
+
     selection = create_widget(
         widget_type="SpinBox",
         name=name,
         value=value,
         options={"min": min, "step": 1},
     )
+    help = QLabel()
+    if tool_link is not None:
+        help.setOpenExternalLinks(True)
+        help.setText(
+            f'<a href="{tool_link}" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+    if tool_tip is not None:
+        help.setToolTip(
+            f'{tool_tip}\nClick on question mark to read more.'
+        )
+    
+    container.layout().addStretch()
+    selection.native.setMaximumWidth(max_width)
     container.layout().addWidget(
         selection.native
     )
+    if tool_link is not None or tool_tip is not None:
+        container.layout().addWidget(help)
     container.setVisible(visible)
 
     return container,selection
+
+def float_sbox_containter_and_selection(
+    name:str,
+    value:int,
+    label:str,
+    min:float = 0,
+    step: float = 0.1,
+    max:float =1,
+    visible:bool=False,
+    max_width: int = MAX_WIDTH,
+    tool_tip:str = None,
+    tool_link:str =None,
+):
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    container.layout().addWidget(
+        QLabel(label)
+    )
+
+    selection = create_widget(
+        widget_type="FloatSpinBox",
+        name=name,
+        value=value,
+        options={"min": min, "step": step, "max": max},
+    )
+    help = QLabel()
+    if tool_link is not None:
+        help.setOpenExternalLinks(True)
+        help.setText(
+            f'<a href="{tool_link}" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+    if tool_tip is not None:
+        help.setToolTip(
+            f'{tool_tip}\nClick on question mark to read more.'
+        )
+    
+    container.layout().addStretch()
+    selection.native.setMaximumWidth(max_width)
+    container.layout().addWidget(
+        selection.native
+    )
+    if tool_link is not None or tool_tip is not None:
+        container.layout().addWidget(help)
+    container.setVisible(visible)
+
+    return container,selection
+
+
 
 def button(name):
     widget = QWidget()
