@@ -1,7 +1,6 @@
 import os
 import warnings
 
-
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
@@ -13,12 +12,20 @@ from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
+from ._Qt_code import (
+    ICON_ROOT,
+    MplCanvas,
+    MyNavigationToolbar,
+    SelectFromCollection,
+    button,
+    labels_container_and_selection,
+    title,
+)
 from ._utilities import (
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
@@ -27,18 +34,9 @@ from ._utilities import (
     get_nice_colormap,
 )
 
-from ._Qt_code import(
-    labels_container_and_selection,
-    title,
-    ICON_ROOT,
-    MplCanvas,
-    MyNavigationToolbar,
-    SelectFromCollection,
-    button,
-)
-
 # can be changed to frame or whatever we decide to use
 POINTER = "frame"
+
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
@@ -120,7 +118,10 @@ class PlotterWidget(QWidget):
         label_container = title("<b>Plotting</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container,self.labels_select = labels_container_and_selection()
+        (
+            labels_layer_selection_container,
+            self.labels_select,
+        ) = labels_container_and_selection()
 
         # widget for the selection of axes
         axes_container = QWidget()
@@ -139,8 +140,8 @@ class PlotterWidget(QWidget):
         cluster_container.layout().addWidget(self.plot_cluster_id)
 
         # making buttons
-        run_container,run_button = button("Run")
-        update_container,update_button = button("Update Measurements")
+        run_container, run_button = button("Run")
+        update_container, update_button = button("Update Measurements")
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)

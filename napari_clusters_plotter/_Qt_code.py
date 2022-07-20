@@ -1,4 +1,16 @@
+import os
+from pathlib import Path as PathL
+
+import numpy as np
+from magicgui.widgets import create_widget
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
+from matplotlib.path import Path
+from matplotlib.widgets import LassoSelector, RectangleSelector
+from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
+from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -8,24 +20,10 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from magicgui.widgets import create_widget
-from napari.layers import Labels, Image
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-from matplotlib.path import Path
-from matplotlib.widgets import LassoSelector, RectangleSelector
-from pathlib import Path as PathL
-
-import numpy as np
-import os
-
-
-from qtpy.QtGui import QIcon
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 MAX_WIDTH = 100
+
 
 def measurements_container_and_list():
     properties_container = QWidget()
@@ -38,6 +36,7 @@ def measurements_container_and_list():
 
     return properties_container, properties_list
 
+
 def labels_container_and_selection():
     labels_layer_selection_container = QWidget()
     labels_layer_selection_container.setLayout(QHBoxLayout())
@@ -46,6 +45,7 @@ def labels_container_and_selection():
     labels_layer_selection_container.layout().addWidget(labels_select.native)
 
     return labels_layer_selection_container, labels_select
+
 
 def image_container_and_selection():
     image_select = create_widget(annotation=Image, label="image_layer")
@@ -56,6 +56,7 @@ def image_container_and_selection():
 
     return image_layer_selection_container, image_select
 
+
 def title(name: str):
     title_container = QWidget()
     title_container.setLayout(QVBoxLayout())
@@ -63,21 +64,20 @@ def title(name: str):
 
     return title_container
 
+
 def int_sbox_containter_and_selection(
-    name:str,
-    value:int,
-    min:int = 2,
-    label:str="Number of Clusters",
-    visible:bool=False,
+    name: str,
+    value: int,
+    min: int = 2,
+    label: str = "Number of Clusters",
+    visible: bool = False,
     max_width: int = MAX_WIDTH,
-    tool_tip:str = None,
-    tool_link:str =None,
+    tool_tip: str = None,
+    tool_link: str = None,
 ):
     container = QWidget()
     container.setLayout(QHBoxLayout())
-    container.layout().addWidget(
-        QLabel(label)
-    )
+    container.layout().addWidget(QLabel(label))
 
     selection = create_widget(
         widget_type="SpinBox",
@@ -93,38 +93,33 @@ def int_sbox_containter_and_selection(
             'style="text-decoration:none; color:white"><b>?</b></a>'
         )
     if tool_tip is not None:
-        help.setToolTip(
-            f'{tool_tip}\nClick on question mark to read more.'
-        )
-    
+        help.setToolTip(f"{tool_tip}\nClick on question mark to read more.")
+
     container.layout().addStretch()
     selection.native.setMaximumWidth(max_width)
-    container.layout().addWidget(
-        selection.native
-    )
+    container.layout().addWidget(selection.native)
     if tool_link is not None or tool_tip is not None:
         container.layout().addWidget(help)
     container.setVisible(visible)
 
-    return container,selection
+    return container, selection
+
 
 def float_sbox_containter_and_selection(
-    name:str,
-    value:int,
-    label:str,
-    min:float = 0,
+    name: str,
+    value: int,
+    label: str,
+    min: float = 0,
     step: float = 0.1,
-    max:float =1,
-    visible:bool=False,
+    max: float = 1,
+    visible: bool = False,
     max_width: int = MAX_WIDTH,
-    tool_tip:str = None,
-    tool_link:str =None,
+    tool_tip: str = None,
+    tool_link: str = None,
 ):
     container = QWidget()
     container.setLayout(QHBoxLayout())
-    container.layout().addWidget(
-        QLabel(label)
-    )
+    container.layout().addWidget(QLabel(label))
 
     selection = create_widget(
         widget_type="FloatSpinBox",
@@ -140,21 +135,16 @@ def float_sbox_containter_and_selection(
             'style="text-decoration:none; color:white"><b>?</b></a>'
         )
     if tool_tip is not None:
-        help.setToolTip(
-            f'{tool_tip}\nClick on question mark to read more.'
-        )
-    
+        help.setToolTip(f"{tool_tip}\nClick on question mark to read more.")
+
     container.layout().addStretch()
     selection.native.setMaximumWidth(max_width)
-    container.layout().addWidget(
-        selection.native
-    )
+    container.layout().addWidget(selection.native)
     if tool_link is not None or tool_tip is not None:
         container.layout().addWidget(help)
     container.setVisible(visible)
 
-    return container,selection
-
+    return container, selection
 
 
 def button(name):
@@ -162,9 +152,10 @@ def button(name):
     widget.setLayout(QHBoxLayout())
     button = QPushButton(name)
     widget.layout().addWidget(button)
-    return widget,button
+    return widget, button
 
-def checkbox(name:str, value, visible:bool= False):
+
+def checkbox(name: str, value, visible: bool = False):
     container = QWidget()
     container.setLayout(QHBoxLayout())
     selection = create_widget(
@@ -177,7 +168,8 @@ def checkbox(name:str, value, visible:bool= False):
 
     return container, selection
 
-def algorithm_choice(name:str,value,options:dict,label:str):
+
+def algorithm_choice(name: str, value, options: dict, label: str):
     # selection of the clustering methods
     container = QWidget()
     container.setLayout(QHBoxLayout())
@@ -188,10 +180,9 @@ def algorithm_choice(name:str,value,options:dict,label:str):
         value=value,
         options=options,
     )
-    container.layout().addWidget(
-        choice_list.native
-    )
-    return container,choice_list
+    container.layout().addWidget(choice_list.native)
+    return container, choice_list
+
 
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
