@@ -114,7 +114,7 @@ class DimensionalityReductionWidget(QWidget):
                 "datasets usually require a larger perplexity. Consider selecting "
                 "a value between 5 and\n50. Different values can result in "
                 "significantly different results."
-            )
+            ),
         )
 
         # selection of the number of components to keep after PCA transformation,
@@ -132,7 +132,7 @@ class DimensionalityReductionWidget(QWidget):
                 "The number of components sets the number of principal components to be included "
                 "after the transformation.\nWhen set to 0 the number of components that are selected "
                 "is determined by the explained variance\nthreshold."
-            )
+            ),
         )
 
         # Minimum percentage of variance explained by kept PCA components,

@@ -9,13 +9,7 @@ from magicgui.types import FileDialogMode
 from magicgui.widgets import FileEdit, create_widget
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from tqdm import tqdm
 
 from ._plotter import POINTER
