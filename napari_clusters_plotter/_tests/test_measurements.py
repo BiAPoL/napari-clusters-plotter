@@ -1,5 +1,7 @@
-import numpy as np
 import time
+
+import numpy as np
+
 import napari_clusters_plotter as ncp
 
 
@@ -73,4 +75,3 @@ def test_measurements(qtbot, make_napari_viewer):
 
 if __name__ == "__main__":
     test_measurements()
-
