@@ -100,9 +100,11 @@ class DimensionalityReductionWidget(QWidget):
             min=1,
             tool_link='https://distill.pub/2016/misread-tsne/',
             tool_tip=(
-                "The perplexity is related to the number of nearest neighbors that is used in other manifold learning\n"
-                "algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5 and\n"
-                "50. Different values can result in significantly different results."
+                "The perplexity is related to the number of nearest neighbors "
+                "that is used in other manifold learning\nalgorithms. Larger "
+                "datasets usually require a larger perplexity. Consider selecting "
+                "a value between 5 and\n50. Different values can result in "
+                "significantly different results."
             )
         )
 
@@ -115,9 +117,9 @@ class DimensionalityReductionWidget(QWidget):
             label ="Number of Components",
             tool_link='https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
             tool_tip=(
-                "The number of components sets the number of principal components to be included after the transformation.\n"
-                "When set to 0 the number of components that are selected is determined by the explained variance\n"
-                "threshold."
+                "The number of components sets the number of principal components to be included "
+                "after the transformation.\nWhen set to 0 the number of components that are selected "
+                "is determined by the explained variance\nthreshold."
             )
         )
 
