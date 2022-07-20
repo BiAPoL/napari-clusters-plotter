@@ -1,21 +1,13 @@
-from json import tool
 import warnings
 from functools import partial
 from typing import Tuple
 from enum import Enum
-
 import numpy as np
 import pandas as pd
-from magicgui.widgets import create_widget
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtWidgets import (
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import QVBoxLayout, QWidget
+
 
 from ._plotter import POINTER
 from ._clustering import ID_NAME

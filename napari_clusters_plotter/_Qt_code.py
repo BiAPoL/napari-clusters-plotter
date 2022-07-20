@@ -1,12 +1,9 @@
-from matplotlib import container
 from qtpy.QtCore import QRect
 from qtpy.QtWidgets import (
     QAbstractItemView,
-    QComboBox,
     QHBoxLayout,
     QLabel,
     QListWidget,
-    QListWidgetItem,
     QPushButton,
     QVBoxLayout,
     QWidget,

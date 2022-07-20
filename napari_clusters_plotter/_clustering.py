@@ -2,10 +2,8 @@ import warnings
 from enum import Enum
 from functools import partial
 from typing import Tuple
-
 import numpy as np
 import pandas as pd
-from magicgui.widgets import create_widget
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import (
