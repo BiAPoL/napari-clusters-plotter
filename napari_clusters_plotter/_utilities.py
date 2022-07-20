@@ -5,6 +5,7 @@ import pandas as pd
 import pyclesperanto_prototype as cle
 from qtpy.QtWidgets import QListWidgetItem
 
+
 def widgets_inactive(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
@@ -67,6 +68,7 @@ def catch_NaNs(func):
 
     return wrapper
 
+
 # TODO docstring
 def update_properties_list(widget, exclude_list):
     selected_layer = widget.labels_select.value
@@ -74,13 +76,15 @@ def update_properties_list(widget, exclude_list):
     if selected_layer is not None:
         features = get_layer_tabular_data(selected_layer)
         if features is not None:
-            old_selected_props = [i.text() for i in widget.properties_list.selectedItems()]
+            old_selected_props = [
+                i.text() for i in widget.properties_list.selectedItems()
+            ]
             widget.properties_list.clear()
             for p in list(features.keys()):
                 exclude = False
-                for flag in exclude_list + ["index","label"]:
+                for flag in exclude_list + ["index", "label"]:
                     if flag in p:
-                        exclude=True
+                        exclude = True
                         break
                 if exclude:
                     continue
@@ -91,6 +95,7 @@ def update_properties_list(widget, exclude_list):
                     continue
                 if p in old_selected_props:
                     item.setSelected(True)
+
 
 def generate_cluster_image(label_image, predictionlist):
     """

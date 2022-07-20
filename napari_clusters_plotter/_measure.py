@@ -13,21 +13,20 @@ from qtpy.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QVBoxLayout,
     QWidget,
 )
 from tqdm import tqdm
 
 from ._plotter import POINTER
+from ._Qt_code import (
+    button,
+    image_container_and_selection,
+    labels_container_and_selection,
+    title,
+)
 from ._utilities import set_features, show_table, widgets_inactive
 
-from ._Qt_code import (
-    labels_container_and_selection,
-    image_container_and_selection,
-    title,
-    button,
-)
 
 @register_dock_widget(
     menu="Measurement > Measure intensity, shape and neighbor counts (ncp)"
@@ -49,13 +48,18 @@ class MeasureWidget(QWidget):
         self.setLayout(QVBoxLayout())
 
         title_container = title("<b>Measurement</b>")
-  
 
         # widget for the selection of image layer
-        image_layer_selection_container, self.image_select = image_container_and_selection()
+        (
+            image_layer_selection_container,
+            self.image_select,
+        ) = image_container_and_selection()
 
         # widget for the selection of labels layer
-        labels_layer_selection_container,self.labels_select= labels_container_and_selection()
+        (
+            labels_layer_selection_container,
+            self.labels_select,
+        ) = labels_container_and_selection()
 
         # selection if region properties should be measured now or uploaded from file
         reg_props_container = QWidget()
@@ -91,7 +95,7 @@ class MeasureWidget(QWidget):
         self.closest_points_container.setVisible(False)
 
         # Run button
-        run_container,run_button = button("Run")
+        run_container, run_button = button("Run")
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)

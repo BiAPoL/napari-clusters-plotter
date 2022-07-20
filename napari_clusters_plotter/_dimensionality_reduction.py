@@ -1,16 +1,26 @@
 import warnings
+from enum import Enum
 from functools import partial
 from typing import Tuple
-from enum import Enum
+
 import numpy as np
 import pandas as pd
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QVBoxLayout, QWidget
 
-
-from ._plotter import POINTER
 from ._clustering import ID_NAME
+from ._plotter import POINTER
+from ._Qt_code import (
+    algorithm_choice,
+    button,
+    checkbox,
+    float_sbox_containter_and_selection,
+    int_sbox_containter_and_selection,
+    labels_container_and_selection,
+    measurements_container_and_list,
+    title,
+)
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
@@ -18,19 +28,8 @@ from ._utilities import (
     restore_defaults,
     set_features,
     show_table,
-    widgets_inactive,
     update_properties_list,
-)
-
-from ._Qt_code import (
-    measurements_container_and_list,
-    labels_container_and_selection,
-    int_sbox_containter_and_selection,
-    float_sbox_containter_and_selection,
-    title,
-    button,
-    checkbox,
-    algorithm_choice,
+    widgets_inactive,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -43,7 +42,8 @@ DEFAULTS = {
     "pca_components": 0,
     "explained_variance": 95.0,
 }
-EXCLUDE = [ID_NAME,POINTER,"UMAP","t-SNE"]
+EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE"]
+
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
 class DimensionalityReductionWidget(QWidget):
@@ -64,13 +64,19 @@ class DimensionalityReductionWidget(QWidget):
         label_container = title("<b>Dimensionality reduction</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container, self.labels_select= labels_container_and_selection()
+        (
+            labels_layer_selection_container,
+            self.labels_select,
+        ) = labels_container_and_selection()
 
         # select properties of which to produce a dimensionality reduced version
-        choose_properties_container,self.properties_list = measurements_container_and_list()
+        (
+            choose_properties_container,
+            self.properties_list,
+        ) = measurements_container_and_list()
 
         # selection of dimension reduction algorithm
-        algorithm_container,self.algorithm_choice_list = algorithm_choice(
+        algorithm_container, self.algorithm_choice_list = algorithm_choice(
             name="Clustering_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
@@ -80,73 +86,84 @@ class DimensionalityReductionWidget(QWidget):
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
         # used for manifold approximation. Larger values result in more global views of the manifold, while smaller
         # values result in more local data being preserved.
-        self.n_neighbors_container,self.n_neighbors = int_sbox_containter_and_selection(
+        (
+            self.n_neighbors_container,
+            self.n_neighbors,
+        ) = int_sbox_containter_and_selection(
             name="n_neighbors",
             value=DEFAULTS["n_neighbors"],
-            label ="Number of neighbors",
-            tool_link='https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors',
+            label="Number of neighbors",
+            tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors",
             tool_tip=(
                 "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold\n"
                 "approximation. Larger values result in more global views of the manifold, while smaller values\n"
                 "result in more local data being preserved. In general, it should be in the range 2 to 100."
-            )
+            ),
         )
-        
+
         # selection of the level of perplexity. Higher values should be chosen when handling large datasets
-        self.perplexity_container,self.perplexity = int_sbox_containter_and_selection(
+        self.perplexity_container, self.perplexity = int_sbox_containter_and_selection(
             name="perplexity",
             value=DEFAULTS["perplexity"],
             label="Perplexity",
             min=1,
-            tool_link='https://distill.pub/2016/misread-tsne/',
+            tool_link="https://distill.pub/2016/misread-tsne/",
             tool_tip=(
                 "The perplexity is related to the number of nearest neighbors that is used in other manifold learning\n"
                 "algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5 and\n"
                 "50. Different values can result in significantly different results."
-            )
+            ),
         )
 
         # selection of the number of components to keep after PCA transformation,
         # values above 0 will override explained variance option
-        self.pca_components_container,self.pca_components = int_sbox_containter_and_selection(
+        (
+            self.pca_components_container,
+            self.pca_components,
+        ) = int_sbox_containter_and_selection(
             name="pca_components",
             value=DEFAULTS["pca_components"],
             min=0,
-            label ="Number of Components",
-            tool_link='https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+            label="Number of Components",
+            tool_link="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html",
             tool_tip=(
                 "The number of components sets the number of principal components to be included after the transformation.\n"
                 "When set to 0 the number of components that are selected is determined by the explained variance\n"
                 "threshold."
-            )
+            ),
         )
 
         # Minimum percentage of variance explained by kept PCA components,
         # will not be used if pca_components > 0
-        self.explained_variance_container,self.explained_variance = float_sbox_containter_and_selection(
+        (
+            self.explained_variance_container,
+            self.explained_variance,
+        ) = float_sbox_containter_and_selection(
             name="explained_variance",
             value=DEFAULTS["explained_variance"],
-            min=1, max=100, step=1,
+            min=1,
+            max=100,
+            step=1,
             label="Explained Variance Threshold",
-            tool_link='https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+            tool_link="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html",
             tool_tip=(
                 "The explained variance threshold sets the amount of variance in the dataset that can "
                 "minimally be\n represented by the principal components. The closer the threshold is to"
                 " 100% ,the more the variance in\nthe dataset can be accounted for by the chosen "
                 "principal components (and the less dimensionality\nreduction will be perfomed as a result)."
-            )
+            ),
         )
 
         # checkbox whether data should be standardized
-        self.settings_container_scaler,self.standardization= checkbox(
+        self.settings_container_scaler, self.standardization = checkbox(
             name="Standardize Features",
             value=DEFAULTS["standardization"],
         )
 
         # making buttons
-        run_container,run_button = button("Run")
-        update_container,update_button = button("Update Measurements")
-        defaults_container,defaults_button = button("Restore Defaults")
+        run_container, run_button = button("Run")
+        update_container, update_button = button("Update Measurements")
+        defaults_container, defaults_button = button("Restore Defaults")
 
         def run_clicked():
 
@@ -175,11 +192,13 @@ class DimensionalityReductionWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(partial(update_properties_list,self,EXCLUDE))
+        update_button.clicked.connect(partial(update_properties_list, self, EXCLUDE))
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(partial(update_properties_list,self,EXCLUDE))
+        self.labels_select.changed.connect(
+            partial(update_properties_list, self, EXCLUDE)
+        )
 
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)
@@ -206,9 +225,7 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.algorithm_choice_list.changed.connect(
-            self.change_settings_visibility
-        )
+        self.algorithm_choice_list.changed.connect(self.change_settings_visibility)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -221,41 +238,36 @@ class DimensionalityReductionWidget(QWidget):
     def change_settings_visibility(self):
         widgets_inactive(
             self.n_neighbors_container,
-            active=self.algorithm_choice_list.current_choice 
-            == self.Options.UMAP.value,
+            active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
         widgets_inactive(
             self.settings_container_scaler,
             active=(
-                self.algorithm_choice_list.current_choice 
-                == self.Options.UMAP.value
-                or self.algorithm_choice_list.current_choice 
-                == self.Options.TSNE.value
+                self.algorithm_choice_list.current_choice == self.Options.UMAP.value
+                or self.algorithm_choice_list.current_choice == self.Options.TSNE.value
             ),
         )
         widgets_inactive(
             self.perplexity_container,
-            active=self.algorithm_choice_list.current_choice 
-            == self.Options.TSNE.value,
+            active=self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
         )
         widgets_inactive(
             self.pca_components_container,
-            active=self.algorithm_choice_list.current_choice
-            == self.Options.PCA.value,
+            active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
         widgets_inactive(
             self.explained_variance_container,
-            active=self.algorithm_choice_list.current_choice
-            == self.Options.PCA.value,
+            active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
-        
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             self.last_connected.events.properties.disconnect(
-                partial(update_properties_list,self,EXCLUDE)
+                partial(update_properties_list, self, EXCLUDE)
             )
-        self.labels_select.value.events.properties.connect(partial(update_properties_list,self,EXCLUDE))
+        self.labels_select.value.events.properties.connect(
+            partial(update_properties_list, self, EXCLUDE)
+        )
         self.last_connected = self.labels_select.value
 
     # this function runs after the run button is clicked

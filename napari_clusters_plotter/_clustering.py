@@ -2,37 +2,31 @@ import warnings
 from enum import Enum
 from functools import partial
 from typing import Tuple
+
 import numpy as np
 import pandas as pd
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
+from ._Qt_code import (
+    algorithm_choice,
+    button,
+    checkbox,
+    float_sbox_containter_and_selection,
+    int_sbox_containter_and_selection,
+    labels_container_and_selection,
+    measurements_container_and_list,
+    title,
+)
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     show_table,
-    widgets_inactive,
     update_properties_list,
-)
-
-from ._Qt_code import (
-    measurements_container_and_list,
-    labels_container_and_selection,
-    title,
-    int_sbox_containter_and_selection,
-    float_sbox_containter_and_selection,
-    button,
-    checkbox,
-    algorithm_choice,
+    widgets_inactive,
 )
 
 DEFAULTS = {
@@ -49,6 +43,7 @@ DEFAULTS = {
     "custom_name": "",
 }
 ID_NAME = "_CLUSTER_ID"
+
 
 @register_dock_widget(menu="Measurement > Clustering (ncp)")
 class ClusteringWidget(QWidget):
@@ -69,13 +64,19 @@ class ClusteringWidget(QWidget):
         title_container = title("<b>Clustering</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container,self.labels_select= labels_container_and_selection()
+        (
+            labels_layer_selection_container,
+            self.labels_select,
+        ) = labels_container_and_selection()
 
         # widget for the selection of properties to perform clustering
-        choose_properties_container,self.properties_list = measurements_container_and_list()
+        (
+            choose_properties_container,
+            self.properties_list,
+        ) = measurements_container_and_list()
 
         # selection of the clustering methods
-        self.clust_method_container,self.clust_method_choice_list = algorithm_choice(
+        self.clust_method_container, self.clust_method_choice_list = algorithm_choice(
             name="Clustering_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
@@ -84,12 +85,17 @@ class ClusteringWidget(QWidget):
 
         # clustering options for KMeans
         # selection of number of clusters
-        self.kmeans_settings_container_nr,self.kmeans_nr_clusters = int_sbox_containter_and_selection(
-            name="kmeans_nr_clusters",
-            value=DEFAULTS["kmeans_nr_clusters"]
+        (
+            self.kmeans_settings_container_nr,
+            self.kmeans_nr_clusters,
+        ) = int_sbox_containter_and_selection(
+            name="kmeans_nr_clusters", value=DEFAULTS["kmeans_nr_clusters"]
         )
         # selection of number of iterations
-        self.kmeans_settings_container_iter,self.kmeans_nr_iterations = int_sbox_containter_and_selection(
+        (
+            self.kmeans_settings_container_iter,
+            self.kmeans_nr_iterations,
+        ) = int_sbox_containter_and_selection(
             name="kmeans_nr_iter",
             value=DEFAULTS["kmeans_nr_iterations"],
             min=1,
@@ -98,21 +104,30 @@ class ClusteringWidget(QWidget):
 
         # clustering options for Gaussian mixture model
         # selection of number of clusters
-        self.gmm_settings_container_nr,self.gmm_nr_clusters= int_sbox_containter_and_selection(
+        (
+            self.gmm_settings_container_nr,
+            self.gmm_nr_clusters,
+        ) = int_sbox_containter_and_selection(
             name="gmm_nr_clusters",
             value=DEFAULTS["gmm_nr_clusters"],
         )
 
         # clustering options for Mean Shift
         # selection of quantile
-        self.ms_settings_container_nr,self.ms_quantile=float_sbox_containter_and_selection(
+        (
+            self.ms_settings_container_nr,
+            self.ms_quantile,
+        ) = float_sbox_containter_and_selection(
             name="ms_quantile",
             value=DEFAULTS["ms_quantile"],
-            label= "Quantile",
+            label="Quantile",
         )
 
         # number of samples selection
-        self.ms_settings_container_samples,self.ms_n_samples = int_sbox_containter_and_selection(
+        (
+            self.ms_settings_container_samples,
+            self.ms_n_samples,
+        ) = int_sbox_containter_and_selection(
             name="ms_n_samples",
             value=DEFAULTS["ms_n_samples"],
             label="Number of samples",
@@ -120,48 +135,60 @@ class ClusteringWidget(QWidget):
 
         # clustering options for Agglomerative Clustering
         # selection of number of clusters
-        self.ac_settings_container_clusters,self.ac_n_clusters= int_sbox_containter_and_selection(
+        (
+            self.ac_settings_container_clusters,
+            self.ac_n_clusters,
+        ) = int_sbox_containter_and_selection(
             name="ac_n_clusters",
             value=DEFAULTS["ac_n_clusters"],
         )
 
         # selection of number of neighbors
-        self.ac_settings_container_neighbors,self.ac_n_neighbors= int_sbox_containter_and_selection(
+        (
+            self.ac_settings_container_neighbors,
+            self.ac_n_neighbors,
+        ) = int_sbox_containter_and_selection(
             name="ac_n_neighbors",
             value=DEFAULTS["ac_n_neighbors"],
             label="Number of neighbors",
         )
 
         # checkbox whether data should be standardized
-        self.clustering_settings_container_scaler,self.standardization = checkbox(
+        self.clustering_settings_container_scaler, self.standardization = checkbox(
             name="Standardize Features",
             value=DEFAULTS["standardization"],
         )
 
         # Clustering options for HDBSCAN
         # selection of the minimum size of clusters
-        self.hdbscan_settings_container_size,self.hdbscan_min_clusters_size= int_sbox_containter_and_selection(
+        (
+            self.hdbscan_settings_container_size,
+            self.hdbscan_min_clusters_size,
+        ) = int_sbox_containter_and_selection(
             name="hdbscan_min_clusters_size",
             value=DEFAULTS["hdbscan_min_clusters_size"],
-            label = "Minimum size of clusters",
-            tool_link='https://hdbscan.readthedocs.io/en/latest/parameter_selection.html',
+            label="Minimum size of clusters",
+            tool_link="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html",
             tool_tip=(
                 "The minimum size of clusters; single linkage splits that contain fewer points than this will be\n"
                 "considered points falling out of a cluster rather than a cluster splitting into two new clusters."
-            )
+            ),
         )
 
         # selection of the minimum number of samples in a neighborhood for a point to be considered as a core point
-        self.hdbscan_settings_container_min_nr, self.hdbscan_min_nr_samples = int_sbox_containter_and_selection(
+        (
+            self.hdbscan_settings_container_min_nr,
+            self.hdbscan_min_nr_samples,
+        ) = int_sbox_containter_and_selection(
             name="hdbscan_min_nr_samples",
             value=self.hdbscan_min_clusters_size.value,
             min=1,
-            label = "Minimum number of samples",
-            tool_link='https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#selecting-min-samples',
+            label="Minimum number of samples",
+            tool_link="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#selecting-min-samples",
             tool_tip=(
                 "The number of samples in a neighbourhood for a point to be considered a core\n"
                 "point. By default it is equal to the minimum cluster size."
-            )
+            ),
         )
 
         # custom result column name field
@@ -178,9 +205,9 @@ class ClusteringWidget(QWidget):
         self.custom_name_not_editable.setReadOnly(True)
 
         # making buttons
-        run_container,run_button = button("Run")
-        update_container,update_button = button("Update Measurements")
-        defaults_container,defaults_button = button("Restore Defaults")
+        run_container, run_button = button("Run")
+        update_container, update_button = button("Update Measurements")
+        defaults_container, defaults_button = button("Restore Defaults")
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
@@ -235,13 +262,13 @@ class ClusteringWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(
-            partial(update_properties_list,self,[ID_NAME])
-        )
+        update_button.clicked.connect(partial(update_properties_list, self, [ID_NAME]))
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(partial(update_properties_list,self,[ID_NAME]))
+        self.labels_select.changed.connect(
+            partial(update_properties_list, self, [ID_NAME])
+        )
 
         # update axes combo boxes automatically if features of
         # layer are changed
@@ -299,20 +326,18 @@ class ClusteringWidget(QWidget):
                 == self.Options.HDBSCAN.value
                 or self.clust_method_choice_list.current_choice
                 == self.Options.GMM.value
-                or self.clust_method_choice_list.current_choice 
-                == self.Options.MS.value
-                or self.clust_method_choice_list.current_choice 
-                == self.Options.AC.value
+                or self.clust_method_choice_list.current_choice == self.Options.MS.value
+                or self.clust_method_choice_list.current_choice == self.Options.AC.value
             ),
         )
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             self.last_connected.events.properties.disconnect(
-                partial(update_properties_list,self,[ID_NAME])
+                partial(update_properties_list, self, [ID_NAME])
             )
         self.labels_select.value.events.properties.connect(
-            partial(update_properties_list,self,[ID_NAME])
+            partial(update_properties_list, self, [ID_NAME])
         )
         self.last_connected = self.labels_select.value
 
