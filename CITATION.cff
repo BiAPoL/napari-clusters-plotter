@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+title: napari-clusters-plotter
+message: "If you use this software, please cite it using the metadata from this file."
+abstract: "A plugin to use with napari for clustering objects according to their properties."
+type: software
+authors:
+  - given-names: Laura
+    family-names: Zigutyte
+    email: zigutyte@gmail.com
+  - given-names: Ryan
+    family-names: Savill
+  - given-names: Johannes
+    family-names: Müller
+  - given-names: Marcelo
+    family-names: Zoccoler
+  - given-names: Robert
+    family-names: Haase
+    email: robert.haase@tu-dresden.de
+version: 0.5.1
+date-released: 2021-11-15
+identifiers:
+  - description: This is the collection of archived snapshots of all versions of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.5884657"
+  - description: This is the archived snapshot of version 0.5.1 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.6620442"
+  - description: This is the archived snapshot of version 0.5.0 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.6520216"
+  - description: This is the archived snapshot of version 0.4.0 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.6483425"
+  - description: This is the archived snapshot of version 0.3.0 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.6412049"
+  - description: This is the archived snapshot of version 0.2.2 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.5884658"
+license: BSD-3-Clause
+repository-code: https://github.com/BiAPoL/napari-clusters-plotter
