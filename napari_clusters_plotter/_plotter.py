@@ -612,6 +612,7 @@ class PlotterWidget(QWidget):
                         cluster_image,  # self.analysed_layer.data
                         color=cmap_dict,  # cluster_id_dict
                         name="cluster_ids_in_space",
+                        scale=self.labels_select.value.scale,
                     )
                 else:
                     # updating data
