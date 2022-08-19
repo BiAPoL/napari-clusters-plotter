@@ -30,7 +30,7 @@ from ._utilities import (
     set_features,
     show_table,
     widgets_inactive,
-    widgets_valid
+    widgets_valid,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -328,10 +328,12 @@ class DimensionalityReductionWidget(QWidget):
         if self.algorithm_choice_list.currentText() == "t-SNE":
             features = get_layer_tabular_data(self.labels_select.value)
             widgets_valid(
-                self.perplexity,
-                valid=self.perplexity.value <= features.shape[0])
+                self.perplexity, valid=self.perplexity.value <= features.shape[0]
+            )
             if self.perplexity.value >= features.shape[0]:
-                warnings.warn("Perplexity must be less than the number of labeled objects!")
+                warnings.warn(
+                    "Perplexity must be less than the number of labeled objects!"
+                )
 
     # toggle widgets visibility according to what is selected
     def change_umap_settings(self):
