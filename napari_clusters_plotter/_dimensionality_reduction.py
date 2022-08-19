@@ -30,6 +30,7 @@ from ._utilities import (
     set_features,
     show_table,
     widgets_inactive,
+    widgets_valid,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -130,9 +131,9 @@ class DimensionalityReductionWidget(QWidget):
 
         help_perplexity.setToolTip(
             "The perplexity is related to the number of nearest neighbors that is used in other manifold learning "
-            "algorithms. Larger datasets usually require a larger perplexity. Consider selecting a value between 5 and "
-            "50. Different values can result in significantly different results. "
-            "Click on the question mark to read more."
+            "algorithms. The perplexity must be less than the number of samples. Larger datasets usually require a "
+            "larger perplexity. Consider selecting a value between 5 and 50. Different values can result in "
+            "significantly different results. Click on the question mark to read more."
         )
 
         self.perplexity.native.setMaximumWidth(70)
@@ -274,6 +275,8 @@ class DimensionalityReductionWidget(QWidget):
 
         # update measurements list when a new labels layer is selected
         self.labels_select.changed.connect(self.update_properties_list)
+        self.labels_select.changed.connect(self._check_perplexity)
+        self.perplexity.changed.connect(self._check_perplexity)
 
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)
@@ -320,6 +323,18 @@ class DimensionalityReductionWidget(QWidget):
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
 
+    # triggered by the selection of t-SNE as dim reduction algorithm, change of input image or perplexity value
+    def _check_perplexity(self):
+        if self.algorithm_choice_list.currentText() == "t-SNE":
+            features = get_layer_tabular_data(self.labels_select.value)
+            widgets_valid(
+                self.perplexity, valid=self.perplexity.value <= features.shape[0]
+            )
+            if self.perplexity.value >= features.shape[0]:
+                warnings.warn(
+                    "Perplexity must be less than the number of labeled objects!"
+                )
+
     # toggle widgets visibility according to what is selected
     def change_umap_settings(self):
         widgets_inactive(
@@ -335,6 +350,9 @@ class DimensionalityReductionWidget(QWidget):
         )
 
     def change_tsne_settings(self):
+        if self.algorithm_choice_list.currentText() == "t-SNE":
+            self._check_perplexity()
+
         widgets_inactive(
             self.perplexity_container,
             active=self.algorithm_choice_list.currentText() == "t-SNE",

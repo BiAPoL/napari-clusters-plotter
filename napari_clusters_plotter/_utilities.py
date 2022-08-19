@@ -10,6 +10,11 @@ def widgets_inactive(*widgets, active):
         widget.setVisible(active)
 
 
+def widgets_valid(*widgets, valid):
+    for widget in widgets:
+        widget.native.setStyleSheet("" if valid else "background-color: lightcoral")
+
+
 def show_table(viewer, labels_layer):
     from napari_skimage_regionprops import add_table
 
