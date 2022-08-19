@@ -192,7 +192,7 @@ def test_tsne():
 
     from napari_clusters_plotter._dimensionality_reduction import tsne
 
-    result = tsne(pd.DataFrame(X), perplexity=5, n_components=2)
+    result = tsne(pd.DataFrame(X), perplexity=3, n_components=2)
     assert result[1].shape[-1] == n_comp
 
 
