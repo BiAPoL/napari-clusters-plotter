@@ -202,6 +202,9 @@ class MyNavigationToolbar(NavigationToolbar):
         self.canvas.axes.spines["right"].set_color("black")
         self.canvas.axes.spines["left"].set_color("black")
 
+        self.canvas.axes.xaxis.label.set_color("black")
+        self.canvas.axes.yaxis.label.set_color("black")
+
         # changing colors of axis labels
         self.canvas.axes.tick_params(axis="x", colors="black")
         self.canvas.axes.tick_params(axis="y", colors="black")
@@ -218,6 +221,9 @@ class MyNavigationToolbar(NavigationToolbar):
         # changing colors of axis labels
         self.canvas.axes.tick_params(axis="x", colors="white")
         self.canvas.axes.tick_params(axis="y", colors="white")
+
+        self.canvas.axes.xaxis.label.set_color("white")
+        self.canvas.axes.yaxis.label.set_color("white")
 
         self.canvas.draw()
 
