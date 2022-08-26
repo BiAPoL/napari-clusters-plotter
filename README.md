@@ -9,7 +9,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/napari-clusters-plotter.svg)](https://pypistats.org/packages/napari-clusters-plotter)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clusters-plotter)](https://www.napari-hub.org/plugins/napari-clusters-plotter)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5884658.svg)](https://doi.org/10.5281/zenodo.5884658)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7011471.svg)](https://doi.org/10.5281/zenodo.7011471)
 
 A plugin to use with napari for clustering objects according to their properties.
 
