@@ -37,7 +37,7 @@ repos:
     - id: pyupgrade
       args: ["--py37-plus"]
 -   repo: https://github.com/myint/autoflake
-    rev: 'v1.4'
+    rev: 'v1.5.1'
     hooks:
     - id: autoflake
       args: ["--remove-all-unused-imports", "-i"]
