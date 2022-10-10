@@ -2,7 +2,6 @@ from functools import wraps
 
 import numpy as np
 import pandas as pd
-import pyclesperanto_prototype as cle
 
 
 def widgets_inactive(*widgets, active):
@@ -93,8 +92,32 @@ def generate_cluster_image(label_image, predictionlist):
     predictionlist_new = np.array(predictionlist) + 1
     predictionlist_new = np.insert(predictionlist_new, 0, 0)
 
+    import importlib
+    loader = importlib.find_loader("pyclesperanto_prototype")
+    found = loader is not None
+
+    if found:
+        return relabel_image_cle(label_image, predictionlist_new)
+    else:
+        return relabel_image_numpy(label_image, predictionlist_new)
+
+def relabel_image_cle(label_image, predictionlist):
+    """
+    Returns a label image where each label value corresponds
+    to the cluster identity defined by the predictionlist.
+    it is assumed that len(predictionlist) == max(label_image)
+
+    Parameters
+    ----------
+    label_image: ndarray or dask array
+        Label image used for cluster predictions
+    predictionlist: array
+        Array containing cluster identities for each label
+    """
+    import pyclesperanto_prototype as cle
+
     # loading data into gpu
-    clelist = cle.push(predictionlist_new)
+    clelist = cle.push(predictionlist)
     gpu_labelimage = cle.push(label_image)
 
     # generation of cluster label image
@@ -108,6 +131,8 @@ def generate_cluster_image(label_image, predictionlist):
 
     return output
 
+def relabel_image_numpy(label_image, predictionlist):
+    return np.take(predictionlist,label_image)
 
 # TODO docstring
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
