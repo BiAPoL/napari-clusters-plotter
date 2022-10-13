@@ -68,10 +68,11 @@ jobs:
       - name: Install dependencies
         shell: bash -l {0}
         run: |
-          python --version
-          conda install -y pyopencl hdbscan pip setuptools wheel pytest pytest-cov pytest-benchmark pytest-qt pyqt pytest-xvfb pandas
-          # pip install setuptools tox tox-gh-actions
+          conda install -c defaults scipy
+          conda install -y pyopencl hdbscan
+          python -m pip install --upgrade pip
 
+          pip install pytest pytest-cov PyQt5 pytest-qt pytest-xvfb
           pip install -e .
       #   pip install setuptools tox tox-gh-actions
       # # conda install -c defaults scipy is needed otherwise tests crash on Windows due to FileNotFoundError. Remove this when the problem is fixed
