@@ -1,7 +1,6 @@
 import warnings
 from functools import partial
 
-import pandas as pd
 from magicgui.widgets import create_widget
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
@@ -14,17 +13,35 @@ from qtpy.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
-from ._utilities import restore_defaults, widgets_inactive
+from ._utilities import (
+    get_layer_tabular_data,
+    restore_defaults,
+    set_features,
+    show_table,
+    widgets_inactive,
+)
 
 DEFAULTS = dict(correlation_threshold=0.95)
+NON_DATA_COLUMN_NAMES = ["label", "frame", "index"]
 
 
 @register_dock_widget(menu="Measurement > Feature selection (ncp)")
-class FeatureSelectionWidget(QWidget):
+class FeatureSelectionWidget(QScrollArea):
+    def __init__(self, napari_viewer):
+        super().__init__()
+        widget = FeatureWidget(napari_viewer=napari_viewer)
+        self.setWidget(widget)
+        self.setWidgetResizable(True)
+        self.setLayout(QVBoxLayout())
+        self.layout().setSpacing(0)
+
+
+class FeatureWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -125,37 +142,10 @@ class FeatureSelectionWidget(QWidget):
                 return
 
             # measure correlation properties
-            self.analyse_correlation()
-
-            # adding widgets
-            if self.correlating_keys is not None and len(self.correlating_keys) != 0:
-                self.correlation_key_lists = [
-                    QListWidget() for correlations in self.correlating_keys
-                ]
-                for widget, key_list in zip(
-                    self.correlation_key_lists, self.correlating_keys
-                ):
-                    widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
-                    widget.setGeometry(QRect(10, 10, 101, 291))
-                    for i, p in enumerate(key_list):
-                        item = QListWidgetItem(p)
-                        widget.addItem(item)
-
-                        if i == 0:
-                            item.setSelected(True)
-
-                self.correlation_containers = [
-                    QWidget() for correlations in self.correlating_keys
-                ]
-                for i, widget in enumerate(self.correlation_containers):
-                    widget.setLayout(QVBoxLayout())
-                    widget.layout().addWidget(QLabel(f"Correlating Group #{i + 1}"))
-                    widget.layout().addWidget(self.correlation_key_lists[i])
-                    widget.setVisible(False)
-
-                for container in self.correlation_containers:
-                    self.layout().addWidget(container)
-                self.layout().setSpacing(0)
+            self.analyse_correlation(
+                labels_layer=self.labels_select.value,
+                threshold=self.correlation_threshold.value,
+            )
 
         run_button.clicked.connect(run_clicked)
         update_button.clicked.connect(self.update_properties_list)
@@ -170,10 +160,10 @@ class FeatureSelectionWidget(QWidget):
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(method_container)
         self.layout().addWidget(self.correlation_threshold_container)
-        self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
-        self.layout().addWidget(run_widget)
+        self.layout().addWidget(update_container)
         self.layout().addWidget(self.analyse_correlation_container)
+        self.layout().addWidget(run_widget)
 
         if self.correlating_keys is not None and len(self.correlating_keys) != 0:
             for container in self.correlation_containers:
@@ -229,95 +219,165 @@ class FeatureSelectionWidget(QWidget):
                     == "Correlation Filter",
                 )
 
-    def analyse_correlation(self):
-        import numpy as np
-        import pandas as pd
-
-        # get thresholds and region properties from selected labels layer
-        threshold = self.correlation_threshold.value
-        self.update_properties_list()
-        labels_layer = self.labels_select.value
-
-        # convert properties to dataframe for further processing
-        df_regprops = pd.DataFrame(labels_layer.properties)
-
-        # Actually finding the correlating features with pandas
-        correlation_df = df_regprops.corr().abs()
-        correlation_matrix = correlation_df.to_numpy()
-
-        # using numpy to get the correlating features out of the matrix
-        mask = np.triu(np.ones(correlation_matrix.shape, dtype=bool), k=1)
-        masked_array = correlation_matrix * mask
-        highly_corr = np.where(masked_array >= threshold)
-
-        # Using sets as a datatype for easier agglomeration of the features
-        # afterwards conversion back to list
-        correlating_feats = [{i, j} for i, j in zip(highly_corr[0], highly_corr[1])]
-        correlating_feats_agglo = agglomerate_corr_feats(correlating_feats)
-        corr_ind_list = [sorted(list(i)) for i in correlating_feats_agglo]
-
-        # getting the keys and then turning the indices into keys
-        keys = df_regprops.keys()
-        correlating_keys = [keys[ind].tolist() for ind in corr_ind_list]
-
-        # remove label key and save correlating keys into self variable for later recall
-        self.correlating_keys = [
-            [key for key in keygroup if key != "label"] for keygroup in correlating_keys
-        ]
+    def inactivate_correlation_boxes(self):
+        try:
+            for widget in self.correlation_containers:
+                widgets_inactive(
+                    widget,
+                    active=False,
+                )
+        except AttributeError:
+            pass
 
     def update_properties_list(self):
         selected_layer = self.labels_select.value
         if selected_layer is not None:
-            properties = selected_layer.properties
-            if selected_layer.properties is not None:
+            features = get_layer_tabular_data(selected_layer)
+            if features is not None:
                 self.properties_list.clear()
-                for p in list(properties.keys()):
-                    if p == "label" or "CLUSTER_ID" in p:
+                for p in list(features.keys()):
+                    if "label" in p or "CLUSTER_ID" in p or "index" in p:
                         continue
                     item = QListWidgetItem(p)
                     self.properties_list.addItem(item)
                     item.setSelected(True)
 
+    def analyse_correlation(
+        self,
+        labels_layer,
+        threshold,
+    ):
+        # get newest properties
+        self.update_properties_list()
+
+        # retrieve regionprops from labels_layer
+        df_regprops = get_layer_tabular_data(labels_layer)
+        feature_keys = [
+            key for key in df_regprops.keys() if key not in NON_DATA_COLUMN_NAMES
+        ]
+        df_regprops_only_features = df_regprops[feature_keys]
+        correlating_keys = get_correlating_keys(
+            df_regprops_only_features, threshold=threshold
+        )
+        print(f"correlating keys after analysis {correlating_keys}")
+        # remove label key and save correlating keys into self variable for later recall
+        self.correlating_keys = [
+            [key for key in keygroup] for keygroup in correlating_keys
+        ]
+        print(f"self.correlating keys after analysis {self.correlating_keys}")
+        self.inactivate_correlation_boxes()
+        self.correlation_containers = None
+        self.correlation_key_lists = None
+
+        # adding widgets for correlating features
+        if self.correlating_keys is not None and len(self.correlating_keys) != 0:
+            self.correlation_key_lists = [
+                QListWidget() for correlations in self.correlating_keys
+            ]
+            for widget, key_list in zip(
+                self.correlation_key_lists, self.correlating_keys
+            ):
+                widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+                widget.setGeometry(QRect(10, 10, 101, 291))
+                for i, p in enumerate(key_list):
+                    item = QListWidgetItem(p)
+                    widget.addItem(item)
+
+                    if i == 0:
+                        item.setSelected(True)
+
+            self.correlation_containers = [
+                QWidget() for correlations in self.correlating_keys
+            ]
+            for i, widget in enumerate(self.correlation_containers):
+                widget.setLayout(QVBoxLayout())
+                widget.layout().addWidget(QLabel(f"Correlating Group #{i + 1}"))
+                widget.layout().addWidget(self.correlation_key_lists[i])
+                widget.setVisible(False)
+
+            for container in self.correlation_containers:
+                self.layout().addWidget(container)
+            self.layout().setSpacing(0)
+
     # this function runs after the run button is clicked
     def run(self, labels_layer):
-        print("Selected labels layer: " + str(labels_layer))
-
-        # Turn properties from layer into a dataframe
-        properties = labels_layer.properties
-        reg_props = pd.DataFrame(properties)
+        reg_props = get_layer_tabular_data(labels_layer)
 
         if self.method_choice_list.currentText() == "Correlation Filter":
-            resulting_df = self.get_uncorrelating_subselection(reg_props)
+            kept_keys = []
+            for widget in self.correlation_key_lists:
+                kept_keys += [i.text() for i in widget.selectedItems()]
+            print(f"kept keys: {kept_keys}")
+
+            resulting_df = get_uncorrelating_subselection(
+                reg_props,
+                self.correlating_keys,
+                kept_keys,
+            )
 
             # replace previous table with new table containing only uncorrelating features
-            labels_layer.properties = resulting_df
-
-        from ._utilities import show_table
-
-        show_table(self.viewer, labels_layer)
+            set_features(labels_layer, resulting_df)
+            # self.inactivate_correlation_boxes()
 
         print("Feature selection finished")
-
-    # TODO description of what this does
-    def get_uncorrelating_subselection(self, df_regprops):
-        kept_feats = []
-        for widget in self.correlation_key_lists:
-            kept_feats += [i.text() for i in widget.selectedItems()]
-
-        # getting all the feature keys that were correlating
-        all_selectionkeys = []
-        for keygroup in self.correlating_keys:
-            all_selectionkeys += keygroup
-
-        # finding out which keys to drop and dropping them
-        dropkeys = [key for key in all_selectionkeys if key not in kept_feats]
-        resulting_df = df_regprops.drop(dropkeys, axis=1)
-
-        return resulting_df
+        show_table(self.viewer, labels_layer)
 
 
-# TODO description of what this does
+# TODO description of parameters
+def get_uncorrelating_subselection(df_regprops, correlating_keys, kept_keys):
+    """
+    Returns a dataframe with only uncorrelating features based on given correlating keys
+    and keys of features to be kept from the correlating groups
+    """
+    # getting all the feature keys that were correlating
+    all_selectionkeys = []
+    for keygroup in correlating_keys:
+        all_selectionkeys += keygroup
+
+    # finding out which keys to drop and dropping them
+    dropkeys = [key for key in all_selectionkeys if key not in kept_keys]
+    resulting_df = df_regprops.drop(dropkeys, axis=1)
+
+    return resulting_df
+
+
+def get_correlating_keys(df_regprops, threshold):
+    """
+    Returns sets of correlating features as lists of keys based on a dataframe
+    containing region properties
+    """
+    import numpy as np
+
+    # Actually finding the correlating features with pandas
+    correlation_df = df_regprops.corr().abs()
+    correlation_matrix = correlation_df.to_numpy()
+
+    # using numpy to get the correlating features out of the matrix
+    mask = np.triu(np.ones(correlation_matrix.shape, dtype=bool), k=1)
+    masked_array = correlation_matrix * mask
+    highly_corr = np.where(masked_array >= threshold)
+
+    # Using sets as a datatype for easier agglomeration of the features
+    # afterwards conversion back to list
+    correlating_feats = [{i, j} for i, j in zip(highly_corr[0], highly_corr[1])]
+    correlating_feats_agglo = agglomerate_corr_feats(correlating_feats)
+    corr_ind_list = [sorted(list(i)) for i in correlating_feats_agglo]
+
+    # getting the keys and then turning the indices into keys
+    keys = df_regprops.keys()
+    correlating_keys = [keys[ind].tolist() for ind in corr_ind_list]
+
+    return correlating_keys
+
+
+# TODO parameter description
 def agglomerate_corr_feats(correlating_features_sets):
+    """
+    Returns sets of features which all correlate (if A and B correlate as well
+    as B and C the group of ABC is returned as a set.) when given pairs of
+    correlating features in the form of sets
+    """
+
     new_sets = []
     for i in correlating_features_sets:
         unique_set = True

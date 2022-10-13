@@ -19,29 +19,56 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif)
 
+----------------------------------
+
+Jump to:
+- [Usage](#usage)
+  - [Starting point](#starting-point)
+  - [Measurements](#measurements)
+  - [Time-Lapse Measurements](#time-lapse-measurements)
+  - [Plotting](#plotting)
+  - [Time-Lapse Plotting](#time-lapse-plotting)
+  - [Dimensionality reduction: UMAP, t-SNE or PCA](#dimensionality-reduction-umap-t-sne-or-pca)
+  - [Clustering](#clustering)
+  - [Plotting clustering results](#plotting-clustering-results)
+- [Installation](#installation)
+- [Troubleshooting installation](#troubleshooting-installation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+
+
 ## Usage
 
 ### Starting point
 For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and a label image
 representing a segmentation of objects. For segmenting objects, you can for example use the
-[Voronoi-Otsu-labeling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labeling)
+[Voronoi-Otsu-labelling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labelling)
 in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://www.napari-hub.org/plugins/napari-segment-blobs-and-things-with-membranes).
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
 
 ### Measurements
-The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
+The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
 You can use the menu `Tools > Measurement > Measure intensity, shape and neighbor counts (ncp)` for that.
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 A table with the measurements will open:
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/measure.png)
 
-Afterwards, you can save and/or close the measurement table. Also, close the Measure widget. Or if you want you can
-interact with labels and see which row of the table corresponds to which labelled object. For this, use the Pick mode
-in napari and activate the show selected checkbox. Alternatively, you can also select a specific row of the table and
-appropriate label is displayed (make sure that `show selected` checkbox is selected).
+Afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
+If you are uploading your own measurements make sure that there is a column that specifies the which measurement belongs to which label
+by adding a column with the name "label". If you don't specify this column it will be assumed that measurements start at 1 and each
+column describes the next label.
 
+#### Time-Lapse Measurements
+If you have 3D time-lapse data this will automatically be detected. In case you have 2D time-lapse data you need to
+convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
+which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
+Note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
+time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
+If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
+this column must not be added.
 
 ### Plotting
 
@@ -64,16 +91,22 @@ Hold down the SHIFT key while annotating regions in the plot to manually select 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
 
-You can also select a labeled object in the original labels layer (not "cluster_ids_in_space" layer) using the `Pick`
-mode in napari and see which data point in the plot it corresponds to.
+#### Time-Lapse Plotting
+When you plot your time-lapse datasets you will notice that the plots look slightly different.
+Datapoints of the current time frame are highlighted in white and you can see the datapoints move through the plot if you press play:
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/select_in_layer.gif)
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plotting_time-lapse_data_as_movie.gif)
 
+You can also manually select groups using the lasso tool and plot a measurement per frame and see how the group behaves in time.
+Furthermore, you could also select a group in time and see where the datapoints lie in a different feature space:
 
-### Dimensionality reduction: UMAP or t-SNE
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse_manual_clustering_tips.gif)
+
+### Dimensionality reduction: UMAP, t-SNE or PCA
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
-using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/) or [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html).
+using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/), [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
+or [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
 To apply it to your data use the menu `Tools > Measurement > Dimensionality reduction (ncp)`.
 Select the label image that was analysed and in the list below, select all measurements that should be
 dimensionality reduced. By default, all measurements are selected in the box. If you cannot see any measurements, but
@@ -128,7 +161,13 @@ Example of k-means clustering results:
 conda create --name ncp-env python=3.9
 ```
 
-* Activate the new environment and install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
+* Activate the new environment via conda:
+
+```
+conda activate ncp-env
+```
+
+* Install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
 
 ```
 conda install -c conda-forge pyopencl
@@ -175,21 +214,26 @@ pip install napari-clusters-plotter
 
 - `WARNING: No ICDs were found` or `LogicError: clGetPlatformIDs failed: PLATFORM_NOT_FOUND_KHR`
 
-Make your system-wide implementation visible by installing ocl-icd-system conda package:
+Make your system-wide implementation visible by installing either of the following conda packages:
 
 ```
 conda install -c conda-forge ocl-icd-system
+conda install -c conda-forge ocl_icd_wrapper_apple
 ```
 
 ## Contributing
 
-Contributions are very welcome. Tests can be run with [tox], please ensure
+Contributions are very welcome. Tests can be run with [pytest], please ensure
 the coverage at least stays the same before you submit a pull request.
 
 ## License
 
 Distributed under the terms of the [BSD-3] license,
 "napari-clusters-plotter" is free and open source software
+
+## Acknowledgements
+This project was supported by the Deutsche Forschungsgemeinschaft under Germany’s Excellence Strategy – EXC2068 - Cluster of Excellence "Physics of Life" of TU Dresden.
+This project has been made possible in part by grant number [2021-240341 (Napari plugin accelerator grant)](https://chanzuckerberg.com/science/programs-resources/imaging/napari/improving-image-processing/) from the Chan Zuckerberg Initiative DAF, an advised fund of the Silicon Valley Community Foundation.
 
 ## Issues
 
@@ -208,6 +252,6 @@ with a detailed description.
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
 
 [napari]: https://github.com/napari/napari
-[tox]: https://tox.readthedocs.io/en/latest/
+[pytest]: https://docs.pytest.org/en/7.0.x/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/

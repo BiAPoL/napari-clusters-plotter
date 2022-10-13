@@ -2,7 +2,6 @@ import os
 import warnings
 from pathlib import Path as PathL
 
-import matplotlib
 import numpy as np
 import pandas as pd
 from magicgui.widgets import create_widget
@@ -14,7 +13,7 @@ from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt, QTimer
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QComboBox,
@@ -25,15 +24,18 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    dask_cluster_image_timelapse,
+    generate_cluster_image,
     get_layer_tabular_data,
     get_nice_colormap,
 )
 
+# can be changed to frame or whatever we decide to use
+POINTER = "frame"
 ICON_ROOT = PathL(__file__).parent / "icons"
-
-matplotlib.use("Qt5Agg")
 
 
 # Class below was based upon matplotlib lasso selection example:
@@ -337,8 +339,25 @@ class PlotterWidget(QWidget):
         run_button = QPushButton("Run")
         run_widget.layout().addWidget(run_button)
 
-        def run_clicked():
+        # adding all widgets to the layout
+        self.layout().addWidget(label_container)
+        self.layout().addWidget(labels_layer_selection_container)
+        self.layout().addWidget(axes_container)
+        self.layout().addWidget(cluster_container)
+        self.layout().addWidget(update_container)
+        self.layout().addWidget(run_widget)
+        self.layout().setSpacing(0)
 
+        # go through all widgets and change spacing
+        for i in range(self.layout().count()):
+            item = self.layout().itemAt(i).widget()
+            item.layout().setSpacing(0)
+            item.layout().setContentsMargins(3, 3, 3, 3)
+
+        # adding spacing between fields for selecting two axes
+        axes_container.layout().setSpacing(6)
+
+        def run_clicked():
             if self.labels_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
@@ -365,32 +384,61 @@ class PlotterWidget(QWidget):
                 self.plot_cluster_id.currentText(),
             )
 
-        # adding all widgets to the layout
-        self.layout().addWidget(label_container)
-        self.layout().addWidget(labels_layer_selection_container)
-        self.layout().addWidget(axes_container)
-        self.layout().addWidget(cluster_container)
-        self.layout().addWidget(update_container)
-        self.layout().addWidget(run_widget)
-        self.layout().setSpacing(0)
+        # takes care of case where this isn't set yet directly after init
+        self.plot_cluster_name = None
+        self.old_frame = None
+        self.frame = self.viewer.dims.current_step[0]
 
-        # go through all widgets and change spacing
-        for i in range(self.layout().count()):
-            item = self.layout().itemAt(i).widget()
-            item.layout().setSpacing(0)
-            item.layout().setContentsMargins(3, 3, 3, 3)
+        def frame_changed(event):
+            if self.viewer.dims.ndim <= 3:
+                return
+            frame = event.value[0]
+            if (not self.old_frame) or (self.old_frame != frame):
+                if self.labels_select.value is None:
+                    warnings.warn("Please select labels layer!")
+                    return
+                if get_layer_tabular_data(self.labels_select.value) is None:
+                    warnings.warn(
+                        "No labels image with features/properties was selected! Consider doing measurements first."
+                    )
+                    return
+                if (
+                    self.plot_x_axis.currentText() == ""
+                    or self.plot_y_axis.currentText() == ""
+                ):
+                    warnings.warn(
+                        "No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
+                        "but you have performed measurements/dimensionality reduction before, try clicking "
+                        "Update Axes Selection Boxes"
+                    )
+                    return
 
-        # adding spacing between fields for selecting two axes
-        axes_container.layout().setSpacing(6)
+                self.frame = frame
+
+                self.run(
+                    get_layer_tabular_data(self.labels_select.value),
+                    self.plot_x_axis.currentText(),
+                    self.plot_y_axis.currentText(),
+                    self.plot_cluster_name,
+                    redraw_cluster_image=False,
+                )
+            self.old_frame = frame
 
         # update axes combo boxes once a new label layer is selected
         self.labels_select.changed.connect(self.update_axes_list)
+
+        # update axes combo boxes automatically if features of
+        # layer are changed
+        self.last_connected = None
+        self.labels_select.changed.connect(self.activate_property_autoupdate)
 
         # update axes combo boxes once update button is clicked
         update_button.clicked.connect(self.update_axes_list)
 
         # select what happens when the run button is clicked
         run_button.clicked.connect(run_clicked)
+
+        self.viewer.dims.events.current_step.connect(frame_changed)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -399,26 +447,11 @@ class PlotterWidget(QWidget):
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
 
-    def clicked_label_in_view(self, event, event1):
-        # We need to run this lagter as the labels_layer.selected_label isn't changed yet.
-        QTimer.singleShot(200, self.after_clicked_label_in_view)
-
-    def after_clicked_label_in_view(self):
-        clustering_ID = "MANUAL_CLUSTER_ID"
-
-        # save manual clustering; select only the label that's currently selected on the layer
-        inside = np.ones(self.analysed_layer.data.max())
-        inside[self.analysed_layer.selected_label - 1] = 0
-        features = get_layer_tabular_data(self.analysed_layer)
-        features[clustering_ID] = inside
-
-        self.run(
-            features,
-            self.plot_x_axis_name,
-            self.plot_y_axis_name,
-            plot_cluster_name=clustering_ID,
-        )
-        self.graphics_widget.draw()
+    def activate_property_autoupdate(self):
+        if self.last_connected is not None:
+            self.last_connected.events.properties.disconnect(self.update_axes_list)
+        self.labels_select.value.events.properties.connect(self.update_axes_list)
+        self.last_connected = self.labels_select.value
 
     def update_axes_list(self):
         selected_layer = self.labels_select.value
@@ -448,7 +481,17 @@ class PlotterWidget(QWidget):
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
     # this function runs after the run button is clicked
-    def run(self, features, plot_x_axis_name, plot_y_axis_name, plot_cluster_name=None):
+    def run(
+        self,
+        features,
+        plot_x_axis_name,
+        plot_y_axis_name,
+        plot_cluster_name=None,
+        redraw_cluster_image=True,
+    ):
+        if not self.isVisible():
+            # don't redraw in case the plot is invisible anyway
+            return
 
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
@@ -458,6 +501,10 @@ class PlotterWidget(QWidget):
         self.analysed_layer = self.labels_select.value
 
         self.graphics_widget.reset()
+        number_of_points = len(features)
+        tracking_data = (
+            len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
+        )
 
         if (
             plot_cluster_name is not None
@@ -470,18 +517,29 @@ class PlotterWidget(QWidget):
 
             # get long colormap from function
             colors = get_nice_colormap()
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
+                frame_id = features[POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
+                frame_id = None
+                current_frame = None
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+
+            a, sizes, colors_plot = clustered_plot_parameters(
+                cluster_id=self.cluster_ids,
+                frame_id=frame_id,
+                current_frame=current_frame,
+                n_datapoints=number_of_points,
+                color_hex_list=colors,
+            )
 
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
-                c=[colors[int(x) % len(colors)] for x in self.cluster_ids],
-                cmap="Spectral",
-                # here spot size is set differentially: larger (5) for all clustered datapoints (id >=0)
-                # and smaller (2.5) for the noise points with id = -1
-                s=[5 if id >= 0 else 2.5 for id in self.cluster_ids],
-                # here alpha is set differentially: higher (0.7) for all clustered datapoints (id >= 0)
-                # and lower (0.3) for the noise points with id = -1
-                alpha=[0.7 if id >= 0 else 0.3 for id in self.cluster_ids],
+                c=colors_plot,
+                s=sizes,
+                alpha=a,
             )
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(
@@ -495,36 +553,98 @@ class PlotterWidget(QWidget):
 
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
-            # generate dictionary mapping each label to the color of the cluster
+            # generate dictionary mapping each prediction to its respective color
             # list cycling with  % introduced for all labels except hdbscan noise points (id = -1)
-            cluster_id_dict = {
-                i + 1: (cmap[int(color) % len(cmap)] if color >= 0 else [0, 0, 0, 0])
-                for i, color in enumerate(self.cluster_ids)
+            cmap_dict = {
+                int(prediction + 1): (
+                    cmap[int(prediction) % len(cmap)]
+                    if prediction >= 0
+                    else [0, 0, 0, 0]
+                )
+                for prediction in self.cluster_ids
             }
+            # take care of background label
+            cmap_dict[0] = [0, 0, 0, 0]
 
             keep_selection = list(self.viewer.layers.selection)
 
-            if (
-                self.visualized_labels_layer is None
-                or self.visualized_labels_layer not in self.viewer.layers
-            ):
-                # instead of visualising cluster image, visualise label image with dictionary mapping
-                self.visualized_labels_layer = self.viewer.add_labels(
-                    self.analysed_layer.data,
-                    color=cluster_id_dict,
-                    name="cluster_ids_in_space",
-                )
-            else:
-                # instead of updating data, update colormap
-                self.visualized_labels_layer.color = cluster_id_dict
+            # Generating the cluster image
+            if redraw_cluster_image:
+                # depending on the dimensionality of the data
+                # generate the cluster image -> TODO change so possible
+                # with 2D timelapse data
+                if len(self.analysed_layer.data.shape) == 4:
+                    if not tracking_data:
+                        max_timepoint = features[POINTER].max() + 1
+
+                        prediction_lists_per_timepoint = [
+                            features.loc[features[POINTER] == i][
+                                plot_cluster_name
+                            ].tolist()
+                            for i in range(int(max_timepoint))
+                        ]
+                    else:
+                        prediction_lists_per_timepoint = [
+                            features[plot_cluster_name].tolist()
+                            for i in range(self.analysed_layer.data.shape[0])
+                        ]
+
+                    cluster_image = dask_cluster_image_timelapse(
+                        self.analysed_layer.data, prediction_lists_per_timepoint
+                    )
+
+                elif len(self.analysed_layer.data.shape) <= 3:
+                    cluster_image = generate_cluster_image(
+                        self.analysed_layer.data, self.cluster_ids
+                    )
+                else:
+                    warnings.warn("Image dimensions too high for processing!")
+                    return
+
+                # if the cluster image layer doesn't yet exist make it
+                # otherwise just update it
+                if (
+                    self.visualized_labels_layer is None
+                    or self.visualized_labels_layer not in self.viewer.layers
+                ):
+                    # visualising cluster image
+                    self.visualized_labels_layer = self.viewer.add_labels(
+                        cluster_image,  # self.analysed_layer.data
+                        color=cmap_dict,  # cluster_id_dict
+                        name="cluster_ids_in_space",
+                    )
+                else:
+                    # updating data
+                    self.visualized_labels_layer.data = cluster_image
+                    self.visualized_labels_layer.color = cmap_dict
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
 
         else:
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
+                frame_id = features[POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
+                frame_id = None
+                current_frame = None
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+
+            a, sizes, colors_plot = unclustered_plot_parameters(
+                frame_id=frame_id,
+                current_frame=current_frame,
+                n_datapoints=number_of_points,
+            )
+
+            # Potting
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x, self.data_y, color="#BABABA", s=5
+                self.data_x,
+                self.data_y,
+                color=colors_plot,
+                s=sizes,
+                alpha=a,
             )
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
@@ -535,10 +655,3 @@ class PlotterWidget(QWidget):
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-
-        # remove interaction from all label layers, just in case
-        for layer in self.viewer.layers:
-            if self.clicked_label_in_view in layer.mouse_drag_callbacks:
-                layer.mouse_drag_callbacks.remove(self.clicked_label_in_view)
-
-        self.analysed_layer.mouse_drag_callbacks.append(self.clicked_label_in_view)
