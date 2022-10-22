@@ -1,5 +1,7 @@
+import warnings
 from functools import wraps
 
+import napari.layers
 import numpy as np
 import pandas as pd
 import pyclesperanto_prototype as cle
@@ -97,7 +99,7 @@ def update_properties_list(widget, exclude_list):
                     item.setSelected(True)
 
 
-def generate_cluster_image(label_image, predictionlist):
+def generate_cluster_image(layer, predictionlist):
     """
     Returns a label image where each label value corresponds
     to the cluster identity defined by the predictionlist.
@@ -105,32 +107,42 @@ def generate_cluster_image(label_image, predictionlist):
 
     Parameters
     ----------
-    label_image: ndarray or dask array
-        Label image used for cluster predictions
+    layer: napari.types.Layer
+        Layer used for cluster predictions
     predictionlist: array
         Array containing cluster identities for each label
     """
-    # reforming the prediction list this is done to account
-    # for cluster labels that start at 0 conviniently hdbscan
-    # labelling starts at -1 for noise, removing these from
-    # the labels
-    predictionlist_new = np.array(predictionlist) + 1
-    predictionlist_new = np.insert(predictionlist_new, 0, 0)
 
-    # loading data into gpu
-    clelist = cle.push(predictionlist_new)
-    gpu_labelimage = cle.push(label_image)
+    if isinstance(layer, napari.layers.Labels):
+        label_image = layer.data
+        # reforming the prediction list this is done to account
+        # for cluster labels that start at 0 conveniently hdbscan
+        # labelling starts at -1 for noise, removing these from
+        # the labels
+        predictionlist_new = np.array(predictionlist) + 1
+        predictionlist_new = np.insert(predictionlist_new, 0, 0)
 
-    # generation of cluster label image
-    parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
-    gpu_labelimage = None
-    clelist = None
+        # loading data into gpu
+        clelist = cle.push(predictionlist_new)
+        gpu_labelimage = cle.push(label_image)
 
-    # retrieving the gpu image
-    output = cle.pull(parametric_image).astype("uint32")
-    parametric_image = None
+        # generation of cluster label image
+        parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
+        gpu_labelimage = None
+        clelist = None
 
-    return output
+        # retrieving the gpu image
+        output = cle.pull(parametric_image).astype("uint32")
+        parametric_image = None
+        layer_type = "Labels"
+    elif isinstance(layer, napari.layers.Surface):
+        surface_data = layer.data
+        output = (surface_data[0], surface_data[1], np.array(predictionlist) + 1)
+        layer_type = "Surface"
+    else:
+        warnings.warn("Image type not supported to view clusters as layer")
+
+    return output, layer_type
 
 
 # TODO docstring
