@@ -333,12 +333,14 @@ class ClusteringWidget(QWidget):
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
-            self.last_connected.events.properties.disconnect(
+            if hasattr(self.last_connected.events, "properties"):
+                self.last_connected.events.properties.disconnect(
+                    partial(update_properties_list, self, [ID_NAME])
+                )
+        if hasattr(self.labels_select.value.events, "properties"):
+            self.labels_select.value.events.properties.connect(
                 partial(update_properties_list, self, [ID_NAME])
             )
-        self.labels_select.value.events.properties.connect(
-            partial(update_properties_list, self, [ID_NAME])
-        )
         self.last_connected = self.labels_select.value
 
     def showEvent(self, event) -> None:
