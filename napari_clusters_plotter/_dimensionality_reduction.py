@@ -264,12 +264,14 @@ class DimensionalityReductionWidget(QWidget):
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
-            self.last_connected.events.properties.disconnect(
+            if hasattr(self.last_connected.events, "properties"):
+                self.last_connected.events.properties.disconnect(
+                    partial(update_properties_list, self, EXCLUDE)
+                )
+        if hasattr(self.labels_select.value.events, "properties"):
+            self.labels_select.value.events.properties.connect(
                 partial(update_properties_list, self, EXCLUDE)
             )
-        self.labels_select.value.events.properties.connect(
-            partial(update_properties_list, self, EXCLUDE)
-        )
         self.last_connected = self.labels_select.value
 
     # this function runs after the run button is clicked

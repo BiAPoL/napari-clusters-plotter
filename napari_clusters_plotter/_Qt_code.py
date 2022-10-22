@@ -8,7 +8,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector
-from napari.layers import Image, Labels
+from napari.layers import Image, Labels, Layer
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
@@ -38,13 +38,13 @@ def measurements_container_and_list():
 
 
 def labels_container_and_selection():
-    labels_layer_selection_container = QWidget()
-    labels_layer_selection_container.setLayout(QHBoxLayout())
-    labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-    labels_select = create_widget(annotation=Labels, label="labels_layer")
-    labels_layer_selection_container.layout().addWidget(labels_select.native)
+    layer_selection_container = QWidget()
+    layer_selection_container.setLayout(QHBoxLayout())
+    layer_selection_container.layout().addWidget(QLabel("Layer"))
+    layer_select = create_widget(annotation=Layer, label="layer")
+    layer_selection_container.layout().addWidget(layer_select.native)
 
-    return labels_layer_selection_container, labels_select
+    return layer_selection_container, layer_select
 
 
 def image_container_and_selection():
