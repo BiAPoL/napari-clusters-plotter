@@ -1,7 +1,7 @@
 import os
 import warnings
-import napari
 
+import napari
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
@@ -304,25 +304,31 @@ class PlotterWidget(QWidget):
         self.graphics_widget.reset()
         number_of_points = len(features)
         tracking_data = (
-                isinstance(self.analysed_layer, napari.layers.Labels) and
-                len(self.analysed_layer.data.shape) == 4 and
-                "frame" not in features.keys()
+            isinstance(self.analysed_layer, napari.layers.Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and "frame" not in features.keys()
         )
 
         frame_id = None
         current_frame = None
-        if (isinstance(self.analysed_layer, napari.layers.Labels) and
-                len(self.analysed_layer.data.shape) == 4 and
-                not tracking_data):
+        if (
+            isinstance(self.analysed_layer, napari.layers.Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and not tracking_data
+        ):
             frame_id = features[POINTER].tolist()
             current_frame = self.frame
-        elif (isinstance(self.analysed_layer, napari.layers.Labels) and len(
-                self.analysed_layer.data.shape) <= 3) or tracking_data:
+        elif (
+            isinstance(self.analysed_layer, napari.layers.Labels)
+            and len(self.analysed_layer.data.shape) <= 3
+        ) or tracking_data:
             pass
         elif isinstance(self.analysed_layer, napari.layers.Surface):
             pass
         else:
-            warnings.warn("Image dimensions too high or wrong image type for processing!")
+            warnings.warn(
+                "Image dimensions too high or wrong image type for processing!"
+            )
 
         if (
             plot_cluster_name is not None
@@ -385,7 +391,10 @@ class PlotterWidget(QWidget):
                 # depending on the dimensionality of the data
                 # generate the cluster image -> TODO change so possible
                 # with 2D timelapse data
-                if (isinstance(self.analysed_layer, napari.layers.Labels) and len(self.analysed_layer.data.shape) == 4):
+                if (
+                    isinstance(self.analysed_layer, napari.layers.Labels)
+                    and len(self.analysed_layer.data.shape) == 4
+                ):
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
 
@@ -405,8 +414,10 @@ class PlotterWidget(QWidget):
                         self.analysed_layer.data, prediction_lists_per_timepoint
                     )
 
-                elif (isinstance(self.analysed_layer, napari.layers.Labels) and len(self.analysed_layer.data.shape) <= 3) or \
-                    isinstance(self.analysed_layer, napari.layers.Surface):
+                elif (
+                    isinstance(self.analysed_layer, napari.layers.Labels)
+                    and len(self.analysed_layer.data.shape) <= 3
+                ) or isinstance(self.analysed_layer, napari.layers.Surface):
                     cluster_layer_data, cluster_layer_type = generate_cluster_image(
                         self.analysed_layer, self.cluster_ids
                     )
