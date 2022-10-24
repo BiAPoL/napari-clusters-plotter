@@ -53,9 +53,9 @@ The first step is deriving measurements from the labelled image and the correspo
 You can use the menu `Tools > Measurement > Label statistics (clEsperanto)` which is included in the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant)
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 A table with the measurements will open and afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
-If you want to upload your own measurements you can do this using [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops). 
+If you want to upload your own measurements you can do this using [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops).
 Under the menu `Tools > Measurement > Load from CSV (nsr)` you can find a widget to upload your own csv.
-Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label". 
+Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
 If you don't specify this column it will be assumed that measurements start at 1 and each
 column describes the next label.
 

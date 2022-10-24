@@ -93,6 +93,7 @@ def generate_cluster_image(label_image, predictionlist):
     predictionlist_new = np.insert(predictionlist_new, 0, 0)
 
     import importlib
+
     loader = importlib.find_loader("pyclesperanto_prototype")
     found = loader is not None
 
@@ -100,6 +101,7 @@ def generate_cluster_image(label_image, predictionlist):
         return relabel_image_cle(label_image, predictionlist_new)
     else:
         return relabel_image_numpy(label_image, predictionlist_new)
+
 
 def relabel_image_cle(label_image, predictionlist):
     """
@@ -131,9 +133,11 @@ def relabel_image_cle(label_image, predictionlist):
 
     return output
 
+
 # TODO docsstring
 def relabel_image_numpy(label_image, predictionlist):
-    return np.take(predictionlist,label_image)
+    return np.take(predictionlist, label_image)
+
 
 # TODO docstring
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
