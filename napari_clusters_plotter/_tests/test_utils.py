@@ -5,14 +5,15 @@ import pandas as pd
 
 from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
-    get_layer_tabular_data,
-    set_features,
-    generate_cluster_image,
     dask_cluster_image_timelapse,
+    generate_cluster_image,
+    get_layer_tabular_data,
     reshape_2D_timelapse,
+    set_features,
 )
 
 sys.path.append("../")
+
 
 def test_cluster_image_generation():
     label = np.array(
@@ -27,7 +28,7 @@ def test_cluster_image_generation():
         ]
     )
 
-    predictions = np.array([0,0,0,1,1,1,2])
+    predictions = np.array([0, 0, 0, 1, 1, 1, 2])
     result = generate_cluster_image(label, predictions)
     true_result = np.array(
         [
@@ -37,33 +38,30 @@ def test_cluster_image_generation():
             [1, 1, 0, 0, 0, 0, 0],
             [0, 0, 2, 2, 0, 2, 2],
             [2, 2, 2, 2, 0, 2, 0],
-            [0, 3, 3, 0, 0, 0, 0]
+            [0, 3, 3, 0, 0, 0, 0],
         ]
     )
     assert np.array_equal(result, true_result)
 
-    label_timelapse_3d = np.array(
-        [label,label]
-    )
+    label_timelapse_3d = np.array([label, label])
     label_timelapse = reshape_2D_timelapse(label_timelapse_3d)
 
-    predictions_list = np.array([
-        [0,0,0,1,1,1,2],
-        [0,0,0,1,1,1,0]
-    ])
-    result_dask = dask_cluster_image_timelapse(label_timelapse,predictions_list)
-    true_result_tp2 = np.array([
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 0, 0, 1, 1],
-        [0, 0, 0, 0, 1, 1, 1],
-        [1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 2, 2, 0, 2, 2],
-        [2, 2, 2, 2, 0, 2, 0],
-        [0, 1, 1, 0, 0, 0, 0]
-    ])
-    
-    assert np.array_equal(result_dask[0].compute()[0],true_result)
-    assert np.array_equal(result_dask[1].compute()[0],true_result_tp2)
+    predictions_list = np.array([[0, 0, 0, 1, 1, 1, 2], [0, 0, 0, 1, 1, 1, 0]])
+    result_dask = dask_cluster_image_timelapse(label_timelapse, predictions_list)
+    true_result_tp2 = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 0, 1, 1],
+            [0, 0, 0, 0, 1, 1, 1],
+            [1, 1, 0, 0, 0, 0, 0],
+            [0, 0, 2, 2, 0, 2, 2],
+            [2, 2, 2, 2, 0, 2, 0],
+            [0, 1, 1, 0, 0, 0, 0],
+        ]
+    )
+
+    assert np.array_equal(result_dask[0].compute()[0], true_result)
+    assert np.array_equal(result_dask[1].compute()[0], true_result_tp2)
 
 
 def test_feature_setting(make_napari_viewer):
