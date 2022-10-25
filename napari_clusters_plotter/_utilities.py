@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from napari_skimage_regionprops import relabel
 
+
 def widgets_inactive(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
@@ -85,15 +86,15 @@ def generate_cluster_image(label_image, predictionlist):
     predictionlist: array
         Array containing cluster identities for each label
     """
-    
 
     # reforming the prediction list this is done to account
     # for cluster labels that start at 0 conviniently hdbscan
     # labelling starts at -1 for noise, removing these from
     # the labels
     predictionlist_new = np.array(predictionlist) + 1
-    
+
     return relabel(label_image, list(predictionlist_new))
+
 
 # TODO docstring
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
