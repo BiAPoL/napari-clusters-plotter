@@ -75,7 +75,7 @@ time the given row refers to. If you want to import your own csv files for time-
 If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
 this column must not be added.
 
-Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops) and [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant) include measureing widgets for timelapse data.
+Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops) and [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant) include measuring widgets for timelapse data.
 
 ### Plotting
 
@@ -196,7 +196,7 @@ pip install napari-clusters-plotter
 ### Optional installation
 Follow these steps instead of the regular installation to include the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
 Creating the environment like this will allow you to use your GPU to render your cluster results.
-Furthermore, you as access the decaprecated measurement functions of the napari-cluster-plotter of releases < 0.6.0.
+Furthermore, you as access the deprecated measurement functions of the napari-cluster-plotter of releases < 0.6.0.
 If you have trouble with this library you can use the regular installation above.
 
 ```
@@ -210,7 +210,7 @@ conda create --name ncp-env python==3.9
 conda activate ncp-env
 ```
 
-* Install napari-pyclesperanto-assistan, eg. with pip:
+* Install napari-pyclesperanto-assistant, eg. with pip:
 
 ´´´
 pip install napari-pyclesperanto-assistant
