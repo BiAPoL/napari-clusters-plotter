@@ -25,6 +25,8 @@ class FakeWidget:
 
         self.properties_list = QListWidget()
         self.labels_select = Labels_select(layer)
+
+
 def test_cluster_image_generation():
     label = np.array(
         [
