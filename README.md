@@ -50,7 +50,7 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 ### Measurements
 The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
-Since the 0.6.0 release measurement is no longer part of this plugin and you will have to use other napari plugins to measure your data.
+Since the 0.6.0 release measurements widget is no longer part of this plugin and you will have to use other napari plugins to measure your data.
 One way is to use the measurement functions in [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops), which comes pre-installed with the napari cluster plotter.
 Use the menu `Tools > Measurement > Regionprops (scikit-image, nsr)` to get to the measurement widget.
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
