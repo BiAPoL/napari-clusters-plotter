@@ -1,9 +1,9 @@
 import numpy as np
-from sklearn import datasets
-from napari import Viewer
-from .._utilities import set_features
 import pandas as pd
+from napari import Viewer
+from sklearn import datasets
 
+from .._utilities import set_features
 
 
 def test_clustering_widget(make_napari_viewer):
@@ -34,8 +34,8 @@ def test_clustering_widget(make_napari_viewer):
         ]
     )
 
-    viewer.add_labels(label_data, name = "label_1")
-    labels_2 = viewer.add_labels(label_data, name = "label_2")
+    viewer.add_labels(label_data, name="label_1")
+    labels_2 = viewer.add_labels(label_data, name="label_2")
 
     n_samples = 20
     n_centers = 2
@@ -47,8 +47,8 @@ def test_clustering_widget(make_napari_viewer):
         n_features=2,
     )
 
-    dataframe = pd.DataFrame(data[0], columns =["x","y"])
-    set_features(labels_2,dataframe)
+    dataframe = pd.DataFrame(data[0], columns=["x", "y"])
+    set_features(labels_2, dataframe)
 
     cluster_widget.labels_select.value = labels_2
     cluster_widget.clust_method_choice_list.value = "KMeans"
@@ -67,8 +67,9 @@ def test_clustering_widget(make_napari_viewer):
         cluster_widget.ac_n_clusters.value,
         cluster_widget.ac_n_neighbors.value,
         cluster_widget.custom_name.text(),
-        show = False
+        show=False,
     )
+
 
 def test_kmeans_clustering():
 

@@ -365,7 +365,7 @@ class ClusteringWidget(QWidget):
         ac_n_clusters,
         ac_n_neighbors,
         custom_name,
-        show = True,
+        show=True,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
