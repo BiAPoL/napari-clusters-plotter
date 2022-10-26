@@ -49,8 +49,8 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
 
 ### Measurements
-The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image. 
-Since the 0.6.0 release measurement is no longer part of this plugin and you will have to use other napari plugins to measure your data. 
+The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
+Since the 0.6.0 release measurement is no longer part of this plugin and you will have to use other napari plugins to measure your data.
 One way is to use the measurement functions in [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops), which comes pre-installed with the napari cluster plotter.
 Use the menu `Tools > Measurement > Regionprops (scikit-image, nsr)` to get to the measurement widget
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
@@ -186,10 +186,10 @@ Afterwards, you can install `napari-clusters-plotter` via [pip]:
 pip install napari-clusters-plotter
 ```
 
-### Optional installation 
+### Optional installation
 Follow these steps instead of the regular installation to include the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
-Creating the environment like this will allow you to use your GPU to render your cluster results. 
-Furthermore, you as access the decaprecated measurement functions of the napari-cluster-plotter of releases < 0.6.0. 
+Creating the environment like this will allow you to use your GPU to render your cluster results.
+Furthermore, you as access the decaprecated measurement functions of the napari-cluster-plotter of releases < 0.6.0.
 If you have trouble with this library you can use the regular installation above.
 
 ```
