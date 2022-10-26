@@ -5,6 +5,7 @@ import pandas as pd
 from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
+
 def widgets_inactive(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
