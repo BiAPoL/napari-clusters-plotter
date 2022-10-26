@@ -49,10 +49,17 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
 
 ### Measurements
-The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
-You can use the menu `Tools > Measurement > Label statistics (clEsperanto)` which is included in the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant)
+The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image. 
+Since the 0.6.0 release measurement is no longer part of this plugin and you will have to use other napari plugins to measure your data. 
+One way is to use the measurement functions in [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops), which comes pre-installed with the napari cluster plotter.
+Use the menu `Tools > Measurement > Regionprops (scikit-image, nsr)` to get to the measurement widget
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
+
+In the previous napari-cluster-plotter release a GPU dependant measurement function was implemented which you can find in the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
+To use this function you will need to install this library (see optional installation steps) and you can find the widget under the menu `Tools > Measurement > Label statistics (clEsperanto)`. As before, select the image, the corresponding label image and the measurements to analyse and click on `Run`.
+
 A table with the measurements will open and afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
+
 If you want to upload your own measurements you can do this using [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops).
 Under the menu `Tools > Measurement > Load from CSV (nsr)` you can find a widget to upload your own csv.
 Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
@@ -62,10 +69,13 @@ column describes the next label.
 #### Time-Lapse Measurements
 In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
+
 Note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
 time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
 If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
 this column must not be added.
+
+Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops) and [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant) include measureing widgets for timelapse data.
 
 ### Plotting
 
@@ -164,11 +174,52 @@ conda create --name ncp-env python=3.9
 conda activate ncp-env
 ```
 
-* Install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
+* Install [napari], e.g. via [pip]:
 
 ```
-conda install -c conda-forge pyopencl
+python -m pip install "napari[all]"
 ```
+
+Afterwards, you can install `napari-clusters-plotter` via [pip]:
+
+```
+pip install napari-clusters-plotter
+```
+
+### Optional installation 
+Follow these steps instead of the regular installation to include the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
+Creating the environment like this will allow you to use your GPU to render your cluster results. 
+Furthermore, you as access the decaprecated measurement functions of the napari-cluster-plotter of releases < 0.6.0. 
+If you have trouble with this library you can use the regular installation above.
+
+```
+conda create --name ncp-env python==3.9
+```
+
+
+* Activate the new environment via conda:
+
+```
+conda activate ncp-env
+```
+
+* Install napari-pyclesperanto-assistan, eg. with pip:
+
+´´´
+pip install napari-pyclesperanto-assistant
+´´´
+
+* Mac-users please also install this:
+
+´´´
+conda install -c conda-forge ocl_icd_wrapper_apple
+´´´
+
+* Linux users please also install this:
+
+´´´
+conda install -c conda-forge ocl-icd-system
+´´´
 
 * Install [napari], e.g. via [pip]:
 

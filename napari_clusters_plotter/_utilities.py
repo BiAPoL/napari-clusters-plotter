@@ -93,7 +93,7 @@ def generate_cluster_image(label_image, predictionlist):
     # the labels
     predictionlist_new = np.array(predictionlist) + 1
 
-    return relabel(label_image, list(predictionlist_new))
+    return relabel(label_image, list(predictionlist_new)).astype("uint64")
 
 
 # TODO docstring
