@@ -196,7 +196,7 @@ pip install napari-clusters-plotter
 ### Optional installation
 Follow these steps instead of the regular installation to include the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
 Creating the environment like this will allow you to use your GPU to render your cluster results.
-Furthermore, you as access the deprecated measurement functions of the napari-cluster-plotter of releases < 0.6.0.
+Furthermore, you can access the deprecated measurement functions of the napari-cluster-plotter in releases < 0.6.0.
 If you have trouble with this library you can use the regular installation above.
 
 ```
