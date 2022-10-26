@@ -210,7 +210,7 @@ conda create --name ncp-env python==3.9
 conda activate ncp-env
 ```
 
-* Install napari-pyclesperanto-assistant, eg. with pip:
+* Install napari-pyclesperanto-assistant, e.g. with pip:
 
 ´´´
 pip install napari-pyclesperanto-assistant
