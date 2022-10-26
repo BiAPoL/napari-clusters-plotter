@@ -159,7 +159,7 @@ Example of k-means clustering results:
 ## Installation
 ### Devbio-napari installation
 The easiest way to install this plugin is to install the [devbio-napari](https://github.com/haesleinhuepf/devbio-napari) library.
-This library installs napari alongside many other useful plugins, including the napari-cluster-plotter.
+This library installs napari alongside many other useful plugins, including the napari-clusters-plotter.
 We recommend this library as it is not only the easiest way to install the napari-cluster-plotter, but it includes plugins for segmentation and measurement, which we don't provide.
 There are detailed installation instructions on the [napari-hub-page](https://www.napari-hub.org/plugins/devbio-napari) if you have any problems installing it.
 In case you want to have a minimal installation of our plugin you can find other installation options below.
