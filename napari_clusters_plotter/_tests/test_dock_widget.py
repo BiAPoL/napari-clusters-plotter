@@ -12,7 +12,6 @@ import napari_clusters_plotter
 MY_PLUGIN_NAME = "napari-clusters-plotter"
 # the name of your widget(s)
 MY_WIDGET_NAMES = [
-    "Measure Widget",
     "Plotter Widget",
     "Dimensionality Reduction Widget",
     "Clustering Widget",

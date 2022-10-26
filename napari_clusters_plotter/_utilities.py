@@ -2,7 +2,7 @@ from functools import wraps
 
 import numpy as np
 import pandas as pd
-import pyclesperanto_prototype as cle
+from napari_skimage_regionprops import relabel
 
 
 def widgets_inactive(*widgets, active):
@@ -86,27 +86,14 @@ def generate_cluster_image(label_image, predictionlist):
     predictionlist: array
         Array containing cluster identities for each label
     """
+
     # reforming the prediction list this is done to account
     # for cluster labels that start at 0 conviniently hdbscan
     # labelling starts at -1 for noise, removing these from
     # the labels
     predictionlist_new = np.array(predictionlist) + 1
-    predictionlist_new = np.insert(predictionlist_new, 0, 0)
 
-    # loading data into gpu
-    clelist = cle.push(predictionlist_new)
-    gpu_labelimage = cle.push(label_image)
-
-    # generation of cluster label image
-    parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
-    gpu_labelimage = None
-    clelist = None
-
-    # retrieving the gpu image
-    output = cle.pull(parametric_image).astype("uint32")
-    parametric_image = None
-
-    return output
+    return relabel(label_image, list(predictionlist_new)).astype("uint64")
 
 
 # TODO docstring
