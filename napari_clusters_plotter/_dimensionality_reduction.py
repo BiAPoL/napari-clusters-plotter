@@ -205,6 +205,8 @@ class DimensionalityReductionWidget(QWidget):
 
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.labels_select.changed.connect(self._check_perplexity)
+        self.perplexity.changed.connect(self._check_perplexity)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
