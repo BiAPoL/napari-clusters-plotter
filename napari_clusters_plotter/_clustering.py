@@ -5,29 +5,27 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from magicgui.widgets import create_widget
-from napari.layers import Labels
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtCore import QRect
-from qtpy.QtWidgets import (
-    QAbstractItemView,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
+from ._Qt_code import (
+    algorithm_choice,
+    button,
+    checkbox,
+    float_sbox_containter_and_selection,
+    int_sbox_containter_and_selection,
+    labels_container_and_selection,
+    measurements_container_and_list,
+    title,
+)
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     show_table,
+    update_properties_list,
     widgets_inactive,
 )
 
@@ -44,6 +42,7 @@ DEFAULTS = {
     "ac_n_neighbors": 2,
     "custom_name": "",
 }
+ID_NAME = "_CLUSTER_ID"
 
 
 @register_dock_widget(menu="Measurement > Clustering (ncp)")
@@ -62,244 +61,135 @@ class ClusteringWidget(QWidget):
         self.setLayout(QVBoxLayout())
         self.viewer = napari_viewer
 
-        title_container = QWidget()
-        title_container.setLayout(QVBoxLayout())
-        title_container.layout().addWidget(QLabel("<b>Clustering</b>"))
+        title_container = title("<b>Clustering</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container = QWidget()
-        labels_layer_selection_container.setLayout(QHBoxLayout())
-        labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-        self.labels_select = create_widget(annotation=Labels, label="labels_layer")
-
-        labels_layer_selection_container.layout().addWidget(self.labels_select.native)
+        (
+            labels_layer_selection_container,
+            self.labels_select,
+        ) = labels_container_and_selection()
 
         # widget for the selection of properties to perform clustering
-        choose_properties_container = QWidget()
-        choose_properties_container.setLayout(QVBoxLayout())
-        choose_properties_container.layout().addWidget(QLabel("Measurements"))
-        self.properties_list = QListWidget()
-        self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.properties_list.setGeometry(QRect(10, 10, 101, 291))
-        choose_properties_container.layout().addWidget(self.properties_list)
+        (
+            choose_properties_container,
+            self.properties_list,
+        ) = measurements_container_and_list()
 
         # selection of the clustering methods
-        self.clust_method_container = QWidget()
-        self.clust_method_container.setLayout(QHBoxLayout())
-        self.clust_method_container.layout().addWidget(QLabel("Clustering Method"))
-        self.clust_method_choice_list = create_widget(
-            widget_type="ComboBox",
+        self.clust_method_container, self.clust_method_choice_list = algorithm_choice(
             name="Clustering_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
-        )
-
-        self.clust_method_container.layout().addWidget(
-            self.clust_method_choice_list.native
+            label="Clustering Method",
         )
 
         # clustering options for KMeans
         # selection of number of clusters
-        self.kmeans_settings_container_nr = QWidget()
-        self.kmeans_settings_container_nr.setLayout(QHBoxLayout())
-        self.kmeans_settings_container_nr.layout().addWidget(
-            QLabel("Number of Clusters")
+        (
+            self.kmeans_settings_container_nr,
+            self.kmeans_nr_clusters,
+        ) = int_sbox_containter_and_selection(
+            name="kmeans_nr_clusters", value=DEFAULTS["kmeans_nr_clusters"]
         )
-        self.kmeans_nr_clusters = create_widget(
-            widget_type="SpinBox",
-            name="kmeans_nr_clusters",
-            value=DEFAULTS["kmeans_nr_clusters"],
-            options={"min": 2, "step": 1},
-        )
-
-        self.kmeans_settings_container_nr.layout().addWidget(
-            self.kmeans_nr_clusters.native
-        )
-        self.kmeans_settings_container_nr.setVisible(False)
-
         # selection of number of iterations
-        self.kmeans_settings_container_iter = QWidget()
-        self.kmeans_settings_container_iter.setLayout(QHBoxLayout())
-        self.kmeans_settings_container_iter.layout().addWidget(
-            QLabel("Number of Iterations")
-        )
-        self.kmeans_nr_iterations = create_widget(
-            widget_type="SpinBox",
+        (
+            self.kmeans_settings_container_iter,
+            self.kmeans_nr_iterations,
+        ) = int_sbox_containter_and_selection(
             name="kmeans_nr_iter",
             value=DEFAULTS["kmeans_nr_iterations"],
-            options={"min": 1, "max": 10000},
+            min=1,
+            label="Number of Iterations",
         )
-
-        self.kmeans_settings_container_iter.layout().addWidget(
-            self.kmeans_nr_iterations.native
-        )
-        self.kmeans_settings_container_iter.setVisible(False)
 
         # clustering options for Gaussian mixture model
         # selection of number of clusters
-        self.gmm_settings_container_nr = QWidget()
-        self.gmm_settings_container_nr.setLayout(QHBoxLayout())
-        self.gmm_settings_container_nr.layout().addWidget(QLabel("Number of Clusters"))
-        self.gmm_nr_clusters = create_widget(
-            widget_type="SpinBox",
+        (
+            self.gmm_settings_container_nr,
+            self.gmm_nr_clusters,
+        ) = int_sbox_containter_and_selection(
             name="gmm_nr_clusters",
             value=DEFAULTS["gmm_nr_clusters"],
-            options={"min": 2, "step": 1},
         )
-
-        self.gmm_settings_container_nr.layout().addWidget(self.gmm_nr_clusters.native)
-        self.gmm_settings_container_nr.setVisible(False)
 
         # clustering options for Mean Shift
         # selection of quantile
-        self.ms_settings_container_nr = QWidget()
-        self.ms_settings_container_nr.setLayout(QHBoxLayout())
-        self.ms_settings_container_nr.layout().addWidget(QLabel("Quantile"))
-        self.ms_quantile = create_widget(
-            widget_type="FloatSpinBox",
+        (
+            self.ms_settings_container_nr,
+            self.ms_quantile,
+        ) = float_sbox_containter_and_selection(
             name="ms_quantile",
             value=DEFAULTS["ms_quantile"],
-            options={"min": 0, "step": 0.1, "max": 1},
+            label="Quantile",
         )
 
-        self.ms_settings_container_nr.layout().addWidget(self.ms_quantile.native)
-        self.ms_settings_container_nr.setVisible(False)
-
-        # selection of number of samples
-        self.ms_settings_container_samples = QWidget()
-        self.ms_settings_container_samples.setLayout(QHBoxLayout())
-        self.ms_settings_container_samples.layout().addWidget(
-            QLabel("Number of samples")
-        )
-        self.ms_n_samples = create_widget(
-            widget_type="SpinBox",
+        # number of samples selection
+        (
+            self.ms_settings_container_samples,
+            self.ms_n_samples,
+        ) = int_sbox_containter_and_selection(
             name="ms_n_samples",
             value=DEFAULTS["ms_n_samples"],
-            options={"min": 2, "step": 1},
+            label="Number of samples",
         )
 
-        self.ms_settings_container_samples.layout().addWidget(self.ms_n_samples.native)
-        self.ms_settings_container_samples.setVisible(False)
-
-        #
         # clustering options for Agglomerative Clustering
         # selection of number of clusters
-        self.ac_settings_container_clusters = QWidget()
-        self.ac_settings_container_clusters.setLayout(QHBoxLayout())
-        self.ac_settings_container_clusters.layout().addWidget(
-            QLabel("Number of clusters")
-        )
-        self.ac_n_clusters = create_widget(
-            widget_type="SpinBox",
+        (
+            self.ac_settings_container_clusters,
+            self.ac_n_clusters,
+        ) = int_sbox_containter_and_selection(
             name="ac_n_clusters",
             value=DEFAULTS["ac_n_clusters"],
-            options={"min": 2, "step": 1},
         )
 
-        self.ac_settings_container_clusters.layout().addWidget(
-            self.ac_n_clusters.native
-        )
-        self.ac_settings_container_clusters.setVisible(False)
-
-        # selection of number of clusters
-        self.ac_settings_container_neighbors = QWidget()
-        self.ac_settings_container_neighbors.setLayout(QHBoxLayout())
-        self.ac_settings_container_neighbors.layout().addWidget(
-            QLabel("Number of neighbors")
-        )
-        self.ac_n_neighbors = create_widget(
-            widget_type="SpinBox",
+        # selection of number of neighbors
+        (
+            self.ac_settings_container_neighbors,
+            self.ac_n_neighbors,
+        ) = int_sbox_containter_and_selection(
             name="ac_n_neighbors",
             value=DEFAULTS["ac_n_neighbors"],
-            options={"min": 2, "step": 1},
+            label="Number of neighbors",
         )
-
-        self.ac_settings_container_neighbors.layout().addWidget(
-            self.ac_n_neighbors.native
-        )
-        self.ac_settings_container_neighbors.setVisible(False)
 
         # checkbox whether data should be standardized
-        self.clustering_settings_container_scaler = QWidget()
-        self.clustering_settings_container_scaler.setLayout(QHBoxLayout())
-        self.standardization = create_widget(
-            widget_type="CheckBox",
+        self.clustering_settings_container_scaler, self.standardization = checkbox(
             name="Standardize Features",
             value=DEFAULTS["standardization"],
         )
 
-        self.clustering_settings_container_scaler.layout().addWidget(
-            self.standardization.native
-        )
-        self.clustering_settings_container_scaler.setVisible(False)
-
         # Clustering options for HDBSCAN
         # selection of the minimum size of clusters
-        self.hdbscan_settings_container_size = QWidget()
-        self.hdbscan_settings_container_size.setLayout(QHBoxLayout())
-        self.hdbscan_settings_container_size.layout().addWidget(
-            QLabel("Minimum size of clusters")
-        )
-        self.hdbscan_settings_container_size.layout().addStretch()
-        self.hdbscan_min_clusters_size = create_widget(
-            widget_type="SpinBox",
+        (
+            self.hdbscan_settings_container_size,
+            self.hdbscan_min_clusters_size,
+        ) = int_sbox_containter_and_selection(
             name="hdbscan_min_clusters_size",
             value=DEFAULTS["hdbscan_min_clusters_size"],
-            options={"min": 2, "step": 1},
+            label="Minimum size of clusters",
+            tool_link="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html",
+            tool_tip=(
+                "The minimum size of clusters; single linkage splits that contain fewer points than this will be\n"
+                "considered points falling out of a cluster rather than a cluster splitting into two new clusters."
+            ),
         )
-
-        help_min_clusters_size = QLabel()
-        help_min_clusters_size.setOpenExternalLinks(True)
-        help_min_clusters_size.setText(
-            '<a href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-
-        help_min_clusters_size.setToolTip(
-            "The minimum size of clusters; single linkage splits that contain fewer points than this will be "
-            "considered points falling out of a cluster rather than a cluster splitting into two new clusters. "
-            " Click on question mark to read more."
-        )
-
-        self.hdbscan_min_clusters_size.native.setMaximumWidth(70)
-        self.hdbscan_settings_container_size.layout().addWidget(
-            self.hdbscan_min_clusters_size.native
-        )
-        self.hdbscan_settings_container_size.layout().addWidget(help_min_clusters_size)
-        self.hdbscan_settings_container_size.setVisible(False)
 
         # selection of the minimum number of samples in a neighborhood for a point to be considered as a core point
-        self.hdbscan_settings_container_min_nr = QWidget()
-        self.hdbscan_settings_container_min_nr.setLayout(QHBoxLayout())
-        self.hdbscan_settings_container_min_nr.layout().addWidget(
-            QLabel("Minimum number of samples")
-        )
-        self.hdbscan_settings_container_min_nr.layout().addStretch()
-        self.hdbscan_min_nr_samples = create_widget(
-            widget_type="SpinBox",
+        (
+            self.hdbscan_settings_container_min_nr,
+            self.hdbscan_min_nr_samples,
+        ) = int_sbox_containter_and_selection(
             name="hdbscan_min_nr_samples",
             value=self.hdbscan_min_clusters_size.value,
-            options={"min": 1, "step": 1},
+            min=1,
+            label="Minimum number of samples",
+            tool_link="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#selecting-min-samples",
+            tool_tip=(
+                "The number of samples in a neighbourhood for a point to be considered a core\n"
+                "point. By default it is equal to the minimum cluster size."
+            ),
         )
-        help_min_nr_samples = QLabel()
-        help_min_nr_samples.setOpenExternalLinks(True)
-        help_min_nr_samples.setText(
-            '<a href="https://hdbscan.readthedocs.io/en/latest/parameter_selection.html#selecting-min-samples" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-
-        help_min_nr_samples.setToolTip(
-            "The number of samples in a neighbourhood for a point to be considered a core "
-            "point. By default it is equal to the minimum cluster size. Click on the "
-            "question mark to read more."
-        )
-
-        self.hdbscan_min_nr_samples.native.setMaximumWidth(70)
-        self.hdbscan_settings_container_min_nr.layout().addWidget(
-            self.hdbscan_min_nr_samples.native
-        )
-        self.hdbscan_settings_container_min_nr.layout().addWidget(help_min_nr_samples)
-        self.hdbscan_settings_container_min_nr.setVisible(False)
 
         # custom result column name field
         self.custom_name_container = QWidget()
@@ -311,26 +201,13 @@ class ClusteringWidget(QWidget):
         self.custom_name_container.layout().addWidget(self.custom_name)
         self.custom_name_container.layout().addWidget(self.custom_name_not_editable)
         self.custom_name.setPlaceholderText("Algorithm_name")
-        self.custom_name_not_editable.setPlaceholderText("_CLUSTER_ID")
+        self.custom_name_not_editable.setPlaceholderText(ID_NAME)
         self.custom_name_not_editable.setReadOnly(True)
 
-        # Run button
-        run_container = QWidget()
-        run_container.setLayout(QHBoxLayout())
-        run_button = QPushButton("Run")
-        run_container.layout().addWidget(run_button)
-
-        # Update measurements button
-        update_container = QWidget()
-        update_container.setLayout(QHBoxLayout())
-        update_button = QPushButton("Update Measurements")
-        update_container.layout().addWidget(update_button)
-
-        # Defaults button
-        defaults_container = QWidget()
-        defaults_container.setLayout(QHBoxLayout())
-        defaults_button = QPushButton("Restore Defaults")
-        defaults_container.layout().addWidget(defaults_button)
+        # making buttons
+        run_container, run_button = button("Run")
+        update_container, update_button = button("Update Measurements")
+        defaults_container, defaults_button = button("Restore Defaults")
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
@@ -385,11 +262,13 @@ class ClusteringWidget(QWidget):
             )
 
         run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(self.update_properties_list)
+        update_button.clicked.connect(partial(update_properties_list, self, [ID_NAME]))
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(self.update_properties_list)
+        self.labels_select.changed.connect(
+            partial(update_properties_list, self, [ID_NAME])
+        )
 
         # update axes combo boxes automatically if features of
         # layer are changed
@@ -452,26 +331,14 @@ class ClusteringWidget(QWidget):
             ),
         )
 
-    def update_properties_list(self):
-        selected_layer = self.labels_select.value
-
-        if selected_layer is not None:
-            features = get_layer_tabular_data(selected_layer)
-            if features is not None:
-                self.properties_list.clear()
-                for p in list(features.keys()):
-                    if "label" in p or "CLUSTER_ID" in p or "index" in p:
-                        continue
-                    item = QListWidgetItem(p)
-                    self.properties_list.addItem(item)
-                    item.setSelected(True)
-
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             self.last_connected.events.properties.disconnect(
-                self.update_properties_list
+                partial(update_properties_list, self, [ID_NAME])
             )
-        self.labels_select.value.events.properties.connect(self.update_properties_list)
+        self.labels_select.value.events.properties.connect(
+            partial(update_properties_list, self, [ID_NAME])
+        )
         self.last_connected = self.labels_select.value
 
     def showEvent(self, event) -> None:
@@ -498,6 +365,7 @@ class ClusteringWidget(QWidget):
         ac_n_clusters,
         ac_n_neighbors,
         custom_name,
+        show=True,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -518,10 +386,11 @@ class ClusteringWidget(QWidget):
             print(result_column_name + " predictions finished.")
             add_column_to_layer_tabular_data(
                 labels_layer,
-                result_column_name + "_CLUSTER_ID",
+                result_column_name + ID_NAME,
                 returned[1],
             )
-            show_table(self.viewer, labels_layer)
+            if show:
+                show_table(self.viewer, labels_layer)
 
         # perform standard scaling, if selected
         if standardize:

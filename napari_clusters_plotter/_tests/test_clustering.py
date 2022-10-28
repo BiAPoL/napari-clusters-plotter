@@ -1,12 +1,15 @@
 import numpy as np
+import pandas as pd
+from napari import Viewer
 from sklearn import datasets
+
+from .._utilities import set_features
 
 
 def test_clustering_widget(make_napari_viewer):
-
     import napari_clusters_plotter as ncp
 
-    viewer = make_napari_viewer()
+    viewer: Viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
     n_wdgts = len(viewer.window._dock_widgets)
 
@@ -14,10 +17,58 @@ def test_clustering_widget(make_napari_viewer):
         _widget = widget(viewer)
 
         if isinstance(_widget, ncp._clustering.ClusteringWidget):
-            plot_widget = _widget
+            cluster_widget = _widget
 
-    viewer.window.add_dock_widget(plot_widget)
+    viewer.window.add_dock_widget(cluster_widget)
     assert len(viewer.window._dock_widgets) == n_wdgts + 1
+
+    label_data = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 0, 2, 2],
+            [0, 0, 0, 0, 2, 2, 2],
+            [3, 3, 0, 0, 0, 0, 0],
+            [0, 0, 4, 4, 0, 5, 5],
+            [6, 6, 6, 6, 0, 5, 0],
+            [0, 7, 7, 0, 0, 0, 0],
+        ]
+    )
+
+    viewer.add_labels(label_data, name="label_1")
+    labels_2 = viewer.add_labels(label_data, name="label_2")
+
+    n_samples = 20
+    n_centers = 2
+    data = datasets.make_blobs(
+        n_samples=n_samples,
+        random_state=1,
+        centers=n_centers,
+        cluster_std=0.3,
+        n_features=2,
+    )
+
+    dataframe = pd.DataFrame(data[0], columns=["x", "y"])
+    set_features(labels_2, dataframe)
+
+    cluster_widget.labels_select.value = labels_2
+    cluster_widget.clust_method_choice_list.value = "KMeans"
+    cluster_widget.run(
+        cluster_widget.labels_select.value,
+        [i.text() for i in cluster_widget.properties_list.selectedItems()],
+        cluster_widget.clust_method_choice_list.current_choice,
+        cluster_widget.kmeans_nr_clusters.value,
+        cluster_widget.kmeans_nr_iterations.value,
+        cluster_widget.standardization.value,
+        cluster_widget.hdbscan_min_clusters_size.value,
+        cluster_widget.hdbscan_min_nr_samples.value,
+        cluster_widget.gmm_nr_clusters.value,
+        cluster_widget.ms_quantile.value,
+        cluster_widget.ms_n_samples.value,
+        cluster_widget.ac_n_clusters.value,
+        cluster_widget.ac_n_neighbors.value,
+        cluster_widget.custom_name.text(),
+        show=False,
+    )
 
 
 def test_kmeans_clustering():
