@@ -1,27 +1,26 @@
 import warnings
+from enum import Enum
 from functools import partial
 from typing import Tuple
 
 import numpy as np
 import pandas as pd
-from magicgui.widgets import create_widget
-from napari.layers import Labels
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtCore import QRect
-from qtpy.QtWidgets import (
-    QAbstractItemView,
-    QComboBox,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QListWidgetItem,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import QVBoxLayout, QWidget
 
+from ._clustering import ID_NAME
 from ._plotter import POINTER
+from ._Qt_code import (
+    algorithm_choice,
+    button,
+    checkbox,
+    float_sbox_containter_and_selection,
+    int_sbox_containter_and_selection,
+    labels_container_and_selection,
+    measurements_container_and_list,
+    title,
+)
 from ._utilities import (
     add_column_to_layer_tabular_data,
     catch_NaNs,
@@ -29,6 +28,7 @@ from ._utilities import (
     restore_defaults,
     set_features,
     show_table,
+    update_properties_list,
     widgets_inactive,
     widgets_valid,
 )
@@ -43,10 +43,17 @@ DEFAULTS = {
     "pca_components": 0,
     "explained_variance": 95.0,
 }
+EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE"]
 
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
 class DimensionalityReductionWidget(QWidget):
+    class Options(Enum):
+        EMPTY = ""
+        UMAP = "UMAP"
+        TSNE = "t-SNE"
+        PCA = "PCA"
+
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -55,193 +62,111 @@ class DimensionalityReductionWidget(QWidget):
 
         # QVBoxLayout - lines up widgets vertically
         self.setLayout(QVBoxLayout())
-        label_container = QWidget()
-        label_container.setLayout(QVBoxLayout())
-        label_container.layout().addWidget(QLabel("<b>Dimensionality reduction</b>"))
+        label_container = title("<b>Dimensionality reduction</b>")
 
         # widget for the selection of labels layer
-        labels_layer_selection_container = QWidget()
-        labels_layer_selection_container.setLayout(QHBoxLayout())
-        labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-        self.labels_select = create_widget(annotation=Labels, label="labels_layer")
+        (
+            labels_layer_selection_container,
+            self.labels_select,
+        ) = labels_container_and_selection()
 
-        labels_layer_selection_container.layout().addWidget(self.labels_select.native)
+        # select properties of which to produce a dimensionality reduced version
+        (
+            choose_properties_container,
+            self.properties_list,
+        ) = measurements_container_and_list()
 
         # selection of dimension reduction algorithm
-        algorithm_container = QWidget()
-        algorithm_container.setLayout(QHBoxLayout())
-        algorithm_container.layout().addWidget(
-            QLabel("Dimensionality Reduction Algorithm")
+        algorithm_container, self.algorithm_choice_list = algorithm_choice(
+            name="Clustering_method",
+            value=self.Options.EMPTY.value,
+            options={"choices": [e.value for e in self.Options]},
+            label="Clustering Method",
         )
-        self.algorithm_choice_list = QComboBox()
-        self.algorithm_choice_list.addItems(["", "UMAP", "t-SNE", "PCA"])
-        algorithm_container.layout().addWidget(self.algorithm_choice_list)
 
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
         # used for manifold approximation. Larger values result in more global views of the manifold, while smaller
         # values result in more local data being preserved.
-        self.n_neighbors_container = QWidget()
-        self.n_neighbors_container.setLayout(QHBoxLayout())
-        self.n_neighbors_container.layout().addWidget(QLabel("Number of neighbors"))
-        self.n_neighbors_container.layout().addStretch()
-        self.n_neighbors = create_widget(
-            widget_type="SpinBox",
+        (
+            self.n_neighbors_container,
+            self.n_neighbors,
+        ) = int_sbox_containter_and_selection(
             name="n_neighbors",
             value=DEFAULTS["n_neighbors"],
-            options=dict(min=2, step=1),
+            label="Number of neighbors",
+            tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors",
+            tool_tip=(
+                "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold\n"
+                "approximation. Larger values result in more global views of the manifold, while smaller values\n"
+                "result in more local data being preserved. In general, it should be in the range 2 to 100."
+            ),
         )
-
-        help_n_neighbors = QLabel()
-        help_n_neighbors.setOpenExternalLinks(True)
-        help_n_neighbors.setText(
-            '<a href="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-
-        help_n_neighbors.setToolTip(
-            "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold "
-            "approximation. Larger values result in more global views of the manifold, while smaller values "
-            "result in more local data being preserved. In general, it should be in the range 2 to 100. Click on the "
-            "question mark to read more."
-        )
-
-        self.n_neighbors.native.setMaximumWidth(70)
-        self.n_neighbors_container.layout().addWidget(self.n_neighbors.native)
-        self.n_neighbors_container.layout().addWidget(help_n_neighbors)
-        self.n_neighbors_container.setVisible(False)
 
         # selection of the level of perplexity. Higher values should be chosen when handling large datasets
-        self.perplexity_container = QWidget()
-        self.perplexity_container.setLayout(QHBoxLayout())
-        self.perplexity_container.layout().addWidget(QLabel("Perplexity"))
-        self.perplexity_container.layout().addStretch()
-        self.perplexity = create_widget(
-            widget_type="SpinBox",
+        self.perplexity_container, self.perplexity = int_sbox_containter_and_selection(
             name="perplexity",
             value=DEFAULTS["perplexity"],
-            options=dict(min=1, step=1),
+            label="Perplexity",
+            min=1,
+            tool_link="https://distill.pub/2016/misread-tsne/",
+            tool_tip=(
+                "The perplexity is related to the number of nearest neighbors "
+                "that is used in other manifold learning\nalgorithms. Larger "
+                "datasets usually require a larger perplexity. Consider selecting "
+                "a value between 5 and\n50. Different values can result in "
+                "significantly different results."
+            ),
         )
-
-        help_perplexity = QLabel()
-        help_perplexity.setOpenExternalLinks(True)
-        help_perplexity.setText(
-            '<a href="https://distill.pub/2016/misread-tsne/" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-
-        help_perplexity.setToolTip(
-            "The perplexity is related to the number of nearest neighbors that is used in other manifold learning "
-            "algorithms. The perplexity must be less than the number of samples. Larger datasets usually require a "
-            "larger perplexity. Consider selecting a value between 5 and 50. Different values can result in "
-            "significantly different results. Click on the question mark to read more."
-        )
-
-        self.perplexity.native.setMaximumWidth(70)
-        self.perplexity_container.layout().addWidget(self.perplexity.native)
-        self.perplexity_container.layout().addWidget(help_perplexity)
-        self.perplexity_container.setVisible(False)
-
-        # select properties of which to produce a dimensionality reduced version
-        choose_properties_container = QWidget()
-        self.properties_list = QListWidget()
-        self.properties_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.properties_list.setGeometry(QRect(10, 10, 101, 291))
-
-        choose_properties_container.setLayout(QVBoxLayout())
-        choose_properties_container.layout().addWidget(QLabel("Measurements"))
-        choose_properties_container.layout().addWidget(self.properties_list)
 
         # selection of the number of components to keep after PCA transformation,
         # values above 0 will override explained variance option
-        self.pca_components_container = QWidget()
-        self.pca_components_container.setLayout(QHBoxLayout())
-        self.pca_components_container.layout().addWidget(QLabel("Number of Components"))
-        self.pca_components = create_widget(
-            widget_type="SpinBox",
+        (
+            self.pca_components_container,
+            self.pca_components,
+        ) = int_sbox_containter_and_selection(
             name="pca_components",
             value=DEFAULTS["pca_components"],
-            options=dict(min=0, step=1),
-        )  # TODO , max=len(self.properties_list)
-
-        help_pca_components = QLabel()
-        help_pca_components.setOpenExternalLinks(True)
-        help_pca_components.setText(
-            '<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
+            min=0,
+            label="Number of Components",
+            tool_link="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html",
+            tool_tip=(
+                "The number of components sets the number of principal components to be included "
+                "after the transformation.\nWhen set to 0 the number of components that are selected "
+                "is determined by the explained variance\nthreshold."
+            ),
         )
-
-        help_pca_components.setToolTip(
-            "The number of components sets the number of principal components to be included after the transformation. "
-            "When set to 0 the number of components that are selected is determined by the explained variance "
-            "threshold. Click on the question mark to read more."
-        )
-
-        self.pca_components_container.layout().addWidget(self.pca_components.native)
-        self.pca_components_container.layout().addWidget(help_pca_components)
-        self.pca_components_container.setVisible(False)
 
         # Minimum percentage of variance explained by kept PCA components,
         # will not be used if pca_components > 0
-        self.explained_variance_container = QWidget()
-        self.explained_variance_container.setLayout(QHBoxLayout())
-        self.explained_variance_container.layout().addWidget(
-            QLabel("Explained Variance Threshold")
-        )
-        self.explained_variance = create_widget(
-            widget_type="FloatSpinBox",
+        (
+            self.explained_variance_container,
+            self.explained_variance,
+        ) = float_sbox_containter_and_selection(
             name="explained_variance",
             value=DEFAULTS["explained_variance"],
-            options=dict(min=1, max=100, step=1),
+            min=1,
+            max=100,
+            step=1,
+            label="Explained Variance Threshold",
+            tool_link="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html",
+            tool_tip=(
+                "The explained variance threshold sets the amount of variance in the dataset that can "
+                "minimally be\n represented by the principal components. The closer the threshold is to"
+                " 100% ,the more the variance in\nthe dataset can be accounted for by the chosen "
+                "principal components (and the less dimensionality\nreduction will be perfomed as a result)."
+            ),
         )
 
-        help_explained_variance = QLabel()
-        help_explained_variance.setOpenExternalLinks(True)
-        help_explained_variance.setText(
-            '<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-
-        help_explained_variance.setToolTip(
-            "The explained variance threshold sets the amount of variance in the dataset that can minimally be "
-            "represented by the principal components. The closer the threshold is to 100% ,the more the variance in "
-            "the dataset can be accounted for by the chosen principal components (and the less dimensionality "
-            "reduction will be perfomed as a result). Click on the question mark to read more."
-        )
-
-        self.explained_variance_container.layout().addWidget(
-            self.explained_variance.native
-        )
-        self.explained_variance_container.layout().addWidget(help_explained_variance)
-        self.explained_variance_container.setVisible(False)
         # checkbox whether data should be standardized
-        self.settings_container_scaler = QWidget()
-        self.settings_container_scaler.setLayout(QHBoxLayout())
-        self.standardization = create_widget(
-            widget_type="CheckBox",
+        self.settings_container_scaler, self.standardization = checkbox(
             name="Standardize Features",
             value=DEFAULTS["standardization"],
         )
 
-        self.settings_container_scaler.layout().addWidget(self.standardization.native)
-        self.settings_container_scaler.setVisible(False)
-
-        # Run button
-        run_widget = QWidget()
-        run_widget.setLayout(QHBoxLayout())
-        run_button = QPushButton("Run")
-        run_widget.layout().addWidget(run_button)
-
-        # Update measurements button
-        update_container = QWidget()
-        update_container.setLayout(QHBoxLayout())
-        update_button = QPushButton("Update Measurements")
-        update_container.layout().addWidget(update_button)
-
-        # Defaults button
-        defaults_container = QWidget()
-        defaults_container.setLayout(QHBoxLayout())
-        defaults_button = QPushButton("Restore Defaults")
-        defaults_container.layout().addWidget(defaults_button)
+        # making buttons
+        run_container, run_button = button("Run")
+        update_container, update_button = button("Update Measurements")
+        defaults_container, defaults_button = button("Restore Defaults")
 
         def run_clicked():
 
@@ -253,7 +178,7 @@ class DimensionalityReductionWidget(QWidget):
                 warnings.warn("Please select some measurements!")
                 return
 
-            if self.algorithm_choice_list.currentText() == "":
+            if self.algorithm_choice_list.current_choice == self.Options.EMPTY.value:
                 warnings.warn("Please select dimensionality reduction algorithm.")
                 return
 
@@ -263,23 +188,25 @@ class DimensionalityReductionWidget(QWidget):
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value,
                 self.perplexity.value,
-                self.algorithm_choice_list.currentText(),
+                self.algorithm_choice_list.current_choice,
                 self.standardization.value,
                 self.explained_variance.value,
                 self.pca_components.value,
             )
 
         run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(self.update_properties_list)
+        update_button.clicked.connect(partial(update_properties_list, self, EXCLUDE))
         defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(self.update_properties_list)
-        self.labels_select.changed.connect(self._check_perplexity)
-        self.perplexity.changed.connect(self._check_perplexity)
+        self.labels_select.changed.connect(
+            partial(update_properties_list, self, EXCLUDE)
+        )
 
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.labels_select.changed.connect(self._check_perplexity)
+        self.perplexity.changed.connect(self._check_perplexity)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
@@ -293,7 +220,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
-        self.layout().addWidget(run_widget)
+        self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
 
         # go through all widgets and change spacing
@@ -303,18 +230,7 @@ class DimensionalityReductionWidget(QWidget):
             item.layout().setContentsMargins(3, 3, 3, 3)
 
         # hide widgets unless appropriate options are chosen
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_pca_components
-        )
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_explained_variance
-        )
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_umap_settings
-        )
-        self.algorithm_choice_list.currentIndexChanged.connect(
-            self.change_tsne_settings
-        )
+        self.algorithm_choice_list.changed.connect(self.change_settings_visibility)
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -336,73 +252,39 @@ class DimensionalityReductionWidget(QWidget):
                 )
 
     # toggle widgets visibility according to what is selected
-    def change_umap_settings(self):
+    def change_settings_visibility(self):
         widgets_inactive(
             self.n_neighbors_container,
-            active=self.algorithm_choice_list.currentText() == "UMAP",
+            active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
         widgets_inactive(
             self.settings_container_scaler,
             active=(
-                self.algorithm_choice_list.currentText() == "UMAP"
-                or self.algorithm_choice_list.currentText() == "t-SNE"
+                self.algorithm_choice_list.current_choice == self.Options.UMAP.value
+                or self.algorithm_choice_list.current_choice == self.Options.TSNE.value
             ),
         )
-
-    def change_tsne_settings(self):
-        if self.algorithm_choice_list.currentText() == "t-SNE":
-            self._check_perplexity()
-
         widgets_inactive(
             self.perplexity_container,
-            active=self.algorithm_choice_list.currentText() == "t-SNE",
+            active=self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
         )
-        widgets_inactive(
-            self.settings_container_scaler,
-            active=(
-                self.algorithm_choice_list.currentText() == "UMAP"
-                or self.algorithm_choice_list.currentText() == "t-SNE"
-            ),
-        )
-
-    def change_pca_components(self):
         widgets_inactive(
             self.pca_components_container,
-            active=self.algorithm_choice_list.currentText() == "PCA",
+            active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
-
-    def change_explained_variance(self):
         widgets_inactive(
             self.explained_variance_container,
-            active=self.algorithm_choice_list.currentText() == "PCA",
+            active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
-
-    def update_properties_list(self):
-        selected_layer = self.labels_select.value
-        if selected_layer is not None:
-            features = get_layer_tabular_data(selected_layer)
-            if features is not None:
-                self.properties_list.clear()
-                for p in list(features.keys()):
-                    if (
-                        "label" in p
-                        or "CLUSTER_ID" in p
-                        or "UMAP" in p
-                        or "t-SNE" in p
-                        or "index" in p
-                        or POINTER in p
-                    ):
-                        continue
-                    item = QListWidgetItem(p)
-                    self.properties_list.addItem(item)
-                    item.setSelected(True)
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             self.last_connected.events.properties.disconnect(
-                self.update_properties_list
+                partial(update_properties_list, self, EXCLUDE)
             )
-        self.labels_select.value.events.properties.connect(self.update_properties_list)
+        self.labels_select.value.events.properties.connect(
+            partial(update_properties_list, self, EXCLUDE)
+        )
         self.last_connected = self.labels_select.value
 
     # this function runs after the run button is clicked
@@ -468,7 +350,7 @@ class DimensionalityReductionWidget(QWidget):
             print("Dimensionality reduction finished")
 
         # depending on the selected dim reduction algorithm start a secondary thread
-        if selected_algorithm == "UMAP":
+        if selected_algorithm == self.Options.UMAP.value:
             self.worker = create_worker(
                 umap,
                 properties_to_reduce,
@@ -479,7 +361,7 @@ class DimensionalityReductionWidget(QWidget):
             self.worker.returned.connect(return_func_dim_reduction)
             self.worker.start()
 
-        elif selected_algorithm == "t-SNE":
+        elif selected_algorithm == self.Options.TSNE.value:
             self.worker = create_worker(
                 tsne,
                 properties_to_reduce,
@@ -490,7 +372,7 @@ class DimensionalityReductionWidget(QWidget):
             self.worker.returned.connect(return_func_dim_reduction)
             self.worker.start()
 
-        elif selected_algorithm == "PCA":
+        elif selected_algorithm == self.Options.PCA.value:
             self.worker = create_worker(
                 pca,
                 properties_to_reduce,

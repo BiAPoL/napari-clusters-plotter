@@ -2,6 +2,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from qtpy.QtWidgets import QListWidget
 
 from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
@@ -10,9 +11,20 @@ from napari_clusters_plotter._utilities import (
     get_layer_tabular_data,
     reshape_2D_timelapse,
     set_features,
+    update_properties_list,
 )
 
 sys.path.append("../")
+
+
+class FakeWidget:
+    def __init__(self, layer):
+        class Labels_select:
+            def __init__(self, layer):
+                self.value = layer
+
+        self.properties_list = QListWidget()
+        self.labels_select = Labels_select(layer)
 
 
 def test_cluster_image_generation():
@@ -94,6 +106,9 @@ def test_feature_setting(make_napari_viewer):
     add_column_to_layer_tabular_data(label_layer, "C", [5, 6, 7])
     some_features = get_layer_tabular_data(label_layer)
     assert "C" in some_features.columns
+
+    widget = FakeWidget(label_layer)
+    update_properties_list(widget, exclude_list=["A"])
 
 
 if __name__ == "__main__":
