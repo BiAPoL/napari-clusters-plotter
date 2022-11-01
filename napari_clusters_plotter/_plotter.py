@@ -33,6 +33,7 @@ POINTER = "frame"
 
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
+@register_dock_widget(menu="Visualization > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
