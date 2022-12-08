@@ -2,6 +2,7 @@ import sys
 
 import numpy as np
 from skimage import measure
+import time
 
 sys.path.append("../")
 
