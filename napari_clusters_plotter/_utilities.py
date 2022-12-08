@@ -116,8 +116,8 @@ def generate_cluster_image(label_image, predictionlist):
         Array containing cluster identities for each label
     """
 
-    # reforming the prediction list this is done to account
-    # for cluster labels that start at 0 conviniently hdbscan
+    # reforming the prediction list, this is done to account
+    # for cluster labels that start at 0, conveniently hdbscan
     # labelling starts at -1 for noise, removing these from
     # the labels
     predictionlist_new = np.array(predictionlist) + 1
