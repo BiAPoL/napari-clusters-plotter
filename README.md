@@ -17,9 +17,11 @@ A plugin to use with napari for clustering objects according to their properties
 
 This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [cookiecutter-napari-plugin] template.
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif)
+<img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif" width="700"/>
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif)
+Demonstration of handling 3D time-lapse data:
+
+<img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif" width="700"/>
 
 ----------------------------------
 
