@@ -43,7 +43,7 @@ DEFAULTS = {
     "pca_components": 0,
     "explained_variance": 95.0,
 }
-EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE"]
+EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
@@ -78,10 +78,10 @@ class DimensionalityReductionWidget(QWidget):
 
         # selection of dimension reduction algorithm
         algorithm_container, self.algorithm_choice_list = algorithm_choice(
-            name="Clustering_method",
+            name="Dimensionality_reduction_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
-            label="Clustering Method",
+            label="Dimensionality Reduction Method",
         )
 
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
@@ -241,7 +241,7 @@ class DimensionalityReductionWidget(QWidget):
 
     # triggered by the selection of t-SNE as dim reduction algorithm, change of input image or perplexity value
     def _check_perplexity(self):
-        if self.algorithm_choice_list.currentText() == "t-SNE":
+        if self.algorithm_choice_list.current_choice == "t-SNE":
             features = get_layer_tabular_data(self.labels_select.value)
             widgets_valid(
                 self.perplexity, valid=self.perplexity.value <= features.shape[0]
