@@ -19,6 +19,8 @@ This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [c
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif)
 
+![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif)
+
 ----------------------------------
 
 Jump to:
