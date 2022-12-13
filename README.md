@@ -73,8 +73,8 @@ column describes the next label.
 Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
 time the given row refers to.
 
-**For the correct visualisation of clusters IDs in space**, it is **important** that label images/time-points of the time-lapse 
-are either **labelled sequentially** or missing labels still exist in the loaded csv file (i.e., missing label exists in the 
+**For the correct visualisation of clusters IDs in space**, it is **important** that label images/time-points of the time-lapse
+are either **labelled sequentially** or missing labels still exist in the loaded csv file (i.e., missing label exists in the
 "label" column with `NaN` values for other measurements in the same row). If you perform measurements using before mentioned
 plugins, the obtained dataframe is already in the correct form.
 
@@ -91,7 +91,7 @@ Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skim
 
 ### Plotting
 
-Once measurements were made or uploaded, these measurements were saved in the `properties/features` of the labels layer which was 
+Once measurements were made or uploaded, these measurements were saved in the `properties/features` of the labels layer which was
 analysed. You can then plot these measurements using the menu `Tools > Measurement > Plot measurement (ncp)`.
 
 In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
