@@ -193,16 +193,16 @@ conda create --name ncp-env python=3.9
 conda activate ncp-env
 ```
 
-* Install [napari], e.g. via [pip]:
+* Install [napari], e.g. via [conda]:
 
 ```
-python -m pip install "napari[all]"
+conda install -c conda-forge napari
 ```
 
-Afterwards, you can install `napari-clusters-plotter` via [pip]:
+Afterwards, you can install `napari-clusters-plotter`, e.g. via [conda]:
 
 ```
-pip install napari-clusters-plotter
+conda install -c conda-forge napari-clusters-plotter
 ```
 
 ### Optional installation
@@ -224,32 +224,35 @@ conda activate ncp-env
 
 * Install napari-pyclesperanto-assistant, e.g. with pip:
 
-´´´
+```
 pip install napari-pyclesperanto-assistant
-´´´
+```
 
 * Mac-users please also install this:
 
-´´´
+```
 conda install -c conda-forge ocl_icd_wrapper_apple
-´´´
+```
 
 * Linux users please also install this:
 
-´´´
+```
 conda install -c conda-forge ocl-icd-system
-´´´
+```
 
-* Install [napari], e.g. via [pip]:
+* Install [napari], e.g. via [pip] or [conda]:
 
 ```
 python -m pip install "napari[all]"
 ```
+```
+conda install -c conda-forge napari
+```
 
-Afterwards, you can install `napari-clusters-plotter` via [pip]:
+Afterwards, you can install `napari-clusters-plotter`, e.g. via [conda]:
 
 ```
-pip install napari-clusters-plotter
+conda install -c conda-forge napari-clusters-plotter
 ```
 
 ## Troubleshooting installation
@@ -265,7 +268,7 @@ you will need an environment with a lower python version (python=3.8).
 
 - `Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly`
 
-Install hdbscan via conda before installing the plugin:
+This can happen if you used pip for the installation. To solve this error, install hdbscan via conda before installing the plugin:
 
 ```
 conda install -c conda-forge hdbscan
@@ -322,3 +325,4 @@ with a detailed description.
 [pytest]: https://docs.pytest.org/en/7.0.x/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
+[conda]: https://docs.conda.io/projects/conda/en/latest/
