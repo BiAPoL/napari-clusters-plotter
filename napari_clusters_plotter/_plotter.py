@@ -416,7 +416,10 @@ class PlotterWidget(QWidget):
                     isinstance(self.analysed_layer, napari.layers.Labels)
                     and len(self.analysed_layer.data.shape) <= 3
                 ) or isinstance(self.analysed_layer, napari.layers.Surface):
-                    cluster_layer_data, cluster_layer_type = generate_cluster_image_from_layer(
+                    (
+                        cluster_layer_data,
+                        cluster_layer_type,
+                    ) = generate_cluster_image_from_layer(
                         self.analysed_layer, self.cluster_ids
                     )
                 else:
