@@ -4,7 +4,6 @@ from functools import wraps
 import napari.layers
 import numpy as np
 import pandas as pd
-from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
 
