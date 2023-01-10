@@ -1,6 +1,6 @@
 import warnings
 from functools import wraps
-from typing import Tuple, Any
+from typing import Tuple
 
 import napari.layers
 import numpy as np
