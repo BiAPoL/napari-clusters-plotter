@@ -4,13 +4,18 @@ from functools import wraps
 import napari.layers
 import numpy as np
 import pandas as pd
-import pyclesperanto_prototype as cle
+from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
 
 def widgets_inactive(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
+
+
+def widgets_valid(*widgets, valid):
+    for widget in widgets:
+        widget.native.setStyleSheet("" if valid else "background-color: lightcoral")
 
 
 def show_table(viewer, labels_layer):
@@ -116,7 +121,7 @@ def generate_cluster_image(layer, predictionlist):
     if isinstance(layer, napari.layers.Labels):
         label_image = layer.data
         # reforming the prediction list this is done to account
-        # for cluster labels that start at 0 conveniently hdbscan
+        # for cluster labels that start at 0, conveniently hdbscan
         # labelling starts at -1 for noise, removing these from
         # the labels
         predictionlist_new = np.array(predictionlist) + 1

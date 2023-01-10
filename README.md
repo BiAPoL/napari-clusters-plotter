@@ -7,9 +7,9 @@
 [![tests](https://github.com/lazigu/napari-clusters-plotter/workflows/tests/badge.svg)](https://github.com/lazigu/napari-clusters-plotter/actions)
 [![codecov](https://codecov.io/gh/BiAPoL/napari-clusters-plotter/branch/main/graph/badge.svg?token=R6W2KO1NJ8)](https://codecov.io/gh/BiAPoL/napari-clusters-plotter)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/napari-clusters-plotter.svg)](https://pypistats.org/packages/napari-clusters-plotter)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/napari-clusters-plotter/badges/downloads.svg)](https://anaconda.org/conda-forge/napari-clusters-plotter)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clusters-plotter)](https://www.napari-hub.org/plugins/napari-clusters-plotter)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5884658.svg)](https://doi.org/10.5281/zenodo.5884658)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7011471.svg)](https://doi.org/10.5281/zenodo.7011471)
 
 A plugin to use with napari for clustering objects according to their properties.
 
@@ -17,7 +17,11 @@ A plugin to use with napari for clustering objects according to their properties
 
 This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [cookiecutter-napari-plugin] template.
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif)
+<img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif" width="700"/>
+
+Demonstration of handling 3D time-lapse data:
+
+<img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif" width="700"/>
 
 ----------------------------------
 
@@ -50,30 +54,45 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 ### Measurements
 The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
-You can use the menu `Tools > Measurement > Measure intensity, shape and neighbor counts (ncp)` for that.
+Since the 0.6.0 release measurements widget is no longer part of this plugin and you will have to use other napari plugins to measure your data.
+One way is to use the measurement functions in [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops), which comes pre-installed with the napari cluster plotter.
+Use the menu `Tools > Measurement > Regionprops (scikit-image, nsr)` to get to the measurement widget.
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
-A table with the measurements will open:
 
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/measure.png)
+In the previous napari-cluster-plotter release a GPU dependant measurement function was implemented which you can find in the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
+To use this function you will need to install this library (see optional installation steps) and you can find the widget under the menu `Tools > Measurement > Label statistics (clEsperanto)`. As before, select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 
-Afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
-If you are uploading your own measurements make sure that there is a column that specifies the which measurement belongs to which label
-by adding a column with the name "label". If you don't specify this column it will be assumed that measurements start at 1 and each
+A table with the measurements will open and afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
+
+If you want to upload your own measurements you can do this using [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops).
+Under the menu `Tools > Measurement > Load from CSV (nsr)` you can find a widget to upload your own csv file.
+Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
+If you don't specify this column it will be assumed that measurements start at 1 and each
 column describes the next label.
 
+Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
+time the given row refers to.
+
+**For the correct visualisation of clusters IDs in space**, it is **important** that label images/time-points of the time-lapse
+are either **labelled sequentially** or missing labels still exist in the loaded csv file (i.e., missing label exists in the
+"label" column with `NaN` values for other measurements in the same row). If you perform measurements using before mentioned
+plugins, the obtained dataframe is already in the correct form.
+
 #### Time-Lapse Measurements
-If you have 3D time-lapse data this will automatically be detected. In case you have 2D time-lapse data you need to
-convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
+In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
+
 Note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
 time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
 If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
 this column must not be added.
 
+Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops) and [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant) include measuring widgets for timelapse data.
+
 ### Plotting
 
-Once measurements were made, these measurements were saved in the `properties` of the labels layer which was analysed.
-You can then plot these measurements using the menu `Tools > Measurement > Plot measurement (ncp)`.
+Once measurements were made or uploaded, these measurements were saved in the `properties/features` of the labels layer which was
+analysed. You can then plot these measurements using the menu `Tools > Measurement > Plot measurement (ncp)`.
 
 In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
 on the X- and Y-axis. If you cannot see any options in axes selection boxes, but you have performed measurements, click
@@ -150,7 +169,14 @@ Example of k-means clustering results:
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/kmeans_clusters_plot.png)
 
 ## Installation
+### Devbio-napari installation
+The easiest way to install this plugin is to install the [devbio-napari](https://github.com/haesleinhuepf/devbio-napari) library.
+This library installs napari alongside many other useful plugins, including the napari-clusters-plotter.
+We recommend this library as it is not only the easiest way to install the napari-cluster-plotter, but it includes plugins for segmentation and measurement, which we don't provide.
+There are detailed installation instructions on the [napari-hub-page](https://www.napari-hub.org/plugins/devbio-napari) if you have any problems installing it.
+In case you want to have a minimal installation of our plugin you can find other installation options below.
 
+### Minimal installation
 * Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html).
   If you never used python/conda environments before, please follow the instructions
   [here](https://mpicbg-scicomp.github.io/ipf_howtoguides/guides/Python_Conda_Environments) first. It is recommended to
@@ -167,22 +193,66 @@ conda create --name ncp-env python=3.9
 conda activate ncp-env
 ```
 
-* Install [pyopencl](https://documen.tician.de/pyopencl/), e.g. via conda:
+* Install [napari], e.g. via [conda]:
 
 ```
-conda install -c conda-forge pyopencl
+conda install -c conda-forge napari
 ```
 
-* Install [napari], e.g. via [pip]:
+Afterwards, you can install `napari-clusters-plotter`, e.g. via [conda]:
+
+```
+conda install -c conda-forge napari-clusters-plotter
+```
+
+### Optional installation
+Follow these steps instead of the regular installation to include the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
+Creating the environment like this will allow you to use your GPU to render your cluster results.
+Furthermore, you can access the deprecated measurement functions of the napari-cluster-plotter in releases < 0.6.0.
+If you have trouble with this library you can use the regular installation above.
+
+```
+conda create --name ncp-env python==3.9
+```
+
+
+* Activate the new environment via conda:
+
+```
+conda activate ncp-env
+```
+
+* Install napari-pyclesperanto-assistant, e.g. with pip:
+
+```
+pip install napari-pyclesperanto-assistant
+```
+
+* Mac-users please also install this:
+
+```
+conda install -c conda-forge ocl_icd_wrapper_apple
+```
+
+* Linux users please also install this:
+
+```
+conda install -c conda-forge ocl-icd-system
+```
+
+* Install [napari], e.g. via [pip] or [conda]:
 
 ```
 python -m pip install "napari[all]"
 ```
+```
+conda install -c conda-forge napari
+```
 
-Afterwards, you can install `napari-clusters-plotter` via [pip]:
+Afterwards, you can install `napari-clusters-plotter`, e.g. via [conda]:
 
 ```
-pip install napari-clusters-plotter
+conda install -c conda-forge napari-clusters-plotter
 ```
 
 ## Troubleshooting installation
@@ -198,7 +268,7 @@ you will need an environment with a lower python version (python=3.8).
 
 - `Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly`
 
-Install hdbscan via conda before installing the plugin:
+This can happen if you used pip for the installation. To solve this error, install hdbscan via conda before installing the plugin:
 
 ```
 conda install -c conda-forge hdbscan
@@ -255,3 +325,4 @@ with a detailed description.
 [pytest]: https://docs.pytest.org/en/7.0.x/
 [pip]: https://pypi.org/project/pip/
 [PyPI]: https://pypi.org/
+[conda]: https://docs.conda.io/projects/conda/en/latest/

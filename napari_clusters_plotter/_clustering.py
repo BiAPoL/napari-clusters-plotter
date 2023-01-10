@@ -367,6 +367,7 @@ class ClusteringWidget(QWidget):
         ac_n_clusters,
         ac_n_neighbors,
         custom_name,
+        show=True,
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -390,7 +391,8 @@ class ClusteringWidget(QWidget):
                 result_column_name + ID_NAME,
                 returned[1],
             )
-            show_table(self.viewer, labels_layer)
+            if show:
+                show_table(self.viewer, labels_layer)
 
         # perform standard scaling, if selected
         if standardize:

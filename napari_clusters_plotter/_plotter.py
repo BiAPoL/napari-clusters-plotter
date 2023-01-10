@@ -34,6 +34,7 @@ POINTER = "frame"
 
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
+@register_dock_widget(menu="Visualization > Plot measurements (ncp)")
 class PlotterWidget(QWidget):
     def __init__(self, napari_viewer):
         super().__init__()
@@ -437,6 +438,7 @@ class PlotterWidget(QWidget):
                             cluster_layer_data,  # self.analysed_layer.data
                             color=cmap_dict,  # cluster_id_dict
                             name="cluster_ids_in_space",
+                            scale=self.labels_select.value.scale,
                         )
                     elif cluster_layer_type == "Surface":
                         self.visualized_cluster_layer = self.viewer.add_surface(
@@ -444,6 +446,7 @@ class PlotterWidget(QWidget):
                             # color=cmap_dict,  # error: not supported for surfaces
                             name="cluster_ids_in_space",
                         )
+
                 else:
                     # updating data
                     self.visualized_cluster_layer.data = cluster_layer_data

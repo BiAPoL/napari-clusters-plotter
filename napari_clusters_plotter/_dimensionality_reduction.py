@@ -30,6 +30,7 @@ from ._utilities import (
     show_table,
     update_properties_list,
     widgets_inactive,
+    widgets_valid,
 )
 
 # Remove when the problem is fixed from sklearn side
@@ -42,7 +43,7 @@ DEFAULTS = {
     "pca_components": 0,
     "explained_variance": 95.0,
 }
-EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE"]
+EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
 
 @register_dock_widget(menu="Measurement > Dimensionality reduction (ncp)")
@@ -77,10 +78,10 @@ class DimensionalityReductionWidget(QWidget):
 
         # selection of dimension reduction algorithm
         algorithm_container, self.algorithm_choice_list = algorithm_choice(
-            name="Clustering_method",
+            name="Dimensionality_reduction_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
-            label="Clustering Method",
+            label="Dimensionality Reduction Method",
         )
 
         # selection of n_neighbors - The size of local neighborhood (in terms of number of neighboring sample points)
@@ -204,6 +205,8 @@ class DimensionalityReductionWidget(QWidget):
 
         self.last_connected = None
         self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.labels_select.changed.connect(self._check_perplexity)
+        self.perplexity.changed.connect(self._check_perplexity)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
@@ -235,6 +238,18 @@ class DimensionalityReductionWidget(QWidget):
 
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
+
+    # triggered by the selection of t-SNE as dim reduction algorithm, change of input image or perplexity value
+    def _check_perplexity(self):
+        if self.algorithm_choice_list.current_choice == "t-SNE":
+            features = get_layer_tabular_data(self.labels_select.value)
+            widgets_valid(
+                self.perplexity, valid=self.perplexity.value <= features.shape[0]
+            )
+            if self.perplexity.value >= features.shape[0]:
+                warnings.warn(
+                    "Perplexity must be less than the number of labeled objects!"
+                )
 
     # toggle widgets visibility according to what is selected
     def change_settings_visibility(self):
