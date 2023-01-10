@@ -7,7 +7,7 @@ from qtpy.QtWidgets import QListWidget
 from napari_clusters_plotter._utilities import (
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
-    generate_cluster_image,
+    generate_cluster_image_from_layer,
     get_layer_tabular_data,
     reshape_2D_timelapse,
     set_features,
@@ -27,8 +27,9 @@ class FakeWidget:
         self.labels_select = Labels_select(layer)
 
 
-def test_cluster_image_generation():
-    label = np.array(
+def test_cluster_image_generation(make_napari_viewer):
+    viewer = make_napari_viewer()
+    data = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 0, 0, 2, 2],
@@ -39,9 +40,10 @@ def test_cluster_image_generation():
             [0, 7, 7, 0, 0, 0, 0],
         ]
     )
+    viewer.add_labels(data)
 
     predictions = np.array([0, 0, 0, 1, 1, 1, 2])
-    result = generate_cluster_image(label, predictions)
+    result, _ = generate_cluster_image_from_layer(viewer.layers[0], predictions)
     true_result = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
@@ -55,7 +57,7 @@ def test_cluster_image_generation():
     )
     assert np.array_equal(result, true_result)
 
-    label_timelapse_3d = np.array([label, label])
+    label_timelapse_3d = np.array([data, data])
     label_timelapse = reshape_2D_timelapse(label_timelapse_3d)
 
     predictions_list = np.array([[0, 0, 0, 1, 1, 1, 2], [0, 0, 0, 1, 1, 1, 0]])
@@ -114,4 +116,4 @@ def test_feature_setting(make_napari_viewer):
 if __name__ == "__main__":
     import napari
 
-    test_feature_setting(napari.Viewer)
+    test_cluster_image_generation(napari.Viewer)
