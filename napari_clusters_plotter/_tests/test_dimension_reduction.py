@@ -211,14 +211,3 @@ def test_pca():
 
     result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
     assert result[1].shape[-1] == n_comp
-
-
-if __name__ == "__main__":
-    pass
-
-    # test_clustering_widget()
-    import napari
-
-    test_bad_measurements(napari.Viewer)
-    # test_call_to_function(napari.Viewer)
-    # test_umap()

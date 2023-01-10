@@ -111,9 +111,3 @@ def test_feature_setting(make_napari_viewer):
 
     widget = FakeWidget(label_layer)
     update_properties_list(widget, exclude_list=["A"])
-
-
-if __name__ == "__main__":
-    import napari
-
-    test_cluster_image_generation(napari.Viewer)
