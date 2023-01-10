@@ -17,6 +17,7 @@ MY_WIDGET_NAMES = [
     "Clustering Widget",
 ]
 
+
 @pytest.mark.parametrize("widget_name", MY_WIDGET_NAMES)
 def test_widget_creation(widget_name, make_napari_viewer, napari_plugin_manager):
     """Function to test docking widgets into viewer"""
