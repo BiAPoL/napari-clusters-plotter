@@ -14,7 +14,7 @@ on:
     branches:
       - master
       - main
-      - '/tree/**'
+      - support_other_layer_types
   workflow_dispatch:
 
 jobs:
