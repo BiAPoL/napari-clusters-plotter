@@ -1,6 +1,6 @@
 import warnings
 from functools import wraps
-from typing import Tuple, Any
+from typing import Tuple
 
 import napari.layers
 import numpy as np
@@ -105,7 +105,7 @@ def update_properties_list(widget, exclude_list):
                     item.setSelected(True)
 
 
-def generate_cluster_image_from_layer(layer, predictionlist)-> Tuple[np.ndarray, str]:
+def generate_cluster_image_from_layer(layer, predictionlist) -> Tuple[np.ndarray, str]:
     """
     Returns a label image where each label value corresponds
     to the cluster identity defined by the predictionlist.
@@ -138,6 +138,7 @@ def generate_cluster_image_from_layer(layer, predictionlist)-> Tuple[np.ndarray,
         warnings.warn("Image type not supported to view clusters as layer")
 
     return output, layer_type
+
 
 def generate_cluster_image_from_image(label_image, predictionlist):
     """
