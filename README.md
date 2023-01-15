@@ -56,11 +56,11 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
 Since the 0.6.0 release measurements widget is no longer part of this plugin and you will have to use other napari plugins to measure your data.
 One way is to use the measurement functions in [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops), which comes pre-installed with the napari cluster plotter.
-Use the menu `Tools > Measurement > Regionprops (scikit-image, nsr)` to get to the measurement widget.
+Use the menu `Tools > Measurement tables > Regionprops (scikit-image, nsr)` to get to the measurement widget.
 Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 
 In the previous napari-cluster-plotter release a GPU dependant measurement function was implemented which you can find in the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
-To use this function you will need to install this library (see optional installation steps) and you can find the widget under the menu `Tools > Measurement > Label statistics (clEsperanto)`. As before, select the image, the corresponding label image and the measurements to analyse and click on `Run`.
+To use this function you will need to install this library (see optional installation steps) and you can find the widget under the menu `Tools > Measurement tables > Label statistics (clEsperanto)`. As before, select the image, the corresponding label image and the measurements to analyse and click on `Run`.
 
 A table with the measurements will open and afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
 
