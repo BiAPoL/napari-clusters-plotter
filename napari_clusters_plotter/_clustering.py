@@ -45,7 +45,7 @@ DEFAULTS = {
 ID_NAME = "_CLUSTER_ID"
 
 
-@register_dock_widget(menu="Measurement > Clustering (ncp)")
+@register_dock_widget(menu="Measurement post-processing > Clustering (ncp)")
 class ClusteringWidget(QWidget):
     class Options(Enum):
         EMPTY = ""
