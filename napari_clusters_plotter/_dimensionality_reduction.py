@@ -46,7 +46,9 @@ DEFAULTS = {
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
 
-@register_dock_widget(menu="Measurement post-processing > Dimensionality reduction (ncp)")
+@register_dock_widget(
+    menu="Measurement post-processing > Dimensionality reduction (ncp)"
+)
 class DimensionalityReductionWidget(QWidget):
     class Options(Enum):
         EMPTY = ""
