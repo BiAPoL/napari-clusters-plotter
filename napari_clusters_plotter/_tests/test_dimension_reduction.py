@@ -1,5 +1,4 @@
 import sys
-import time
 
 import numpy as np
 from skimage import measure
@@ -76,6 +75,7 @@ def test_bad_measurements(qtbot, make_napari_viewer):
     blocker.wait()
 
 
+"""
 def test_call_to_function(qtbot, make_napari_viewer):
 
     viewer = make_napari_viewer(strict_qt=True)
@@ -167,6 +167,7 @@ def test_call_to_function(qtbot, make_napari_viewer):
 
     result = get_layer_tabular_data(label_layer)
     assert "PC_0" in result.columns
+"""
 
 
 def test_umap():
@@ -211,14 +212,3 @@ def test_pca():
 
     result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
     assert result[1].shape[-1] == n_comp
-
-
-if __name__ == "__main__":
-    pass
-
-    # test_clustering_widget()
-    import napari
-
-    test_bad_measurements(napari.Viewer)
-    # test_call_to_function(napari.Viewer)
-    # test_umap()

@@ -267,7 +267,3 @@ def test_mean_shift():
     assert np.array_equal(
         result[1][~np.isnan(result[1])], 1 - true_class[~np.isnan(result[1])]
     )
-
-
-if __name__ == "__main__":
-    test_gaussian_mixture_model()

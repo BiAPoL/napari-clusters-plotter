@@ -1,9 +1,11 @@
 import warnings
 from functools import wraps
+from typing import Tuple
 
 import napari.layers
 import numpy as np
 import pandas as pd
+from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
 
@@ -103,7 +105,7 @@ def update_properties_list(widget, exclude_list):
                     item.setSelected(True)
 
 
-def generate_cluster_image(layer, predictionlist):
+def generate_cluster_image_from_layer(layer, predictionlist) -> Tuple[np.ndarray, str]:
     """
     Returns a label image where each label value corresponds
     to the cluster identity defined by the predictionlist.
@@ -117,6 +119,8 @@ def generate_cluster_image(layer, predictionlist):
         Array containing cluster identities for each label
     """
 
+    output = None
+    layer_type = None
     if isinstance(layer, napari.layers.Labels):
         label_image = layer.data
         # reforming the prediction list this is done to account
@@ -124,20 +128,7 @@ def generate_cluster_image(layer, predictionlist):
         # labelling starts at -1 for noise, removing these from
         # the labels
         predictionlist_new = np.array(predictionlist) + 1
-        predictionlist_new = np.insert(predictionlist_new, 0, 0)
-
-        # loading data into gpu
-        clelist = cle.push(predictionlist_new)
-        gpu_labelimage = cle.push(label_image)
-
-        # generation of cluster label image
-        parametric_image = cle.replace_intensities(gpu_labelimage, clelist)
-        gpu_labelimage = None
-        clelist = None
-
-        # retrieving the gpu image
-        output = cle.pull(parametric_image).astype("uint32")
-        parametric_image = None
+        output = relabel(label_image, list(predictionlist_new)).astype("uint32")
         layer_type = "Labels"
     elif isinstance(layer, napari.layers.Surface):
         surface_data = layer.data
@@ -149,14 +140,39 @@ def generate_cluster_image(layer, predictionlist):
     return output, layer_type
 
 
-# TODO docstring
+def generate_cluster_image_from_image(label_image, predictionlist):
+    """
+    Returns a label image where each label value corresponds
+    to the cluster identity defined by the predictionlist.
+    Parameters
+    ----------
+    label_image: dask array
+        Label image used for cluster predictions
+    predictionlist: array
+        Array containing cluster identities for each label
+    """
+
+    predictionlist_new = np.array(predictionlist) + 1
+    return relabel(label_image, list(predictionlist_new)).astype("uint32")
+
+
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
+    """
+    Generates cluster images with delay using dask.
+
+    Parameters
+    ----------
+    label_image: dask array
+        Dask array of label image used for cluster predictions
+    prediction_list_list: np.ndarray
+        Array containing cluster identities for each label
+    """
     import dask.array as da
     from dask import delayed
 
     sample = label_image[0]
 
-    lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
+    lazy_cluster_image = delayed(generate_cluster_image_from_image)  # lazy processor
     lazy_arrays = [
         lazy_cluster_image(frame, preds)
         for frame, preds in zip(label_image, prediction_list_list)

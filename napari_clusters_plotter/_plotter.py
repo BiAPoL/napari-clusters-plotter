@@ -24,7 +24,7 @@ from ._Qt_code import (
 from ._utilities import (
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
-    generate_cluster_image,
+    generate_cluster_image_from_layer,
     get_layer_tabular_data,
     get_nice_colormap,
 )
@@ -385,13 +385,10 @@ class PlotterWidget(QWidget):
 
             keep_selection = list(self.viewer.layers.selection)
 
-            # Generating the cluster image
+            # Generating the cluster image depending on the dimensionality of the data
             if redraw_cluster_image:
                 cluster_layer_type = None
 
-                # depending on the dimensionality of the data
-                # generate the cluster image -> TODO change so possible
-                # with 2D timelapse data
                 if (
                     isinstance(self.analysed_layer, napari.layers.Labels)
                     and len(self.analysed_layer.data.shape) == 4
@@ -419,7 +416,10 @@ class PlotterWidget(QWidget):
                     isinstance(self.analysed_layer, napari.layers.Labels)
                     and len(self.analysed_layer.data.shape) <= 3
                 ) or isinstance(self.analysed_layer, napari.layers.Surface):
-                    cluster_layer_data, cluster_layer_type = generate_cluster_image(
+                    (
+                        cluster_layer_data,
+                        cluster_layer_type,
+                    ) = generate_cluster_image_from_layer(
                         self.analysed_layer, self.cluster_ids
                     )
                 else:
