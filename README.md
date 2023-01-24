@@ -65,7 +65,7 @@ To use this function you will need to install this library (see optional install
 A table with the measurements will open and afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
 
 If you want to upload your own measurements you can do this using [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops).
-Under the menu `Tools > Measurement > Load from CSV (nsr)` you can find a widget to upload your own csv file.
+Under the menu `Tools > Measurement tables > Load from CSV (nsr)` you can find a widget to upload your own csv file.
 Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
 If you don't specify this column it will be assumed that measurements start at 1 and each
 column describes the next label.
@@ -92,7 +92,7 @@ Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skim
 ### Plotting
 
 Once measurements were made or uploaded, these measurements were saved in the `properties/features` of the labels layer which was
-analysed. You can then plot these measurements using the menu `Tools > Measurement > Plot measurement (ncp)`.
+analysed. You can then plot these measurements using the menu `Tools > Measurement tables > Plot measurement (ncp)`.
 
 In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
 on the X- and Y-axis. If you cannot see any options in axes selection boxes, but you have performed measurements, click
@@ -126,7 +126,7 @@ Furthermore, you could also select a group in time and see where the datapoints 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
 using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/), [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
 or [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
-To apply it to your data use the menu `Tools > Measurement > Dimensionality reduction (ncp)`.
+To apply it to your data use the menu `Tools > Measurement post-processing > Dimensionality reduction (ncp)`.
 Select the label image that was analysed and in the list below, select all measurements that should be
 dimensionality reduced. By default, all measurements are selected in the box. If you cannot see any measurements, but
 you have performed them, click on `Update Measurements` to refresh the box. You can read more about parameters of both
@@ -147,7 +147,7 @@ If manual clustering, as shown above, is not an option, you can automatically cl
 * [Mean Shift (MS)](https://scikit-learn.org/stable/auto_examples/cluster/plot_mean_shift.html#sphx-glr-auto-examples-cluster-plot-mean-shift-py)
 * [Agglomerative clustering (AC)](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html)
 
-Therefore, click the menu `Tools > Measurement > Clustering (ncp)`,
+Therefore, click the menu `Tools > Measurement post-processing > Clustering (ncp)`,
 again, select the analysed labels layer.
 This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
 Select the clustering method `KMeans` and click on `Run`.
@@ -159,7 +159,7 @@ ID of each datapoint.
 Afterwards, you can again save and/or close the table. Also, close the clustering widget.
 
 ### Plotting clustering results
-Return to the Plotter widget using the menu `Tools > Measurement > Plot measurement (ncp)`.
+Return to the Plotter widget using the menu `Tools > Measurement tables > Plot measurement (ncp)`.
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Clustering`, and click on `Run`.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/hdbscan_clusters_plot.png)
