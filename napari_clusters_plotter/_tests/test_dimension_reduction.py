@@ -7,7 +7,6 @@ sys.path.append("../")
 
 
 def test_clustering_widget(make_napari_viewer):
-
     import napari_clusters_plotter as ncp
 
     viewer = make_napari_viewer(strict_qt=True)
@@ -27,7 +26,6 @@ def test_clustering_widget(make_napari_viewer):
 
 
 def test_bad_measurements(qtbot, make_napari_viewer):
-
     from napari_clusters_plotter._dimensionality_reduction import (
         DimensionalityReductionWidget,
     )
@@ -171,7 +169,6 @@ def test_call_to_function(qtbot, make_napari_viewer):
 
 
 def test_umap():
-
     import pandas as pd
 
     from napari_clusters_plotter._dimensionality_reduction import umap
@@ -186,7 +183,6 @@ def test_umap():
 
 
 def test_tsne():
-
     X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     n_comp = 2
 
@@ -199,7 +195,6 @@ def test_tsne():
 
 
 def test_pca():
-
     X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
     n_comp = 3
 

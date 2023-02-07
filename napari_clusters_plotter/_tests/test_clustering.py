@@ -72,7 +72,6 @@ def test_clustering_widget(make_napari_viewer):
 
 
 def test_kmeans_clustering():
-
     # create an example dataset
     n_samples = 20
     n_centers = 2
@@ -115,7 +114,6 @@ def test_kmeans_clustering():
 
 
 def test_hdbscan_clustering():
-
     # create an example dataset
     n_samples = 100
     data = datasets.make_moons(n_samples=n_samples, random_state=1, noise=0.05)
@@ -153,7 +151,6 @@ def test_hdbscan_clustering():
 
 
 def test_gaussian_mixture_model():
-
     # create an example dataset
     n_samples = 20
     n_centers = 2
@@ -196,7 +193,6 @@ def test_gaussian_mixture_model():
 
 
 def test_agglomerative_clustering():
-
     # create an example dataset
     n_samples = 20
     n_centers = 2
@@ -234,7 +230,6 @@ def test_agglomerative_clustering():
 
 
 def test_mean_shift():
-
     # create an example dataset
     n_samples = 20
     n_centers = 2
