@@ -21,7 +21,6 @@ from napari_clusters_plotter._utilities import get_layer_tabular_data, get_nice_
 
 
 def test_plotting(make_napari_viewer):
-
     viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
 

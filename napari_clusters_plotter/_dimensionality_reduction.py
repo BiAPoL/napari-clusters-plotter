@@ -171,7 +171,6 @@ class DimensionalityReductionWidget(QWidget):
         defaults_container, defaults_button = button("Restore Defaults")
 
         def run_clicked():
-
             if self.labels_select.value is None:
                 warnings.warn("No labels image was selected!")
                 return
@@ -303,7 +302,6 @@ class DimensionalityReductionWidget(QWidget):
         pca_components,
         n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
     ):
-
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
@@ -320,7 +318,6 @@ class DimensionalityReductionWidget(QWidget):
 
         # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
         def return_func_dim_reduction(result):
-
             if result[0] == "PCA":
                 # check if principal components are already present
                 # and remove them by overwriting the features

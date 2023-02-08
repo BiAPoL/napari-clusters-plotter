@@ -77,7 +77,6 @@ def test_cluster_image_generation():
 
 
 def test_feature_setting(make_napari_viewer):
-
     viewer = make_napari_viewer()
     label = np.array(
         [
