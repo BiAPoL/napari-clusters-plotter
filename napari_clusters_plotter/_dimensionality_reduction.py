@@ -325,7 +325,7 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
-        umap_progress_bar,
+        umap_multithreading=False,
         n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
     ):
         print("Selected labels layer: " + str(labels_layer))
@@ -375,7 +375,10 @@ class DimensionalityReductionWidget(QWidget):
             print("Dimensionality reduction finished")
 
         # depending on the selected dim red algorithm start either a secondary thread or run in the same one as napari
-        if selected_algorithm == self.Options.UMAP.value and umap_progress_bar is True:
+        if (
+            selected_algorithm == self.Options.UMAP.value
+            and umap_multithreading is True
+        ):
             # this part runs if umap is selected, and the progress bar/multithreading is enabled under advanced options
             self.worker = create_worker(
                 umap,
@@ -389,7 +392,7 @@ class DimensionalityReductionWidget(QWidget):
 
         elif (
             selected_algorithm == self.Options.UMAP.value
-            and umap_progress_bar is not True
+            and umap_multithreading is not True
         ):
             # this part runs if umap is selected, and the progress bar/multithreading is disabled (default option)
             # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the notebook
