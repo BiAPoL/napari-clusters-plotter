@@ -6,6 +6,11 @@ from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
 
+def buttons_inactive(*buttons, active):
+    for button in buttons:
+        button.setEnabled(active)
+
+
 def widgets_inactive(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
