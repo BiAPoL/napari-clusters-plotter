@@ -305,82 +305,111 @@ class DimensionalityReductionWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        features = get_layer_tabular_data(labels_layer)
+        # disable all the buttons while the computation is happening
+        widgets_inactive(
+            self.run_button, self.defaults_button, self.run_button, active=False
+        )
 
-        # only select the columns the user requested
-        properties_to_reduce = features[selected_measurements_list]
+        def activate_buttons_if_error_occurs():
+            """Utility function to enable all the buttons again if an error/exception happens in a secondary thread"""
+            widgets_inactive(
+                self.run_button, self.defaults_button, self.run_button, active=True
+            )
 
-        # perform standard scaling, if selected
-        if standardize:
-            from sklearn.preprocessing import StandardScaler
+        try:
+            features = get_layer_tabular_data(labels_layer)
 
-            properties_to_reduce = StandardScaler().fit_transform(properties_to_reduce)
+            # only select the columns the user requested
+            properties_to_reduce = features[selected_measurements_list]
 
-        # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
-        def return_func_dim_reduction(result):
-            if result[0] == "PCA":
-                # check if principal components are already present
-                # and remove them by overwriting the features
-                tabular_data = get_layer_tabular_data(labels_layer)
-                dropkeys = [
-                    column for column in tabular_data.keys() if column.startswith("PC_")
-                ]
-                df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
-                set_features(labels_layer, df_principal_components_removed)
+            # perform standard scaling, if selected
+            if standardize:
+                from sklearn.preprocessing import StandardScaler
 
-                # write result back to properties
-                for i in range(0, len(result[1].T)):
-                    add_column_to_layer_tabular_data(
-                        labels_layer, "PC_" + str(i), result[1][:, i]
+                properties_to_reduce = StandardScaler().fit_transform(
+                    properties_to_reduce
+                )
+
+            # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
+            def return_func_dim_reduction(result):
+                widgets_inactive(
+                    self.run_button, self.defaults_button, self.run_button, active=True
+                )
+
+                if result[0] == "PCA":
+                    # check if principal components are already present
+                    # and remove them by overwriting the features
+                    tabular_data = get_layer_tabular_data(labels_layer)
+                    dropkeys = [
+                        column
+                        for column in tabular_data.keys()
+                        if column.startswith("PC_")
+                    ]
+                    df_principal_components_removed = tabular_data.drop(
+                        dropkeys, axis=1
                     )
+                    set_features(labels_layer, df_principal_components_removed)
 
-            elif result[0] == "UMAP" or result[0] == "t-SNE":
-                # write result back to properties
-                for i in range(0, n_components):
-                    add_column_to_layer_tabular_data(
-                        labels_layer, result[0] + "_" + str(i), result[1][:, i]
-                    )
+                    # write result back to properties
+                    for i in range(0, len(result[1].T)):
+                        add_column_to_layer_tabular_data(
+                            labels_layer, "PC_" + str(i), result[1][:, i]
+                        )
 
-            else:
-                "Dimensionality reduction not successful. Please try again"
-                return
+                elif result[0] == "UMAP" or result[0] == "t-SNE":
+                    # write result back to properties
+                    for i in range(0, n_components):
+                        add_column_to_layer_tabular_data(
+                            labels_layer, result[0] + "_" + str(i), result[1][:, i]
+                        )
 
-            show_table(viewer, labels_layer)
-            print("Dimensionality reduction finished")
+                else:
+                    "Dimensionality reduction not successful. Please try again"
+                    return
 
-        # depending on the selected dim reduction algorithm start a secondary thread
-        if selected_algorithm == self.Options.UMAP.value:
-            self.worker = create_worker(
-                umap,
-                properties_to_reduce,
-                n_neigh=n_neighbours,
-                n_components=n_components,
-                _progress=True,
-            )
-            self.worker.returned.connect(return_func_dim_reduction)
-            self.worker.start()
+                show_table(viewer, labels_layer)
+                print("Dimensionality reduction finished")
 
-        elif selected_algorithm == self.Options.TSNE.value:
-            self.worker = create_worker(
-                tsne,
-                properties_to_reduce,
-                perplexity=perplexity,
-                n_components=n_components,
-                _progress=True,
-            )
-            self.worker.returned.connect(return_func_dim_reduction)
-            self.worker.start()
+            # depending on the selected dim reduction algorithm start a secondary thread
+            if selected_algorithm == self.Options.UMAP.value:
+                self.worker = create_worker(
+                    umap,
+                    properties_to_reduce,
+                    n_neigh=n_neighbours,
+                    n_components=n_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons_if_error_occurs)
+                self.worker.start()
 
-        elif selected_algorithm == self.Options.PCA.value:
-            self.worker = create_worker(
-                pca,
-                properties_to_reduce,
-                explained_variance_threshold=explained_variance,
-                n_components=pca_components,
-                _progress=True,
-            )
-            self.worker.returned.connect(return_func_dim_reduction)
-            self.worker.start()
+            elif selected_algorithm == self.Options.TSNE.value:
+                self.worker = create_worker(
+                    tsne,
+                    properties_to_reduce,
+                    perplexity=perplexity,
+                    n_components=n_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons_if_error_occurs)
+                self.worker.start()
+
+            elif selected_algorithm == self.Options.PCA.value:
+                self.worker = create_worker(
+                    pca,
+                    properties_to_reduce,
+                    explained_variance_threshold=explained_variance,
+                    n_components=pca_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons_if_error_occurs)
+                self.worker.start()
+        finally:
+            # make buttons active again even if an exception/error occurred during execution of the code above and not
+            # in a secondary thread
+            activate_buttons_if_error_occurs()
 
 
 @catch_NaNs
