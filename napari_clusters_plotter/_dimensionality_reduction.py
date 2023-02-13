@@ -23,6 +23,7 @@ from ._Qt_code import (
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    buttons_inactive,
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
@@ -166,9 +167,9 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         # making buttons
-        run_container, run_button = button("Run")
-        update_container, update_button = button("Update Measurements")
-        defaults_container, defaults_button = button("Restore Defaults")
+        run_container, self.run_button = button("Run")
+        update_container, self.update_button = button("Update Measurements")
+        defaults_container, self.defaults_button = button("Restore Defaults")
 
         def run_clicked():
             if self.labels_select.value is None:
@@ -195,9 +196,11 @@ class DimensionalityReductionWidget(QWidget):
                 self.pca_components.value,
             )
 
-        run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(partial(update_properties_list, self, EXCLUDE))
-        defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
+        self.run_button.clicked.connect(run_clicked)
+        self.update_button.clicked.connect(
+            partial(update_properties_list, self, EXCLUDE)
+        )
+        self.defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
         self.labels_select.changed.connect(
@@ -305,17 +308,18 @@ class DimensionalityReductionWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        # disable all the buttons while the computation is happening
-        widgets_inactive(
-            self.run_button, self.defaults_button, self.run_button, active=False
-        )
+        def activate_or_disable_buttons(active=True):
+            """Utility function to enable all the buttons again if an error/exception happens in a secondary thread or
+            the computation has finished successfully."""
 
-        def activate_buttons_if_error_occurs():
-            """Utility function to enable all the buttons again if an error/exception happens in a secondary thread"""
-            widgets_inactive(
-                self.run_button, self.defaults_button, self.run_button, active=True
+            buttons_inactive(
+                self.run_button, self.defaults_button, self.update_button, active=active
             )
 
+        # disable all the buttons while the computation is happening
+        activate_or_disable_buttons(False)
+
+        # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
         try:
             features = get_layer_tabular_data(labels_layer)
 
@@ -332,9 +336,12 @@ class DimensionalityReductionWidget(QWidget):
 
             # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
             def return_func_dim_reduction(result):
-                widgets_inactive(
-                    self.run_button, self.defaults_button, self.run_button, active=True
-                )
+                """
+                A function, which receives the result from dimensionality reduction functions if they finished
+                successfully, and writes result to the reg props table, which is also added to napari viewer.
+                """
+
+                activate_or_disable_buttons()
 
                 if result[0] == "PCA":
                     # check if principal components are already present
@@ -380,7 +387,7 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_buttons_if_error_occurs)
+                self.worker.errored.connect(activate_or_disable_buttons)
                 self.worker.start()
 
             elif selected_algorithm == self.Options.TSNE.value:
@@ -392,7 +399,7 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_buttons_if_error_occurs)
+                self.worker.errored.connect(activate_or_disable_buttons)
                 self.worker.start()
 
             elif selected_algorithm == self.Options.PCA.value:
@@ -404,12 +411,12 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_buttons_if_error_occurs)
+                self.worker.errored.connect(activate_or_disable_buttons)
                 self.worker.start()
-        finally:
-            # make buttons active again even if an exception/error occurred during execution of the code above and not
+        except Exception:
+            # make buttons active again even if an exception occurred during execution of the code above and not
             # in a secondary thread
-            activate_buttons_if_error_occurs()
+            activate_or_disable_buttons()
 
 
 @catch_NaNs
