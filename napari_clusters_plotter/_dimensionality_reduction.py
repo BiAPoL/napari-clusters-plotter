@@ -385,6 +385,7 @@ class DimensionalityReductionWidget(QWidget):
                 properties_to_reduce,
                 n_neigh=n_neighbours,
                 n_components=n_components,
+                verbose=True,
                 _progress=True,
             )
             self.worker.returned.connect(return_func_dim_reduction)
@@ -398,7 +399,10 @@ class DimensionalityReductionWidget(QWidget):
             # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the notebook
             # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
             result = umap(
-                properties_to_reduce, n_neigh=n_neighbours, n_components=n_components
+                properties_to_reduce,
+                n_neigh=n_neighbours,
+                n_components=n_components,
+                verbose=False,
             )
 
             # run the function, which opens a table after umap function is finished
@@ -429,7 +433,7 @@ class DimensionalityReductionWidget(QWidget):
 
 @catch_NaNs
 def umap(
-    reg_props: pd.DataFrame, n_neigh: int, n_components: int
+    reg_props: pd.DataFrame, n_neigh: int, n_components: int, verbose: bool
 ) -> Tuple[str, np.ndarray]:
     import umap.umap_ as umap
 
@@ -437,7 +441,7 @@ def umap(
         random_state=133,
         n_components=n_components,
         n_neighbors=n_neigh,
-        verbose=True,
+        verbose=verbose,
         tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
     return "UMAP", reducer.fit_transform(reg_props)
