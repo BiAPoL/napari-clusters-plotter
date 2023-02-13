@@ -23,14 +23,14 @@ from ._Qt_code import (
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,
-    buttons_inactive,
+    buttons_active,
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     set_features,
     show_table,
     update_properties_list,
-    widgets_inactive,
+    widgets_active,
     widgets_valid,
 )
 
@@ -257,26 +257,26 @@ class DimensionalityReductionWidget(QWidget):
 
     # toggle widgets visibility according to what is selected
     def change_settings_visibility(self):
-        widgets_inactive(
+        widgets_active(
             self.n_neighbors_container,
             active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.settings_container_scaler,
             active=(
                 self.algorithm_choice_list.current_choice == self.Options.UMAP.value
                 or self.algorithm_choice_list.current_choice == self.Options.TSNE.value
             ),
         )
-        widgets_inactive(
+        widgets_active(
             self.perplexity_container,
             active=self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.pca_components_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.explained_variance_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
@@ -308,16 +308,16 @@ class DimensionalityReductionWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        def activate_or_disable_buttons(active=True):
+        def activate_buttons(active=True):
             """Utility function to enable all the buttons again if an error/exception happens in a secondary thread or
             the computation has finished successfully."""
 
-            buttons_inactive(
+            buttons_active(
                 self.run_button, self.defaults_button, self.update_button, active=active
             )
 
         # disable all the buttons while the computation is happening
-        activate_or_disable_buttons(False)
+        activate_buttons(False)
 
         # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
         try:
@@ -341,7 +341,7 @@ class DimensionalityReductionWidget(QWidget):
                 successfully, and writes result to the reg props table, which is also added to napari viewer.
                 """
 
-                activate_or_disable_buttons()
+                activate_buttons()
 
                 if result[0] == "PCA":
                     # check if principal components are already present
@@ -387,7 +387,7 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_or_disable_buttons)
+                self.worker.errored.connect(activate_buttons)
                 self.worker.start()
 
             elif selected_algorithm == self.Options.TSNE.value:
@@ -399,7 +399,7 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_or_disable_buttons)
+                self.worker.errored.connect(activate_buttons)
                 self.worker.start()
 
             elif selected_algorithm == self.Options.PCA.value:
@@ -411,12 +411,12 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_or_disable_buttons)
+                self.worker.errored.connect(activate_buttons)
                 self.worker.start()
         except Exception:
             # make buttons active again even if an exception occurred during execution of the code above and not
             # in a secondary thread
-            activate_or_disable_buttons()
+            activate_buttons()
 
 
 @catch_NaNs
