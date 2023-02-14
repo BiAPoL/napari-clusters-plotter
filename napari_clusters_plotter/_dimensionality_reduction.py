@@ -424,6 +424,7 @@ class DimensionalityReductionWidget(QWidget):
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons)
                 self.worker.start()
 
             elif (
@@ -442,17 +443,6 @@ class DimensionalityReductionWidget(QWidget):
 
                 # run the function, which opens a table after umap function is finished
                 return_func_dim_reduction(result)
-
-            elif selected_algorithm == self.Options.TSNE.value:
-                self.worker = create_worker(
-                    tsne,
-                    properties_to_reduce,
-                    perplexity=perplexity,
-                    n_components=n_components,
-                    _progress=True,
-                )
-                self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.start()
 
             elif selected_algorithm == self.Options.TSNE.value:
                 self.worker = create_worker(
