@@ -15,6 +15,7 @@ from ._Qt_code import (
     algorithm_choice,
     button,
     checkbox,
+    collapsible_box,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
     labels_container_and_selection,
@@ -45,6 +46,10 @@ DEFAULTS = {
     "standardization": True,
     "pca_components": 0,
     "explained_variance": 95.0,
+    # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the Jupyter notebook,
+    # therefore by default the following value is False.
+    # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
+    "umap_separate_thread": False,
 }
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
@@ -168,6 +173,23 @@ class DimensionalityReductionWidget(QWidget):
             value=DEFAULTS["standardization"],
         )
 
+        # advanced options for UMAP
+        self.advanced_options_container = collapsible_box("Expand for advanced options")
+        self.advanced_options_container.setVisible(
+            False
+        )  # hide this container until umap is selected
+
+        self.settings_container_multithreading, self.multithreading = checkbox(
+            name="Enable multi-threading",
+            value=DEFAULTS["umap_separate_thread"],
+            visible=True,
+            tool_tip="Only enable if you are running napari not from the Jupyter notebook or your data is not big.\n"
+            "Otherwise it can result in the crash of the kernel.",
+        )
+        self.advanced_options_container.addWidget(
+            self.settings_container_multithreading
+        )
+
         # making buttons
         run_container, self.run_button = button("Run")
         update_container, self.update_button = button("Update Measurements")
@@ -196,6 +218,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.standardization.value,
                 self.explained_variance.value,
                 self.pca_components.value,
+                self.multithreading.value,
             )
 
         self.run_button.clicked.connect(run_clicked)
@@ -224,6 +247,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(choose_properties_container)
+        self.layout().addWidget(self.advanced_options_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
@@ -261,6 +285,7 @@ class DimensionalityReductionWidget(QWidget):
     def change_settings_visibility(self):
         widgets_active(
             self.n_neighbors_container,
+            self.advanced_options_container,
             active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
         widgets_active(
@@ -305,6 +330,7 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
+        umap_multithreading=False,
         n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
     ):
         print("Selected labels layer: " + str(labels_layer))
@@ -383,17 +409,49 @@ class DimensionalityReductionWidget(QWidget):
                 show_table(viewer, labels_layer)
                 print("Dimensionality reduction finished")
 
-            # depending on the selected dim reduction algorithm start a secondary thread
-            if selected_algorithm == self.Options.UMAP.value:
+            # depending on the selected dim red algorithm start either a secondary thread or run in the same as napari
+            if (
+                selected_algorithm == self.Options.UMAP.value
+                and umap_multithreading is True
+            ):
+                # this part runs if umap is selected, and the multithreading is enabled under advanced options
                 self.worker = create_worker(
                     umap,
                     properties_to_reduce,
                     n_neigh=n_neighbours,
                     n_components=n_components,
+                    verbose=True,
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
-                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+
+            elif (
+                selected_algorithm == self.Options.UMAP.value
+                and umap_multithreading is not True
+            ):
+                # this part runs if umap is selected, and the progress bar/multithreading is disabled (default option)
+                # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the notebook
+                # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
+                result = umap(
+                    properties_to_reduce,
+                    n_neigh=n_neighbours,
+                    n_components=n_components,
+                    verbose=False,
+                )
+
+                # run the function, which opens a table after umap function is finished
+                return_func_dim_reduction(result)
+
+            elif selected_algorithm == self.Options.TSNE.value:
+                self.worker = create_worker(
+                    tsne,
+                    properties_to_reduce,
+                    perplexity=perplexity,
+                    n_components=n_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
                 self.worker.start()
 
             elif selected_algorithm == self.Options.TSNE.value:
@@ -419,6 +477,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.worker.returned.connect(return_func_dim_reduction)
                 self.worker.errored.connect(activate_buttons)
                 self.worker.start()
+
         except Exception:
             # make buttons active again even if an exception occurred during execution of the code above and not
             # in a secondary thread
@@ -427,7 +486,7 @@ class DimensionalityReductionWidget(QWidget):
 
 @catch_NaNs
 def umap(
-    reg_props: pd.DataFrame, n_neigh: int, n_components: int
+    reg_props: pd.DataFrame, n_neigh: int, n_components: int, verbose: bool = False
 ) -> Tuple[str, np.ndarray]:
     import umap.umap_ as umap
 
@@ -435,7 +494,7 @@ def umap(
         random_state=133,
         n_components=n_components,
         n_neighbors=n_neigh,
-        verbose=True,
+        verbose=verbose,
         tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
     return "UMAP", reducer.fit_transform(reg_props)
