@@ -8,7 +8,8 @@ from qtpy.QtWidgets import QListWidgetItem
 
 def buttons_active(*buttons, active):
     for button in buttons:
-        button.setEnabled(active)
+        if button.isVisible():
+            button.setEnabled(active)
 
 
 def widgets_active(*widgets, active):
