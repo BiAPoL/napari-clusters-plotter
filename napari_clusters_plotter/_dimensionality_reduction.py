@@ -37,6 +37,8 @@ from ._utilities import (
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
 
+DEBUG = False
+
 DEFAULTS = {
     "n_neighbors": 15,
     "perplexity": 30,
@@ -308,7 +310,7 @@ class DimensionalityReductionWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        def activate_buttons(active=True):
+        def activate_buttons(error=None, active=True):
             """Utility function to enable all the buttons again if an error/exception happens in a secondary thread or
             the computation has finished successfully."""
 
@@ -316,8 +318,12 @@ class DimensionalityReductionWidget(QWidget):
                 self.run_button, self.defaults_button, self.update_button, active=active
             )
 
+            if DEBUG:
+                print(error)
+                print("Buttons are activated again")
+
         # disable all the buttons while the computation is happening
-        activate_buttons(False)
+        activate_buttons(active=False)
 
         # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
         try:
