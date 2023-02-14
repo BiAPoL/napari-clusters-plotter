@@ -280,7 +280,6 @@ class MplCanvas(FigureCanvas):
         self.rectangle_selector = RectangleSelector(
             self.axes,
             self.draw_rectangle,
-            drawtype="box",
             useblit=True,
             rectprops=dict(edgecolor="white", fill=False),
             button=3,  # right button
