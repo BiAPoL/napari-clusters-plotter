@@ -281,7 +281,7 @@ class MplCanvas(FigureCanvas):
             self.axes,
             self.draw_rectangle,
             useblit=True,
-            rectprops=dict(edgecolor="white", fill=False),
+            props=dict(edgecolor="white", fill=False),
             button=3,  # right button
             minspanx=5,
             minspany=5,
