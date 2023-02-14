@@ -37,12 +37,15 @@ from ._utilities import (
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
 
+DEBUG = True
+
 DEFAULTS = {
     "n_neighbors": 15,
     "perplexity": 30,
     "standardization": True,
     "pca_components": 0,
     "explained_variance": 95.0,
+    "n_components": 2,
 }
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
@@ -96,7 +99,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = int_sbox_containter_and_selection(
             name="n_neighbors",
             value=DEFAULTS["n_neighbors"],
-            label="Number of neighbors",
+            label="Number of Neighbors",
             tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors",
             tool_tip=(
                 "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold\n"
@@ -137,6 +140,19 @@ class DimensionalityReductionWidget(QWidget):
                 "after the transformation.\nWhen set to 0 the number of components that are selected "
                 "is determined by the explained variance\nthreshold."
             ),
+        )
+
+        # selection of the number of components for UMAP/t-SNE,
+        (
+            self.n_components_container,
+            self.n_components,
+        ) = int_sbox_containter_and_selection(
+            name="n_components",
+            value=DEFAULTS["n_components"],
+            min=1,
+            label="Number of Components",
+            tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-components",
+            tool_tip=("Dimension of the embedded space."),
         )
 
         # Minimum percentage of variance explained by kept PCA components,
@@ -194,6 +210,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.standardization.value,
                 self.explained_variance.value,
                 self.pca_components.value,
+                self.n_components.value,
             )
 
         self.run_button.clicked.connect(run_clicked)
@@ -219,6 +236,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.perplexity_container)
         self.layout().addWidget(self.n_neighbors_container)
         self.layout().addWidget(self.pca_components_container)
+        self.layout().addWidget(self.n_components_container)
         self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(choose_properties_container)
@@ -277,6 +295,11 @@ class DimensionalityReductionWidget(QWidget):
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
         widgets_active(
+            self.n_components_container,
+            active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value
+            or self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
+        )
+        widgets_active(
             self.explained_variance_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
@@ -303,21 +326,24 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
-        n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
+        n_components,  # dimension of the embedded space
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        def activate_buttons(active=True):
+        def activate_buttons(error=None, active=True):
             """Utility function to enable all the buttons again if an error/exception happens in a secondary thread or
             the computation has finished successfully."""
 
             buttons_active(
                 self.run_button, self.defaults_button, self.update_button, active=active
             )
+            if DEBUG:
+                print(error)
+                print("Buttons are activated again")
 
         # disable all the buttons while the computation is happening
-        activate_buttons(False)
+        activate_buttons(active=False)
 
         # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
         try:
