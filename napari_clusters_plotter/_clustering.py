@@ -231,7 +231,6 @@ class ClusteringWidget(QWidget):
         self.layout().setSpacing(0)
 
         def run_clicked():
-
             if self.labels_select.value is None:
                 warnings.warn("No labels image was selected!")
                 return

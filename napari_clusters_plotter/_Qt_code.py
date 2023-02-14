@@ -20,9 +20,14 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from superqt import QCollapsible
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 MAX_WIDTH = 100
+
+
+def collapsible_box(name):
+    return QCollapsible(name)
 
 
 def measurements_container_and_list():
@@ -85,29 +90,21 @@ def int_sbox_containter_and_selection(
         value=value,
         options={"min": min, "step": 1},
     )
-    help = QLabel()
-    if tool_link is not None:
-        help.setOpenExternalLinks(True)
-        help.setText(
-            f'<a href="{tool_link}" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-    if tool_tip is not None:
-        help.setToolTip(f"{tool_tip}\nClick on question mark to read more.")
 
     container.layout().addStretch()
     selection.native.setMaximumWidth(max_width)
     container.layout().addWidget(selection.native)
-    if tool_link is not None or tool_tip is not None:
-        container.layout().addWidget(help)
     container.setVisible(visible)
+
+    if tool_link is not None or tool_tip is not None:
+        add_tooltip(container, tool_link, tool_tip)
 
     return container, selection
 
 
 def float_sbox_containter_and_selection(
     name: str,
-    value: int,
+    value: float,
     label: str,
     min: float = 0,
     step: float = 0.1,
@@ -127,22 +124,14 @@ def float_sbox_containter_and_selection(
         value=value,
         options={"min": min, "step": step, "max": max},
     )
-    help = QLabel()
-    if tool_link is not None:
-        help.setOpenExternalLinks(True)
-        help.setText(
-            f'<a href="{tool_link}" '
-            'style="text-decoration:none; color:white"><b>?</b></a>'
-        )
-    if tool_tip is not None:
-        help.setToolTip(f"{tool_tip}\nClick on question mark to read more.")
 
     container.layout().addStretch()
     selection.native.setMaximumWidth(max_width)
     container.layout().addWidget(selection.native)
-    if tool_link is not None or tool_tip is not None:
-        container.layout().addWidget(help)
     container.setVisible(visible)
+
+    if tool_link is not None or tool_tip is not None:
+        add_tooltip(container, tool_link, tool_tip)
 
     return container, selection
 
@@ -155,18 +144,54 @@ def button(name):
     return widget, button
 
 
-def checkbox(name: str, value, visible: bool = False):
+def checkbox(
+    name: str,
+    value: bool,
+    visible: bool = False,
+    tool_tip: str = None,
+    tool_link: str = None,
+):
     container = QWidget()
     container.setLayout(QHBoxLayout())
-    selection = create_widget(
-        widget_type="CheckBox",
-        name=name,
-        value=value,
-    )
+
+    if tool_tip is not None or tool_link is not None:
+        selection = create_widget(
+            widget_type="CheckBox",
+            name=name,
+            value=value,
+            options={"tooltip": tool_tip},
+        )
+    else:
+        selection = create_widget(
+            widget_type="CheckBox",
+            name=name,
+            value=value,
+        )
     container.layout().addWidget(selection.native)
     container.setVisible(visible)
 
     return container, selection
+
+
+def add_tooltip(
+    container,
+    tool_link: str,
+    tool_tip: str,
+):
+    help_tooltip = QLabel()
+    new_line = "\n"
+    if tool_link is not None:
+        help_tooltip.setOpenExternalLinks(True)
+        help_tooltip.setText(
+            f'<a href="{tool_link}" '
+            'style="text-decoration:none; color:white"><b>?</b></a>'
+        )
+    if tool_tip is not None:
+        help_tooltip.setToolTip(
+            f"{tool_tip}{new_line}{'Click on a question mark to read more.' if tool_link is not None else ''}"
+        )
+
+    container.layout().addWidget(help_tooltip)
 
 
 def algorithm_choice(name: str, value, options: dict, label: str):
@@ -280,9 +305,8 @@ class MplCanvas(FigureCanvas):
         self.rectangle_selector = RectangleSelector(
             self.axes,
             self.draw_rectangle,
-            drawtype="box",
             useblit=True,
-            rectprops=dict(edgecolor="white", fill=False),
+            props=dict(edgecolor="white", fill=False),
             button=3,  # right button
             minspanx=5,
             minspany=5,
