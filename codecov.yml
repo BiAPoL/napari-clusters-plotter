@@ -1,0 +1,6 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5% # allow for 5% reduction of coverage without failing
