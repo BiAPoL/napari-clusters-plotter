@@ -24,18 +24,21 @@ from ._Qt_code import (
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    buttons_active,
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     set_features,
     show_table,
     update_properties_list,
-    widgets_inactive,
+    widgets_active,
     widgets_valid,
 )
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
+
+DEBUG = False
 
 DEFAULTS = {
     "n_neighbors": 15,
@@ -188,9 +191,9 @@ class DimensionalityReductionWidget(QWidget):
         )
 
         # making buttons
-        run_container, run_button = button("Run")
-        update_container, update_button = button("Update Measurements")
-        defaults_container, defaults_button = button("Restore Defaults")
+        run_container, self.run_button = button("Run")
+        update_container, self.update_button = button("Update Measurements")
+        defaults_container, self.defaults_button = button("Restore Defaults")
 
         def run_clicked():
             if self.labels_select.value is None:
@@ -218,9 +221,11 @@ class DimensionalityReductionWidget(QWidget):
                 self.multithreading.value,
             )
 
-        run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(partial(update_properties_list, self, EXCLUDE))
-        defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
+        self.run_button.clicked.connect(run_clicked)
+        self.update_button.clicked.connect(
+            partial(update_properties_list, self, EXCLUDE)
+        )
+        self.defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
         self.labels_select.changed.connect(
@@ -278,27 +283,27 @@ class DimensionalityReductionWidget(QWidget):
 
     # toggle widgets visibility according to what is selected
     def change_settings_visibility(self):
-        widgets_inactive(
+        widgets_active(
             self.n_neighbors_container,
             self.advanced_options_container,
             active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.settings_container_scaler,
             active=(
                 self.algorithm_choice_list.current_choice == self.Options.UMAP.value
                 or self.algorithm_choice_list.current_choice == self.Options.TSNE.value
             ),
         )
-        widgets_inactive(
+        widgets_active(
             self.perplexity_container,
             active=self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.pca_components_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.explained_variance_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
@@ -331,104 +336,142 @@ class DimensionalityReductionWidget(QWidget):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
-        features = get_layer_tabular_data(labels_layer)
+        def activate_buttons(error=None, active=True):
+            """Utility function to enable all the buttons again if an error/exception happens in a secondary thread or
+            the computation has finished successfully."""
 
-        # only select the columns the user requested
-        properties_to_reduce = features[selected_measurements_list]
+            buttons_active(
+                self.run_button, self.defaults_button, self.update_button, active=active
+            )
 
-        # perform standard scaling, if selected
-        if standardize:
-            from sklearn.preprocessing import StandardScaler
+            if DEBUG:
+                print(error)
+                print("Buttons are activated again")
 
-            properties_to_reduce = StandardScaler().fit_transform(properties_to_reduce)
+        # disable all the buttons while the computation is happening
+        activate_buttons(active=False)
 
-        # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
-        def return_func_dim_reduction(result):
-            if result[0] == "PCA":
-                # check if principal components are already present
-                # and remove them by overwriting the features
-                tabular_data = get_layer_tabular_data(labels_layer)
-                dropkeys = [
-                    column for column in tabular_data.keys() if column.startswith("PC_")
-                ]
-                df_principal_components_removed = tabular_data.drop(dropkeys, axis=1)
-                set_features(labels_layer, df_principal_components_removed)
+        # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
+        try:
+            features = get_layer_tabular_data(labels_layer)
 
-                # write result back to properties
-                for i in range(0, len(result[1].T)):
-                    add_column_to_layer_tabular_data(
-                        labels_layer, "PC_" + str(i), result[1][:, i]
+            # only select the columns the user requested
+            properties_to_reduce = features[selected_measurements_list]
+
+            # perform standard scaling, if selected
+            if standardize:
+                from sklearn.preprocessing import StandardScaler
+
+                properties_to_reduce = StandardScaler().fit_transform(
+                    properties_to_reduce
+                )
+
+            # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
+            def return_func_dim_reduction(result):
+                """
+                A function, which receives the result from dimensionality reduction functions if they finished
+                successfully, and writes result to the reg props table, which is also added to napari viewer.
+                """
+
+                activate_buttons()
+
+                if result[0] == "PCA":
+                    # check if principal components are already present
+                    # and remove them by overwriting the features
+                    tabular_data = get_layer_tabular_data(labels_layer)
+                    dropkeys = [
+                        column
+                        for column in tabular_data.keys()
+                        if column.startswith("PC_")
+                    ]
+                    df_principal_components_removed = tabular_data.drop(
+                        dropkeys, axis=1
                     )
+                    set_features(labels_layer, df_principal_components_removed)
 
-            elif result[0] == "UMAP" or result[0] == "t-SNE":
-                # write result back to properties
-                for i in range(0, n_components):
-                    add_column_to_layer_tabular_data(
-                        labels_layer, result[0] + "_" + str(i), result[1][:, i]
-                    )
+                    # write result back to properties
+                    for i in range(0, len(result[1].T)):
+                        add_column_to_layer_tabular_data(
+                            labels_layer, "PC_" + str(i), result[1][:, i]
+                        )
 
-            else:
-                "Dimensionality reduction not successful. Please try again"
-                return
+                elif result[0] == "UMAP" or result[0] == "t-SNE":
+                    # write result back to properties
+                    for i in range(0, n_components):
+                        add_column_to_layer_tabular_data(
+                            labels_layer, result[0] + "_" + str(i), result[1][:, i]
+                        )
 
-            show_table(viewer, labels_layer)
-            print("Dimensionality reduction finished")
+                else:
+                    "Dimensionality reduction not successful. Please try again"
+                    return
 
-        # depending on the selected dim red algorithm start either a secondary thread or run in the same one as napari
-        if (
-            selected_algorithm == self.Options.UMAP.value
-            and umap_multithreading is True
-        ):
-            # this part runs if umap is selected, and the progress bar/multithreading is enabled under advanced options
-            self.worker = create_worker(
-                umap,
-                properties_to_reduce,
-                n_neigh=n_neighbours,
-                n_components=n_components,
-                verbose=True,
-                _progress=True,
-            )
-            self.worker.returned.connect(return_func_dim_reduction)
-            self.worker.start()
+                show_table(viewer, labels_layer)
+                print("Dimensionality reduction finished")
 
-        elif (
-            selected_algorithm == self.Options.UMAP.value
-            and umap_multithreading is not True
-        ):
-            # this part runs if umap is selected, and the progress bar/multithreading is disabled (default option)
-            # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the notebook
-            # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
-            result = umap(
-                properties_to_reduce,
-                n_neigh=n_neighbours,
-                n_components=n_components,
-                verbose=False,
-            )
+            # depending on the selected dim red algorithm start either a secondary thread or run in the same as napari
+            if (
+                selected_algorithm == self.Options.UMAP.value
+                and umap_multithreading is True
+            ):
+                # this part runs if umap is selected, and the multithreading is enabled under advanced options
+                self.worker = create_worker(
+                    umap,
+                    properties_to_reduce,
+                    n_neigh=n_neighbours,
+                    n_components=n_components,
+                    verbose=True,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
 
-            # run the function, which opens a table after umap function is finished
-            return_func_dim_reduction(result)
+            elif (
+                selected_algorithm == self.Options.UMAP.value
+                and umap_multithreading is not True
+            ):
+                # this part runs if umap is selected, and the progress bar/multithreading is disabled (default option)
+                # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the notebook
+                # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
+                result = umap(
+                    properties_to_reduce,
+                    n_neigh=n_neighbours,
+                    n_components=n_components,
+                    verbose=False,
+                )
 
-        elif selected_algorithm == self.Options.TSNE.value:
-            self.worker = create_worker(
-                tsne,
-                properties_to_reduce,
-                perplexity=perplexity,
-                n_components=n_components,
-                _progress=True,
-            )
-            self.worker.returned.connect(return_func_dim_reduction)
-            self.worker.start()
+                # run the function, which opens a table after umap function is finished
+                return_func_dim_reduction(result)
 
-        elif selected_algorithm == self.Options.PCA.value:
-            self.worker = create_worker(
-                pca,
-                properties_to_reduce,
-                explained_variance_threshold=explained_variance,
-                n_components=pca_components,
-                _progress=True,
-            )
-            self.worker.returned.connect(return_func_dim_reduction)
-            self.worker.start()
+            elif selected_algorithm == self.Options.TSNE.value:
+                self.worker = create_worker(
+                    tsne,
+                    properties_to_reduce,
+                    perplexity=perplexity,
+                    n_components=n_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+
+            elif selected_algorithm == self.Options.PCA.value:
+                self.worker = create_worker(
+                    pca,
+                    properties_to_reduce,
+                    explained_variance_threshold=explained_variance,
+                    n_components=pca_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+
+        except Exception:
+            # make buttons active again even if an exception occurred during execution of the code above and not
+            # in a secondary thread
+            activate_buttons()
 
 
 @catch_NaNs
