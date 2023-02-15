@@ -67,6 +67,7 @@ def test_bad_measurements(qtbot, make_napari_viewer):
         n_components=2,
         explained_variance=95.0,
         pca_components=0,
+        umap_multithreading=True,
     )
 
     blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
