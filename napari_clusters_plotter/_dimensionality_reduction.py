@@ -46,11 +46,13 @@ DEFAULTS = {
     "standardization": True,
     "pca_components": 0,
     "explained_variance": 95.0,
+    "n_components": 2,
     # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the Jupyter notebook,
     # therefore by default the following value is False.
     # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
     "umap_separate_thread": False,
 }
+
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
 
@@ -103,7 +105,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = int_sbox_containter_and_selection(
             name="n_neighbors",
             value=DEFAULTS["n_neighbors"],
-            label="Number of neighbors",
+            label="Number of Neighbors",
             tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-neighbors",
             tool_tip=(
                 "The size of local neighborhood (in terms of number of neighboring sample points) used for manifold\n"
@@ -144,6 +146,19 @@ class DimensionalityReductionWidget(QWidget):
                 "after the transformation.\nWhen set to 0 the number of components that are selected "
                 "is determined by the explained variance\nthreshold."
             ),
+        )
+
+        # selection of the number of components for UMAP/t-SNE,
+        (
+            self.n_components_container,
+            self.n_components,
+        ) = int_sbox_containter_and_selection(
+            name="n_components",
+            value=DEFAULTS["n_components"],
+            min=1,
+            label="Number of Components",
+            tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-components",
+            tool_tip=("Dimension of the embedded space."),
         )
 
         # Minimum percentage of variance explained by kept PCA components,
@@ -218,6 +233,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.standardization.value,
                 self.explained_variance.value,
                 self.pca_components.value,
+                self.n_components.value,
                 self.multithreading.value,
             )
 
@@ -244,6 +260,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.perplexity_container)
         self.layout().addWidget(self.n_neighbors_container)
         self.layout().addWidget(self.pca_components_container)
+        self.layout().addWidget(self.n_components_container)
         self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(choose_properties_container)
@@ -304,6 +321,11 @@ class DimensionalityReductionWidget(QWidget):
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
         widgets_active(
+            self.n_components_container,
+            active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value
+            or self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
+        )
+        widgets_active(
             self.explained_variance_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
         )
@@ -330,8 +352,8 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
+        n_components,  # dimension of the embedded space
         umap_multithreading=False,
-        n_components=2,  # dimension of the embedded space. For now 2 by default, since only 2D plotting is supported
     ):
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
@@ -343,6 +365,9 @@ class DimensionalityReductionWidget(QWidget):
             buttons_active(
                 self.run_button, self.defaults_button, self.update_button, active=active
             )
+            if DEBUG:
+                print(error)
+                print("Buttons are activated again")
 
             if DEBUG:
                 print(error)
