@@ -21,12 +21,13 @@ from ._Qt_code import (
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,
+    buttons_active,
     catch_NaNs,
     get_layer_tabular_data,
     restore_defaults,
     show_table,
     update_properties_list,
-    widgets_inactive,
+    widgets_active,
 )
 
 DEFAULTS = {
@@ -205,9 +206,9 @@ class ClusteringWidget(QWidget):
         self.custom_name_not_editable.setReadOnly(True)
 
         # making buttons
-        run_container, run_button = button("Run")
-        update_container, update_button = button("Update Measurements")
-        defaults_container, defaults_button = button("Restore Defaults")
+        run_container, self.run_button = button("Run")
+        update_container, self.update_button = button("Update Measurements")
+        defaults_container, self.defaults_button = button("Restore Defaults")
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
@@ -260,9 +261,11 @@ class ClusteringWidget(QWidget):
                 self.custom_name.text(),
             )
 
-        run_button.clicked.connect(run_clicked)
-        update_button.clicked.connect(partial(update_properties_list, self, [ID_NAME]))
-        defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
+        self.run_button.clicked.connect(run_clicked)
+        self.update_button.clicked.connect(
+            partial(update_properties_list, self, [ID_NAME])
+        )
+        self.defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
         self.labels_select.changed.connect(
@@ -286,37 +289,37 @@ class ClusteringWidget(QWidget):
         )
 
     def change_clustering_options_visibility(self):
-        widgets_inactive(
+        widgets_active(
             self.kmeans_settings_container_nr,
             self.kmeans_settings_container_iter,
             active=self.clust_method_choice_list.current_choice
             == self.Options.KMEANS.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.hdbscan_settings_container_size,
             self.hdbscan_settings_container_min_nr,
             active=self.clust_method_choice_list.current_choice
             == self.Options.HDBSCAN.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.gmm_settings_container_nr,
             active=self.clust_method_choice_list.current_choice
             == self.Options.GMM.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.ms_settings_container_nr,
             self.ms_settings_container_samples,
             active=self.clust_method_choice_list.current_choice
             == self.Options.MS.value,
         )
-        widgets_inactive(
+        widgets_active(
             self.ac_settings_container_clusters,
             self.ac_settings_container_neighbors,
             active=self.clust_method_choice_list.current_choice
             == self.Options.AC.value,
         )
 
-        widgets_inactive(
+        widgets_active(
             self.clustering_settings_container_scaler,
             active=(
                 self.clust_method_choice_list.current_choice
@@ -377,8 +380,21 @@ class ClusteringWidget(QWidget):
         # only select the columns the user requested
         selected_properties = features[selected_measurements_list]
 
+        def activate_buttons(active=True):
+            """Utility function to enable/disable all the buttons if an error/exception happens in a secondary thread or
+            the computation has finished successfully."""
+
+            buttons_active(
+                self.run_button, self.defaults_button, self.update_button, active=active
+            )
+
+        # disable all the buttons while the computation is happening
+        activate_buttons(False)
+
         # from a secondary thread a tuple (str, np.ndarray) is returned, where str is the name of the clustering method
         def result_of_clustering(returned):
+            activate_buttons()
+
             # write result back to features/properties of the labels layer
             if custom_name == DEFAULTS["custom_name"]:
                 result_column_name = returned[0]
@@ -393,67 +409,81 @@ class ClusteringWidget(QWidget):
             if show:
                 show_table(self.viewer, labels_layer)
 
-        # perform standard scaling, if selected
-        if standardize:
-            from sklearn.preprocessing import StandardScaler
+        # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
+        try:
+            # perform standard scaling, if selected
+            if standardize:
+                from sklearn.preprocessing import StandardScaler
 
-            selected_properties = StandardScaler().fit_transform(selected_properties)
+                selected_properties = StandardScaler().fit_transform(
+                    selected_properties
+                )
 
-        # perform clustering
-        if selected_method == self.Options.KMEANS.value:
-            self.worker = create_worker(
-                kmeans_clustering,
-                selected_properties,
-                cluster_number=num_clusters,
-                iterations=num_iterations,
-                _progress=True,
-            )
-            self.worker.returned.connect(result_of_clustering)
-            self.worker.start()
-        elif selected_method == self.Options.HDBSCAN.value:
-            self.worker = create_worker(
-                hdbscan_clustering,
-                selected_properties,
-                min_cluster_size=min_cluster_size,
-                min_samples=min_nr_samples,
-                _progress=True,
-            )
-            self.worker.returned.connect(result_of_clustering)
-            self.worker.start()
-        elif selected_method == self.Options.GMM.value:
-            self.worker = create_worker(
-                gaussian_mixture_model,
-                selected_properties,
-                cluster_number=gmm_num_cluster,
-                _progress=True,
-            )
-            self.worker.returned.connect(result_of_clustering)
-            self.worker.start()
-        elif selected_method == self.Options.MS.value:
-            self.worker = create_worker(
-                mean_shift,
-                selected_properties,
-                quantile=ms_quantile,
-                n_samples=ms_n_samples,
-                _progress=True,
-            )
-            self.worker.returned.connect(result_of_clustering)
-            self.worker.start()
-        elif selected_method == self.Options.AC.value:
-            self.worker = create_worker(
-                agglomerative_clustering,
-                selected_properties,
-                cluster_number=ac_n_clusters,
-                n_neighbors=ac_n_neighbors,
-                _progress=True,
-            )
-            self.worker.returned.connect(result_of_clustering)
-            self.worker.start()
-        else:
-            warnings.warn(
-                "Clustering unsuccessful. Please check selected options again."
-            )
-            return
+            # perform clustering
+            if selected_method == self.Options.KMEANS.value:
+                self.worker = create_worker(
+                    kmeans_clustering,
+                    selected_properties,
+                    cluster_number=num_clusters,
+                    iterations=num_iterations,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_clustering)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+            elif selected_method == self.Options.HDBSCAN.value:
+                self.worker = create_worker(
+                    hdbscan_clustering,
+                    selected_properties,
+                    min_cluster_size=min_cluster_size,
+                    min_samples=min_nr_samples,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_clustering)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+            elif selected_method == self.Options.GMM.value:
+                self.worker = create_worker(
+                    gaussian_mixture_model,
+                    selected_properties,
+                    cluster_number=gmm_num_cluster,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_clustering)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+            elif selected_method == self.Options.MS.value:
+                self.worker = create_worker(
+                    mean_shift,
+                    selected_properties,
+                    quantile=ms_quantile,
+                    n_samples=ms_n_samples,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_clustering)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+            elif selected_method == self.Options.AC.value:
+                self.worker = create_worker(
+                    agglomerative_clustering,
+                    selected_properties,
+                    cluster_number=ac_n_clusters,
+                    n_neighbors=ac_n_neighbors,
+                    _progress=True,
+                )
+                self.worker.returned.connect(result_of_clustering)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+            else:
+                warnings.warn(
+                    "Clustering unsuccessful. Please check selected options again."
+                )
+                return
+
+        except Exception:
+            # make buttons active again even if an exception occurred during execution of the code above and not
+            # in a secondary thread
+            activate_buttons()
 
 
 @catch_NaNs

@@ -9,7 +9,17 @@ from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
 
-def widgets_inactive(*widgets, active):
+def buttons_active(*buttons, active):
+    for button in buttons:
+        try:
+            if button.isVisible():
+                button.setEnabled(active)
+        except RuntimeError:
+            # necessary for tests because buttons are deleted before computation is finished in the secondary thread
+            break
+
+
+def widgets_active(*widgets, active):
     for widget in widgets:
         widget.setVisible(active)
 
