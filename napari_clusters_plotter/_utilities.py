@@ -47,6 +47,19 @@ def set_features(layer, tabular_data):
 
 
 def get_layer_tabular_data(layer):
+    """
+    Return tabular data associated with a layer object.
+
+    Parameters:
+    -----------
+    layer : object (napari layer)
+        An object that may contain tabular data as either properties (older napari versions) or features.
+
+    Returns :
+    --------
+    pandas.DataFrame or None
+        A DataFrame containing the tabular data, or None if no data was found.
+    """
     if hasattr(layer, "properties") and layer.properties is not None:
         return pd.DataFrame(layer.properties)
     if hasattr(layer, "features") and layer.features is not None:
@@ -55,6 +68,18 @@ def get_layer_tabular_data(layer):
 
 
 def add_column_to_layer_tabular_data(layer, column_name, data):
+    """
+    Add a new column with a given name and data to a layer's tabular data.
+
+    Parameters
+    ----------
+    layer : napari.layer
+        A napari layer to which tabular data will be added
+    column_name : str
+        The name of the new column to add to the layer's tabular data.
+    data : iterable
+        The data to add to the new column.
+    """
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
     if hasattr(layer, "features"):
@@ -62,7 +87,7 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
 
 
 def catch_NaNs(func):
-    "Remove NaNs from array for processing and put result to correct location."
+    """Remove NaNs from array for processing and put result to correct location."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -84,8 +109,24 @@ def catch_NaNs(func):
     return wrapper
 
 
-# TODO docstring
 def update_properties_list(widget, exclude_list):
+    """
+    Updates the properties list of a given widget with the properties of a selected layer.
+    The function first gets the currently selected layer from the widget's label select
+    dropdown. If a layer is selected, it retrieves the tabular data of the layer using the
+    get_layer_tabular_data() function. It then populates the properties list of the widget with
+    the keys of the tabular data. Any properties whose names match any of the strings in the
+    exclude_list, as well as properties named "index" or "label", are skipped. If there were
+    any properties that were selected in the old properties list, the function selects them
+    again in the updated properties list.
+
+    Parameters
+    -----------
+    widget : QWidget
+       The widget whose properties list will be updated.
+    exclude_list : list of str
+        A list of property names to exclude from the properties list.
+    """
     selected_layer = widget.labels_select.value
 
     if selected_layer is not None:
@@ -114,29 +155,53 @@ def update_properties_list(widget, exclude_list):
 
 def generate_cluster_image(label_image, predictionlist):
     """
-    Returns a label image where each label value corresponds
-    to the cluster identity defined by the predictionlist.
-    it is assumed that len(predictionlist) == max(label_image)
+    Generates a clusters image from a label image and a list of cluster predictions,
+    where each label value corresponds to the cluster identity.
+    It is assumed that len(predictionlist) == max(label_image)
 
     Parameters
     ----------
     label_image: ndarray or dask array
         Label image used for cluster predictions
     predictionlist: array
-        Array containing cluster identities for each label
+        An array containing cluster identities for each label
+
+    Returns
+    ----------
+    ndarray: The clusters image as a numpy array.
     """
 
     # reforming the prediction list, this is done to account
     # for cluster labels that start at 0, conveniently hdbscan
-    # labelling starts at -1 for noise, removing these from
-    # the labels
+    # labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
 
     return relabel(label_image, list(predictionlist_new)).astype("uint64")
 
 
-# TODO docstring
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
+    """
+    Generates a timelapse of cluster images using Dask.
+
+    Given a label image and a list of prediction lists, this function generates a timelapse
+    of cluster images using Dask. Each prediction list contains the predicted cluster labels
+    for the corresponding frame in the label image.
+
+    Parameters
+    -----------
+    label_image : ndarray
+        A NumPy array representing the label image.
+    prediction_list_list : list
+        A list of prediction lists. Each prediction list contains the predicted cluster labels
+        for the corresponding frame in the label image.
+
+    Returns
+    -----------
+    dask.array.Array : A 4D Dask array representing the timelapse of cluster images.
+                       The first dimension corresponds to time, while the remaining
+                       three dimensions correspond to the shape of each cluster image.
+
+    """
     import dask.array as da
     from dask import delayed
 
