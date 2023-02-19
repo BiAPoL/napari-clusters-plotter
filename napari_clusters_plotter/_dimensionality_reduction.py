@@ -279,6 +279,8 @@ class DimensionalityReductionWidget(QWidget):
         # hide widgets unless appropriate options are chosen
         self.algorithm_choice_list.changed.connect(self.change_settings_visibility)
 
+        update_properties_list(self, EXCLUDE)
+
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
