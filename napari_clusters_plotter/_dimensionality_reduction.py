@@ -407,7 +407,7 @@ class DimensionalityReductionWidget(QWidget):
                 """
                 A function, which receives the result from dimensionality reduction functions if they finished
                 successfully, and writes result to the reg props table (features/properties of the layer),
-                which is also added to napari viewer.
+                which is also added to the napari viewer.
 
                 Parameters
                 -----------
