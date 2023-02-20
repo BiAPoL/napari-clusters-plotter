@@ -1,5 +1,5 @@
 def unclustered_plot_parameters(
-    frame_id: list[int],
+    frame_id: list,
     current_frame: int,
     n_datapoints: int,
 ):
@@ -37,8 +37,8 @@ def unclustered_plot_parameters(
 
 
 def clustered_plot_parameters(
-    cluster_id: list[int],
-    frame_id: list[int],
+    cluster_id: list,
+    frame_id: list,
     current_frame: int,
     n_datapoints: int,
     color_hex_list: list,
