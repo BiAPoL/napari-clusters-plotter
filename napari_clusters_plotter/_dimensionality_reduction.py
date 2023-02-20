@@ -522,8 +522,8 @@ def umap(
     reg_props: pd.DataFrame, n_neigh: int, n_components: int, verbose: bool = False
 ) -> Tuple[str, np.ndarray]:
     """
-    Performs dimensionality reduction using the Uniform Manifold Approximation Projection (UMAP) on the given data. UMAP is a nonlinear
-    dimensionality reduction technique that preserves the global structure of the data while
+    Performs dimensionality reduction using the Uniform Manifold Approximation Projection (UMAP) on the given data.
+    UMAP is a nonlinear dimensionality reduction technique that preserves the global structure of the data while
     allowing for efficient computation of distances in the lower-dimensional space.
 
     Parameters
