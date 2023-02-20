@@ -238,6 +238,8 @@ class PlotterWidget(QWidget):
 
         self.viewer.dims.events.current_step.connect(frame_changed)
 
+        self.update_axes_list()
+
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()

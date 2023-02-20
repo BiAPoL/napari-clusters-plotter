@@ -321,7 +321,7 @@ def alpha_factor(n_datapoints):
     n_datapoints : int
         The total number of data points.
     """
-    return min(1, (max(0.3, 8000 / n_datapoints)))
+    return min(1, (max(0.6, 8000 / n_datapoints)))
 
 
 def frame_spot_factor():
