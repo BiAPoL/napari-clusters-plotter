@@ -9,7 +9,6 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
-from vispy.color import Color
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
@@ -353,6 +352,8 @@ class PlotterWidget(QWidget):
                 self.graphics_widget.axes,
                 self.graphics_widget.pts,
             )
+
+            from vispy.color import Color
 
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
