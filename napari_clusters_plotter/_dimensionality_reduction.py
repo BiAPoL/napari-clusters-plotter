@@ -567,7 +567,7 @@ def tsne(
     reg_props: pd.DataFrame, perplexity: float, n_components: int
 ) -> Tuple[str, np.ndarray]:
     """
-    Applies t-SNE (t-distributed stochastic neighbor embedding) to the given
+    Applies t-distributed Stochastic Neighbor Embedding (t-SNE) to the given
     feature matrix.
 
     Parameters
