@@ -148,7 +148,7 @@ class DimensionalityReductionWidget(QWidget):
             ),
         )
 
-        # selection of the number of components for UMAP/t-SNE,
+        # selection of the number of components for UMAP/t-SNE
         (
             self.n_components_container,
             self.n_components,
@@ -237,6 +237,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.multithreading.value,
             )
 
+        # connect buttons with functions that need to be triggered by them
         self.run_button.clicked.connect(run_clicked)
         self.update_button.clicked.connect(
             partial(update_properties_list, self, EXCLUDE)
@@ -286,8 +287,12 @@ class DimensionalityReductionWidget(QWidget):
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
 
-    # triggered by the selection of t-SNE as dim reduction algorithm, change of input image or perplexity value
     def _check_perplexity(self):
+        """
+        The function, which is triggered by the selection of t-SNE as a dimensionality reduction algorithm,
+        change of input image or perplexity value. It checks whether the selected perplexity is less than
+        the number of labeled objects, and if not it makes the widget red.
+        """
         if self.algorithm_choice_list.current_choice == "t-SNE":
             features = get_layer_tabular_data(self.labels_select.value)
             widgets_valid(
@@ -298,8 +303,11 @@ class DimensionalityReductionWidget(QWidget):
                     "Perplexity must be less than the number of labeled objects!"
                 )
 
-    # toggle widgets visibility according to what is selected
     def change_settings_visibility(self):
+        """
+        The function, which is triggered by the selection/change of dimensionality reduction algorithm.
+        It changes the visibility of some parameters depending on the current choice of the algorithm.
+        """
         widgets_active(
             self.n_neighbors_container,
             self.advanced_options_container,
@@ -340,7 +348,6 @@ class DimensionalityReductionWidget(QWidget):
         )
         self.last_connected = self.labels_select.value
 
-    # this function runs after the run button is clicked
     def run(
         self,
         viewer,
@@ -352,9 +359,12 @@ class DimensionalityReductionWidget(QWidget):
         standardize,
         explained_variance,
         pca_components,
-        n_components,  # dimension of the embedded space
+        n_components,
         umap_multithreading=False,
     ):
+        """
+        The function triggered by clicking the run button.
+        """
         print("Selected labels layer: " + str(labels_layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
@@ -391,13 +401,19 @@ class DimensionalityReductionWidget(QWidget):
                     properties_to_reduce
                 )
 
-            # from a secondary thread a tuple[str, np.ndarray] is returned, where result[0] is the name of algorithm
             def return_func_dim_reduction(result):
                 """
                 A function, which receives the result from dimensionality reduction functions if they finished
-                successfully, and writes result to the reg props table, which is also added to napari viewer.
-                """
+                successfully, and writes result to the reg props table (features/properties of the layer),
+                which is also added to napari viewer.
 
+                Parameters
+                -----------
+                result : Tuple(str, np.ndarray)
+                    A tuple returned by dimensionality reduction functions, where first item is the name of the
+                    algorithm, and second item is the embedding of features into the low dimensional space.
+                """
+                # all the buttons are activated again
                 activate_buttons()
 
                 if result[0] == "PCA":
@@ -414,14 +430,14 @@ class DimensionalityReductionWidget(QWidget):
                     )
                     set_features(labels_layer, df_principal_components_removed)
 
-                    # write result back to properties
+                    # write result back to properties/features of the layer
                     for i in range(0, len(result[1].T)):
                         add_column_to_layer_tabular_data(
                             labels_layer, "PC_" + str(i), result[1][:, i]
                         )
 
                 elif result[0] == "UMAP" or result[0] == "t-SNE":
-                    # write result back to properties
+                    # write result back to properties/features of the layer
                     for i in range(0, n_components):
                         add_column_to_layer_tabular_data(
                             labels_layer, result[0] + "_" + str(i), result[1][:, i]
@@ -431,6 +447,7 @@ class DimensionalityReductionWidget(QWidget):
                     "Dimensionality reduction not successful. Please try again"
                     return
 
+                # add a table to napari viewer
                 show_table(viewer, labels_layer)
                 print("Dimensionality reduction finished")
 
@@ -466,7 +483,6 @@ class DimensionalityReductionWidget(QWidget):
                     verbose=False,
                 )
 
-                # run the function, which opens a table after umap function is finished
                 return_func_dim_reduction(result)
 
             elif selected_algorithm == self.Options.TSNE.value:
@@ -494,8 +510,8 @@ class DimensionalityReductionWidget(QWidget):
                 self.worker.start()
 
         except Exception:
-            # make buttons active again even if an exception occurred during execution of the code above and not
-            # in a secondary thread
+            # make buttons active again even if an exception occurred during execution
+            # of the code above and not in a secondary thread
             activate_buttons()
 
 
@@ -503,6 +519,35 @@ class DimensionalityReductionWidget(QWidget):
 def umap(
     reg_props: pd.DataFrame, n_neigh: int, n_components: int, verbose: bool = False
 ) -> Tuple[str, np.ndarray]:
+    """
+    Performs dimensionality reduction using UMAP algorithm on the given data. UMAP is a nonlinear
+    dimensionality reduction technique that preserves the global structure of the data while
+    allowing for efficient computation of distances in the lower-dimensional space.
+
+    Parameters
+    ----------
+    reg_props : pd.DataFrame
+        A pandas DataFrame containing the input data to be reduced.
+    n_neigh : int
+        The size of local neighborhood (in terms of number of neighboring sample points) used for
+        manifold approximation. Larger values result in more global views of the manifold, while smaller
+        values result in more local data being preserved.
+    n_components : int
+        The number of dimensions of the embedded space.
+    verbose : bool, optional
+        Verbosity flag controlling the amount of output generated by the algorithm, by default False.
+
+    Returns
+    -------
+    Tuple[str, np.ndarray]
+        A tuple containing a string with the name of the dimensionality reduction technique used and the
+        reduced data as a NumPy ndarray of shape (n_samples, n_components).
+
+    References
+    ----------
+    [1] McInnes, L., Healy, J., & Melville, J. (2018). Umap: Uniform manifold approximation and projection
+    for dimension reduction. arXiv preprint arXiv:1802.03426.
+    """
     import umap.umap_ as umap
 
     reducer = umap.UMAP(
@@ -519,6 +564,32 @@ def umap(
 def tsne(
     reg_props: pd.DataFrame, perplexity: float, n_components: int
 ) -> Tuple[str, np.ndarray]:
+    """
+    Applies t-SNE (t-distributed stochastic neighbor embedding) to the given
+    feature matrix.
+
+    Parameters
+    ----------
+    reg_props : pd.DataFrame
+        The input dataframe, where each row represents an object (label or a track ID) and each
+        column represents a feature/measurement.
+    perplexity : float
+        The perplexity hyperparameter for t-SNE, which is a measure of the number of neighbors.
+        It determines how to balance attention between local and global aspects of the data.
+    n_components : int
+        The dimensionality of the reduced space.
+
+    Returns
+    ----------
+    Tuple[str, np.ndarray]
+        A tuple consisting of the string with the name of the dimensionality reduction technique used
+        and a numpy array of shape (n_samples, n_components), which represents the reduced feature matrix.
+
+    References
+    ----------
+    [1] Van der Maaten, L., & Hinton, G. (2008). Visualizing data using t-SNE.
+    Journal of machine learning research, 9(11).
+    """
     from sklearn.manifold import TSNE
 
     reducer = TSNE(
@@ -535,6 +606,30 @@ def tsne(
 def pca(
     reg_props: pd.DataFrame, explained_variance_threshold: float, n_components: int
 ) -> Tuple[str, np.ndarray]:
+    """
+    Perform PCA on the input dataframe and return a tuple containing the name of the method and the transformed data.
+
+    Parameters
+    ----------
+    reg_props : pandas.DataFrame
+        The input dataframe to be transformed.
+    explained_variance_threshold : float
+        A percentage threshold for the explained variance to be retained.
+    n_components : int
+        The number of components to retain. If n_components is 0 or greater than the number of input features,
+        all components will be retained.
+
+    Returns
+    -------
+    Tuple[str, numpy.ndarray]
+        A tuple containing the name of the method and the transformed data.
+
+    Raises
+    ------
+    ValueError
+        If the explained_variance_threshold is not in the range [0, 100].
+
+    """
     from sklearn.decomposition import PCA
     from sklearn.preprocessing import StandardScaler
 

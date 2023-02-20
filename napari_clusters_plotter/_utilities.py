@@ -7,6 +7,19 @@ from qtpy.QtWidgets import QListWidgetItem
 
 
 def buttons_active(*buttons, active):
+    """
+    Set the state (enabled or disabled) of a list of buttons.
+
+    For each button in the input list, if it is visible, its enabled state is set to the value of `active`.
+    If a button is not visible or raises a `RuntimeError`, it is skipped.
+
+    Parameters
+    ----------
+    *buttons : QtWidgets.QPushButton
+        A variable number of QPushButton objects to be modified.
+    active : bool
+        A flag indicating the desired enabled state for the buttons.
+    """
     for button in buttons:
         try:
             if button.isVisible():
@@ -17,22 +30,57 @@ def buttons_active(*buttons, active):
 
 
 def widgets_active(*widgets, active):
+    """
+    Sets the visibility of a list of Qt widgets to a specified state.
+
+    Parameters
+    ----------
+    *widgets : Qt widget objects
+        The list of widgets to modify the visibility.
+    active : bool
+        If True, the widgets will be set to visible. If False, the widgets will be set to hidden.
+    """
     for widget in widgets:
         widget.setVisible(active)
 
 
 def widgets_valid(*widgets, valid):
+    """
+    Sets the background color of a group of widgets based on their validity status.
+
+    Parameters
+    ----------
+    *widgets : Qt widget objects
+        One or more widgets to set the background color of.
+    valid : bool
+        Whether the widgets are valid or not. If True, the background color will be set to the default color.
+        If False, the background color will be set to lightcoral.
+    """
     for widget in widgets:
         widget.native.setStyleSheet("" if valid else "background-color: lightcoral")
 
 
 def show_table(viewer, labels_layer):
+    """Adds a table to napari viewer."""
     from napari_skimage_regionprops import add_table
 
     add_table(labels_layer, viewer)
 
 
 def restore_defaults(widget, defaults: dict):
+    """
+    Restores the default values for a given widget based on a dictionary of default values.
+
+    This function sets each widget value to the corresponding value in the `defaults` dictionary.
+    If the widget has a "custom_name" attribute, it will also clear the contents of the custom name field.
+
+    Parameters
+    ----------
+    widget : QtWidgets.QWidget
+        The widget whose default values are being reset.
+    defaults : dict
+        A dictionary mapping containing default values.
+    """
     for item, val in defaults.items():
         getattr(widget, item).value = val
         if item == "custom_name":
@@ -40,6 +88,16 @@ def restore_defaults(widget, defaults: dict):
 
 
 def set_features(layer, tabular_data):
+    """
+    Sets the features or properties (older napari versions) of a given layer to a provided tabular data.
+
+    Parameters
+    ----------
+    layer : object
+        A layer object that has either "properties" or "features" attribute.
+    tabular_data : pandas.DataFrame
+        The tabular data to set as features or properties of the layer.
+    """
     if hasattr(layer, "properties"):
         layer.properties = tabular_data
     if hasattr(layer, "features"):

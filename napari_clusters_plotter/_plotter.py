@@ -9,6 +9,7 @@ from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from vispy.color import Color
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
@@ -28,7 +29,6 @@ from ._utilities import (
     get_nice_colormap,
 )
 
-# can be changed to frame or whatever we decide to use
 POINTER = "frame"
 
 
@@ -47,7 +47,6 @@ class PlotterWidget(QWidget):
         self.analysed_layer = None
         self.visualized_labels_layer = None
 
-        # noinspection PyPep8Naming
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
 
@@ -279,15 +278,17 @@ class PlotterWidget(QWidget):
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
-    # this function runs after the run button is clicked
     def run(
         self,
-        features,
-        plot_x_axis_name,
-        plot_y_axis_name,
+        features: pd.DataFrame,
+        plot_x_axis_name: str,
+        plot_y_axis_name: str,
         plot_cluster_name=None,
         redraw_cluster_image=True,
     ):
+        """
+        This function that runs after the run button is clicked.
+        """
         if not self.isVisible():
             # don't redraw in case the plot is invisible anyway
             return
@@ -301,6 +302,10 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
+
+        # if selected image is 4 dimensional, but does not contain frame column in its features
+        # it will be considered to be tracking data, where all labels of the same track have
+        # the same label, and each column represent track's features
         tracking_data = (
             len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
         )
@@ -347,9 +352,6 @@ class PlotterWidget(QWidget):
                 self.graphics_widget.pts,
             )
 
-            # get colormap as rgba array
-            from vispy.color import Color
-
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
             # generate dictionary mapping each prediction to its respective color
@@ -370,8 +372,7 @@ class PlotterWidget(QWidget):
             # Generating the cluster image
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
-                # generate the cluster image -> TODO change so possible
-                # with 2D timelapse data
+                # generate the cluster image
                 if len(self.analysed_layer.data.shape) == 4:
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
@@ -438,7 +439,6 @@ class PlotterWidget(QWidget):
                 n_datapoints=number_of_points,
             )
 
-            # Potting
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,
