@@ -7,6 +7,19 @@ from qtpy.QtWidgets import QListWidgetItem
 
 
 def buttons_active(*buttons, active):
+    """
+    Set the state (enabled or disabled) of a list of buttons.
+
+    For each button in the input list, if it is visible, its enabled state is set to the value of `active`.
+    If a button is not visible or raises a `RuntimeError`, it is skipped.
+
+    Parameters
+    ----------
+    *buttons : QtWidgets.QPushButton
+        A variable number of QPushButton objects to be modified.
+    active : bool
+        A flag indicating the desired enabled state for the buttons.
+    """
     for button in buttons:
         try:
             if button.isVisible():
@@ -17,22 +30,57 @@ def buttons_active(*buttons, active):
 
 
 def widgets_active(*widgets, active):
+    """
+    Sets the visibility of a list of Qt widgets to a specified state.
+
+    Parameters
+    ----------
+    *widgets : Qt widget objects
+        The list of widgets to modify the visibility.
+    active : bool
+        If True, the widgets will be set to visible. If False, the widgets will be set to hidden.
+    """
     for widget in widgets:
         widget.setVisible(active)
 
 
 def widgets_valid(*widgets, valid):
+    """
+    Sets the background color of a group of widgets based on their validity status.
+
+    Parameters
+    ----------
+    *widgets : Qt widget objects
+        One or more widgets to set the background color of.
+    valid : bool
+        Whether the widgets are valid or not. If True, the background color will be set to the default color.
+        If False, the background color will be set to lightcoral.
+    """
     for widget in widgets:
         widget.native.setStyleSheet("" if valid else "background-color: lightcoral")
 
 
 def show_table(viewer, labels_layer):
+    """Adds a table to napari viewer."""
     from napari_skimage_regionprops import add_table
 
     add_table(labels_layer, viewer)
 
 
 def restore_defaults(widget, defaults: dict):
+    """
+    Restores the default values for a given widget based on a dictionary of default values.
+
+    This function sets each widget value to the corresponding value in the `defaults` dictionary.
+    If the widget has a "custom_name" attribute, it will also clear the contents of the custom name field.
+
+    Parameters
+    ----------
+    widget : QtWidgets.QWidget
+        The widget whose default values are being reset.
+    defaults : dict
+        A dictionary mapping containing default values.
+    """
     for item, val in defaults.items():
         getattr(widget, item).value = val
         if item == "custom_name":
@@ -40,6 +88,16 @@ def restore_defaults(widget, defaults: dict):
 
 
 def set_features(layer, tabular_data):
+    """
+    Sets the features or properties (older napari versions) of a given layer to a provided tabular data.
+
+    Parameters
+    ----------
+    layer : object
+        A layer object that has either "properties" or "features" attribute.
+    tabular_data : pandas.DataFrame
+        The tabular data to set as features or properties of the layer.
+    """
     if hasattr(layer, "properties"):
         layer.properties = tabular_data
     if hasattr(layer, "features"):
@@ -47,6 +105,19 @@ def set_features(layer, tabular_data):
 
 
 def get_layer_tabular_data(layer):
+    """
+    Return tabular data associated with a layer object.
+
+    Parameters:
+    -----------
+    layer : object (napari layer)
+        An object that may contain tabular data as either properties (older napari versions) or features.
+
+    Returns :
+    --------
+    pandas.DataFrame or None
+        A DataFrame containing the tabular data, or None if no data was found.
+    """
     if hasattr(layer, "properties") and layer.properties is not None:
         return pd.DataFrame(layer.properties)
     if hasattr(layer, "features") and layer.features is not None:
@@ -55,6 +126,18 @@ def get_layer_tabular_data(layer):
 
 
 def add_column_to_layer_tabular_data(layer, column_name, data):
+    """
+    Add a new column with a given name and data to a layer's tabular data.
+
+    Parameters
+    ----------
+    layer : napari.layer
+        A napari layer to which tabular data will be added
+    column_name : str
+        The name of the new column to add to the layer's tabular data.
+    data : iterable
+        The data to add to the new column.
+    """
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
     if hasattr(layer, "features"):
@@ -62,7 +145,7 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
 
 
 def catch_NaNs(func):
-    "Remove NaNs from array for processing and put result to correct location."
+    """Remove NaNs from array for processing and put result to correct location."""
 
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -84,8 +167,24 @@ def catch_NaNs(func):
     return wrapper
 
 
-# TODO docstring
 def update_properties_list(widget, exclude_list):
+    """
+    Updates the properties list of a given widget with the properties of a selected layer.
+    The function first gets the currently selected layer from the widget's label select
+    dropdown. If a layer is selected, it retrieves the tabular data of the layer using the
+    get_layer_tabular_data() function. It then populates the properties list of the widget with
+    the keys of the tabular data. Any properties whose names match any of the strings in the
+    exclude_list, as well as properties named "index" or "label", are skipped. If there were
+    any properties that were selected in the old properties list, the function selects them
+    again in the updated properties list.
+
+    Parameters
+    -----------
+    widget : QWidget
+       The widget whose properties list will be updated.
+    exclude_list : list of str
+        A list of property names to exclude from the properties list.
+    """
     selected_layer = widget.labels_select.value
 
     if selected_layer is not None:
@@ -114,29 +213,53 @@ def update_properties_list(widget, exclude_list):
 
 def generate_cluster_image(label_image, predictionlist):
     """
-    Returns a label image where each label value corresponds
-    to the cluster identity defined by the predictionlist.
-    it is assumed that len(predictionlist) == max(label_image)
+    Generates a clusters image from a label image and a list of cluster predictions,
+    where each label value corresponds to the cluster identity.
+    It is assumed that len(predictionlist) == max(label_image)
 
     Parameters
     ----------
     label_image: ndarray or dask array
         Label image used for cluster predictions
     predictionlist: array
-        Array containing cluster identities for each label
+        An array containing cluster identities for each label
+
+    Returns
+    ----------
+    ndarray: The clusters image as a numpy array.
     """
 
     # reforming the prediction list, this is done to account
     # for cluster labels that start at 0, conveniently hdbscan
-    # labelling starts at -1 for noise, removing these from
-    # the labels
+    # labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
 
     return relabel(label_image, list(predictionlist_new)).astype("uint64")
 
 
-# TODO docstring
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
+    """
+    Generates a timelapse of cluster images using Dask.
+
+    Given a label image and a list of prediction lists, this function generates a timelapse
+    of cluster images using Dask. Each prediction list contains the predicted cluster labels
+    for the corresponding frame in the label image.
+
+    Parameters
+    -----------
+    label_image : ndarray
+        A NumPy array representing the label image.
+    prediction_list_list : list
+        A list of prediction lists. Each prediction list contains the predicted cluster labels
+        for the corresponding frame in the label image.
+
+    Returns
+    -----------
+    dask.array.Array : A 4D Dask array representing the timelapse of cluster images.
+                       The first dimension corresponds to time, while the remaining
+                       three dimensions correspond to the shape of each cluster image.
+
+    """
     import dask.array as da
     from dask import delayed
 
