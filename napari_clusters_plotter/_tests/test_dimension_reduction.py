@@ -68,6 +68,10 @@ def test_bad_measurements(qtbot, make_napari_viewer):
         n_components=2,
         explained_variance=95.0,
         pca_components=0,
+        mds_metric=True,
+        mds_n_init=4,
+        mds_max_iter=300,
+        mds_eps=0.001,
         umap_multithreading=True,
     )
 
