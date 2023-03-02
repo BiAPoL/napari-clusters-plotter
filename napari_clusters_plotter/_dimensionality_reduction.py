@@ -249,8 +249,8 @@ class DimensionalityReductionWidget(QWidget):
         (self.mds_eps_container, self.mds_eps) = float_sbox_containter_and_selection(
             name="Relative Tolerance",
             label="Relative Tolerance",
-            value=1e-3,
-            min=1e-10,
+            value=0.001,
+            min=0.00000001,
             visible=False,
             tool_tip="Relative tolerance with respect to stress at which to "
             "declare convergence.",
@@ -757,7 +757,7 @@ def mds(
     n_init: int = 4,
     metric: bool = True,
     max_iter: int = 300,
-    eps: float = 1e-3,
+    eps: float = 0.001,
 ) -> Tuple[str, np.ndarray]:
     """
     Applies Multidimensional scaling.
