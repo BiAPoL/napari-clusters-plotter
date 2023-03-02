@@ -65,6 +65,8 @@ class DimensionalityReductionWidget(QWidget):
         UMAP = "UMAP"
         TSNE = "t-SNE"
         PCA = "PCA"
+        ISOMAP = "Isomap"
+        MDS = "MDS"
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -158,7 +160,7 @@ class DimensionalityReductionWidget(QWidget):
             min=1,
             label="Number of Components",
             tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#n-components",
-            tool_tip=("Dimension of the embedded space."),
+            tool_tip="Dimension of the embedded space.",
         )
 
         # Minimum percentage of variance explained by kept PCA components,
@@ -178,7 +180,7 @@ class DimensionalityReductionWidget(QWidget):
                 "The explained variance threshold sets the amount of variance in the dataset that can "
                 "minimally be\n represented by the principal components. The closer the threshold is to"
                 " 100% ,the more the variance in\nthe dataset can be accounted for by the chosen "
-                "principal components (and the less dimensionality\nreduction will be perfomed as a result)."
+                "principal components (and the less dimensionality\nreduction will be performed as a result)."
             ),
         )
 
@@ -195,7 +197,7 @@ class DimensionalityReductionWidget(QWidget):
         )  # hide this container until umap is selected
 
         self.settings_container_multithreading, self.multithreading = checkbox(
-            name="Enable multi-threading",
+            name="Enable Multi-threading",
             value=DEFAULTS["umap_separate_thread"],
             visible=True,
             tool_tip="Only enable if you are running napari not from the Jupyter notebook or your data is not big.\n"
@@ -203,6 +205,56 @@ class DimensionalityReductionWidget(QWidget):
         )
         self.advanced_options_container.addWidget(
             self.settings_container_multithreading
+        )
+
+        # additional options for MDS
+        (self.mds_metric_container, self.mds_metric) = checkbox(
+            "Metric",
+            value=True,
+            visible=False,
+            tool_tip="If selected perform metric MDS; otherwise, nonmetric MDS, where dissimilarities with 0 "
+            "are considered as missing values.",
+            tool_link="https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling",
+        )
+
+        (
+            self.mds_n_init_container,
+            self.mds_n_init,
+        ) = int_sbox_containter_and_selection(
+            name="Number of Initializations",
+            label="Number of Initializations",
+            value=4,
+            min=1,
+            visible=False,
+            tool_tip="Number of times the SMACOF algorithm will be run with different"
+            " initializations. The final results\nwill be the best output of"
+            " the runs, determined by the run with the smallest final stress.",
+            tool_link="https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling",
+        )
+
+        (
+            self.mds_max_iter_container,
+            self.mds_max_iter,
+        ) = int_sbox_containter_and_selection(
+            name="Max Number of Iterations",
+            label="Max Number of Iterations",
+            value=300,
+            min=1,
+            visible=False,
+            tool_tip="Maximum number of iterations of the SMACOF algorithm for a "
+            "single run.",
+            tool_link="https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling",
+        )
+
+        (self.mds_eps_container, self.mds_eps) = float_sbox_containter_and_selection(
+            name="Relative Tolerance",
+            label="Relative Tolerance",
+            value=1e-3,
+            min=1e-10,
+            visible=False,
+            tool_tip="Relative tolerance with respect to stress at which to "
+            "declare convergence.",
+            tool_link="https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling",
         )
 
         # making buttons
@@ -235,6 +287,10 @@ class DimensionalityReductionWidget(QWidget):
                 self.pca_components.value,
                 self.n_components.value,
                 self.multithreading.value,
+                self.mds_metric.value,
+                self.mds_n_init.value,
+                self.mds_max_iter.value,
+                self.mds_eps.value,
             )
 
         # connect buttons with functions that need to be triggered by them
@@ -264,6 +320,10 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.n_components_container)
         self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
+        self.layout().addWidget(self.mds_metric_container)
+        self.layout().addWidget(self.mds_n_init_container)
+        self.layout().addWidget(self.mds_max_iter_container)
+        self.layout().addWidget(self.mds_eps_container)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(self.advanced_options_container)
         self.layout().addWidget(update_container)
@@ -316,10 +376,26 @@ class DimensionalityReductionWidget(QWidget):
             active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
         widgets_active(
+            self.n_neighbors_container,
+            active=self.algorithm_choice_list.current_choice
+            == self.Options.ISOMAP.value,
+        )
+        widgets_active(
+            self.mds_metric_container,
+            self.mds_n_init_container,
+            self.mds_max_iter_container,
+            self.mds_eps_container,
+            active=self.algorithm_choice_list.current_choice == self.Options.MDS.value,
+        )
+        widgets_active(
             self.settings_container_scaler,
+            self.n_components_container,
             active=(
                 self.algorithm_choice_list.current_choice == self.Options.UMAP.value
                 or self.algorithm_choice_list.current_choice == self.Options.TSNE.value
+                or self.algorithm_choice_list.current_choice
+                == self.Options.ISOMAP.value
+                or self.algorithm_choice_list.current_choice == self.Options.MDS.value
             ),
         )
         widgets_active(
@@ -329,11 +405,6 @@ class DimensionalityReductionWidget(QWidget):
         widgets_active(
             self.pca_components_container,
             active=self.algorithm_choice_list.current_choice == self.Options.PCA.value,
-        )
-        widgets_active(
-            self.n_components_container,
-            active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value
-            or self.algorithm_choice_list.current_choice == self.Options.TSNE.value,
         )
         widgets_active(
             self.explained_variance_container,
@@ -362,7 +433,11 @@ class DimensionalityReductionWidget(QWidget):
         explained_variance,
         pca_components,
         n_components,
-        umap_multithreading=False,
+        umap_multithreading,
+        mds_metric,
+        mds_n_init,
+        mds_max_iter,
+        mds_eps,
     ):
         """
         The function triggered by clicking the run button.
@@ -438,7 +513,12 @@ class DimensionalityReductionWidget(QWidget):
                             labels_layer, "PC_" + str(i), result[1][:, i]
                         )
 
-                elif result[0] == "UMAP" or result[0] == "t-SNE":
+                elif (
+                    result[0] == "UMAP"
+                    or result[0] == "t-SNE"
+                    or result[0] == "Isomap"
+                    or result[0] == "MDS"
+                ):
                     # write result back to properties/features of the layer
                     for i in range(0, n_components):
                         add_column_to_layer_tabular_data(
@@ -505,6 +585,33 @@ class DimensionalityReductionWidget(QWidget):
                     properties_to_reduce,
                     explained_variance_threshold=explained_variance,
                     n_components=pca_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+
+            elif selected_algorithm == self.Options.ISOMAP.value:
+                self.worker = create_worker(
+                    isomap,
+                    properties_to_reduce,
+                    n_neighbors=n_neighbours,
+                    n_components=n_components,
+                    _progress=True,
+                )
+                self.worker.returned.connect(return_func_dim_reduction)
+                self.worker.errored.connect(activate_buttons)
+                self.worker.start()
+
+            elif selected_algorithm == self.Options.MDS.value:
+                self.worker = create_worker(
+                    mds,
+                    properties_to_reduce,
+                    n_components=n_components,
+                    metric=mds_metric,
+                    n_init=mds_n_init,
+                    max_iter=mds_max_iter,
+                    eps=mds_eps,
                     _progress=True,
                 )
                 self.worker.returned.connect(return_func_dim_reduction)
@@ -602,6 +709,107 @@ def tsne(
         random_state=42,
     )
     return "t-SNE", reducer.fit_transform(reg_props)
+
+
+@catch_NaNs
+def isomap(
+    reg_props: pd.DataFrame, n_neighbors: int, n_components: int
+) -> Tuple[str, np.ndarray]:
+    """
+    Applies non-linear dimensionality reduction through Isometric Mapping.
+
+    Parameters
+    ----------
+    reg_props : pd.DataFrame
+        The input dataframe, where each row represents an object (label or a track ID) and each
+        column represents a feature/measurement.
+    n_neighbors : int, default=5
+        Number of neighbors to consider for each point.
+    n_components : int, default=2
+        The dimensionality of the reduced space.
+
+    Returns
+    ----------
+    Tuple[str, np.ndarray]
+        A tuple consisting of the string with the name of the dimensionality reduction technique used
+        and a numpy array of shape (n_samples, n_components), which represents the reduced feature matrix.
+
+    References
+    ----------
+    [1] Tenenbaum, J. B., Silva, V. D., & Langford, J. C. (2000). A global geometric framework for nonlinear
+    dimensionality reduction. science, 290(5500), 2319-2323.
+    """
+    from sklearn.manifold import Isomap
+
+    reducer = Isomap(
+        n_neighbors=n_neighbors,
+        n_components=n_components,
+        eigen_solver="auto",
+        metric="minkowski",
+    )
+    return "Isomap", reducer.fit_transform(reg_props)
+
+
+@catch_NaNs
+def mds(
+    reg_props: pd.DataFrame,
+    n_components: int,
+    n_init: int = 4,
+    metric: bool = True,
+    max_iter: int = 300,
+    eps: float = 1e-3,
+) -> Tuple[str, np.ndarray]:
+    """
+    Applies Multidimensional scaling.
+
+    Read me at scikit-learn documentation:
+    https://scikit-learn.org/stable/modules/generated/sklearn.manifold.MDS.html#sklearn.manifold.MDS
+
+    Parameters
+    ----------
+    reg_props : pd.DataFrame
+        The input dataframe, where each row represents an object (label or a track ID) and each
+        column represents a feature/measurement.
+    n_components : int
+        The dimensionality of the reduced space.
+    n_init : int
+        Number of times the SMACOF algorithm will be run with different initializations. The final results
+        will be the best output of the runs, determined by the run with the smallest final stress.
+    metric : bool
+        If True, perform metric MDS; otherwise, perform nonmetric MDS.
+        When False (i.e. non-metric MDS), dissimilarities with 0 are considered as missing values.
+    max_iter : int
+        Maximum number of iterations of the SMACOF algorithm for a single run.
+    eps : float
+        Relative tolerance with respect to stress at which to declare convergence. The value of eps should
+        be tuned separately depending on whether normalized_stress is being used.
+
+    Returns
+    ----------
+    Tuple[str, np.ndarray]
+        A tuple consisting of the string with the name of the dimensionality reduction technique used
+        and a numpy array of shape (n_samples, n_components), which represents the reduced feature matrix.
+
+    References
+    ----------
+    [1] "Nonmetric multidimensional scaling: a numerical method" Kruskal, J. Psychometrika, 29 (1964)
+    [2] "Multidimensional scaling by optimizing goodness of fit to a nonmetric hypothesis"
+    Kruskal, J. Psychometrika, 29, (1964)
+    [3] "Modern Multidimensional Scaling - Theory and Applications" Borg, I.; Groenen P. Springer
+    Series in Statistics (1997)
+    """
+    from sklearn.manifold import MDS
+
+    reducer = MDS(
+        n_components=n_components,
+        metric=metric,
+        n_init=n_init,
+        max_iter=max_iter,
+        eps=eps,
+        verbose=1,
+        random_state=42,
+    )
+    return "MDS", reducer.fit_transform(reg_props)
 
 
 @catch_NaNs
