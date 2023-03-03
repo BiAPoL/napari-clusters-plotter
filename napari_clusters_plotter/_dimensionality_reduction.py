@@ -560,7 +560,7 @@ class DimensionalityReductionWidget(QWidget):
                 # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
                 result = umap(
                     properties_to_reduce,
-                    n_neigh=n_neighbours,
+                    n_neighbors=n_neighbours,
                     n_components=n_components,
                     verbose=False,
                 )
@@ -626,7 +626,7 @@ class DimensionalityReductionWidget(QWidget):
 
 @catch_NaNs
 def umap(
-    reg_props: pd.DataFrame, n_neigh: int, n_components: int, verbose: bool = False
+    reg_props: pd.DataFrame, n_neighbors: int, n_components: int, verbose: bool = False
 ) -> Tuple[str, np.ndarray]:
     """
     Performs dimensionality reduction using the Uniform Manifold Approximation Projection (UMAP) on the given data.
@@ -637,7 +637,7 @@ def umap(
     ----------
     reg_props : pd.DataFrame
         A pandas DataFrame containing the input data to be reduced.
-    n_neigh : int
+    n_neighbors : int
         The size of local neighborhood (in terms of number of neighboring sample points) used for
         manifold approximation. Larger values result in more global views of the manifold, while smaller
         values result in more local data being preserved.
@@ -662,7 +662,7 @@ def umap(
     reducer = umap.UMAP(
         random_state=133,
         n_components=n_components,
-        n_neighbors=n_neigh,
+        n_neighbors=n_neighbors,
         verbose=verbose,
         tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
