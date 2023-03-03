@@ -542,7 +542,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.worker = create_worker(
                     umap,
                     properties_to_reduce,
-                    n_neigh=n_neighbours,
+                    n_neighbors=n_neighbours,
                     n_components=n_components,
                     verbose=True,
                     _progress=True,
