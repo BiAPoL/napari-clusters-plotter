@@ -8,7 +8,7 @@ from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
-from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QCheckBox
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
@@ -136,11 +136,33 @@ class PlotterWidget(QWidget):
         run_container, run_button = button("Run")
         update_container, update_button = button("Update Measurements")
 
+        # checkbox background
+        def checkbox_status_changed():
+            if self.cluster_ids is not None:
+                clustering_ID = "MANUAL_CLUSTER_ID"
+                features = get_layer_tabular_data(self.analysed_layer)
+
+                # redraw the whole plot
+                self.run(
+                    features,
+                    self.plot_x_axis_name,
+                    self.plot_y_axis_name,
+                    plot_cluster_name=clustering_ID,
+                )
+
+        checkbox_container = QWidget()
+        checkbox_container.setLayout(QHBoxLayout())
+        checkbox_container.layout().addWidget(QLabel("Hide non-selected clusters"))
+        self.plot_hide_non_selected = QCheckBox()
+        self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
+        checkbox_container.layout().addWidget(self.plot_hide_non_selected)
+
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
+        self.layout().addWidget(checkbox_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
@@ -153,6 +175,9 @@ class PlotterWidget(QWidget):
 
         # adding spacing between fields for selecting two axes
         axes_container.layout().setSpacing(6)
+
+
+
 
         def run_clicked():
             if self.labels_select.value is None:
@@ -316,6 +341,10 @@ class PlotterWidget(QWidget):
             and plot_cluster_name != "label"
             and plot_cluster_name in list(features.keys())
         ):
+
+            if self.plot_hide_non_selected.isChecked():
+                features[plot_cluster_name][features[plot_cluster_name]==0] = -1 # make unselected points to noise points
+
             # fill all prediction nan values with -1 -> turns them
             # into noise points
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
