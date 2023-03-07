@@ -8,7 +8,14 @@ from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
-from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget, QCheckBox
+from qtpy.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
@@ -16,8 +23,8 @@ from ._Qt_code import (
     MplCanvas,
     MyNavigationToolbar,
     SelectFromCollection,
-    collapsible_box,
     button,
+    collapsible_box,
     labels_container_and_selection,
     title,
 )
@@ -140,6 +147,7 @@ class PlotterWidget(QWidget):
 
         # checkbox background
         self.advanced_options_container = collapsible_box("Expand for advanced options")
+
         def checkbox_status_changed():
             if self.cluster_ids is not None:
                 clustering_ID = "MANUAL_CLUSTER_ID"
@@ -179,9 +187,6 @@ class PlotterWidget(QWidget):
 
         # adding spacing between fields for selecting two axes
         axes_container.layout().setSpacing(6)
-
-
-
 
         def run_clicked():
             if self.labels_select.value is None:
@@ -345,9 +350,10 @@ class PlotterWidget(QWidget):
             and plot_cluster_name != "label"
             and plot_cluster_name in list(features.keys())
         ):
-
             if self.plot_hide_non_selected.isChecked():
-                features[plot_cluster_name][features[plot_cluster_name]==0] = -1 # make unselected points to noise points
+                features[plot_cluster_name][
+                    features[plot_cluster_name] == 0
+                ] = -1  # make unselected points to noise points
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
