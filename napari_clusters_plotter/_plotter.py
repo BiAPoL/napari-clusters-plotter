@@ -16,6 +16,7 @@ from ._Qt_code import (
     MplCanvas,
     MyNavigationToolbar,
     SelectFromCollection,
+    collapsible_box,
     button,
     labels_container_and_selection,
     title,
@@ -138,6 +139,7 @@ class PlotterWidget(QWidget):
         update_container, update_button = button("Update Measurements")
 
         # checkbox background
+        self.advanced_options_container = collapsible_box("Expand for advanced options")
         def checkbox_status_changed():
             if self.cluster_ids is not None:
                 clustering_ID = "MANUAL_CLUSTER_ID"
@@ -157,13 +159,14 @@ class PlotterWidget(QWidget):
         self.plot_hide_non_selected = QCheckBox()
         self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
         checkbox_container.layout().addWidget(self.plot_hide_non_selected)
+        self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
-        self.layout().addWidget(checkbox_container)
+        self.layout().addWidget(self.advanced_options_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
