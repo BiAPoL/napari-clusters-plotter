@@ -8,7 +8,15 @@ from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
-from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
@@ -33,12 +41,24 @@ POINTER = "frame"
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
-class PlotterWidget(QWidget):
+class PlotterWidget(QMainWindow):
     def __init__(self, napari_viewer):
         super().__init__()
 
         self.cluster_ids = None
         self.viewer = napari_viewer
+
+        # create a scroll area
+        self.scrollArea = QScrollArea()
+        self.setCentralWidget(self.scrollArea)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.contents = QWidget()
+        self.scrollArea.setWidget(self.contents)
+
+        self.layout = QVBoxLayout(self.contents)
+        self.layout.setAlignment(Qt.AlignTop)
 
         # a figure instance to plot on
         self.figure = Figure()
@@ -99,14 +119,12 @@ class PlotterWidget(QWidget):
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
-        graph_container.setMaximumHeight(500)
+        graph_container.setMinimumHeight(300)
         graph_container.setLayout(QtWidgets.QVBoxLayout())
         graph_container.layout().addWidget(self.toolbar)
         graph_container.layout().addWidget(self.graphics_widget)
 
-        # QVBoxLayout - lines up widgets vertically
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(graph_container)
+        self.layout.addWidget(graph_container, alignment=Qt.AlignTop)
 
         label_container = title("<b>Plotting</b>")
 
@@ -137,17 +155,17 @@ class PlotterWidget(QWidget):
         update_container, update_button = button("Update Measurements")
 
         # adding all widgets to the layout
-        self.layout().addWidget(label_container)
-        self.layout().addWidget(labels_layer_selection_container)
-        self.layout().addWidget(axes_container)
-        self.layout().addWidget(cluster_container)
-        self.layout().addWidget(update_container)
-        self.layout().addWidget(run_container)
-        self.layout().setSpacing(0)
+        self.layout.addWidget(label_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(update_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(run_container, alignment=Qt.AlignTop)
+        self.layout.setSpacing(0)
 
         # go through all widgets and change spacing
-        for i in range(self.layout().count()):
-            item = self.layout().itemAt(i).widget()
+        for i in range(self.layout.count()):
+            item = self.layout.itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
