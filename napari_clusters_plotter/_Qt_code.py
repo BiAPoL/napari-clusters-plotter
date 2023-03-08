@@ -2,15 +2,14 @@ import os
 from pathlib import Path as PathL
 
 import numpy as np
+import pandas as pd
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-from matplotlib.path import Path
 from matplotlib.patches import Polygon
+from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector
-import matplotlib.pyplot as plt
-import pandas as pd
 from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
@@ -370,7 +369,7 @@ class SelectFrom2DHistogram:
         self.ind_mask = path.contains_points(self.xys)
         self.ind = np.nonzero(self.ind_mask)[0]
 
-        p = Polygon(verts, facecolor='red', alpha=0.5)
+        p = Polygon(verts, facecolor="red", alpha=0.5)
         self.parent.polygons.append(p)
         self.ax.add_patch(p)
         self.canvas.draw_idle()
@@ -519,7 +518,7 @@ class MplCanvas(FigureCanvas):
         if len(colors) == 1:
             self.polygons = [self.polygons[-1]]
 
-        self.axes.imshow(heatmap.T, extent=extent, origin='lower')
+        self.axes.imshow(heatmap.T, extent=extent, origin="lower")
 
         for poly_i, poly in enumerate(self.polygons):
             poly.set_facecolor(colors[poly_i])
@@ -527,7 +526,7 @@ class MplCanvas(FigureCanvas):
 
         # ax = plt.gca()
 
-        full_data = pd.concat([data_x,data_y],axis=1)
+        full_data = pd.concat([data_x, data_y], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
 
@@ -545,7 +544,6 @@ class MplCanvas(FigureCanvas):
             self.axes,
             self.pts,
         )
-
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure

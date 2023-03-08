@@ -22,7 +22,6 @@ from ._Qt_code import (
     ICON_ROOT,
     MplCanvas,
     MyNavigationToolbar,
-    SelectFromCollection,
     button,
     collapsible_box,
     labels_container_and_selection,
