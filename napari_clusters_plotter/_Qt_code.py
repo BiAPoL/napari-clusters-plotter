@@ -512,8 +512,8 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
         self.is_pressed = None
 
-    def make_2d_histogram(self, data_x, data_y, colors):
-        heatmap, xedges, yedges = np.histogram2d(data_x, data_y, bins=400)
+    def make_2d_histogram(self, data_x, data_y, colors, bin_number=400):
+        heatmap, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
         if len(colors) == 1:
             self.polygons = [self.polygons[-1]]

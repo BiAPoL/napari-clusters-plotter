@@ -15,8 +15,10 @@ from qtpy.QtWidgets import (
     QLabel,
     QVBoxLayout,
     QWidget,
+    QSpinBox,
+    QPushButton
 )
-
+from enum import Enum, auto
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
     ICON_ROOT,
@@ -37,6 +39,9 @@ from ._utilities import (
 
 POINTER = "frame"
 
+class PlottingType(Enum):
+    HISTOGRAM_2D = auto()
+    SCATTER = auto()
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
@@ -184,16 +189,56 @@ class PlotterWidget(QWidget):
                 # In this case, replotting is not yet possible
                 pass
 
+            if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
+                self.bin_number_container.setVisible(True)
+            else:
+                self.bin_number_container.setVisible(False)
+
+        def bin_number_set():
+            clustering_ID = None
+            if self.cluster_ids is not None:
+                clustering_ID = "MANUAL_CLUSTER_ID"
+
+            features = get_layer_tabular_data(self.analysed_layer)
+
+            # redraw the whole plot
+
+            try:
+                self.run(
+                    features,
+                    self.plot_x_axis_name,
+                    self.plot_y_axis_name,
+                    plot_cluster_name=clustering_ID,
+                )
+            except AttributeError:
+                # In this case, replotting is not yet possible
+                pass
 
         # Combobox with plotting types
         combobox_plotting_container = QWidget()
         combobox_plotting_container.setLayout(QHBoxLayout())
         combobox_plotting_container.layout().addWidget(QLabel("Plotting type"))
         self.plotting_type = QComboBox()
-        self.plotting_type.addItems(["Scatter", "2D Histogram"])
+        self.plotting_type.addItems([PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name])
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
-
         combobox_plotting_container.layout().addWidget(self.plotting_type)
+
+        self.bin_number_container = QWidget()
+        self.bin_number_container.setLayout(QHBoxLayout())
+        self.bin_number_container.layout().addWidget(QLabel("Number of bins:"))
+        self.bin_number_spinner = QSpinBox()
+        self.bin_number_spinner.setMinimum(10)
+        self.bin_number_spinner.setMaximum(1000)
+        self.bin_number_spinner.setValue(400)
+        self.bin_number_container.layout().addWidget(self.bin_number_spinner)
+        self.bin_number_set = QPushButton("Set")
+        self.bin_number_set.clicked.connect(bin_number_set)
+        self.bin_number_container.layout().addWidget(self.bin_number_set)
+
+
+
+        self.bin_number_container.setVisible(False)
+
 
         # Checkbox to hide non-selected clusters
         checkbox_container = QWidget()
@@ -204,6 +249,7 @@ class PlotterWidget(QWidget):
         checkbox_container.layout().addWidget(self.plot_hide_non_selected)
 
         self.advanced_options_container.addWidget(combobox_plotting_container)
+        self.advanced_options_container.addWidget(self.bin_number_container)
         self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
@@ -415,7 +461,7 @@ class PlotterWidget(QWidget):
                 color_hex_list=colors,
             )
 
-            if self.plotting_type.currentText() == "Scatter":
+            if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
@@ -425,7 +471,7 @@ class PlotterWidget(QWidget):
                     for x in np.unique(self.cluster_ids)[1:]
                 ]
                 self.graphics_widget.make_2d_histogram(
-                    self.data_x, self.data_y, cluster_colors
+                    self.data_x, self.data_y, cluster_colors, bin_number=int(self.bin_number_spinner.value())
                 )
 
             from vispy.color import Color
@@ -517,12 +563,12 @@ class PlotterWidget(QWidget):
                 n_datapoints=number_of_points,
             )
 
-            if self.plotting_type.currentText() == "Scatter":
+            if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
             else:
-                self.graphics_widget.make_2d_histogram(self.data_x, self.data_y, [])
+                self.graphics_widget.make_2d_histogram(self.data_x, self.data_y, [], bin_number=int(self.bin_number_spinner.value()))
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
