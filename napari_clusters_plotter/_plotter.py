@@ -107,7 +107,7 @@ class PlotterWidget(QWidget):
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
-        graph_container.setMaximumHeight(500)
+        #graph_container.setMaximumHeight(500)
         graph_container.setLayout(QtWidgets.QVBoxLayout())
         graph_container.layout().addWidget(self.toolbar)
         graph_container.layout().addWidget(self.graphics_widget)
@@ -162,6 +162,7 @@ class PlotterWidget(QWidget):
                     plot_cluster_name=clustering_ID,
                 )
         def plotting_type_changed():
+
             clustering_ID=None
             if self.cluster_ids is not None:
                 clustering_ID = "MANUAL_CLUSTER_ID"
@@ -169,12 +170,17 @@ class PlotterWidget(QWidget):
             features = get_layer_tabular_data(self.analysed_layer)
 
             # redraw the whole plot
-            self.run(
-                features,
-                self.plot_x_axis_name,
-                self.plot_y_axis_name,
-                plot_cluster_name=clustering_ID,
-            )
+
+            try:
+                self.run(
+                    features,
+                    self.plot_x_axis_name,
+                    self.plot_y_axis_name,
+                    plot_cluster_name=clustering_ID,
+                )
+            except AttributeError:
+                # In this case, replotting is not yet possible
+                pass
 
 
         # Combobox with plotting types
@@ -186,6 +192,8 @@ class PlotterWidget(QWidget):
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
 
         combobox_plotting_container.layout().addWidget(self.plotting_type)
+
+        #self.num_bins = QComboBox()
 
         # Checkbox to hide non-selected clusters
         checkbox_container = QWidget()
