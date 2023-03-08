@@ -1,5 +1,6 @@
 import os
 import warnings
+from enum import Enum, auto
 
 import numpy as np
 import pandas as pd
@@ -13,12 +14,12 @@ from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
+    QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
-    QSpinBox,
-    QPushButton
 )
-from enum import Enum, auto
+
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
     ICON_ROOT,
@@ -39,9 +40,11 @@ from ._utilities import (
 
 POINTER = "frame"
 
+
 class PlottingType(Enum):
     HISTOGRAM_2D = auto()
     SCATTER = auto()
+
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
@@ -218,7 +221,9 @@ class PlotterWidget(QWidget):
         combobox_plotting_container.setLayout(QHBoxLayout())
         combobox_plotting_container.layout().addWidget(QLabel("Plotting type"))
         self.plotting_type = QComboBox()
-        self.plotting_type.addItems([PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name])
+        self.plotting_type.addItems(
+            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name]
+        )
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
         combobox_plotting_container.layout().addWidget(self.plotting_type)
 
@@ -234,10 +239,7 @@ class PlotterWidget(QWidget):
         self.bin_number_set.clicked.connect(bin_number_set)
         self.bin_number_container.layout().addWidget(self.bin_number_set)
 
-
-
         self.bin_number_container.setVisible(False)
-
 
         # Checkbox to hide non-selected clusters
         checkbox_container = QWidget()
@@ -470,7 +472,10 @@ class PlotterWidget(QWidget):
                     for x in np.unique(self.cluster_ids)[1:]
                 ]
                 self.graphics_widget.make_2d_histogram(
-                    self.data_x, self.data_y, cluster_colors, bin_number=int(self.bin_number_spinner.value())
+                    self.data_x,
+                    self.data_y,
+                    cluster_colors,
+                    bin_number=int(self.bin_number_spinner.value()),
                 )
 
             from vispy.color import Color
@@ -567,7 +572,12 @@ class PlotterWidget(QWidget):
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
             else:
-                self.graphics_widget.make_2d_histogram(self.data_x, self.data_y, [], bin_number=int(self.bin_number_spinner.value()))
+                self.graphics_widget.make_2d_histogram(
+                    self.data_x,
+                    self.data_y,
+                    [],
+                    bin_number=int(self.bin_number_spinner.value()),
+                )
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
