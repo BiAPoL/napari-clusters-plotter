@@ -7,7 +7,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.path import Path
+from matplotlib.patches import Polygon
 from matplotlib.widgets import LassoSelector, RectangleSelector
+import matplotlib.pyplot as plt
+import pandas as pd
 from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
@@ -351,6 +354,35 @@ def algorithm_choice(name: str, value, options: dict, label: str):
     return container, choice_list
 
 
+class SelectFrom2DHistogram:
+    def __init__(self, parent, ax, full_data):
+        self.parent = parent
+        self.ax = ax
+        self.canvas = ax.figure.canvas
+        self.xys = full_data
+
+        self.lasso = LassoSelector(ax, onselect=self.onselect)
+        self.ind = []
+        self.ind_mask = []
+
+    def onselect(self, verts):
+        path = Path(verts)
+        self.ind_mask = path.contains_points(self.xys)
+        self.ind = np.nonzero(self.ind_mask)[0]
+
+        p = Polygon(verts, facecolor='red', alpha=0.5)
+        self.parent.polygons.append(p)
+        self.ax.add_patch(p)
+        self.canvas.draw_idle()
+
+        if self.parent.manual_clustering_method is not None:
+            self.parent.manual_clustering_method(self.ind_mask)
+
+    def disconnect(self):
+        self.lasso.disconnect_events()
+        self.canvas.draw_idle()
+
+
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
 class SelectFromCollection:
@@ -418,6 +450,7 @@ class SelectFromCollection:
 
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=7, height=4, manual_clustering_method=None):
+        print("MAKE FIGURE CANVAS")
         self.fig = Figure(figsize=(width, height))
         self.manual_clustering_method = manual_clustering_method
 
@@ -427,6 +460,9 @@ class MplCanvas(FigureCanvas):
 
         # changing color of plot background to napari main window color
         self.axes.set_facecolor("#262930")
+
+        # polygons for 2d histogram
+        self.polygons = []
 
         # changing colors of all axes
         self.axes.spines["bottom"].set_color("white")
@@ -476,6 +512,40 @@ class MplCanvas(FigureCanvas):
     def reset(self):
         self.axes.clear()
         self.is_pressed = None
+
+    def make_2d_histogram(self, data_x, data_y, colors):
+        heatmap, xedges, yedges = np.histogram2d(data_x, data_y, bins=400)
+        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        if len(colors) == 1:
+            self.polygons = [self.polygons[-1]]
+
+        self.axes.imshow(heatmap.T, extent=extent, origin='lower')
+
+        for poly_i, poly in enumerate(self.polygons):
+            poly.set_facecolor(colors[poly_i])
+            self.axes.add_patch(poly)
+
+        # ax = plt.gca()
+
+        full_data = pd.concat([data_x,data_y],axis=1)
+        self.selector.disconnect()
+        self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+
+    def make_scatter_plot(self, data_x, data_y, colors, sizes, alpha):
+        self.pts = self.axes.scatter(
+            data_x,
+            data_y,
+            c=colors,
+            s=sizes,
+            alpha=alpha,
+        )
+        self.selector.disconnect()
+        self.selector = SelectFromCollection(
+            self,
+            self.axes,
+            self.pts,
+        )
+
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure

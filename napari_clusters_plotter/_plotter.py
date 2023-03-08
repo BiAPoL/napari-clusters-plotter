@@ -378,19 +378,10 @@ class PlotterWidget(QWidget):
                 color_hex_list=colors,
             )
 
-            self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x,
-                self.data_y,
-                c=colors_plot,
-                s=sizes,
-                alpha=a,
-            )
-            self.graphics_widget.selector.disconnect()
-            self.graphics_widget.selector = SelectFromCollection(
-                self.graphics_widget,
-                self.graphics_widget.axes,
-                self.graphics_widget.pts,
-            )
+
+            #self.graphics_widget.make_scatter_plot(self.data_x, self.data_y, colors_plot, sizes, a)
+            cluster_colors = [colors[int(x) % len(colors)] for x in np.unique(self.cluster_ids)[1:]]
+            self.graphics_widget.make_2d_histogram(self.data_x, self.data_y,cluster_colors)
 
             from vispy.color import Color
 
@@ -480,19 +471,8 @@ class PlotterWidget(QWidget):
                 current_frame=current_frame,
                 n_datapoints=number_of_points,
             )
-
-            self.graphics_widget.pts = self.graphics_widget.axes.scatter(
-                self.data_x,
-                self.data_y,
-                color=colors_plot,
-                s=sizes,
-                alpha=a,
-            )
-            self.graphics_widget.selector = SelectFromCollection(
-                self.graphics_widget,
-                self.graphics_widget.axes,
-                self.graphics_widget.pts,
-            )
+            #self.graphics_widget.make_scatter_plot(self.data_x, self.data_y, colors_plot, sizes, a)
+            self.graphics_widget.make_2d_histogram(self.data_x, self.data_y, colors=[])
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
