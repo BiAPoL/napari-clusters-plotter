@@ -145,9 +145,11 @@ class PlotterWidget(QWidget):
         run_container, run_button = button("Run")
         update_container, update_button = button("Update Measurements")
 
-        # checkbox background
-        self.advanced_options_container = collapsible_box("Expand for advanced options")
+        ############################
+        # Advanced plotting options
+        ############################
 
+        self.advanced_options_container = collapsible_box("Expand for advanced options")
         def checkbox_status_changed():
             if self.cluster_ids is not None:
                 clustering_ID = "MANUAL_CLUSTER_ID"
@@ -160,13 +162,41 @@ class PlotterWidget(QWidget):
                     self.plot_y_axis_name,
                     plot_cluster_name=clustering_ID,
                 )
+        def plotting_type_changed():
+            clustering_ID=None
+            if self.cluster_ids is not None:
+                clustering_ID = "MANUAL_CLUSTER_ID"
 
+            features = get_layer_tabular_data(self.analysed_layer)
+
+            # redraw the whole plot
+            self.run(
+                features,
+                self.plot_x_axis_name,
+                self.plot_y_axis_name,
+                plot_cluster_name=clustering_ID,
+            )
+
+
+        # Combobox with plotting types
+        combobox_plotting_container = QWidget()
+        combobox_plotting_container.setLayout(QHBoxLayout())
+        combobox_plotting_container.layout().addWidget(QLabel("Plotting type"))
+        self.plotting_type = QComboBox()
+        self.plotting_type.addItems(["Scatter","2D Histogram"])
+        self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
+
+        combobox_plotting_container.layout().addWidget(self.plotting_type)
+
+        # Checkbox to hide non-selected clusters
         checkbox_container = QWidget()
         checkbox_container.setLayout(QHBoxLayout())
         checkbox_container.layout().addWidget(QLabel("Hide non-selected clusters"))
         self.plot_hide_non_selected = QCheckBox()
         self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
         checkbox_container.layout().addWidget(self.plot_hide_non_selected)
+
+        self.advanced_options_container.addWidget(combobox_plotting_container)
         self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
@@ -378,10 +408,11 @@ class PlotterWidget(QWidget):
                 color_hex_list=colors,
             )
 
-
-            #self.graphics_widget.make_scatter_plot(self.data_x, self.data_y, colors_plot, sizes, a)
-            cluster_colors = [colors[int(x) % len(colors)] for x in np.unique(self.cluster_ids)[1:]]
-            self.graphics_widget.make_2d_histogram(self.data_x, self.data_y,cluster_colors)
+            if self.plotting_type.currentText() == "Scatter":
+                self.graphics_widget.make_scatter_plot(self.data_x, self.data_y, colors_plot, sizes, a)
+            else:
+                cluster_colors = [colors[int(x) % len(colors)] for x in np.unique(self.cluster_ids)[1:]]
+                self.graphics_widget.make_2d_histogram(self.data_x, self.data_y,cluster_colors)
 
             from vispy.color import Color
 
@@ -471,8 +502,11 @@ class PlotterWidget(QWidget):
                 current_frame=current_frame,
                 n_datapoints=number_of_points,
             )
-            #self.graphics_widget.make_scatter_plot(self.data_x, self.data_y, colors_plot, sizes, a)
-            self.graphics_widget.make_2d_histogram(self.data_x, self.data_y, colors=[])
+
+            if self.plotting_type.currentText() == "Scatter":
+                self.graphics_widget.make_scatter_plot(self.data_x, self.data_y, colors_plot, sizes, a)
+            else:
+                self.graphics_widget.make_2d_histogram(self.data_x, self.data_y,[])
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that elsewhere
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
