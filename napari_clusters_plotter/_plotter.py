@@ -107,7 +107,7 @@ class PlotterWidget(QWidget):
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
-        #graph_container.setMaximumHeight(500)
+        # graph_container.setMaximumHeight(500)
         graph_container.setLayout(QtWidgets.QVBoxLayout())
         graph_container.layout().addWidget(self.toolbar)
         graph_container.layout().addWidget(self.graphics_widget)
@@ -164,8 +164,7 @@ class PlotterWidget(QWidget):
                 )
 
         def plotting_type_changed():
-
-            clustering_ID=None
+            clustering_ID = None
             if self.cluster_ids is not None:
                 clustering_ID = "MANUAL_CLUSTER_ID"
 
@@ -183,7 +182,6 @@ class PlotterWidget(QWidget):
             except AttributeError:
                 # In this case, replotting is not yet possible
                 pass
-
 
         # Combobox with plotting types
         combobox_plotting_container = QWidget()
