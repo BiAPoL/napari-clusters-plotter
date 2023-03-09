@@ -535,11 +535,10 @@ class MplCanvas(FigureCanvas):
         colors: "typing.List[str]",
         bin_number: int = 400,
     ):
-
         if len(colors) == 1:
             self.polygons = [self.polygons[-1]]
 
-        self.axes.hist2d(data_x,data_y,bins=bin_number) # extent=extent,
+        self.axes.hist2d(data_x, data_y, bins=bin_number)  # extent=extent,
 
         for poly_i, poly in enumerate(self.polygons):
             poly.set_facecolor(colors[poly_i])
