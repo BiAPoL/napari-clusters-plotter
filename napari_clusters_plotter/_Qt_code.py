@@ -368,16 +368,26 @@ class SelectFrom2DHistogram:
 
     def onselect(self, verts):
         path = Path(verts)
+
         self.ind_mask = path.contains_points(self.xys)
         self.ind = np.nonzero(self.ind_mask)[0]
 
-        p = Polygon(verts, facecolor="red", alpha=0.5)
-        self.parent.polygons.append(p)
-        self.ax.add_patch(p)
-        self.canvas.draw_idle()
+        if np.any(self.ind_mask):
+            p = Polygon(verts, facecolor="red", alpha=0.5)
+            self.parent.polygons.append(p)
+            self.ax.add_patch(p)
 
-        if self.parent.manual_clustering_method is not None:
-            self.parent.manual_clustering_method(self.ind_mask)
+            self.canvas.draw_idle()
+            if self.parent.manual_clustering_method is not None:
+                self.parent.manual_clustering_method(self.ind_mask)
+        else:
+            for p in self.parent.polygons:
+                p.remove()
+            self.parent.polygons = []
+            self.canvas.draw_idle()
+
+
+
 
     def disconnect(self):
         self.lasso.disconnect_events()
@@ -522,6 +532,7 @@ class MplCanvas(FigureCanvas):
 
         self.axes.imshow(heatmap.T, extent=extent, origin="lower")
 
+
         for poly_i, poly in enumerate(self.polygons):
             poly.set_facecolor(colors[poly_i])
             self.axes.add_patch(poly)
@@ -531,6 +542,7 @@ class MplCanvas(FigureCanvas):
         full_data = pd.concat([data_x, data_y], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+        self.fig.tight_layout()
 
     def make_scatter_plot(self, data_x: "numpy.typing.ArrayLike", data_y: "numpy.typing.ArrayLike", colors: "typing.List[str]", sizes: "typing.List[float]", alpha: "typing.List[float]"):
         self.pts = self.axes.scatter(
