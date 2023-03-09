@@ -378,10 +378,10 @@ class SelectFrom2DHistogram:
             self.ax.add_patch(p)
 
             self.canvas.draw_idle()
-            if self.parent.manual_clustering_method is not None:
-                self.parent.manual_clustering_method(self.ind_mask)
         else:
             self.parent.reset_2d_histogram()
+        if self.parent.manual_clustering_method is not None:
+            self.parent.manual_clustering_method(self.ind_mask)
 
     def disconnect(self):
         self.lasso.disconnect_events()
@@ -531,12 +531,11 @@ class MplCanvas(FigureCanvas):
         colors: "typing.List[str]",
         bin_number: int = 400,
     ):
-        heatmap, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
-        extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
         if len(colors) == 1:
             self.polygons = [self.polygons[-1]]
 
-        self.axes.imshow(heatmap.T, extent=extent, origin="lower")
+        self.axes.hist2d(data_x,data_y,bins=bin_number) # extent=extent,
 
         for poly_i, poly in enumerate(self.polygons):
             poly.set_facecolor(colors[poly_i])
@@ -547,7 +546,7 @@ class MplCanvas(FigureCanvas):
         full_data = pd.concat([data_x, data_y], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
-        self.fig.tight_layout()
+        self.axes.figure.canvas.draw_idle()
 
     def make_scatter_plot(
         self,
