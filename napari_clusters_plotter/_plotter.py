@@ -88,7 +88,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
-            self.labels_select.value.visible = False
+            #self.labels_select.value.visible = False
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -411,6 +411,17 @@ class PlotterWidget(QWidget):
         if not self.isVisible():
             # don't redraw in case the plot is invisible anyway
             return
+
+        # check whether given axes names exist and if not don't redraw
+        if (
+            plot_x_axis_name not in features.columns
+            or plot_y_axis_name not in features.columns
+        ):
+            print(
+                "Selected measurements do not exist in layer's properties/features. The plot is not (re)drawn."
+            )
+            return
+
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
         self.plot_x_axis_name = plot_x_axis_name
