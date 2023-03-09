@@ -411,7 +411,6 @@ class PlotterWidget(QWidget):
         if not self.isVisible():
             # don't redraw in case the plot is invisible anyway
             return
-
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
         self.plot_x_axis_name = plot_x_axis_name
@@ -572,6 +571,7 @@ class PlotterWidget(QWidget):
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
             else:
+                self.graphics_widget.reset_2d_histogram()
                 self.graphics_widget.make_2d_histogram(
                     self.data_x,
                     self.data_y,

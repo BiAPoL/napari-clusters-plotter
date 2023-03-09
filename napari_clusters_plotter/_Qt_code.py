@@ -381,10 +381,7 @@ class SelectFrom2DHistogram:
             if self.parent.manual_clustering_method is not None:
                 self.parent.manual_clustering_method(self.ind_mask)
         else:
-            for p in self.parent.polygons:
-                p.remove()
-            self.parent.polygons = []
-            self.canvas.draw_idle()
+            self.parent.reset_2d_histogram()
 
 
 
@@ -523,6 +520,12 @@ class MplCanvas(FigureCanvas):
     def reset(self):
         self.axes.clear()
         self.is_pressed = None
+
+    def reset_2d_histogram(self):
+        for p in self.polygons:
+            p.remove()
+        self.polygons = []
+        self.axes.figure.canvas.draw_idle()
 
     def make_2d_histogram(
         self,
