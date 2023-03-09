@@ -1,10 +1,10 @@
 import os
+import typing
 from pathlib import Path as PathL
 
 import numpy as np
 import numpy.typing
 import pandas as pd
-import typing
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -514,7 +514,13 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
         self.is_pressed = None
 
-    def make_2d_histogram(self, data_x: "numpy.typing.ArrayLike", data_y: "numpy.typing.ArrayLike", colors: "typing.List[str]", bin_number: int=400):
+    def make_2d_histogram(
+        self,
+        data_x: "numpy.typing.ArrayLike",
+        data_y: "numpy.typing.ArrayLike",
+        colors: "typing.List[str]",
+        bin_number: int = 400,
+    ):
         heatmap, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
         extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
         if len(colors) == 1:
@@ -532,7 +538,14 @@ class MplCanvas(FigureCanvas):
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
 
-    def make_scatter_plot(self, data_x: "numpy.typing.ArrayLike", data_y: "numpy.typing.ArrayLike", colors: "typing.List[str]", sizes: "typing.List[float]", alpha: "typing.List[float]"):
+    def make_scatter_plot(
+        self,
+        data_x: "numpy.typing.ArrayLike",
+        data_y: "numpy.typing.ArrayLike",
+        colors: "typing.List[str]",
+        sizes: "typing.List[float]",
+        alpha: "typing.List[float]",
+    ):
         self.pts = self.axes.scatter(
             data_x,
             data_y,
