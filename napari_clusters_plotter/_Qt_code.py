@@ -386,9 +386,6 @@ class SelectFrom2DHistogram:
             self.parent.polygons = []
             self.canvas.draw_idle()
 
-
-
-
     def disconnect(self):
         self.lasso.disconnect_events()
         self.canvas.draw_idle()
@@ -537,7 +534,6 @@ class MplCanvas(FigureCanvas):
             self.polygons = [self.polygons[-1]]
 
         self.axes.imshow(heatmap.T, extent=extent, origin="lower")
-
 
         for poly_i, poly in enumerate(self.polygons):
             poly.set_facecolor(colors[poly_i])
