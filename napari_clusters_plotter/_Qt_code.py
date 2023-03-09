@@ -438,6 +438,10 @@ class SelectFromCollection:
         self.ind_mask = path.contains_points(self.xys)
         self.ind = np.nonzero(self.ind_mask)[0]
 
+        if np.any(self.ind_mask):
+            p = Polygon(verts, facecolor="red", alpha=0.5)
+            self.parent.polygons.append(p)
+
         self.fc[:, -1] = self.alpha_other
         self.fc[self.ind, -1] = 1
         self.collection.set_facecolors(self.fc)
