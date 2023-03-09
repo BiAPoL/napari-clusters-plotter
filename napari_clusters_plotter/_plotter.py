@@ -88,7 +88,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
-            #self.labels_select.value.visible = False
+            self.labels_select.value.visible = False
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
