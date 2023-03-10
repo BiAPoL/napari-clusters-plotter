@@ -22,7 +22,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
+from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters, estimate_number_bins
 from ._Qt_code import (
     ICON_ROOT,
     MplCanvas,
@@ -170,20 +170,7 @@ class PlotterWidget(QMainWindow):
 
         self.advanced_options_container = collapsible_box("Expand for advanced options")
 
-        def checkbox_status_changed():
-            if self.cluster_ids is not None:
-                clustering_ID = "MANUAL_CLUSTER_ID"
-                features = get_layer_tabular_data(self.analysed_layer)
-
-                # redraw the whole plot
-                self.run(
-                    features,
-                    self.plot_x_axis_name,
-                    self.plot_y_axis_name,
-                    plot_cluster_name=clustering_ID,
-                )
-
-        def plotting_type_changed():
+        def replot():
             clustering_ID = None
             if self.cluster_ids is not None:
                 clustering_ID = "MANUAL_CLUSTER_ID"
@@ -202,6 +189,12 @@ class PlotterWidget(QMainWindow):
             except AttributeError:
                 # In this case, replotting is not yet possible
                 pass
+
+        def checkbox_status_changed():
+            replot()
+
+        def plotting_type_changed():
+            replot()
 
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
@@ -209,24 +202,13 @@ class PlotterWidget(QMainWindow):
                 self.bin_number_container.setVisible(False)
 
         def bin_number_set():
-            clustering_ID = None
-            if self.cluster_ids is not None:
-                clustering_ID = "MANUAL_CLUSTER_ID"
+            replot()
+        def bin_auto():
+            self.bin_number_manual_container.setVisible(not self.bin_auto.isChecked())
+            replot()
 
-            features = get_layer_tabular_data(self.analysed_layer)
 
-            # redraw the whole plot
 
-            try:
-                self.run(
-                    features,
-                    self.plot_x_axis_name,
-                    self.plot_y_axis_name,
-                    plot_cluster_name=clustering_ID,
-                )
-            except AttributeError:
-                # In this case, replotting is not yet possible
-                pass
 
         # Combobox with plotting types
         combobox_plotting_container = QWidget()
@@ -242,15 +224,27 @@ class PlotterWidget(QMainWindow):
         self.bin_number_container = QWidget()
         self.bin_number_container.setLayout(QHBoxLayout())
         self.bin_number_container.layout().addWidget(QLabel("Number of bins:"))
+
+        self.bin_number_manual_container = QWidget()
+        self.bin_number_manual_container.setLayout(QHBoxLayout())
         self.bin_number_spinner = QSpinBox()
-        self.bin_number_spinner.setMinimum(10)
+        self.bin_number_spinner.setMinimum(1)
         self.bin_number_spinner.setMaximum(1000)
         self.bin_number_spinner.setValue(400)
-        self.bin_number_container.layout().addWidget(self.bin_number_spinner)
+
+        self.bin_number_manual_container.layout().addWidget(self.bin_number_spinner)
         self.bin_number_set = QPushButton("Set")
         self.bin_number_set.clicked.connect(bin_number_set)
-        self.bin_number_container.layout().addWidget(self.bin_number_set)
+        self.bin_number_manual_container.layout().addWidget(self.bin_number_set)
 
+        self.bin_number_container.layout().addWidget(self.bin_number_manual_container)
+
+        self.bin_auto = QCheckBox("Auto")
+        self.bin_auto.setChecked(True)
+        self.bin_auto.stateChanged.connect(bin_auto)
+        self.bin_number_container.layout().addWidget(self.bin_auto)
+
+        self.bin_number_manual_container.setVisible(False)
         self.bin_number_container.setVisible(False)
 
         # Checkbox to hide non-selected clusters
@@ -493,11 +487,18 @@ class PlotterWidget(QMainWindow):
                     colors[int(x) % len(colors)]
                     for x in np.unique(self.cluster_ids)[1:]
                 ]
+
+                if self.bin_auto.isChecked():
+                    number_bins = int(np.max([estimate_number_bins(self.data_x), estimate_number_bins(self.data_y)]))
+                    self.bin_number_spinner.setValue(number_bins)
+                else:
+                    number_bins = int(self.bin_number_spinner.value())
+
                 self.graphics_widget.make_2d_histogram(
                     self.data_x,
                     self.data_y,
                     cluster_colors,
-                    bin_number=int(self.bin_number_spinner.value()),
+                    bin_number=number_bins,
                 )
 
             from vispy.color import Color
@@ -595,11 +596,18 @@ class PlotterWidget(QMainWindow):
                 )
             else:
                 self.graphics_widget.reset_2d_histogram()
+
+                if self.bin_auto.isChecked():
+                    number_bins = int(np.max([estimate_number_bins(self.data_x), estimate_number_bins(self.data_y)]))
+                    self.bin_number_spinner.setValue(number_bins)
+                else:
+                    number_bins = int(self.bin_number_spinner.value())
+
                 self.graphics_widget.make_2d_histogram(
                     self.data_x,
                     self.data_y,
                     [],
-                    bin_number=int(self.bin_number_spinner.value()),
+                    bin_number=number_bins,
                 )
 
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
