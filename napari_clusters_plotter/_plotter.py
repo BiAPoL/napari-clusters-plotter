@@ -266,14 +266,14 @@ class PlotterWidget(QMainWindow):
         self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
-        self.layout().addWidget(label_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(axes_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(cluster_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(self.advanced_options_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(update_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(run_container, alignment=Qt.AlignTop)
-        self.layout().setSpacing(0)
+        self.layout.addWidget(label_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(self.advanced_options_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(update_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(run_container, alignment=Qt.AlignTop)
+        self.layout.setSpacing(0)
 
 
         # go through all widgets and change spacing
