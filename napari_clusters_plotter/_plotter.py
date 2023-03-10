@@ -22,7 +22,11 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
-from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters, estimate_number_bins
+from ._plotter_utilities import (
+    clustered_plot_parameters,
+    estimate_number_bins,
+    unclustered_plot_parameters,
+)
 from ._Qt_code import (
     ICON_ROOT,
     MplCanvas,
@@ -203,12 +207,10 @@ class PlotterWidget(QMainWindow):
 
         def bin_number_set():
             replot()
+
         def bin_auto():
             self.bin_number_manual_container.setVisible(not self.bin_auto.isChecked())
             replot()
-
-
-
 
         # Combobox with plotting types
         combobox_plotting_container = QWidget()
@@ -489,7 +491,14 @@ class PlotterWidget(QMainWindow):
                 ]
 
                 if self.bin_auto.isChecked():
-                    number_bins = int(np.max([estimate_number_bins(self.data_x), estimate_number_bins(self.data_y)]))
+                    number_bins = int(
+                        np.max(
+                            [
+                                estimate_number_bins(self.data_x),
+                                estimate_number_bins(self.data_y),
+                            ]
+                        )
+                    )
                     self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
@@ -598,7 +607,14 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.reset_2d_histogram()
 
                 if self.bin_auto.isChecked():
-                    number_bins = int(np.max([estimate_number_bins(self.data_x), estimate_number_bins(self.data_y)]))
+                    number_bins = int(
+                        np.max(
+                            [
+                                estimate_number_bins(self.data_x),
+                                estimate_number_bins(self.data_y),
+                            ]
+                        )
+                    )
                     self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())

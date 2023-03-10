@@ -1,5 +1,6 @@
-from scipy import stats
 import numpy as np
+from scipy import stats
+
 
 def unclustered_plot_parameters(
     frame_id: list,
@@ -238,8 +239,9 @@ def spot_size_unclustered(frame_id, current_frame, n_datapoints):
     ]
     return sizes
 
+
 def estimate_number_bins(data) -> int:
-    '''
+    """
     Estimates number of bins according Freedman–Diaconis rule
 
     Parameters
@@ -249,10 +251,11 @@ def estimate_number_bins(data) -> int:
     Returns
     -------
     Estimated number of bins
-    '''
+    """
 
     est_a = (np.max(data) - np.min(data)) / (2 * stats.iqr(data) / np.cbrt(len(data)))
     return int(est_a)
+
 
 def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
     """
