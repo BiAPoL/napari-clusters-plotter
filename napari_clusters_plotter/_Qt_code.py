@@ -460,7 +460,7 @@ class SelectFromCollection:
 
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=10, height=8, manual_clustering_method=None):
-        self.fig = Figure(figsize=(width, height))
+        self.fig = Figure(figsize=(width, height) , constrained_layout=True)
         self.manual_clustering_method = manual_clustering_method
 
         # changing color of axes background to napari main window color
@@ -481,9 +481,13 @@ class MplCanvas(FigureCanvas):
         self.axes.xaxis.label.set_color("white")
         self.axes.yaxis.label.set_color("white")
 
-        # changing colors of axes labels
+        # changing colors of axes ticks
         self.axes.tick_params(axis="x", colors="white")
         self.axes.tick_params(axis="y", colors="white")
+
+        # changing colors of axes labels
+        self.axes.xaxis.label.set_color("white")
+        self.axes.yaxis.label.set_color("white")
 
         super().__init__(self.fig)
 
@@ -601,30 +605,40 @@ class MyNavigationToolbar(NavigationToolbar):
                 )
 
     def save_figure(self):
-        self.canvas.fig.set_facecolor("#00000000")
-        self.canvas.fig.axes[0].set_facecolor("#00000000")
-        self.canvas.axes.tick_params(color="black")
+        # setting the background of the saved figure to white
+        self.canvas.fig.set_facecolor("#ffffff")
+        self.canvas.fig.axes[0].set_facecolor("#ffffff")
 
+        # setting axes colors of the saved figure to black
         self.canvas.axes.spines["bottom"].set_color("black")
         self.canvas.axes.spines["top"].set_color("black")
         self.canvas.axes.spines["right"].set_color("black")
         self.canvas.axes.spines["left"].set_color("black")
 
-        # changing colors of axis labels
+        # changing colors of axes ticks and labels for the saved figure
         self.canvas.axes.tick_params(axis="x", colors="black")
         self.canvas.axes.tick_params(axis="y", colors="black")
 
+        self.canvas.axes.xaxis.label.set_color("black")
+        self.canvas.axes.yaxis.label.set_color("black")
+
         super().save_figure()
 
-        self.canvas.axes.tick_params(color="white")
+        # changing background color back to napari's dark theme color
+        self.canvas.fig.set_facecolor("#262930")
+        self.canvas.fig.axes[0].set_facecolor("#262930")
 
+        # changing other colors back to white
         self.canvas.axes.spines["bottom"].set_color("white")
         self.canvas.axes.spines["top"].set_color("white")
         self.canvas.axes.spines["right"].set_color("white")
         self.canvas.axes.spines["left"].set_color("white")
 
-        # changing colors of axis labels
+        # changing colors of axes ticks and labels back to white
         self.canvas.axes.tick_params(axis="x", colors="white")
         self.canvas.axes.tick_params(axis="y", colors="white")
+
+        self.canvas.axes.xaxis.label.set_color("white")
+        self.canvas.axes.yaxis.label.set_color("white")
 
         self.canvas.draw()

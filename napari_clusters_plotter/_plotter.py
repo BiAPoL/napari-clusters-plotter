@@ -16,6 +16,8 @@ from qtpy.QtWidgets import (
     QLabel,
     QPushButton,
     QSpinBox,
+    QMainWindow,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -48,12 +50,24 @@ class PlottingType(Enum):
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
-class PlotterWidget(QWidget):
+class PlotterWidget(QMainWindow):
     def __init__(self, napari_viewer):
         super().__init__()
 
         self.cluster_ids = None
         self.viewer = napari_viewer
+
+        # create a scroll area
+        self.scrollArea = QScrollArea()
+        self.setCentralWidget(self.scrollArea)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.contents = QWidget()
+        self.scrollArea.setWidget(self.contents)
+
+        self.layout = QVBoxLayout(self.contents)
+        self.layout.setAlignment(Qt.AlignTop)
 
         # a figure instance to plot on
         self.figure = Figure()
@@ -115,14 +129,12 @@ class PlotterWidget(QWidget):
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
-        # graph_container.setMaximumHeight(500)
+        graph_container.setMinimumHeight(300)
         graph_container.setLayout(QtWidgets.QVBoxLayout())
         graph_container.layout().addWidget(self.toolbar)
         graph_container.layout().addWidget(self.graphics_widget)
 
-        # QVBoxLayout - lines up widgets vertically
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(graph_container)
+        self.layout.addWidget(graph_container, alignment=Qt.AlignTop)
 
         label_container = title("<b>Plotting</b>")
 
@@ -254,18 +266,19 @@ class PlotterWidget(QWidget):
         self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
-        self.layout().addWidget(label_container)
-        self.layout().addWidget(labels_layer_selection_container)
-        self.layout().addWidget(axes_container)
-        self.layout().addWidget(cluster_container)
-        self.layout().addWidget(self.advanced_options_container)
-        self.layout().addWidget(update_container)
-        self.layout().addWidget(run_container)
+        self.layout().addWidget(label_container, alignment=Qt.AlignTop)
+        self.layout().addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
+        self.layout().addWidget(axes_container, alignment=Qt.AlignTop)
+        self.layout().addWidget(cluster_container, alignment=Qt.AlignTop)
+        self.layout().addWidget(self.advanced_options_container, alignment=Qt.AlignTop)
+        self.layout().addWidget(update_container, alignment=Qt.AlignTop)
+        self.layout().addWidget(run_container, alignment=Qt.AlignTop)
         self.layout().setSpacing(0)
 
+
         # go through all widgets and change spacing
-        for i in range(self.layout().count()):
-            item = self.layout().itemAt(i).widget()
+        for i in range(self.layout.count()):
+            item = self.layout.itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
@@ -589,7 +602,12 @@ class PlotterWidget(QWidget):
                     [],
                     bin_number=int(self.bin_number_spinner.value()),
                 )
+
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that elsewhere
+
+        self.graphics_widget.axes.xaxis.label.set_color("white")
+        self.graphics_widget.axes.yaxis.label.set_color("white")
+
         self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
         self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
