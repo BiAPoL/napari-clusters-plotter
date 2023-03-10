@@ -460,7 +460,7 @@ class SelectFromCollection:
 
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=10, height=8, manual_clustering_method=None):
-        self.fig = Figure(figsize=(width, height) , constrained_layout=True)
+        self.fig = Figure(figsize=(width, height), constrained_layout=True)
         self.manual_clustering_method = manual_clustering_method
 
         # changing color of axes background to napari main window color
