@@ -14,10 +14,10 @@ from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
-    QPushButton,
-    QSpinBox,
     QMainWindow,
+    QPushButton,
     QScrollArea,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -274,7 +274,6 @@ class PlotterWidget(QMainWindow):
         self.layout.addWidget(update_container, alignment=Qt.AlignTop)
         self.layout.addWidget(run_container, alignment=Qt.AlignTop)
         self.layout.setSpacing(0)
-
 
         # go through all widgets and change spacing
         for i in range(self.layout.count()):
