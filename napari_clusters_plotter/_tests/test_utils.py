@@ -61,7 +61,9 @@ def test_cluster_image_generation():
 
     label_id_list = np.array([[1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7]])
     predictions_list = np.array([[0, 0, 0, 1, 1, 1, 2], [0, 0, 0, 1, 1, 1, 0]])
-    result_dask = dask_cluster_image_timelapse(label_timelapse, label_id_list, predictions_list)
+    result_dask = dask_cluster_image_timelapse(
+        label_timelapse, label_id_list, predictions_list
+    )
     true_result_tp2 = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
@@ -76,7 +78,6 @@ def test_cluster_image_generation():
 
     assert np.array_equal(result_dask[0].compute()[0], true_result)
     assert np.array_equal(result_dask[1].compute()[0], true_result_tp2)
-
 
 
 def test_cluster_image_generation_unsorted_non_sequential_labels():
@@ -113,7 +114,9 @@ def test_cluster_image_generation_unsorted_non_sequential_labels():
 
     label_id_list = np.array([[1, 2, 9, 8, 5, 6, 7], [1, 2, 9, 8, 5, 6, 7]])
     predictions_list = np.array([[0, 0, 0, 1, 1, 1, 2], [0, 0, 0, 1, 1, 1, 0]])
-    result_dask = dask_cluster_image_timelapse(label_timelapse, label_id_list, predictions_list)
+    result_dask = dask_cluster_image_timelapse(
+        label_timelapse, label_id_list, predictions_list
+    )
     true_result_tp2 = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
@@ -128,7 +131,6 @@ def test_cluster_image_generation_unsorted_non_sequential_labels():
 
     assert np.array_equal(result_dask[0].compute()[0], true_result)
     assert np.array_equal(result_dask[1].compute()[0], true_result_tp2)
-
 
 
 def test_feature_setting(make_napari_viewer):

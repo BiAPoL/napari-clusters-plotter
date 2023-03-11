@@ -271,7 +271,9 @@ def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_lis
     lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
     lazy_arrays = [
         lazy_cluster_image(frame, labels_ids, preds)
-        for frame, labels_ids, preds in zip(label_image, label_id_list, prediction_list_list)
+        for frame, labels_ids, preds in zip(
+            label_image, label_id_list, prediction_list_list
+        )
     ]
     dask_arrays = [
         da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
