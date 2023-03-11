@@ -40,8 +40,9 @@ def test_cluster_image_generation():
         ]
     )
 
+    label_ids = np.array([1, 2, 3, 4, 5, 6, 7])
     predictions = np.array([0, 0, 0, 1, 1, 1, 2])
-    result = generate_cluster_image(label, predictions)
+    result = generate_cluster_image(label, label_ids, predictions)
     true_result = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],
@@ -58,8 +59,9 @@ def test_cluster_image_generation():
     label_timelapse_3d = np.array([label, label])
     label_timelapse = reshape_2D_timelapse(label_timelapse_3d)
 
+    label_id_list = np.array([[1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7]])
     predictions_list = np.array([[0, 0, 0, 1, 1, 1, 2], [0, 0, 0, 1, 1, 1, 0]])
-    result_dask = dask_cluster_image_timelapse(label_timelapse, predictions_list)
+    result_dask = dask_cluster_image_timelapse(label_timelapse, label_id_list, predictions_list)
     true_result_tp2 = np.array(
         [
             [0, 0, 0, 0, 0, 0, 0],

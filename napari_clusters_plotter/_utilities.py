@@ -2,7 +2,6 @@ from functools import wraps
 
 import numpy as np
 import pandas as pd
-from napari_skimage_regionprops import relabel
 from qtpy.QtWidgets import QListWidgetItem
 
 
@@ -211,7 +210,7 @@ def update_properties_list(widget, exclude_list):
                     item.setSelected(True)
 
 
-def generate_cluster_image(label_image, predictionlist):
+def generate_cluster_image(label_image, label_list, predictionlist):
     """
     Generates a clusters image from a label image and a list of cluster predictions,
     where each label value corresponds to the cluster identity.
@@ -228,16 +227,17 @@ def generate_cluster_image(label_image, predictionlist):
     ----------
     ndarray: The clusters image as a numpy array.
     """
+    from skimage.util import map_array
 
     # reforming the prediction list, this is done to account
     # for cluster labels that start at 0, conveniently hdbscan
     # labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
 
-    return relabel(label_image, list(predictionlist_new)).astype("uint64")
+    return map_array(label_image, label_list, predictionlist_new).astype("uint64")
 
 
-def dask_cluster_image_timelapse(label_image, prediction_list_list):
+def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
     """
     Generates a timelapse of cluster images using Dask.
 
@@ -249,6 +249,8 @@ def dask_cluster_image_timelapse(label_image, prediction_list_list):
     -----------
     label_image : ndarray
         A NumPy array representing the label image.
+    label_id_list: list
+        List of label IDs in the corresponding order to prediction_list_list
     prediction_list_list : list
         A list of prediction lists. Each prediction list contains the predicted cluster labels
         for the corresponding frame in the label image.
@@ -267,8 +269,8 @@ def dask_cluster_image_timelapse(label_image, prediction_list_list):
 
     lazy_cluster_image = delayed(generate_cluster_image)  # lazy processor
     lazy_arrays = [
-        lazy_cluster_image(frame, preds)
-        for frame, preds in zip(label_image, prediction_list_list)
+        lazy_cluster_image(frame, labels_ids, preds)
+        for frame, labels_ids, preds in zip(label_image, label_id_list, prediction_list_list)
     ]
     dask_arrays = [
         da.from_delayed(delayed_reader, shape=sample.shape, dtype=sample.dtype)
