@@ -233,6 +233,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     # for cluster labels that start at 0, conveniently hdbscan
     # labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
+    label_list = np.array(label_list)
 
     return map_array(label_image, label_list, predictionlist_new).astype("uint64")
 
