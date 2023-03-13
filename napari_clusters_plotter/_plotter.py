@@ -65,6 +65,7 @@ class PlotterWidget(QMainWindow):
         self.scrollArea = QScrollArea()
         self.setCentralWidget(self.scrollArea)
         self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setMinimumWidth(400)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.contents = QWidget()
@@ -107,6 +108,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             self.labels_select.value.opacity = 0
+
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -190,6 +192,7 @@ class PlotterWidget(QMainWindow):
                     self.plot_y_axis_name,
                     plot_cluster_name=clustering_ID,
                 )
+
             except AttributeError:
                 # In this case, replotting is not yet possible
                 pass
@@ -259,6 +262,7 @@ class PlotterWidget(QMainWindow):
 
         self.advanced_options_container.addWidget(combobox_plotting_container)
         self.advanced_options_container.addWidget(self.bin_number_container)
+
         self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
@@ -266,7 +270,9 @@ class PlotterWidget(QMainWindow):
         self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
+
         self.layout.addWidget(self.advanced_options_container, alignment=Qt.AlignTop)
+
         self.layout.addWidget(update_container, alignment=Qt.AlignTop)
         self.layout.addWidget(run_container, alignment=Qt.AlignTop)
         self.layout.setSpacing(0)
