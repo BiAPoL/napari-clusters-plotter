@@ -106,7 +106,7 @@ class PlotterWidget(QMainWindow):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
-            self.labels_select.value.visible = False
+            self.labels_select.value.opacity = 0
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -416,9 +416,12 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
+        print("RUN")
         if not self.isVisible():
+            print("SHOW NOTHING")
             # don't redraw in case the plot is invisible anyway
             return
+
 
         # check whether given axes names exist and if not don't redraw
         if (
