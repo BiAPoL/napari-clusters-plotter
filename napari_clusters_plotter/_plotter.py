@@ -416,7 +416,6 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
-        print("RUN")
         if not self.isVisible():
             # don't redraw in case the plot is invisible anyway
             return
