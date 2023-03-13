@@ -187,7 +187,7 @@ class PlotterWidget(QMainWindow):
         self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
-        self.layout().addWidget(self.advanced_options_container)
+        self.layout.addWidget(self.advanced_options_container)
         self.layout.addWidget(update_container, alignment=Qt.AlignTop)
         self.layout.addWidget(run_container, alignment=Qt.AlignTop)
         self.layout.setSpacing(0)
