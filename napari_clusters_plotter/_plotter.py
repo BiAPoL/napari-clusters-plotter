@@ -52,6 +52,7 @@ class PlotterWidget(QMainWindow):
         self.scrollArea = QScrollArea()
         self.setCentralWidget(self.scrollArea)
         self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setMinimumWidth(400)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.contents = QWidget()
