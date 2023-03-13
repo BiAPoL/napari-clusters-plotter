@@ -109,7 +109,6 @@ class PlotterWidget(QMainWindow):
             )
             self.labels_select.value.opacity = 0
 
-
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
             self.figure, manual_clustering_method=manual_clustering_method
