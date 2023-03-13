@@ -420,7 +420,6 @@ class PlotterWidget(QMainWindow):
             # don't redraw in case the plot is invisible anyway
             return
 
-
         # check whether given axes names exist and if not don't redraw
         if (
             plot_x_axis_name not in features.columns
