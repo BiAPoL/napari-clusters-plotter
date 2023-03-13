@@ -418,7 +418,6 @@ class PlotterWidget(QMainWindow):
         """
         print("RUN")
         if not self.isVisible():
-            print("SHOW NOTHING")
             # don't redraw in case the plot is invisible anyway
             return
 
