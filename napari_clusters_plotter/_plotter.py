@@ -286,11 +286,12 @@ class PlotterWidget(QWidget):
         plot_y_axis_name: str,
         plot_cluster_name=None,
         redraw_cluster_image=True,
+        force_redraw: bool = False,
     ):
         """
         This function that runs after the run button is clicked.
         """
-        if not self.isVisible():
+        if not self.isVisible() and force_redraw == False:
             # don't redraw in case the plot is invisible anyway
             return
 
