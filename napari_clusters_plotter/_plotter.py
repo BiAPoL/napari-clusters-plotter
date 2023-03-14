@@ -291,7 +291,7 @@ class PlotterWidget(QWidget):
         """
         This function that runs after the run button is clicked.
         """
-        if not self.isVisible() and force_redraw == False:
+        if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
             return
 
