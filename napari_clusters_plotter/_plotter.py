@@ -4,7 +4,6 @@ from enum import Enum, auto
 
 import numpy as np
 import pandas as pd
-from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
@@ -74,9 +73,6 @@ class PlotterWidget(QMainWindow):
         self.layout = QVBoxLayout(self.contents)
         self.layout.setAlignment(Qt.AlignTop)
 
-        # a figure instance to plot on
-        self.figure = Figure()
-
         self.analysed_layer = None
         self.visualized_labels_layer = None
 
@@ -109,9 +105,10 @@ class PlotterWidget(QMainWindow):
             )
             self.labels_select.value.opacity = 0
 
-        # Canvas Widget that displays the 'figure', it takes the 'figure' instance
+        # Canvas Widget that displays the 'figure'
+        # fig instance is created inside MplCanvas
         self.graphics_widget = MplCanvas(
-            self.figure, manual_clustering_method=manual_clustering_method
+            manual_clustering_method=manual_clustering_method
         )
 
         # Navigation widget
@@ -485,6 +482,7 @@ class PlotterWidget(QMainWindow):
                 color_hex_list=colors,
             )
 
+
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
@@ -514,6 +512,9 @@ class PlotterWidget(QMainWindow):
                     cluster_colors,
                     bin_number=number_bins,
                 )
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            self.graphics_widget.match_napari_layout()
 
             from vispy.color import Color
 
@@ -630,12 +631,9 @@ class PlotterWidget(QMainWindow):
                     [],
                     bin_number=number_bins,
                 )
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            self.graphics_widget.match_napari_layout()
 
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
-            # because manual selection already does that elsewhere
-
-        self.graphics_widget.axes.xaxis.label.set_color("white")
-        self.graphics_widget.axes.yaxis.label.set_color("white")
-
-        self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-        self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            # because manual selection already does that when selector is disconnected

@@ -463,31 +463,9 @@ class MplCanvas(FigureCanvas):
         self.fig = Figure(figsize=(width, height), constrained_layout=True)
         self.manual_clustering_method = manual_clustering_method
 
-        # changing color of axes background to napari main window color
-        self.fig.patch.set_facecolor("#262930")
         self.axes = self.fig.add_subplot(111)
 
-        # changing color of plot background to napari main window color
-        self.axes.set_facecolor("#262930")
-
-        # polygons for 2d histogram
-        self.polygons = []
-
-        # changing colors of all axes
-        self.axes.spines["bottom"].set_color("white")
-        self.axes.spines["top"].set_color("white")
-        self.axes.spines["right"].set_color("white")
-        self.axes.spines["left"].set_color("white")
-        self.axes.xaxis.label.set_color("white")
-        self.axes.yaxis.label.set_color("white")
-
-        # changing colors of axes ticks
-        self.axes.tick_params(axis="x", colors="white")
-        self.axes.tick_params(axis="y", colors="white")
-
-        # changing colors of axes labels
-        self.axes.xaxis.label.set_color("white")
-        self.axes.yaxis.label.set_color("white")
+        self.match_napari_layout()
 
         super().__init__(self.fig)
 
@@ -576,6 +554,28 @@ class MplCanvas(FigureCanvas):
             self.axes,
             self.pts,
         )
+    def match_napari_layout(self):
+        """Change background and axes colors to match napari layout"""
+        # changing color of axes background to napari main window color
+        self.fig.patch.set_facecolor("#262930")
+        # changing color of plot background to napari main window color
+        self.axes.set_facecolor("#262930")
+
+        # changing colors of all axes
+        self.axes.spines["bottom"].set_color("white")
+        self.axes.spines["top"].set_color("white")
+        self.axes.spines["right"].set_color("white")
+        self.axes.spines["left"].set_color("white")
+        self.axes.xaxis.label.set_color("white")
+        self.axes.yaxis.label.set_color("white")
+
+        # changing colors of axes ticks
+        self.axes.tick_params(axis="x", colors="white")
+        self.axes.tick_params(axis="y", colors="white")
+
+        # changing colors of axes labels
+        self.axes.xaxis.label.set_color("white")
+        self.axes.yaxis.label.set_color("white")
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
@@ -624,21 +624,6 @@ class MyNavigationToolbar(NavigationToolbar):
 
         super().save_figure()
 
-        # changing background color back to napari's dark theme color
-        self.canvas.fig.set_facecolor("#262930")
-        self.canvas.fig.axes[0].set_facecolor("#262930")
-
-        # changing other colors back to white
-        self.canvas.axes.spines["bottom"].set_color("white")
-        self.canvas.axes.spines["top"].set_color("white")
-        self.canvas.axes.spines["right"].set_color("white")
-        self.canvas.axes.spines["left"].set_color("white")
-
-        # changing colors of axes ticks and labels back to white
-        self.canvas.axes.tick_params(axis="x", colors="white")
-        self.canvas.axes.tick_params(axis="y", colors="white")
-
-        self.canvas.axes.xaxis.label.set_color("white")
-        self.canvas.axes.yaxis.label.set_color("white")
+        self.canvas.match_napari_layout()
 
         self.canvas.draw()
