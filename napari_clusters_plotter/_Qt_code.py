@@ -423,7 +423,7 @@ class MplCanvas(FigureCanvas):
 
         self.axes = self.fig.add_subplot(111)
 
-        self.match_napari_layout()        
+        self.match_napari_layout()
 
         super().__init__(self.fig)
 

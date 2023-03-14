@@ -3,7 +3,6 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
