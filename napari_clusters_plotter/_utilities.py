@@ -234,7 +234,7 @@ def generate_cluster_image(label_image, predictionlist):
     # labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
 
-    return relabel(label_image, list(predictionlist_new)).astype("uint64")
+    return relabel(label_image, predictionlist_new).astype("uint64")
 
 
 def dask_cluster_image_timelapse(label_image, prediction_list_list):
