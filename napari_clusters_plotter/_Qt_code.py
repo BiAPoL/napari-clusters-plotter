@@ -478,8 +478,8 @@ class MplCanvas(FigureCanvas):
         self.axes.yaxis.label.set_color("white")
 
         # changing colors of axes ticks
-        self.axes.tick_params(axis="x", colors="white")
-        self.axes.tick_params(axis="y", colors="white")
+        self.axes.tick_params(axis="x", colors="white", labelcolor="white")
+        self.axes.tick_params(axis="y", colors="white", labelcolor="white")
 
         # changing colors of axes labels
         self.axes.xaxis.label.set_color("white")
