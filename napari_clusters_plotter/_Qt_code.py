@@ -468,7 +468,8 @@ class MplCanvas(FigureCanvas):
         self.match_napari_layout()
 
         super().__init__(self.fig)
-
+        # polygons for 2d histogram
+        self.polygons = []
         self.pts = self.axes.scatter([], [])
         self.selector = SelectFromCollection(self, self.axes, self.pts)
         self.rectangle_selector = RectangleSelector(
