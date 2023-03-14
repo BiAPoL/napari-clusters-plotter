@@ -401,7 +401,7 @@ class PlotterWidget(QWidget):
                             for i in range(int(max_timepoint))
                         ]
                     else:
-                        label_id_lists_per_timepoint = [
+                        label_id_list_per_timepoint = [
                             features[plot_cluster_name].tolist()
                             for i in range(self.analysed_layer.data.shape[0])
                         ]
