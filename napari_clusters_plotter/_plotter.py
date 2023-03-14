@@ -482,7 +482,6 @@ class PlotterWidget(QMainWindow):
                 color_hex_list=colors,
             )
 
-
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
