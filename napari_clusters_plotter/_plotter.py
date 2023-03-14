@@ -320,11 +320,12 @@ class PlotterWidget(QWidget):
         plot_y_axis_name: str,
         plot_cluster_name=None,
         redraw_cluster_image=True,
+        force_redraw: bool = False,
     ):
         """
         This function that runs after the run button is clicked.
         """
-        if not self.isVisible():
+        if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
             return
 
@@ -366,6 +367,7 @@ class PlotterWidget(QWidget):
                 ] = -1  # make unselected points to noise points
             # fill all prediction nan values with -1 -> turns them
             # into noise points
+            self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
             # get long colormap from function
@@ -427,7 +429,10 @@ class PlotterWidget(QWidget):
                 if len(self.analysed_layer.data.shape) == 4:
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
-
+                        label_id_list_per_timepoint = [
+                            features.loc[features[POINTER] == i]["label"].tolist()
+                            for i in range(int(max_timepoint))
+                        ]
                         prediction_lists_per_timepoint = [
                             features.loc[features[POINTER] == i][
                                 plot_cluster_name
@@ -435,18 +440,24 @@ class PlotterWidget(QWidget):
                             for i in range(int(max_timepoint))
                         ]
                     else:
+                        label_id_list_per_timepoint = [
+                            features[plot_cluster_name].tolist()
+                            for i in range(self.analysed_layer.data.shape[0])
+                        ]
                         prediction_lists_per_timepoint = [
                             features[plot_cluster_name].tolist()
                             for i in range(self.analysed_layer.data.shape[0])
                         ]
 
                     cluster_image = dask_cluster_image_timelapse(
-                        self.analysed_layer.data, prediction_lists_per_timepoint
+                        self.analysed_layer.data,
+                        label_id_list_per_timepoint,
+                        prediction_lists_per_timepoint,
                     )
 
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_image = generate_cluster_image(
-                        self.analysed_layer.data, self.cluster_ids
+                        self.analysed_layer.data, self.label_ids, self.cluster_ids
                     )
                 else:
                     warnings.warn("Image dimensions too high for processing!")
