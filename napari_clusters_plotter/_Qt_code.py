@@ -441,6 +441,8 @@ class SelectFromCollection:
         if np.any(self.ind_mask):
             p = Polygon(verts, facecolor="red", alpha=0.5)
             self.parent.polygons.append(p)
+        else:
+            self.parent.polygons = []
 
         self.fc[:, -1] = self.alpha_other
         self.fc[self.ind, -1] = 1
