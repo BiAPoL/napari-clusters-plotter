@@ -405,6 +405,11 @@ class PlotterWidget(QMainWindow):
                 s=sizes,
                 alpha=a,
             )
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            self.graphics_widget.match_napari_layout()
+
+            # Here canvas is drawn
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
@@ -508,21 +513,15 @@ class PlotterWidget(QMainWindow):
                 s=sizes,
                 alpha=a,
             )
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            self.graphics_widget.match_napari_layout()
+
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
                 self.graphics_widget.axes,
                 self.graphics_widget.pts,
             )
-            self.graphics_widget.axes.xaxis.label.set_color("white")
-            self.graphics_widget.axes.yaxis.label.set_color("white")
-            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
-            # because manual selection already does that elsewhere
-
-        self.graphics_widget.axes.xaxis.label.set_color("white")
-        self.graphics_widget.axes.yaxis.label.set_color("white")
-
-        self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-        self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            # because manual selection already does that when selector is disconnected
