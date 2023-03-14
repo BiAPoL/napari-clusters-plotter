@@ -63,9 +63,6 @@ class PlotterWidget(QMainWindow):
         self.layout = QVBoxLayout(self.contents)
         self.layout.setAlignment(Qt.AlignTop)
 
-        # a figure instance to plot on
-        self.figure = Figure()
-
         self.analysed_layer = None
         self.visualized_labels_layer = None
 
@@ -98,9 +95,10 @@ class PlotterWidget(QMainWindow):
             )
             self.labels_select.value.visible = False
 
-        # Canvas Widget that displays the 'figure', it takes the 'figure' instance
+        # Canvas Widget that displays the 'figure'
+        # fig instance is created inside MplCanvas
         self.graphics_widget = MplCanvas(
-            self.figure, manual_clustering_method=manual_clustering_method
+            manual_clustering_method=manual_clustering_method
         )
 
         # Navigation widget
