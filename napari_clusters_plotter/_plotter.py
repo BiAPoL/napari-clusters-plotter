@@ -9,7 +9,14 @@ from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
-from qtpy.QtWidgets import QComboBox, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from qtpy.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ._plotter_utilities import clustered_plot_parameters, unclustered_plot_parameters
 from ._Qt_code import (
@@ -18,6 +25,7 @@ from ._Qt_code import (
     MyNavigationToolbar,
     SelectFromCollection,
     button,
+    collapsible_box,
     labels_container_and_selection,
     title,
 )
@@ -29,7 +37,6 @@ from ._utilities import (
     get_nice_colormap,
 )
 
-# can be changed to frame or whatever we decide to use
 POINTER = "frame"
 
 
@@ -48,7 +55,6 @@ class PlotterWidget(QWidget):
         self.analysed_layer = None
         self.visualized_cluster_layer = None
 
-        # noinspection PyPep8Naming
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
 
@@ -76,6 +82,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
+            self.labels_select.value.visible = False
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -139,11 +146,36 @@ class PlotterWidget(QWidget):
         run_container, run_button = button("Run")
         update_container, update_button = button("Update Measurements")
 
+        # checkbox background
+        self.advanced_options_container = collapsible_box("Expand for advanced options")
+
+        def checkbox_status_changed():
+            if self.cluster_ids is not None:
+                clustering_ID = "MANUAL_CLUSTER_ID"
+                features = get_layer_tabular_data(self.analysed_layer)
+
+                # redraw the whole plot
+                self.run(
+                    features,
+                    self.plot_x_axis_name,
+                    self.plot_y_axis_name,
+                    plot_cluster_name=clustering_ID,
+                )
+
+        checkbox_container = QWidget()
+        checkbox_container.setLayout(QHBoxLayout())
+        checkbox_container.layout().addWidget(QLabel("Hide non-selected clusters"))
+        self.plot_hide_non_selected = QCheckBox()
+        self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
+        checkbox_container.layout().addWidget(self.plot_hide_non_selected)
+        self.advanced_options_container.addWidget(checkbox_container)
+
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
         self.layout().addWidget(labels_layer_selection_container)
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
+        self.layout().addWidget(self.advanced_options_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(run_container)
         self.layout().setSpacing(0)
@@ -240,6 +272,8 @@ class PlotterWidget(QWidget):
 
         self.viewer.dims.events.current_step.connect(frame_changed)
 
+        self.update_axes_list()
+
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
@@ -282,17 +316,30 @@ class PlotterWidget(QWidget):
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
-    # this function runs after the run button is clicked
     def run(
         self,
-        features,
-        plot_x_axis_name,
-        plot_y_axis_name,
+        features: pd.DataFrame,
+        plot_x_axis_name: str,
+        plot_y_axis_name: str,
         plot_cluster_name=None,
         redraw_cluster_image=True,
+        force_redraw: bool = False,
     ):
-        if not self.isVisible():
+        """
+        This function that runs after the run button is clicked.
+        """
+        if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
+            return
+
+        # check whether given axes names exist and if not don't redraw
+        if (
+            plot_x_axis_name not in features.columns
+            or plot_y_axis_name not in features.columns
+        ):
+            print(
+                "Selected measurements do not exist in layer's properties/features. The plot is not (re)drawn."
+            )
             return
 
         self.data_x = features[plot_x_axis_name]
@@ -304,6 +351,10 @@ class PlotterWidget(QWidget):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
+
+        # if selected image is 4 dimensional, but does not contain frame column in its features
+        # it will be considered to be tracking data, where all labels of the same track have
+        # the same label, and each column represent track's features
         tracking_data = (
             isinstance(self.analysed_layer, napari.layers.Labels)
             and len(self.analysed_layer.data.shape) == 4
@@ -336,8 +387,13 @@ class PlotterWidget(QWidget):
             and plot_cluster_name != "label"
             and plot_cluster_name in list(features.keys())
         ):
+            if self.plot_hide_non_selected.isChecked():
+                features.loc[
+                    features[plot_cluster_name] == 0, plot_cluster_name
+                ] = -1  # make unselected points to noise points
             # fill all prediction nan values with -1 -> turns them
             # into noise points
+            self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
             # get long colormap from function
@@ -365,7 +421,6 @@ class PlotterWidget(QWidget):
                 self.graphics_widget.pts,
             )
 
-            # get colormap as rgba array
             from vispy.color import Color
 
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
@@ -378,14 +433,15 @@ class PlotterWidget(QWidget):
                     if prediction >= 0
                     else [0, 0, 0, 0]
                 )
-                for prediction in self.cluster_ids
+                for prediction in np.unique(self.cluster_ids)
             }
             # take care of background label
             cmap_dict[0] = [0, 0, 0, 0]
 
             keep_selection = list(self.viewer.layers.selection)
 
-            # Generating the cluster image depending on the dimensionality of the data
+            # depending on the dimensionality of the data and layer type
+            # generate the cluster image
             if redraw_cluster_image:
                 cluster_layer_type = None
 
@@ -395,7 +451,10 @@ class PlotterWidget(QWidget):
                 ):
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
-
+                        label_id_list_per_timepoint = [
+                            features.loc[features[POINTER] == i]["label"].tolist()
+                            for i in range(int(max_timepoint))
+                        ]
                         prediction_lists_per_timepoint = [
                             features.loc[features[POINTER] == i][
                                 plot_cluster_name
@@ -403,13 +462,19 @@ class PlotterWidget(QWidget):
                             for i in range(int(max_timepoint))
                         ]
                     else:
+                        label_id_list_per_timepoint = [
+                            features[plot_cluster_name].tolist()
+                            for i in range(self.analysed_layer.data.shape[0])
+                        ]
                         prediction_lists_per_timepoint = [
                             features[plot_cluster_name].tolist()
                             for i in range(self.analysed_layer.data.shape[0])
                         ]
 
                     cluster_layer_data = dask_cluster_image_timelapse(
-                        self.analysed_layer.data, prediction_lists_per_timepoint
+                        self.analysed_layer.data,
+                        label_id_list_per_timepoint,
+                        prediction_lists_per_timepoint,
                     )
 
                 elif (
@@ -420,7 +485,7 @@ class PlotterWidget(QWidget):
                         cluster_layer_data,
                         cluster_layer_type,
                     ) = generate_cluster_image_from_layer(
-                        self.analysed_layer, self.cluster_ids
+                        self.analysed_layer, self.label_ids, self.cluster_ids
                     )
                 else:
                     warnings.warn("Image dimensions too high for processing!")
@@ -463,7 +528,6 @@ class PlotterWidget(QWidget):
                 n_datapoints=number_of_points,
             )
 
-            # Potting
             self.graphics_widget.pts = self.graphics_widget.axes.scatter(
                 self.data_x,
                 self.data_y,

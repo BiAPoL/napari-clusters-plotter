@@ -1,6 +1,7 @@
 import sys
 
 import numpy as np
+import pandas as pd
 from skimage import measure
 
 sys.path.append("../")
@@ -67,6 +68,10 @@ def test_bad_measurements(qtbot, make_napari_viewer):
         n_components=2,
         explained_variance=95.0,
         pca_components=0,
+        mds_metric=True,
+        mds_n_init=4,
+        mds_max_iter=300,
+        mds_eps=0.001,
         umap_multithreading=True,
     )
 
@@ -170,41 +175,63 @@ def test_call_to_function(qtbot, make_napari_viewer):
 
 
 def test_umap():
-    import pandas as pd
-
     from napari_clusters_plotter._dimensionality_reduction import umap
 
     X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
-    n_comp = 2
+    nr_components = 2
 
     # umap returns (str, np.ndarray), where the first item is algorithm name
-    result = umap(pd.DataFrame(X), n_neigh=2, n_components=n_comp)
+    result = umap(pd.DataFrame(X), n_neighbors=2, n_components=nr_components)
 
-    assert result[1].shape[-1] == n_comp
+    assert result[1].shape[-1] == nr_components
 
 
 def test_tsne():
-    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
-    n_comp = 2
-
-    import pandas as pd
-
     from napari_clusters_plotter._dimensionality_reduction import tsne
 
-    result = tsne(pd.DataFrame(X), perplexity=3, n_components=2)
-    assert result[1].shape[-1] == n_comp
+    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+    nr_components = 2
+    result = tsne(pd.DataFrame(X), perplexity=3, n_components=nr_components)
+    assert result[1].shape[-1] == nr_components
+
+    nr_components = 3
+    result = tsne(pd.DataFrame(X), perplexity=3, n_components=nr_components)
+    assert result[1].shape[-1] == nr_components
 
 
 def test_pca():
-    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
-    n_comp = 3
-
-    import pandas as pd
-
     from napari_clusters_plotter._dimensionality_reduction import pca
 
-    result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
-    assert result[1].shape[-1] == n_comp
+    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+    nr_components = 3
 
     result = pca(pd.DataFrame(X), explained_variance_threshold=95.0, n_components=0)
-    assert result[1].shape[-1] == n_comp
+    assert result[1].shape[-1] == nr_components
+
+    result = pca(
+        pd.DataFrame(X), explained_variance_threshold=95.0, n_components=nr_components
+    )
+    assert result[1].shape[-1] == nr_components
+
+
+def test_isomap():
+    from napari_clusters_plotter._dimensionality_reduction import isomap
+
+    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+    n_neighbors = 3
+    nr_components = 2
+
+    result = isomap(
+        pd.DataFrame(X), n_neighbors=n_neighbors, n_components=nr_components
+    )
+    assert result[1].shape[-1] == nr_components
+
+
+def test_mds():
+    from napari_clusters_plotter._dimensionality_reduction import mds
+
+    X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+    nr_components = 2
+
+    result = mds(pd.DataFrame(X), n_components=nr_components)
+    assert result[1].shape[-1] == nr_components

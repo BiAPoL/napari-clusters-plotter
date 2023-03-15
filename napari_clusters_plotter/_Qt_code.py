@@ -8,7 +8,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector
-from napari.layers import Image, Layer
+from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
@@ -31,6 +31,13 @@ def collapsible_box(name):
 
 
 def measurements_container_and_list():
+    """
+    Creates a container widget and a list widget for displaying measurements.
+
+    Returns
+    -------
+    A tuple containing the created container widget and the list widget for displaying measurements.
+    """
     properties_container = QWidget()
     properties_container.setLayout(QVBoxLayout())
     properties_container.layout().addWidget(QLabel("Measurements"))
@@ -43,16 +50,32 @@ def measurements_container_and_list():
 
 
 def labels_container_and_selection():
-    layer_selection_container = QWidget()
-    layer_selection_container.setLayout(QHBoxLayout())
-    layer_selection_container.layout().addWidget(QLabel("Layer"))
-    layer_select = create_widget(annotation=Layer, label="layer")
-    layer_selection_container.layout().addWidget(layer_select.native)
+    """
+    Create a container and a dropdown widget to select the labels layer.
 
-    return layer_selection_container, layer_select
+    Returns
+    -------
+    A tuple containing a QWidget for displaying the labels layer selection container,
+    and a QWidget containing the selection options for the labels layer.
+    """
+    labels_layer_selection_container = QWidget()
+    labels_layer_selection_container.setLayout(QHBoxLayout())
+    labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
+    labels_select = create_widget(annotation=Labels, label="labels_layer")
+    labels_layer_selection_container.layout().addWidget(labels_select.native)
+
+    return labels_layer_selection_container, labels_select
 
 
 def image_container_and_selection():
+    """
+    Creates a container for selecting an image layer.
+
+    Returns
+    -------
+    A tuple containing a QWidget for displaying the image layer selection container,
+    and a QWidget containing the selection options for the image layer.
+    """
     image_select = create_widget(annotation=Image, label="image_layer")
     image_layer_selection_container = QWidget()
     image_layer_selection_container.setLayout(QHBoxLayout())
@@ -63,6 +86,18 @@ def image_container_and_selection():
 
 
 def title(name: str):
+    """
+    Creates a widget with a single label displaying the specified name as the title.
+
+    Parameters
+    ----------
+    name : str
+        The text to be displayed as the title.
+
+    Returns
+    -------
+    A widget with a single label displaying the specified name as the title.
+    """
     title_container = QWidget()
     title_container.setLayout(QVBoxLayout())
     title_container.layout().addWidget(QLabel(name))
@@ -80,6 +115,35 @@ def int_sbox_containter_and_selection(
     tool_tip: str = None,
     tool_link: str = None,
 ):
+    """
+    Creates a container widget for an integer spin box and returns the container widget and the spin box.
+
+    Parameters
+    ----------
+    name : str
+        A unique name for the spin box.
+    value : int
+        The initial value of the spin box.
+    min : int, optional
+        The minimum value of the spin box. Default is 2.
+    label : str, optional
+        The label of the container widget. Default is "Number of Clusters".
+    visible : bool, optional
+        Whether the container widget is visible. Default is False.
+    max_width : int, optional
+        The maximum width of the spin box widget. Default is MAX_WIDTH.
+    tool_tip : str, optional
+        The tooltip to be displayed for the container widget.
+    tool_link : str, optional
+        The hyperlink URL to associate with the tooltip.
+
+    Returns
+    -------
+    container : QWidget
+        A container widget that holds the spin box widget.
+    selection : QSpinBoxWidget
+        A spin box widget.
+    """
     container = QWidget()
     container.setLayout(QHBoxLayout())
     container.layout().addWidget(QLabel(label))
@@ -114,6 +178,37 @@ def float_sbox_containter_and_selection(
     tool_tip: str = None,
     tool_link: str = None,
 ):
+    """
+    Creates a container widget for a float spin box and returns the container widget and the spin box.
+
+    Parameters
+    ----------
+    name : str
+        A unique name for the spin box.
+    value : float
+        The initial value of the spin box.
+    label : str
+        The label of the container widget.
+    min : float, optional
+        The minimum value of the spin box. Default is 0.
+    step : float, optional
+        The step size of the spin box. Default is 0.1.
+    max : float, optional
+        The maximum value of the spin box. Default is 1.
+    visible : bool, optional
+        Whether the container widget is visible. Default is False.
+    max_width : int, optional
+        The maximum width of the spin box widget. Default is MAX_WIDTH.
+    tool_tip : str, optional
+        The tooltip to be displayed for the container widget.
+    tool_link : str, optional
+        The hyperlink URL to associate with the tooltip.
+
+    Returns
+    -------
+    A tuple consisting of the container widget that holds the spin box widget, and
+    a float spin box widget for the selection of the value.
+    """
     container = QWidget()
     container.setLayout(QHBoxLayout())
     container.layout().addWidget(QLabel(label))
@@ -137,6 +232,21 @@ def float_sbox_containter_and_selection(
 
 
 def button(name):
+    """
+    Creates a container widget for a QPushButton and returns the container widget and the button.
+
+    Parameters
+    ----------
+    name : str
+        The text to display on the button.
+
+    Returns
+    -------
+    widget : QWidget
+        A container widget that holds the button widget.
+    button : QPushButton
+        A QPushButton widget.
+    """
     widget = QWidget()
     widget.setLayout(QHBoxLayout())
     button = QPushButton(name)
@@ -178,6 +288,18 @@ def add_tooltip(
     tool_link: str,
     tool_tip: str,
 ):
+    """
+    Add a tooltip to a widget that displays additional information when hovered or clicked on.
+
+    Parameters
+    ----------
+    container : QWidget
+        The container widget that the tooltip should be added to.
+    tool_link : str
+        The URL of a webpage that provides more information about the parameter.
+    tool_tip : str
+        The text to be displayed as the tooltip when hovered over the question mark.
+    """
     help_tooltip = QLabel()
     new_line = "\n"
     if tool_link is not None:
@@ -195,7 +317,27 @@ def add_tooltip(
 
 
 def algorithm_choice(name: str, value, options: dict, label: str):
-    # selection of the clustering methods
+    """
+    Create a widget for selecting a clustering algorithm from a set of options.
+
+    Parameters
+    ----------
+    name : str
+        The name to be used for the widget.
+    value :
+    The initial value of the widget.
+    options : dict
+        A dictionary of possible options, where the keys are option
+        names and the values are corresponding strings that are
+        actually displayed in the combobox.
+    label : str
+        The label to be displayed next to the widget.
+
+    Returns
+    ----------
+    A tuple containing the container widget and the choice widget. The container widget
+    is a QWidget that contains the label and the choice widget.
+    """
     container = QWidget()
     container.setLayout(QHBoxLayout())
     container.layout().addWidget(QLabel(label))

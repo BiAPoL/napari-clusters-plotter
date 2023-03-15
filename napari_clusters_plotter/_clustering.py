@@ -288,6 +288,8 @@ class ClusteringWidget(QWidget):
             self.change_clustering_options_visibility
         )
 
+        update_properties_list(self, [ID_NAME])
+
     def change_clustering_options_visibility(self):
         widgets_active(
             self.kmeans_settings_container_nr,
