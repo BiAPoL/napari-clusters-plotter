@@ -262,13 +262,12 @@ def generate_cluster_image(labels_layer, label_list, predictionlist):
 
     # reforming the prediction list this is done to account
     # for cluster labels that start at 0, conveniently hdbscan
-    # labelling starts at -1 for noise, removing these from
-    # the labels
+    # labelling starts at -1 for noise, removing these from the labels
     predictionlist_new = np.array(predictionlist) + 1
+
     return map_array(labels_layer, np.array(label_list), predictionlist_new).astype(
         "uint64"
     )
-
 
 def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
     """
