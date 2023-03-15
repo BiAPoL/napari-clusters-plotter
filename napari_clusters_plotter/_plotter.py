@@ -393,7 +393,8 @@ class PlotterWidget(QWidget):
                 ] = -1  # make unselected points to noise points
             # fill all prediction nan values with -1 -> turns them
             # into noise points
-            self.label_ids = features["label"]
+            if isinstance(self.analysed_layer, napari.layers.Labels):
+                self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
             # get long colormap from function
