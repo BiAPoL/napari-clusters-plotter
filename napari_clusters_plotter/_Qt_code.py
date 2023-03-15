@@ -518,10 +518,9 @@ class MplCanvas(FigureCanvas):
         colors: "typing.List[str]",
         bin_number: int = 400,
     ):
-
         self.colors = colors
 
-        self.axes.hist2d(data_x, data_y, bins=bin_number, cmap='magma')
+        self.axes.hist2d(data_x, data_y, bins=bin_number, cmap="magma")
 
         full_data = pd.concat([data_x, data_y], axis=1)
         self.selector.disconnect()
@@ -530,11 +529,10 @@ class MplCanvas(FigureCanvas):
 
     def show_polygons(self):
         for poly_i, poly in enumerate(self.polygons):
-            c = self.colors[int(poly_i+1) % len(self.colors)]
+            c = self.colors[int(poly_i + 1) % len(self.colors)]
             poly.set_facecolor(c)
             self.axes.add_patch(poly)
         self.axes.figure.canvas.draw_idle()
-
 
     def make_scatter_plot(
         self,

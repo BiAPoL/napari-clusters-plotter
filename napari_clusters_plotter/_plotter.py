@@ -476,8 +476,6 @@ class PlotterWidget(QMainWindow):
             else:
                 warnings.warn("Image dimensions too high for processing!")
 
-
-
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = clustered_plot_parameters(
                     cluster_id=self.cluster_ids,
@@ -597,8 +595,6 @@ class PlotterWidget(QMainWindow):
                 current_frame = None
             else:
                 warnings.warn("Image dimensions too high for processing!")
-
-
 
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = unclustered_plot_parameters(
