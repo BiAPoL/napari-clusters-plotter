@@ -269,6 +269,7 @@ def generate_cluster_image(labels_layer, label_list, predictionlist):
         "uint64"
     )
 
+
 def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
     """
     Generates a timelapse of cluster images using Dask.
