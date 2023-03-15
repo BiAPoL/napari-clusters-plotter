@@ -92,6 +92,9 @@ class PlotterWidget(QMainWindow):
                 features.update(pd.DataFrame(former_clusters, columns=[clustering_ID]))
             else:
                 features[clustering_ID] = inside.astype(int)
+                if self.graphics_widget.polygons and np.any(inside):
+                    self.graphics_widget.polygons = []
+
             add_column_to_layer_tabular_data(
                 self.analysed_layer, clustering_ID, features[clustering_ID]
             )
@@ -448,7 +451,7 @@ class PlotterWidget(QMainWindow):
         tracking_data = (
             len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
         )
-
+        colors = get_nice_colormap()
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -464,7 +467,6 @@ class PlotterWidget(QMainWindow):
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
             # get long colormap from function
-            colors = get_nice_colormap()
             if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
@@ -508,9 +510,10 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.make_2d_histogram(
                     self.data_x,
                     self.data_y,
-                    cluster_colors,
+                    colors,
                     bin_number=number_bins,
                 )
+                self.graphics_widget.show_polygons()
             self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             self.graphics_widget.match_napari_layout()
@@ -609,7 +612,7 @@ class PlotterWidget(QMainWindow):
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
             else:
-                self.graphics_widget.reset_2d_histogram()
+                self.graphics_widget.hide_all_polygons()
 
                 if self.bin_auto.isChecked():
                     number_bins = int(
@@ -627,7 +630,7 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.make_2d_histogram(
                     self.data_x,
                     self.data_y,
-                    [],
+                    colors,
                     bin_number=number_bins,
                 )
             self.graphics_widget.axes.set_xlabel(plot_x_axis_name)

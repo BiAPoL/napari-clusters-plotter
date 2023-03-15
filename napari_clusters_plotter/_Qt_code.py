@@ -372,16 +372,15 @@ class SelectFrom2DHistogram:
         self.ind_mask = path.contains_points(self.xys)
         self.ind = np.nonzero(self.ind_mask)[0]
 
+        if self.parent.manual_clustering_method is not None:
+            self.parent.manual_clustering_method(self.ind_mask)
+
         if np.any(self.ind_mask):
             p = Polygon(verts, facecolor="red", alpha=0.5)
             self.parent.polygons.append(p)
-            self.ax.add_patch(p)
-
-            self.canvas.draw_idle()
+            self.parent.show_polygons()
         else:
-            self.parent.reset_2d_histogram()
-        if self.parent.manual_clustering_method is not None:
-            self.parent.manual_clustering_method(self.ind_mask)
+            self.parent.hide_all_polygons()
 
     def disconnect(self):
         self.lasso.disconnect_events()
@@ -507,10 +506,9 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
         self.is_pressed = None
 
-    def reset_2d_histogram(self):
+    def hide_all_polygons(self):
         for p in self.polygons:
             p.remove()
-        self.polygons = []
         self.axes.figure.canvas.draw_idle()
 
     def make_2d_histogram(
@@ -520,21 +518,23 @@ class MplCanvas(FigureCanvas):
         colors: "typing.List[str]",
         bin_number: int = 400,
     ):
-        if len(colors) == 1:
-            self.polygons = [self.polygons[-1]]
+
+        self.colors = colors
 
         self.axes.hist2d(data_x, data_y, bins=bin_number, cmap='magma')
-
-        for poly_i, poly in enumerate(self.polygons):
-            poly.set_facecolor(colors[poly_i])
-            self.axes.add_patch(poly)
-
-        # ax = plt.gca()
 
         full_data = pd.concat([data_x, data_y], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
         self.axes.figure.canvas.draw_idle()
+
+    def show_polygons(self):
+        for poly_i, poly in enumerate(self.polygons):
+            c = self.colors[int(poly_i+1) % len(self.colors)]
+            poly.set_facecolor(c)
+            self.axes.add_patch(poly)
+        self.axes.figure.canvas.draw_idle()
+
 
     def make_scatter_plot(
         self,
