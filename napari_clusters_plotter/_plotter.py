@@ -4,7 +4,6 @@ import warnings
 import napari
 import numpy as np
 import pandas as pd
-from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
@@ -14,6 +13,8 @@ from qtpy.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
+    QMainWindow,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -42,15 +43,25 @@ POINTER = "frame"
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
-class PlotterWidget(QWidget):
+class PlotterWidget(QMainWindow):
     def __init__(self, napari_viewer):
         super().__init__()
 
         self.cluster_ids = None
         self.viewer = napari_viewer
 
-        # a figure instance to plot on
-        self.figure = Figure()
+        # create a scroll area
+        self.scrollArea = QScrollArea()
+        self.setCentralWidget(self.scrollArea)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setMinimumWidth(400)
+        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.contents = QWidget()
+        self.scrollArea.setWidget(self.contents)
+
+        self.layout = QVBoxLayout(self.contents)
+        self.layout.setAlignment(Qt.AlignTop)
 
         self.analysed_layer = None
         self.visualized_cluster_layer = None
@@ -84,9 +95,10 @@ class PlotterWidget(QWidget):
             )
             self.layer_select.value.visible = False
 
-        # Canvas Widget that displays the 'figure', it takes the 'figure' instance
+        # Canvas Widget that displays the 'figure'
+        # fig instance is created inside MplCanvas
         self.graphics_widget = MplCanvas(
-            self.figure, manual_clustering_method=manual_clustering_method
+            manual_clustering_method=manual_clustering_method
         )
 
         # Navigation widget
@@ -109,14 +121,12 @@ class PlotterWidget(QWidget):
 
         # create a placeholder widget to hold the toolbar and graphics widget.
         graph_container = QWidget()
-        graph_container.setMaximumHeight(500)
+        graph_container.setMinimumHeight(300)
         graph_container.setLayout(QtWidgets.QVBoxLayout())
         graph_container.layout().addWidget(self.toolbar)
         graph_container.layout().addWidget(self.graphics_widget)
 
-        # QVBoxLayout - lines up widgets vertically
-        self.setLayout(QVBoxLayout())
-        self.layout().addWidget(graph_container)
+        self.layout.addWidget(graph_container, alignment=Qt.AlignTop)
 
         label_container = title("<b>Plotting</b>")
 
@@ -171,18 +181,18 @@ class PlotterWidget(QWidget):
         self.advanced_options_container.addWidget(checkbox_container)
 
         # adding all widgets to the layout
-        self.layout().addWidget(label_container)
-        self.layout().addWidget(layer_selection_container)
-        self.layout().addWidget(axes_container)
-        self.layout().addWidget(cluster_container)
-        self.layout().addWidget(self.advanced_options_container)
-        self.layout().addWidget(update_container)
-        self.layout().addWidget(run_container)
-        self.layout().setSpacing(0)
+        self.layout.addWidget(label_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(layer_selection_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(self.advanced_options_container)
+        self.layout.addWidget(update_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(run_container, alignment=Qt.AlignTop)
+        self.layout.setSpacing(0)
 
         # go through all widgets and change spacing
-        for i in range(self.layout().count()):
-            item = self.layout().itemAt(i).widget()
+        for i in range(self.layout.count()):
+            item = self.layout.itemAt(i).widget()
             item.layout().setSpacing(0)
             item.layout().setContentsMargins(3, 3, 3, 3)
 
@@ -415,6 +425,11 @@ class PlotterWidget(QWidget):
                 s=sizes,
                 alpha=a,
             )
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            self.graphics_widget.match_napari_layout()
+
+            # Here canvas is drawn
             self.graphics_widget.selector.disconnect()
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
@@ -546,12 +561,15 @@ class PlotterWidget(QWidget):
                 s=sizes,
                 alpha=a,
             )
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            self.graphics_widget.match_napari_layout()
+
             self.graphics_widget.selector = SelectFromCollection(
                 self.graphics_widget,
                 self.graphics_widget.axes,
                 self.graphics_widget.pts,
             )
+
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
-            # because manual selection already does that elsewhere
-        self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-        self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+            # because manual selection already does that when selector is disconnected
