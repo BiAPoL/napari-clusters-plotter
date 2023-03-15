@@ -24,7 +24,7 @@ class FakeWidget:
                 self.value = layer
 
         self.properties_list = QListWidget()
-        self.labels_select = Labels_select(layer)
+        self.layer_select = Labels_select(layer)
 
 
 def test_cluster_image_generation(make_napari_viewer):
