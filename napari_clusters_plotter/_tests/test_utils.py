@@ -45,7 +45,7 @@ def test_cluster_image_generation(make_napari_viewer):
     label_ids = np.array([1, 2, 3, 4, 5, 6, 7])
     predictions = np.array([0, 0, 0, 1, 1, 1, 2])
     result, _ = generate_cluster_image_from_layer(
-        viewer.layers[0], label_ids, predictions
+        viewer.layers[0], predictions, label_ids
     )
     true_result = np.array(
         [
@@ -80,8 +80,6 @@ def test_cluster_image_generation(make_napari_viewer):
         ]
     )
 
-    # res, _ = result_dask[0][0].compute()
-    # assert np.array_equal(res, true_result)
     assert np.array_equal(result_dask[0].compute()[0], true_result)
     assert np.array_equal(result_dask[1].compute()[0], true_result_tp2)
 
@@ -105,7 +103,7 @@ def test_cluster_image_generation_unsorted_non_sequential_labels(make_napari_vie
     label_ids = np.array([1, 2, 9, 8, 5, 6, 7])
     predictions = np.array([0, 0, 0, 1, 1, 1, 2])
     result, _ = generate_cluster_image_from_layer(
-        viewer.layers[0], label_ids, predictions
+        viewer.layers[0], predictions, label_ids
     )
     true_result = np.array(
         [
@@ -119,7 +117,7 @@ def test_cluster_image_generation_unsorted_non_sequential_labels(make_napari_vie
         ]
     )
     assert np.array_equal(result, true_result)
-    """
+
     label_timelapse_3d = np.array([label, label])
     label_timelapse = reshape_2D_timelapse(label_timelapse_3d)
 
@@ -142,7 +140,6 @@ def test_cluster_image_generation_unsorted_non_sequential_labels(make_napari_vie
 
     assert np.array_equal(result_dask[0].compute()[0], true_result)
     assert np.array_equal(result_dask[1].compute()[0], true_result_tp2)
-    """
 
 
 def test_feature_setting(make_napari_viewer):
@@ -177,7 +174,3 @@ def test_feature_setting(make_napari_viewer):
 
     widget = FakeWidget(label_layer)
     update_properties_list(widget, exclude_list=["A"])
-
-
-if __name__ == "__main__":
-    test_cluster_image_generation_unsorted_non_sequential_labels()

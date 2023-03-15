@@ -187,7 +187,7 @@ def update_properties_list(widget, exclude_list):
     exclude_list : list of str
         A list of property names to exclude from the properties list.
     """
-    selected_layer = widget.labels_select.value
+    selected_layer = widget.layer_select.value
 
     if selected_layer is not None:
         features = get_layer_tabular_data(selected_layer)
@@ -214,12 +214,13 @@ def update_properties_list(widget, exclude_list):
 
 
 def generate_cluster_image_from_layer(
-    layer, label_list, predictionlist
+    layer,
+    predictionlist,
+    label_list=None,
 ) -> Tuple[np.ndarray, str]:
     """
-    Generates a clusters image from a label image and a list of cluster predictions,
-    where each label value corresponds to the cluster identity.
-    It is assumed that len(predictionlist) == max(label_image)
+    Generates a clusters image from a labels or surface layer and a list
+    of cluster predictions, where each value corresponds to the cluster identity.
 
     Parameters
     ----------
@@ -235,6 +236,7 @@ def generate_cluster_image_from_layer(
     output = None
     layer_type = None
     if isinstance(layer, napari.layers.Labels):
+        assert label_list is not None
         label_image = layer.data
         # reforming the prediction list this is done to account
         # for cluster labels that start at 0, conveniently hdbscan
@@ -253,6 +255,19 @@ def generate_cluster_image_from_layer(
         warnings.warn("Image type not supported to view clusters as layer")
 
     return output, layer_type
+
+
+def generate_cluster_image(labels_layer, label_list, predictionlist):
+    from skimage.util import map_array
+
+    # reforming the prediction list this is done to account
+    # for cluster labels that start at 0, conveniently hdbscan
+    # labelling starts at -1 for noise, removing these from
+    # the labels
+    predictionlist_new = np.array(predictionlist) + 1
+    return map_array(labels_layer, np.array(label_list), predictionlist_new).astype(
+        "uint64"
+    )
 
 
 def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
@@ -285,11 +300,9 @@ def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_lis
 
     sample = label_image[0]
 
-    lazy_cluster_image = delayed(
-        generate_cluster_image_from_layer, nout=2
-    )  # lazy processor
+    lazy_cluster_image = delayed(generate_cluster_image, nout=1)  # lazy processor
     lazy_arrays = [
-        lazy_cluster_image(frame, labels_ids, preds)(0)
+        lazy_cluster_image(frame, labels_ids, preds)
         for frame, labels_ids, preds in zip(
             label_image, label_id_list, prediction_list_list
         )

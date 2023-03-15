@@ -26,7 +26,7 @@ from ._Qt_code import (
     SelectFromCollection,
     button,
     collapsible_box,
-    labels_container_and_selection,
+    layer_container_and_selection,
     title,
 )
 from ._utilities import (
@@ -82,7 +82,7 @@ class PlotterWidget(QWidget):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
-            self.labels_select.value.visible = False
+            self.layer_select.value.visible = False
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -122,9 +122,9 @@ class PlotterWidget(QWidget):
 
         # widget for the selection of labels layer
         (
-            labels_layer_selection_container,
-            self.labels_select,
-        ) = labels_container_and_selection()
+            layer_selection_container,
+            self.layer_select,
+        ) = layer_container_and_selection()
 
         # widget for the selection of axes
         axes_container = QWidget()
@@ -172,7 +172,7 @@ class PlotterWidget(QWidget):
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
-        self.layout().addWidget(labels_layer_selection_container)
+        self.layout().addWidget(layer_selection_container)
         self.layout().addWidget(axes_container)
         self.layout().addWidget(cluster_container)
         self.layout().addWidget(self.advanced_options_container)
@@ -190,10 +190,10 @@ class PlotterWidget(QWidget):
         axes_container.layout().setSpacing(6)
 
         def run_clicked():
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
-            if get_layer_tabular_data(self.labels_select.value) is None:
+            if get_layer_tabular_data(self.layer_select.value) is None:
                 warnings.warn(
                     "No labels image with features/properties was selected! Consider doing measurements first."
                 )
@@ -210,7 +210,7 @@ class PlotterWidget(QWidget):
                 return
 
             self.run(
-                get_layer_tabular_data(self.labels_select.value),
+                get_layer_tabular_data(self.layer_select.value),
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
@@ -226,10 +226,10 @@ class PlotterWidget(QWidget):
                 return
             frame = event.value[0]
             if (not self.old_frame) or (self.old_frame != frame):
-                if self.labels_select.value is None:
+                if self.layer_select.value is None:
                     warnings.warn("Please select labels layer!")
                     return
-                if get_layer_tabular_data(self.labels_select.value) is None:
+                if get_layer_tabular_data(self.layer_select.value) is None:
                     warnings.warn(
                         "No labels image with features/properties was selected! Consider doing measurements first."
                     )
@@ -248,7 +248,7 @@ class PlotterWidget(QWidget):
                 self.frame = frame
 
                 self.run(
-                    get_layer_tabular_data(self.labels_select.value),
+                    get_layer_tabular_data(self.layer_select.value),
                     self.plot_x_axis.currentText(),
                     self.plot_y_axis.currentText(),
                     self.plot_cluster_name,
@@ -257,12 +257,12 @@ class PlotterWidget(QWidget):
             self.old_frame = frame
 
         # update axes combo boxes once a new label layer is selected
-        self.labels_select.changed.connect(self.update_axes_list)
+        self.layer_select.changed.connect(self.update_axes_list)
 
         # update axes combo boxes automatically if features of
         # layer are changed
         self.last_connected = None
-        self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.layer_select.changed.connect(self.activate_property_autoupdate)
 
         # update axes combo boxes once update button is clicked
         update_button.clicked.connect(self.update_axes_list)
@@ -279,18 +279,18 @@ class PlotterWidget(QWidget):
         self.reset_choices()
 
     def reset_choices(self, event=None):
-        self.labels_select.reset_choices(event)
+        self.layer_select.reset_choices(event)
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             if hasattr(self.last_connected.events, "properties"):
                 self.last_connected.events.properties.disconnect(self.update_axes_list)
-        if hasattr(self.labels_select.value.events, "properties"):
-            self.labels_select.value.events.properties.connect(self.update_axes_list)
-        self.last_connected = self.labels_select.value
+        if hasattr(self.layer_select.value.events, "properties"):
+            self.layer_select.value.events.properties.connect(self.update_axes_list)
+        self.last_connected = self.layer_select.value
 
     def update_axes_list(self):
-        selected_layer = self.labels_select.value
+        selected_layer = self.layer_select.value
 
         former_x_axis = self.plot_x_axis.currentIndex()
         former_y_axis = self.plot_y_axis.currentIndex()
@@ -347,7 +347,7 @@ class PlotterWidget(QWidget):
         self.plot_x_axis_name = plot_x_axis_name
         self.plot_y_axis_name = plot_y_axis_name
         self.plot_cluster_name = plot_cluster_name
-        self.analysed_layer = self.labels_select.value
+        self.analysed_layer = self.layer_select.value
 
         self.graphics_widget.reset()
         number_of_points = len(features)
@@ -476,16 +476,26 @@ class PlotterWidget(QWidget):
                         label_id_list_per_timepoint,
                         prediction_lists_per_timepoint,
                     )
+                    cluster_layer_type = "Labels"
 
                 elif (
                     isinstance(self.analysed_layer, napari.layers.Labels)
                     and len(self.analysed_layer.data.shape) <= 3
-                ) or isinstance(self.analysed_layer, napari.layers.Surface):
+                ):
                     (
                         cluster_layer_data,
                         cluster_layer_type,
                     ) = generate_cluster_image_from_layer(
-                        self.analysed_layer, self.label_ids, self.cluster_ids
+                        self.analysed_layer,
+                        self.cluster_ids,
+                        self.label_ids,
+                    )
+                elif isinstance(self.analysed_layer, napari.layers.Surface):
+                    (
+                        cluster_layer_data,
+                        cluster_layer_type,
+                    ) = generate_cluster_image_from_layer(
+                        self.analysed_layer, self.cluster_ids
                     )
                 else:
                     warnings.warn("Image dimensions too high for processing!")
@@ -503,7 +513,7 @@ class PlotterWidget(QWidget):
                             cluster_layer_data,  # self.analysed_layer.data
                             color=cmap_dict,  # cluster_id_dict
                             name="cluster_ids_in_space",
-                            scale=self.labels_select.value.scale,
+                            scale=self.layer_select.value.scale,
                         )
                     elif cluster_layer_type == "Surface":
                         self.visualized_cluster_layer = self.viewer.add_surface(
