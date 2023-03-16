@@ -9,7 +9,6 @@ from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-from matplotlib.patches import Polygon
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector
 from napari.layers import Image, Labels
@@ -375,7 +374,6 @@ class SelectFrom2DHistogram:
         if self.parent.manual_clustering_method is not None:
             self.parent.manual_clustering_method(self.ind_mask)
 
-
     def disconnect(self):
         self.lasso.disconnect_events()
         self.canvas.draw_idle()
@@ -506,17 +504,24 @@ class MplCanvas(FigureCanvas):
         data_y: "numpy.typing.ArrayLike",
         colors: "typing.List[str]",
         bin_number: int = 400,
-        log_scale: bool = False
+        log_scale: bool = False,
     ):
         self.colors = colors
         norm = None
         if log_scale:
             norm = "log"
         h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
-        self.axes.imshow(h.T, extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], origin='lower',  cmap='magma', aspect='auto', norm = norm)
+        self.axes.imshow(
+            h.T,
+            extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
+            origin="lower",
+            cmap="magma",
+            aspect="auto",
+            norm=norm,
+        )
         self.axes.set_xlim(xedges[0], xedges[-1])
         self.axes.set_ylim(yedges[0], yedges[-1])
-       # h, xedges, yedges, _ = self.axes.hist2d(data_x, data_y, bins=bin_number, cmap="magma", norm=norm, alpha=1)
+        # h, xedges, yedges, _ = self.axes.hist2d(data_x, data_y, bins=bin_number, cmap="magma", norm=norm, alpha=1)
         self.histogram = (h, xedges, yedges)
 
         full_data = pd.concat([data_x, data_y], axis=1)
@@ -569,8 +574,8 @@ class MplCanvas(FigureCanvas):
         self.axes.yaxis.label.set_color("white")
 
         # changing colors of axes ticks
-        self.axes.tick_params(axis="x", colors="white")
-        self.axes.tick_params(axis="y", colors="white")
+        self.axes.tick_params(axis="x", colors="white", labelcolor="white")
+        self.axes.tick_params(axis="y", colors="white", labelcolor="white")
 
         # changing colors of axes labels
         self.axes.xaxis.label.set_color("white")
