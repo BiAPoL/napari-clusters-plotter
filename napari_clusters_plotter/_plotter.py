@@ -450,7 +450,12 @@ class PlotterWidget(QMainWindow):
             )
             mask = h2 > output_max
             np.maximum(h2, output_max, out=output_max)
-            rgba = [float(v) / 255 for v in list(ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB"))]
+            rgba = [
+                float(v) / 255
+                for v in list(
+                    ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB")
+                )
+            ]
             rgba.append(0.9)
             cluster_overlay_rgba[mask] = rgba
 
