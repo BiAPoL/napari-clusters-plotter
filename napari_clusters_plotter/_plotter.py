@@ -623,6 +623,9 @@ class PlotterWidget(QMainWindow):
                 else:
                     warnings.warn("Image dimensions too high for processing!")
                     return
+                
+                from ._utilities import get_surface_color_map
+                napari_colormap = get_surface_color_map(max(self.cluster_ids))
 
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
@@ -631,11 +634,10 @@ class PlotterWidget(QMainWindow):
                     or self.visualized_layer not in self.viewer.layers
                 ):
                     if isinstance(self.analysed_layer, Surface):
-                        from _utilities import get_surface_color_map
-                        napari_colormap = get_surface_color_map(max(self.cluster_ids))
 
                         self.visualized_layer = self.viewer.add_surface(
                             cluster_data,
+                            contrast_limits = [0, self.cluster_ids.max() + 1],
                             colormap=napari_colormap,
                             name="cluster_ids_in_space",
                             scale=self.layer_select.value.scale,
@@ -651,7 +653,11 @@ class PlotterWidget(QMainWindow):
                 else:
                     # updating data
                     self.visualized_layer.data = cluster_data
-                    self.visualized_layer.color = cmap_dict
+                    if isinstance(self.analysed_layer, Labels):
+                        self.visualized_layer.color = cmap_dict
+                    else:
+                        self.visualized_layer.colormap = napari_colormap
+                        self.visualized_layer.contrast_limits = [0, self.cluster_ids.max() + 1]
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
