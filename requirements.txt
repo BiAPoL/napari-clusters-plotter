@@ -4,24 +4,24 @@
 
 -e .
 
-pip~=21.2.4
-wheel~=0.37.0
-tornado~=6.1
-numpy>=1.21
+pip~=23.0.1
+wheel~=0.40
+tornado~=6.2
+numpy~=1.23.5
 docutils~=0.17.1
-pandas~=1.5.2
-napari~=0.4.11
-matplotlib~=3.6.2
-magicgui~=0.6.1
+pandas~=1.5.3
+napari~=0.4.17
+matplotlib~=3.7.1
+magicgui~=0.7.2
 qtpy~=2.3.0
-scikit-image~=0.19
-umap-learn~=0.5.1
-hdbscan~=0.8.27
-scikit-learn~=1.0
-pytz~=2021.3
-numba~=0.55.1
-pre-commit
-pytest~=7.2.0
-setuptools~=65.6.3
+scikit-image~=0.20
+umap-learn~=0.5.3
+hdbscan~=0.8.29
+scikit-learn~=1.2.2
+pytz~=2022.7.1
+numba~=0.56.4
+pre-commit~=3.1.1
+pytest~=7.2.2
+setuptools~=67.6.0
 superqt~=0.4.1
 vispy~=0.11.0
