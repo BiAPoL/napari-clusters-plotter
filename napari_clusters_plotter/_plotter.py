@@ -1,17 +1,17 @@
 import os
-import warnings
 import typing
+import warnings
 from enum import Enum, auto
+from typing import List
 
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
+from PIL import ImageColor
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
-from PIL import ImageColor
-from typing import List
 from qtpy.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -279,7 +279,6 @@ class PlotterWidget(QMainWindow):
 
         self.advanced_options_container.addWidget(checkbox_container)
 
-
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
         self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
@@ -426,25 +425,37 @@ class PlotterWidget(QMainWindow):
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
-    def make_cluster_overlay_img(self,
-                                 cluster_id: str,
-                                 features: pd.DataFrame,
-                                 histogram_data: typing.Tuple,
-                                 feature_x: str,
-                                 feature_y: str,
-                                 colors: List[str]) -> np.array:
+    def make_cluster_overlay_img(
+        self,
+        cluster_id: str,
+        features: pd.DataFrame,
+        histogram_data: typing.Tuple,
+        feature_x: str,
+        feature_y: str,
+        colors: List[str],
+    ) -> np.array:
         h, xedges, yedges = histogram_data
 
-        relevant_entries = features.loc[features[cluster_id] != features[cluster_id].min(), [cluster_id, feature_x, feature_y]]
+        relevant_entries = features.loc[
+            features[cluster_id] != features[cluster_id].min(),
+            [cluster_id, feature_x, feature_y],
+        ]
 
         output = np.zeros((*h.shape, 4), dtype=float)
         output_max = np.zeros(h.shape, dtype=float)
 
         for cluster, entries in relevant_entries.groupby(cluster_id):
-            h2, _, _ = np.histogram2d(entries[feature_x], entries[feature_y], bins=[xedges, yedges])
+            h2, _, _ = np.histogram2d(
+                entries[feature_x], entries[feature_y], bins=[xedges, yedges]
+            )
             mask = h2 > output_max
             np.maximum(h2, output_max, out=output_max)
-            rgb = [float(v) / 255 for v in list(ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB"))]
+            rgb = [
+                float(v) / 255
+                for v in list(
+                    ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB")
+                )
+            ]
             rgb.append(0.9)
             output[mask] = rgb
 
@@ -457,7 +468,6 @@ class PlotterWidget(QMainWindow):
         plot_y_axis_name: str,
         plot_cluster_name=None,
         redraw_cluster_image=True,
-
         force_redraw: bool = False,
     ):
         """
@@ -551,7 +561,7 @@ class PlotterWidget(QMainWindow):
                     self.data_y,
                     colors,
                     bin_number=number_bins,
-                    log_scale=self.log_scale.isChecked()
+                    log_scale=self.log_scale.isChecked(),
                 )
 
                 rgb_img = self.make_cluster_overlay_img(
@@ -560,12 +570,18 @@ class PlotterWidget(QMainWindow):
                     feature_x=self.plot_x_axis_name,
                     feature_y=self.plot_y_axis_name,
                     colors=colors,
-                    histogram_data=self.graphics_widget.histogram
+                    histogram_data=self.graphics_widget.histogram,
                 )
                 xedges = self.graphics_widget.histogram[1]
                 yedges = self.graphics_widget.histogram[2]
 
-                self.graphics_widget.axes.imshow(rgb_img, extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], origin='lower',alpha=1, aspect='auto')
+                self.graphics_widget.axes.imshow(
+                    rgb_img,
+                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
+                    origin="lower",
+                    alpha=1,
+                    aspect="auto",
+                )
                 self.graphics_widget.figure.canvas.draw_idle()
 
             self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
@@ -693,7 +709,7 @@ class PlotterWidget(QMainWindow):
                     self.data_y,
                     colors,
                     bin_number=number_bins,
-                    log_scale=self.log_scale.isChecked()
+                    log_scale=self.log_scale.isChecked(),
                 )
             self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
