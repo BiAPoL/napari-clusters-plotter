@@ -464,10 +464,13 @@ class PlotterWidget(QMainWindow):
         self.graphics_widget.reset()
         number_of_points = len(features)
 
+        from napari.layers import Labels
+
         # if selected image is 4 dimensional, but does not contain frame column in its features
         # it will be considered to be tracking data, where all labels of the same track have
         # the same label, and each column represent track's features
         tracking_data = (
+            isinstance(self.analysed_layer, Labels) and
             len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
         )
         colors = get_nice_colormap()
