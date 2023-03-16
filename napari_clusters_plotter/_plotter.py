@@ -35,7 +35,7 @@ from ._Qt_code import (
     MyNavigationToolbar,
     button,
     collapsible_box,
-    labels_container_and_selection,
+    layer_container_and_selection,
     title,
 )
 from ._utilities import (
@@ -150,7 +150,7 @@ class PlotterWidget(QMainWindow):
         (
             labels_layer_selection_container,
             self.labels_select,
-        ) = labels_container_and_selection()
+        ) = layer_container_and_selection()
 
         # widget for the selection of axes
         axes_container = QWidget()

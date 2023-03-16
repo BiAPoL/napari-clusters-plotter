@@ -18,7 +18,7 @@ from ._Qt_code import (
     collapsible_box,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
-    labels_container_and_selection,
+    layer_container_and_selection,
     measurements_container_and_list,
     title,
 )
@@ -82,7 +82,7 @@ class DimensionalityReductionWidget(QWidget):
         (
             labels_layer_selection_container,
             self.labels_select,
-        ) = labels_container_and_selection()
+        ) = layer_container_and_selection()
 
         # select properties of which to produce a dimensionality reduced version
         (

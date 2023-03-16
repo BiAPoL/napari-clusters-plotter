@@ -15,7 +15,7 @@ from ._Qt_code import (
     checkbox,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
-    labels_container_and_selection,
+    layer_container_and_selection,
     measurements_container_and_list,
     title,
 )
@@ -68,7 +68,7 @@ class ClusteringWidget(QWidget):
         (
             labels_layer_selection_container,
             self.labels_select,
-        ) = labels_container_and_selection()
+        ) = layer_container_and_selection()
 
         # widget for the selection of properties to perform clustering
         (
