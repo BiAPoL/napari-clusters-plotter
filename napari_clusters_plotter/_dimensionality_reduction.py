@@ -78,10 +78,10 @@ class DimensionalityReductionWidget(QWidget):
         self.setLayout(QVBoxLayout())
         label_container = title("<b>Dimensionality reduction</b>")
 
-        # widget for the selection of labels layer
+        # widget for the selection of layer
         (
-            labels_layer_selection_container,
-            self.labels_select,
+            layer_selection_container,
+            self.layer_select,
         ) = layer_container_and_selection()
 
         # select properties of which to produce a dimensionality reduced version
@@ -263,7 +263,7 @@ class DimensionalityReductionWidget(QWidget):
         defaults_container, self.defaults_button = button("Restore Defaults")
 
         def run_clicked():
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("No labels image was selected!")
                 return
 
@@ -277,7 +277,7 @@ class DimensionalityReductionWidget(QWidget):
 
             self.run(
                 self.viewer,
-                self.labels_select.value,
+                self.layer_select.value,
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value,
                 self.perplexity.value,
@@ -301,18 +301,18 @@ class DimensionalityReductionWidget(QWidget):
         self.defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(
+        self.layer_select.changed.connect(
             partial(update_properties_list, self, EXCLUDE)
         )
 
         self.last_connected = None
-        self.labels_select.changed.connect(self.activate_property_autoupdate)
-        self.labels_select.changed.connect(self._check_perplexity)
+        self.layer_select.changed.connect(self.activate_property_autoupdate)
+        self.layer_select.changed.connect(self._check_perplexity)
         self.perplexity.changed.connect(self._check_perplexity)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
-        self.layout().addWidget(labels_layer_selection_container)
+        self.layout().addWidget(layer_selection_container)
         self.layout().addWidget(algorithm_container)
         self.layout().addWidget(self.perplexity_container)
         self.layout().addWidget(self.n_neighbors_container)
@@ -347,7 +347,7 @@ class DimensionalityReductionWidget(QWidget):
         self.reset_choices()
 
     def reset_choices(self, event=None):
-        self.labels_select.reset_choices(event)
+        self.layer_select.reset_choices(event)
 
     def _check_perplexity(self):
         """
@@ -356,7 +356,7 @@ class DimensionalityReductionWidget(QWidget):
         the number of labeled objects, and if not it makes the widget red.
         """
         if self.algorithm_choice_list.current_choice == "t-SNE":
-            features = get_layer_tabular_data(self.labels_select.value)
+            features = get_layer_tabular_data(self.layer_select.value)
             widgets_valid(
                 self.perplexity, valid=self.perplexity.value <= features.shape[0]
             )
@@ -416,10 +416,10 @@ class DimensionalityReductionWidget(QWidget):
             self.last_connected.events.properties.disconnect(
                 partial(update_properties_list, self, EXCLUDE)
             )
-        self.labels_select.value.events.properties.connect(
+        self.layer_select.value.events.properties.connect(
             partial(update_properties_list, self, EXCLUDE)
         )
-        self.last_connected = self.labels_select.value
+        self.last_connected = self.layer_select.value
 
     def run(
         self,

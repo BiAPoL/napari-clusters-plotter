@@ -184,7 +184,7 @@ def update_properties_list(widget, exclude_list):
     exclude_list : list of str
         A list of property names to exclude from the properties list.
     """
-    selected_layer = widget.labels_select.value
+    selected_layer = widget.layer_select.value
 
     if selected_layer is not None:
         features = get_layer_tabular_data(selected_layer)

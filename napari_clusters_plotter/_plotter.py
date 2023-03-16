@@ -146,10 +146,10 @@ class PlotterWidget(QMainWindow):
 
         label_container = title("<b>Plotting</b>")
 
-        # widget for the selection of labels layer
+        # widget for the selection of layer
         (
-            labels_layer_selection_container,
-            self.labels_select,
+            layer_selection_container,
+            self.layer_select,
         ) = layer_container_and_selection()
 
         # widget for the selection of axes
@@ -283,7 +283,7 @@ class PlotterWidget(QMainWindow):
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
-        self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(layer_selection_container, alignment=Qt.AlignTop)
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
 
@@ -303,10 +303,10 @@ class PlotterWidget(QMainWindow):
         axes_container.layout().setSpacing(6)
 
         def run_clicked():
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
-            if get_layer_tabular_data(self.labels_select.value) is None:
+            if get_layer_tabular_data(self.layer_select.value) is None:
                 warnings.warn(
                     "No labels image with features/properties was selected! Consider doing measurements first."
                 )
@@ -323,7 +323,7 @@ class PlotterWidget(QMainWindow):
                 return
 
             self.run(
-                get_layer_tabular_data(self.labels_select.value),
+                get_layer_tabular_data(self.layer_select.value),
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
@@ -339,10 +339,10 @@ class PlotterWidget(QMainWindow):
                 return
             frame = event.value[0]
             if (not self.old_frame) or (self.old_frame != frame):
-                if self.labels_select.value is None:
+                if self.layer_select.value is None:
                     warnings.warn("Please select labels layer!")
                     return
-                if get_layer_tabular_data(self.labels_select.value) is None:
+                if get_layer_tabular_data(self.layer_select.value) is None:
                     warnings.warn(
                         "No labels image with features/properties was selected! Consider doing measurements first."
                     )
@@ -361,7 +361,7 @@ class PlotterWidget(QMainWindow):
                 self.frame = frame
 
                 self.run(
-                    get_layer_tabular_data(self.labels_select.value),
+                    get_layer_tabular_data(self.layer_select.value),
                     self.plot_x_axis.currentText(),
                     self.plot_y_axis.currentText(),
                     self.plot_cluster_name,
@@ -370,12 +370,12 @@ class PlotterWidget(QMainWindow):
             self.old_frame = frame
 
         # update axes combo boxes once a new label layer is selected
-        self.labels_select.changed.connect(self.update_axes_list)
+        self.layer_select.changed.connect(self.update_axes_list)
 
         # update axes combo boxes automatically if features of
         # layer are changed
         self.last_connected = None
-        self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.layer_select.changed.connect(self.activate_property_autoupdate)
 
         # update axes combo boxes once update button is clicked
         update_button.clicked.connect(self.update_axes_list)
@@ -392,16 +392,16 @@ class PlotterWidget(QMainWindow):
         self.reset_choices()
 
     def reset_choices(self, event=None):
-        self.labels_select.reset_choices(event)
+        self.layer_select.reset_choices(event)
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
             self.last_connected.events.properties.disconnect(self.update_axes_list)
-        self.labels_select.value.events.properties.connect(self.update_axes_list)
-        self.last_connected = self.labels_select.value
+        self.layer_select.value.events.properties.connect(self.update_axes_list)
+        self.last_connected = self.layer_select.value
 
     def update_axes_list(self):
-        selected_layer = self.labels_select.value
+        selected_layer = self.layer_select.value
 
         former_x_axis = self.plot_x_axis.currentIndex()
         former_y_axis = self.plot_y_axis.currentIndex()
@@ -459,7 +459,7 @@ class PlotterWidget(QMainWindow):
         self.plot_x_axis_name = plot_x_axis_name
         self.plot_y_axis_name = plot_y_axis_name
         self.plot_cluster_name = plot_cluster_name
-        self.analysed_layer = self.labels_select.value
+        self.analysed_layer = self.layer_select.value
 
         self.graphics_widget.reset()
         number_of_points = len(features)
