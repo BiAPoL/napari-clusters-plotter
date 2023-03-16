@@ -5,6 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
+from napari.layers import Labels, Surface
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import QSignalBlocker, Qt
@@ -42,7 +43,7 @@ from ._utilities import (
     dask_cluster_image_timelapse,
     generate_cluster_image,
     get_layer_tabular_data,
-    get_nice_colormap,
+    get_nice_colormap, generate_cluster_surface,
 )
 
 POINTER = "frame"
@@ -79,7 +80,7 @@ class PlotterWidget(QMainWindow):
         self.figure = Figure()
 
         self.analysed_layer = None
-        self.visualized_labels_layer = None
+        self.visualized_layer = None
 
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
@@ -469,6 +470,22 @@ class PlotterWidget(QMainWindow):
             len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
         )
         colors = get_nice_colormap()
+
+        frame_id = None
+        current_frame = None
+        if isinstance(self.analysed_layer, Labels):
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
+                frame_id = features[POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
+                pass
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+        elif isinstance(self.analysed_layer, Surface):
+            pass
+        else:
+            warnings.warn(f"Layer {type(self.analysed_layer)} not supported")
+
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -481,17 +498,10 @@ class PlotterWidget(QMainWindow):
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
-            self.label_ids = features["label"]
+            if "label" in features.keys():
+                self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
-            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
-                frame_id = features[POINTER].tolist()
-                current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
-                frame_id = None
-                current_frame = None
-            else:
-                warnings.warn("Image dimensions too high for processing!")
 
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = clustered_plot_parameters(
@@ -575,7 +585,7 @@ class PlotterWidget(QMainWindow):
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the cluster image
-                if len(self.analysed_layer.data.shape) == 4:
+                if isinstance(self.analysed_layer, Labels) and len(self.analysed_layer.data.shape) == 4:
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
                         label_id_list_per_timepoint = [
@@ -598,14 +608,16 @@ class PlotterWidget(QMainWindow):
                             for i in range(self.analysed_layer.data.shape[0])
                         ]
 
-                    cluster_image = dask_cluster_image_timelapse(
+                    cluster_data = dask_cluster_image_timelapse(
                         self.analysed_layer.data,
                         label_id_list_per_timepoint,
                         prediction_lists_per_timepoint,
                     )
 
+                elif isinstance(self.analysed_layer, Surface):
+                    cluster_data = generate_cluster_surface(self.analysed_layer.data, self.cluster_ids)
                 elif len(self.analysed_layer.data.shape) <= 3:
-                    cluster_image = generate_cluster_image(
+                    cluster_data = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
                     )
                 else:
@@ -615,35 +627,37 @@ class PlotterWidget(QMainWindow):
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
                 if (
-                    self.visualized_labels_layer is None
-                    or self.visualized_labels_layer not in self.viewer.layers
+                    self.visualized_layer is None
+                    or self.visualized_layer not in self.viewer.layers
                 ):
-                    # visualising cluster image
-                    self.visualized_labels_layer = self.viewer.add_labels(
-                        cluster_image,  # self.analysed_layer.data
-                        color=cmap_dict,  # cluster_id_dict
-                        name="cluster_ids_in_space",
-                        scale=self.labels_select.value.scale,
-                    )
+                    if isinstance(self.analysed_layer, Surface):
+                        from _utilities import get_surface_color_map
+                        napari_colormap = get_surface_color_map(max(self.cluster_ids))
+
+                        self.visualized_layer = self.viewer.add_surface(
+                            cluster_data,
+                            colormap=napari_colormap,
+                            name="cluster_ids_in_space",
+                            scale=self.layer_select.value.scale,
+                        )
+                    else:
+                        # visualising cluster image
+                        self.visualized_layer = self.viewer.add_labels(
+                            cluster_data,  # self.analysed_layer.data
+                            color=cmap_dict,  # cluster_id_dict
+                            name="cluster_ids_in_space",
+                            scale=self.layer_select.value.scale,
+                        )
                 else:
                     # updating data
-                    self.visualized_labels_layer.data = cluster_image
-                    self.visualized_labels_layer.color = cmap_dict
+                    self.visualized_layer.data = cluster_data
+                    self.visualized_layer.color = cmap_dict
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
 
         else:
-            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
-                frame_id = features[POINTER].tolist()
-                current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
-                frame_id = None
-                current_frame = None
-            else:
-                warnings.warn("Image dimensions too high for processing!")
-
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = unclustered_plot_parameters(
                     frame_id=frame_id,

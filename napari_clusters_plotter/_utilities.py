@@ -220,7 +220,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     ----------
     label_image: ndarray or dask array
         Label image used for cluster predictions
-    predictionlist: array
+    predictionlist: Array-like
         An array containing cluster identities for each label
 
     Returns
@@ -238,6 +238,20 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     return map_array(np.asarray(label_image), label_list, predictionlist_new).astype(
         "uint64"
     )
+
+
+def generate_cluster_surface(surface_data, prediction_list):
+    prediction_list = np.asarray(prediction_list)
+
+    # reforming the prediction list, this is done to account
+    # for cluster labels that start at 0, conveniently hdbscan
+    # labelling starts at -1 for noise, removing these from the labels
+    prediction_list_new = np.array(prediction_list) + 1
+
+    # generate new surface data
+    clustered_surface = (surface_data[0], surface_data[1], prediction_list_new)
+
+    return clustered_surface
 
 
 def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
@@ -555,3 +569,27 @@ def get_nice_colormap():
     ]
 
     return colours_w_old_colors
+
+
+def get_surface_color_map(max_cluster_ids):
+    """
+    Create a napari colormap for the surface clusters.
+
+    Parameters
+    ----------
+    max_cluster_ids : int
+        the maximum cluster id.
+    """
+    from napari.utils import Colormap
+    from matplotlib.colors import to_rgba_array
+    # a color for non-annotated vertices
+    non_annotated_color = "#888888"
+    # get the nice colormap with as many colors as there are cluster ids
+    nice_colormap = get_nice_colormap()[:int(max_cluster_ids + 1)]
+    # add the non-annotated colors for the clusters
+    nice_colormap.insert(0, non_annotated_color)
+    # convert the colormap to a rgba colormap
+    colormap = to_rgba_array(nice_colormap)
+    # convert the rgba colormap to a napari colormap
+    napari_colormap = Colormap(colormap)
+    return napari_colormap
