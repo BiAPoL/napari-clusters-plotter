@@ -418,27 +418,12 @@ class SelectFromCollection:
 
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=7, height=4, manual_clustering_method=None):
-        self.fig = Figure(figsize=(width, height))
+        self.fig = Figure(figsize=(width, height), constrained_layout=True)
         self.manual_clustering_method = manual_clustering_method
 
-        # changing color of axes background to napari main window color
-        self.fig.patch.set_facecolor("#262930")
         self.axes = self.fig.add_subplot(111)
 
-        # changing color of plot background to napari main window color
-        self.axes.set_facecolor("#262930")
-
-        # changing colors of all axes
-        self.axes.spines["bottom"].set_color("white")
-        self.axes.spines["top"].set_color("white")
-        self.axes.spines["right"].set_color("white")
-        self.axes.spines["left"].set_color("white")
-        self.axes.xaxis.label.set_color("white")
-        self.axes.yaxis.label.set_color("white")
-
-        # changing colors of axes labels
-        self.axes.tick_params(axis="x", colors="white")
-        self.axes.tick_params(axis="y", colors="white")
+        self.match_napari_layout()
 
         super().__init__(self.fig)
 
@@ -477,6 +462,29 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
         self.is_pressed = None
 
+    def match_napari_layout(self):
+        """Change background and axes colors to match napari layout"""
+        # changing color of axes background to napari main window color
+        self.fig.patch.set_facecolor("#262930")
+        # changing color of plot background to napari main window color
+        self.axes.set_facecolor("#262930")
+
+        # changing colors of all axes
+        self.axes.spines["bottom"].set_color("white")
+        self.axes.spines["top"].set_color("white")
+        self.axes.spines["right"].set_color("white")
+        self.axes.spines["left"].set_color("white")
+        self.axes.xaxis.label.set_color("white")
+        self.axes.yaxis.label.set_color("white")
+
+        # changing colors of axes ticks
+        self.axes.tick_params(axis="x", colors="white", labelcolor="white")
+        self.axes.tick_params(axis="y", colors="white", labelcolor="white")
+
+        # changing colors of axes labels
+        self.axes.xaxis.label.set_color("white")
+        self.axes.yaxis.label.set_color("white")
+
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
 class MyNavigationToolbar(NavigationToolbar):
@@ -505,30 +513,25 @@ class MyNavigationToolbar(NavigationToolbar):
                 )
 
     def save_figure(self):
-        self.canvas.fig.set_facecolor("#00000000")
-        self.canvas.fig.axes[0].set_facecolor("#00000000")
-        self.canvas.axes.tick_params(color="black")
+        # setting the background of the saved figure to white
+        self.canvas.fig.set_facecolor("#ffffff")
+        self.canvas.fig.axes[0].set_facecolor("#ffffff")
 
+        # setting axes colors of the saved figure to black
         self.canvas.axes.spines["bottom"].set_color("black")
         self.canvas.axes.spines["top"].set_color("black")
         self.canvas.axes.spines["right"].set_color("black")
         self.canvas.axes.spines["left"].set_color("black")
 
-        # changing colors of axis labels
+        # changing colors of axes ticks and labels for the saved figure
         self.canvas.axes.tick_params(axis="x", colors="black")
         self.canvas.axes.tick_params(axis="y", colors="black")
 
+        self.canvas.axes.xaxis.label.set_color("black")
+        self.canvas.axes.yaxis.label.set_color("black")
+
         super().save_figure()
 
-        self.canvas.axes.tick_params(color="white")
-
-        self.canvas.axes.spines["bottom"].set_color("white")
-        self.canvas.axes.spines["top"].set_color("white")
-        self.canvas.axes.spines["right"].set_color("white")
-        self.canvas.axes.spines["left"].set_color("white")
-
-        # changing colors of axis labels
-        self.canvas.axes.tick_params(axis="x", colors="white")
-        self.canvas.axes.tick_params(axis="y", colors="white")
+        self.canvas.match_napari_layout()
 
         self.canvas.draw()
