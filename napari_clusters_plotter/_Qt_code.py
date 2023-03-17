@@ -454,8 +454,10 @@ class MplCanvas(FigureCanvas):
         self.histogram = None
 
         self.match_napari_layout()
+        self.xylim = None
 
         super().__init__(self.fig)
+        self.mpl_connect('draw_event', self.on_draw)
         # polygons for 2d histogram
         self.polygons = []
         self.pts = self.axes.scatter([], [])
@@ -472,6 +474,15 @@ class MplCanvas(FigureCanvas):
             interactive=False,
         )
         self.reset()
+
+    def reset_zoom(self):
+        if self.xylim:
+            self.axes.set_xlim(self.xylim[0])
+            self.axes.set_ylim(self.xylim[1])
+
+    def on_draw(self, event):
+        self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
+
 
     def draw_rectangle(self, eclick, erelease):
         """eclick and erelease are the press and release events"""
