@@ -73,11 +73,6 @@ column describes the next label.
 Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
 time the given row refers to.
 
-**For the correct visualisation of clusters IDs in space**, it is **important** that label images/time-points of the time-lapse
-are either **labelled sequentially** or missing labels still exist in the loaded csv file (i.e., missing label exists in the
-"label" column with `NaN` values for other measurements in the same row). If you perform measurements using before mentioned
-plugins, the obtained dataframe is already in the correct form.
-
 #### Time-Lapse Measurements
 In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
