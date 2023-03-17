@@ -457,7 +457,7 @@ class MplCanvas(FigureCanvas):
         self.xylim = None
 
         super().__init__(self.fig)
-        self.mpl_connect('draw_event', self.on_draw)
+        self.mpl_connect("draw_event", self.on_draw)
         # polygons for 2d histogram
         self.polygons = []
         self.pts = self.axes.scatter([], [])
@@ -482,7 +482,6 @@ class MplCanvas(FigureCanvas):
 
     def on_draw(self, event):
         self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
-
 
     def draw_rectangle(self, eclick, erelease):
         """eclick and erelease are the press and release events"""
