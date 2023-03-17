@@ -235,7 +235,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     predictionlist_new = np.array(predictionlist) + 1
     label_list = np.array(label_list)
 
-    return map_array(label_image, label_list, predictionlist_new).astype("uint64")
+    return map_array(np.array(label_image), label_list, predictionlist_new).astype("uint64")
 
 
 def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
