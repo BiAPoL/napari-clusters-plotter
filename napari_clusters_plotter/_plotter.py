@@ -482,7 +482,6 @@ class PlotterWidget(QMainWindow):
             self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
-            # get long colormap from function
             if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
