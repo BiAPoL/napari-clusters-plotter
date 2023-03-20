@@ -231,7 +231,7 @@ class PlotterWidget(QMainWindow):
 
         self.bin_number_container = QWidget()
         self.bin_number_container.setLayout(QHBoxLayout())
-        self.bin_number_container.layout().addWidget(QLabel("Number of bins:"))
+        self.bin_number_container.layout().addWidget(QLabel("Number of bins"))
 
         self.bin_number_manual_container = QWidget()
         self.bin_number_manual_container.setLayout(QHBoxLayout())
