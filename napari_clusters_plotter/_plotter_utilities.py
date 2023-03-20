@@ -385,6 +385,27 @@ def make_cluster_overlay_img(
     feature_y: str,
     colors: typing.List[str],
 ) -> np.array:
+    """
+    Calculates in RGBA image of the clustering result based the results of np.histogram2d.
+
+    Parameters
+    ----------
+    cluster_id Column of the clustering result
+    features Feature dataframe
+    histogram_data 3 element tuple with the histogram itself, x- and -y edges.
+    feature_x Feature column for x-axis
+    feature_y Feature column for y-axis
+    colors Colors for cluster color mapping
+
+    Returns
+    -------
+    numpy array with shape (W,H,4) which represents an RGBA image.
+    """
+
+    assert cluster_id in features, f"Column {cluster_id} not in features."
+    assert feature_x in features, f"Column {feature_x} not in features."
+    assert feature_y in features, f"Column {feature_y} not in features."
+
     h, xedges, yedges = histogram_data
 
     relevant_entries = features.loc[
