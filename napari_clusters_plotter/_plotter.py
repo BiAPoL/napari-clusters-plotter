@@ -257,7 +257,7 @@ class PlotterWidget(QMainWindow):
 
         self.log_scale_container = QWidget()
         self.log_scale_container.setLayout(QHBoxLayout())
-        self.log_scale_container.layout().addWidget(QLabel("Log scale:"))
+        self.log_scale_container.layout().addWidget(QLabel("Log scale"))
         self.log_scale = QCheckBox("")
         self.log_scale.setChecked(False)
         self.log_scale.stateChanged.connect(replot)
