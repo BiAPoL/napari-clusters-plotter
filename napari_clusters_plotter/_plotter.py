@@ -1,8 +1,6 @@
 import os
-import typing
 import warnings
 from enum import Enum, auto
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -27,8 +25,8 @@ from qtpy.QtWidgets import (
 from ._plotter_utilities import (
     clustered_plot_parameters,
     estimate_number_bins,
+    make_cluster_overlay_img,
     unclustered_plot_parameters,
-    make_cluster_overlay_img
 )
 from ._Qt_code import (
     ICON_ROOT,

@@ -1,8 +1,9 @@
-import numpy as np
-from scipy import stats
-from PIL import ImageColor
-import pandas as pd
 import typing
+
+import numpy as np
+import pandas as pd
+from PIL import ImageColor
+from scipy import stats
 
 
 def unclustered_plot_parameters(
@@ -374,6 +375,7 @@ def gen_highlight():
     Currently, it is color white.
     """
     return "#FFFFFF"
+
 
 def make_cluster_overlay_img(
     cluster_id: str,
