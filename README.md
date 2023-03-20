@@ -68,7 +68,7 @@ If you want to upload your own measurements you can do this using [napari-skimag
 Under the menu `Tools > Measurement tables > Load from CSV (nsr)` you can find a widget to upload your own csv file.
 Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
 If you don't specify this column it will be assumed that measurements start at 1 and each
-column describes the next label.
+row describes the next label.
 
 Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
 time the given row refers to.
