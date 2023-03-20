@@ -184,7 +184,6 @@ class PlotterWidget(QMainWindow):
                 clustering_ID = self.cluster_ids.name
                 features = get_layer_tabular_data(self.analysed_layer)
 
-
             features = get_layer_tabular_data(self.analysed_layer)
 
             # redraw the whole plot
