@@ -456,8 +456,7 @@ class MplCanvas(FigureCanvas):
         self.match_napari_layout()
 
         super().__init__(self.fig)
-        # polygons for 2d histogram
-        self.polygons = []
+
         self.pts = self.axes.scatter([], [])
         self.selector = SelectFromCollection(self, self.axes, self.pts)
         self.rectangle_selector = RectangleSelector(
@@ -493,10 +492,6 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
         self.is_pressed = None
 
-    def hide_all_polygons(self):
-        for p in self.polygons:
-            p.remove()
-        self.axes.figure.canvas.draw_idle()
 
     def make_2d_histogram(
         self,
@@ -527,13 +522,6 @@ class MplCanvas(FigureCanvas):
         full_data = pd.concat([data_x, data_y], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
-        self.axes.figure.canvas.draw_idle()
-
-    def show_polygons(self):
-        for poly_i, poly in enumerate(self.polygons):
-            c = self.colors[int(poly_i + 1) % len(self.colors)]
-            poly.set_facecolor(c)
-            self.axes.add_patch(poly)
         self.axes.figure.canvas.draw_idle()
 
     def make_scatter_plot(
