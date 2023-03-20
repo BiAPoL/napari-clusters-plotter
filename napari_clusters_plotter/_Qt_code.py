@@ -515,7 +515,6 @@ class MplCanvas(FigureCanvas):
         )
         self.axes.set_xlim(xedges[0], xedges[-1])
         self.axes.set_ylim(yedges[0], yedges[-1])
-        # h, xedges, yedges, _ = self.axes.hist2d(data_x, data_y, bins=bin_number, cmap="magma", norm=norm, alpha=1)
         self.histogram = (h, xedges, yedges)
 
         full_data = pd.concat([data_x, data_y], axis=1)
