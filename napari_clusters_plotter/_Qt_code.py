@@ -492,7 +492,6 @@ class MplCanvas(FigureCanvas):
         self.axes.clear()
         self.is_pressed = None
 
-
     def make_2d_histogram(
         self,
         data_x: "numpy.typing.ArrayLike",
