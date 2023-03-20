@@ -384,6 +384,7 @@ def make_cluster_overlay_img(
     feature_x: str,
     feature_y: str,
     colors: typing.List[str],
+    hide_first_cluster: bool = True,
 ) -> np.array:
     """
     Calculates in RGBA image of the clustering result based the results of np.histogram2d.
@@ -408,10 +409,14 @@ def make_cluster_overlay_img(
 
     h, xedges, yedges = histogram_data
 
-    relevant_entries = features.loc[
-        features[cluster_id] != features[cluster_id].min(),
-        [cluster_id, feature_x, feature_y],
-    ]
+    relevant_entries = features[[cluster_id, feature_x, feature_y]]
+    if hide_first_cluster:
+        relevant_entries = features.loc[
+            features[cluster_id] != features[cluster_id].min(),
+            [cluster_id, feature_x, feature_y],
+        ]
+
+
 
     cluster_overlay_rgba = np.zeros((*h.shape, 4), dtype=float)
     output_max = np.zeros(h.shape, dtype=float)

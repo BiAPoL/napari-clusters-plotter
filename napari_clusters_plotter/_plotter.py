@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, QSignalBlocker
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -206,6 +206,8 @@ class PlotterWidget(QMainWindow):
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
+                with QSignalBlocker(self.plot_hide_non_selected):
+                    self.plot_hide_non_selected.setChecked(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
@@ -532,6 +534,7 @@ class PlotterWidget(QMainWindow):
                     feature_y=self.plot_y_axis_name,
                     colors=colors,
                     histogram_data=self.graphics_widget.histogram,
+                    hide_first_cluster=self.plot_hide_non_selected.isChecked()
                 )
                 xedges = self.graphics_widget.histogram[1]
                 yedges = self.graphics_widget.histogram[2]
