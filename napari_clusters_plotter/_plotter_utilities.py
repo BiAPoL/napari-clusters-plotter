@@ -416,8 +416,6 @@ def make_cluster_overlay_img(
             [cluster_id, feature_x, feature_y],
         ]
 
-
-
     cluster_overlay_rgba = np.zeros((*h.shape, 4), dtype=float)
     output_max = np.zeros(h.shape, dtype=float)
 

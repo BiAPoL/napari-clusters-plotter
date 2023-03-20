@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt, QSignalBlocker
+from qtpy.QtCore import QSignalBlocker, Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -534,7 +534,7 @@ class PlotterWidget(QMainWindow):
                     feature_y=self.plot_y_axis_name,
                     colors=colors,
                     histogram_data=self.graphics_widget.histogram,
-                    hide_first_cluster=self.plot_hide_non_selected.isChecked()
+                    hide_first_cluster=self.plot_hide_non_selected.isChecked(),
                 )
                 xedges = self.graphics_widget.histogram[1]
                 yedges = self.graphics_widget.histogram[2]
