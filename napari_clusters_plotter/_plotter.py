@@ -160,7 +160,7 @@ class PlotterWidget(QMainWindow):
 
         def checkbox_status_changed():
             if self.cluster_ids is not None:
-                clustering_ID = "MANUAL_CLUSTER_ID"
+                clustering_ID = self.cluster_ids.name
                 features = get_layer_tabular_data(self.analysed_layer)
 
                 # redraw the whole plot
