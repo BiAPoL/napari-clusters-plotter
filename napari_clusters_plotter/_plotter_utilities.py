@@ -1,5 +1,8 @@
 import numpy as np
 from scipy import stats
+from PIL import ImageColor
+import pandas as pd
+import typing
 
 
 def unclustered_plot_parameters(
@@ -371,3 +374,38 @@ def gen_highlight():
     Currently, it is color white.
     """
     return "#FFFFFF"
+
+def make_cluster_overlay_img(
+    cluster_id: str,
+    features: pd.DataFrame,
+    histogram_data: typing.Tuple,
+    feature_x: str,
+    feature_y: str,
+    colors: typing.List[str],
+) -> np.array:
+    h, xedges, yedges = histogram_data
+
+    relevant_entries = features.loc[
+        features[cluster_id] != features[cluster_id].min(),
+        [cluster_id, feature_x, feature_y],
+    ]
+
+    cluster_overlay_rgba = np.zeros((*h.shape, 4), dtype=float)
+    output_max = np.zeros(h.shape, dtype=float)
+
+    for cluster, entries in relevant_entries.groupby(cluster_id):
+        h2, _, _ = np.histogram2d(
+            entries[feature_x], entries[feature_y], bins=[xedges, yedges]
+        )
+        mask = h2 > output_max
+        np.maximum(h2, output_max, out=output_max)
+        rgba = [
+            float(v) / 255
+            for v in list(
+                ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB")
+            )
+        ]
+        rgba.append(0.9)
+        cluster_overlay_rgba[mask] = rgba
+
+    return cluster_overlay_rgba.swapaxes(0, 1)
