@@ -47,6 +47,8 @@ from ._utilities import (
 
 POINTER = "frame"
 
+POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
+
 
 class PlottingType(Enum):
     HISTOGRAM_2D = auto()
@@ -100,6 +102,11 @@ class PlotterWidget(QMainWindow):
             add_column_to_layer_tabular_data(
                 self.analysed_layer, clustering_ID, features[clustering_ID]
             )
+
+            # update the dropdown, so that the "MANUAL_CLUSTER_ID" is added
+            self.update_axes_and_clustering_id_lists()
+            # set the selected item of the "clustering" combobox
+            self.plot_cluster_id.setCurrentText(clustering_ID)
 
             # redraw the whole plot
             self.run(
@@ -167,8 +174,8 @@ class PlotterWidget(QMainWindow):
         cluster_container.layout().addWidget(self.plot_cluster_id)
 
         # making buttons
-        run_container, run_button = button("Run")
-        update_container, update_button = button("Update Measurements")
+        run_container, run_button = button("Plot")
+        update_container, update_button = button("Update Axes/Clustering Options")
 
         ############################
         # Advanced plotting options
@@ -179,7 +186,7 @@ class PlotterWidget(QMainWindow):
         def replot():
             clustering_ID = None
             if self.cluster_ids is not None:
-                clustering_ID = self.cluster_ids.name
+                clustering_ID = self.plot_cluster_id.currentText()
 
             features = get_layer_tabular_data(self.analysed_layer)
 
@@ -368,7 +375,13 @@ class PlotterWidget(QMainWindow):
             self.old_frame = frame
 
         # update axes combo boxes once a new label layer is selected
-        self.labels_select.changed.connect(self.update_axes_list)
+        self.labels_select.changed.connect(self.update_axes_and_clustering_id_lists)
+        # depending on the select clustering ID, enable/disable the checkbox for hiding clusters
+        self.plot_cluster_id.currentIndexChanged.connect(
+            self.change_state_of_nonselected_checkbox
+        )
+        # replot if the clustering ID has changed
+        self.plot_cluster_id.currentIndexChanged.connect(replot)
 
         # update axes combo boxes automatically if features of
         # layer are changed
@@ -376,14 +389,14 @@ class PlotterWidget(QMainWindow):
         self.labels_select.changed.connect(self.activate_property_autoupdate)
 
         # update axes combo boxes once update button is clicked
-        update_button.clicked.connect(self.update_axes_list)
+        update_button.clicked.connect(self.update_axes_and_clustering_id_lists)
 
         # select what happens when the run button is clicked
         run_button.clicked.connect(run_clicked)
 
         self.viewer.dims.events.current_step.connect(frame_changed)
 
-        self.update_axes_list()
+        self.update_axes_and_clustering_id_lists()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -392,13 +405,34 @@ class PlotterWidget(QMainWindow):
     def reset_choices(self, event=None):
         self.labels_select.reset_choices(event)
 
+    def change_state_of_nonselected_checkbox(self):
+        # enable the checkbox only if clustering is done manually or custom way/with a custom name,
+        # i.e., algorithm name is not in POSSIBLE_CLUSTER_IDS
+        enabled = (
+            False
+            if any(
+                name in self.plot_cluster_id.currentText()
+                for name in POSSIBLE_CLUSTER_IDS
+            )
+            else True
+        )
+        self.plot_hide_non_selected.setEnabled(enabled)
+        # if HDBSCAN results are plotted, the checkbox will be disabled and checked,
+        # because HDBSCAN is the only implemented algorithm that predicts noise points
+        checked = "HDBSCAN" in self.plot_cluster_id.currentText()
+        self.plot_hide_non_selected.setChecked(checked)
+
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
-            self.last_connected.events.properties.disconnect(self.update_axes_list)
-        self.labels_select.value.events.properties.connect(self.update_axes_list)
+            self.last_connected.events.properties.disconnect(
+                self.update_axes_and_clustering_id_lists
+            )
+        self.labels_select.value.events.properties.connect(
+            self.update_axes_and_clustering_id_lists
+        )
         self.last_connected = self.labels_select.value
 
-    def update_axes_list(self):
+    def update_axes_and_clustering_id_lists(self):
         selected_layer = self.labels_select.value
 
         former_x_axis = self.plot_x_axis.currentIndex()
@@ -475,9 +509,12 @@ class PlotterWidget(QMainWindow):
             and plot_cluster_name in list(features.keys())
         ):
             if self.plot_hide_non_selected.isChecked():
-                features.loc[
-                    features[plot_cluster_name] == 0, plot_cluster_name
-                ] = -1  # make unselected points to noise points
+                if "HDBSCAN" in plot_cluster_name:
+                    pass  # this algorithm already predicts noise points as -1
+                else:
+                    features.loc[
+                        features[plot_cluster_name] == 0, plot_cluster_name
+                    ] = -1  # make unselected points to noise points
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
