@@ -68,15 +68,10 @@ If you want to upload your own measurements you can do this using [napari-skimag
 Under the menu `Tools > Measurement tables > Load from CSV (nsr)` you can find a widget to upload your own csv file.
 Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
 If you don't specify this column it will be assumed that measurements start at 1 and each
-column describes the next label.
+row describes the next label.
 
 Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
 time the given row refers to.
-
-**For the correct visualisation of clusters IDs in space**, it is **important** that label images/time-points of the time-lapse
-are either **labelled sequentially** or missing labels still exist in the loaded csv file (i.e., missing label exists in the
-"label" column with `NaN` values for other measurements in the same row). If you perform measurements using before mentioned
-plugins, the obtained dataframe is already in the correct form.
 
 #### Time-Lapse Measurements
 In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
