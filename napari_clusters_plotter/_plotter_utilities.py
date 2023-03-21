@@ -391,12 +391,20 @@ def make_cluster_overlay_img(
 
     Parameters
     ----------
-    cluster_id Column of the clustering result
-    features Feature dataframe
-    histogram_data 3 element tuple with the histogram itself, x- and -y edges.
-    feature_x Feature column for x-axis
-    feature_y Feature column for y-axis
-    colors Colors for cluster color mapping
+    cluster_id : str
+        Column of the clustering result
+    features : pd.DataFrame
+        Feature dataframe
+    histogram_data : tuple
+        3 element tuple with the histogram itself, x- and -y edges.
+    feature_x : str
+        Feature column for x-axis
+    feature_y : str
+        Feature column for y-axis
+    colors : list
+        Colors for cluster color mapping
+    hide_first_cluster : bool
+        Whether non-selected points are not visualized as a cluster
 
     Returns
     -------
