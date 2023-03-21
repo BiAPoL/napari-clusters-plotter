@@ -580,12 +580,13 @@ def get_surface_color_map(max_cluster_ids):
     max_cluster_ids : int
         the maximum cluster id.
     """
-    from napari.utils import Colormap
     from matplotlib.colors import to_rgba_array
+    from napari.utils import Colormap
+
     # a color for non-annotated vertices
     non_annotated_color = "#888888"
     # get the nice colormap with as many colors as there are cluster ids
-    nice_colormap = get_nice_colormap()[:int(max_cluster_ids + 1)]
+    nice_colormap = get_nice_colormap()[: int(max_cluster_ids + 1)]
     # add the non-annotated colors for the clusters
     nice_colormap.insert(0, non_annotated_color)
     # convert the colormap to a rgba colormap

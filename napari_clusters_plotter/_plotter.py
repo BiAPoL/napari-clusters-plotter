@@ -42,8 +42,9 @@ from ._utilities import (
     add_column_to_layer_tabular_data,
     dask_cluster_image_timelapse,
     generate_cluster_image,
+    generate_cluster_surface,
     get_layer_tabular_data,
-    get_nice_colormap, generate_cluster_surface,
+    get_nice_colormap,
 )
 
 POINTER = "frame"
@@ -502,7 +503,6 @@ class PlotterWidget(QMainWindow):
                 self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
-
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = clustered_plot_parameters(
                     cluster_id=self.cluster_ids,
@@ -585,7 +585,10 @@ class PlotterWidget(QMainWindow):
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the cluster image
-                if isinstance(self.analysed_layer, Labels) and len(self.analysed_layer.data.shape) == 4:
+                if (
+                    isinstance(self.analysed_layer, Labels)
+                    and len(self.analysed_layer.data.shape) == 4
+                ):
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
                         label_id_list_per_timepoint = [
@@ -615,7 +618,9 @@ class PlotterWidget(QMainWindow):
                     )
 
                 elif isinstance(self.analysed_layer, Surface):
-                    cluster_data = generate_cluster_surface(self.analysed_layer.data, self.cluster_ids)
+                    cluster_data = generate_cluster_surface(
+                        self.analysed_layer.data, self.cluster_ids
+                    )
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_data = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
@@ -623,8 +628,9 @@ class PlotterWidget(QMainWindow):
                 else:
                     warnings.warn("Image dimensions too high for processing!")
                     return
-                
+
                 from ._utilities import get_surface_color_map
+
                 napari_colormap = get_surface_color_map(max(self.cluster_ids))
 
                 # if the cluster image layer doesn't yet exist make it
@@ -634,10 +640,9 @@ class PlotterWidget(QMainWindow):
                     or self.visualized_layer not in self.viewer.layers
                 ):
                     if isinstance(self.analysed_layer, Surface):
-
                         self.visualized_layer = self.viewer.add_surface(
                             cluster_data,
-                            contrast_limits = [0, self.cluster_ids.max() + 1],
+                            contrast_limits=[0, self.cluster_ids.max() + 1],
                             colormap=napari_colormap,
                             name="cluster_ids_in_space",
                             scale=self.layer_select.value.scale,
@@ -657,7 +662,10 @@ class PlotterWidget(QMainWindow):
                         self.visualized_layer.color = cmap_dict
                     else:
                         self.visualized_layer.colormap = napari_colormap
-                        self.visualized_layer.contrast_limits = [0, self.cluster_ids.max() + 1]
+                        self.visualized_layer.contrast_limits = [
+                            0,
+                            self.cluster_ids.max() + 1,
+                        ]
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
