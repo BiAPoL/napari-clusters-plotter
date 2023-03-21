@@ -228,12 +228,13 @@ class PlotterWidget(QMainWindow):
         # takes care of case where this isn't set yet directly after init
         self.plot_cluster_name = None
         self.old_frame = None
-        self.frame = self.viewer.dims.current_step[0]
+        # Get frame from dims (assuming the following standard: (..., t, z, y, x))
+        self.frame = self.viewer.dims.current_step[-4]
 
         def frame_changed(event):
             if self.viewer.dims.ndim <= 3:
                 return
-            frame = event.value[0]
+            frame = event.value[-4]
             if (not self.old_frame) or (self.old_frame != frame):
                 if self.labels_select.value is None:
                     warnings.warn("Please select labels layer!")
