@@ -517,9 +517,28 @@ class MplCanvas(FigureCanvas):
         self.axes.set_ylim(yedges[0], yedges[-1])
         self.histogram = (h, xedges, yedges)
 
-        full_data = pd.concat([data_x, data_y], axis=1)
+        full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+        self.axes.figure.canvas.draw_idle()
+
+    def make_1d_histogram(
+        self,
+        data: "numpy.typing.ArrayLike",
+        bin_number: int = 400,
+        log_scale: bool = False,
+    ):
+        counts, bins = np.histogram(data, bins=bin_number)
+        self.axes.hist(
+            bins[:-1], bins, edgecolor="white", weights=counts, log=log_scale
+        )
+        self.histogram = (counts, bins)
+        self.axes.set_xlim(min(bins), max(bins))
+        if log_scale:
+            self.axes.set_xscale("linear")
+            self.axes.set_yscale("log")
+
+        self.selector.disconnect()
         self.axes.figure.canvas.draw_idle()
 
     def make_scatter_plot(
