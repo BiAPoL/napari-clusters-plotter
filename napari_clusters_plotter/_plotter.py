@@ -417,10 +417,15 @@ class PlotterWidget(QMainWindow):
             else True
         )
         self.plot_hide_non_selected.setEnabled(enabled)
-        # if HDBSCAN results are plotted, the checkbox will be disabled and checked,
-        # because HDBSCAN is the only implemented algorithm that predicts noise points
-        checked = "HDBSCAN" in self.plot_cluster_id.currentText()
-        self.plot_hide_non_selected.setChecked(checked)
+
+        if any(
+            name in self.plot_cluster_id.currentText() for name in POSSIBLE_CLUSTER_IDS
+        ):
+            self.plot_hide_non_selected.setChecked(False)
+        # except when HDBSCAN is selected, because HDBSCAN is the only
+        # implemented algorithm that predicts noise points
+        if "HDBSCAN" in self.plot_cluster_id.currentText():
+            self.plot_hide_non_selected.setChecked(True)
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
