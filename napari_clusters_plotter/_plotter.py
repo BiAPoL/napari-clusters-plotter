@@ -110,7 +110,8 @@ class PlotterWidget(QMainWindow):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
-            self.labels_select.value.opacity = 0
+            if isinstance(self.analysed_layer, Labels):
+                self.labels_select.value.opacity = 0
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -470,8 +471,9 @@ class PlotterWidget(QMainWindow):
         # it will be considered to be tracking data, where all labels of the same track have
         # the same label, and each column represent track's features
         tracking_data = (
-            isinstance(self.analysed_layer, Labels) and
-            len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
+            isinstance(self.analysed_layer, Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and "frame" not in features.keys()
         )
         colors = get_nice_colormap()
 
