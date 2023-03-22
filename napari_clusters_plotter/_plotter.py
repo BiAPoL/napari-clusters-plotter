@@ -277,6 +277,7 @@ class PlotterWidget(QMainWindow):
         checkbox_container.setLayout(QHBoxLayout())
         checkbox_container.layout().addWidget(QLabel("Hide non-selected clusters"))
         self.plot_hide_non_selected = QCheckBox()
+        self.plot_hide_non_selected.setToolTip("Enabled only for manual clustering")
         self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
         checkbox_container.layout().addWidget(self.plot_hide_non_selected)
 
