@@ -380,8 +380,6 @@ class PlotterWidget(QMainWindow):
         self.plot_cluster_id.currentIndexChanged.connect(
             self.change_state_of_nonselected_checkbox
         )
-        # replot if the clustering ID has changed
-        self.plot_cluster_id.currentIndexChanged.connect(replot)
 
         # update axes combo boxes automatically if features of
         # layer are changed
