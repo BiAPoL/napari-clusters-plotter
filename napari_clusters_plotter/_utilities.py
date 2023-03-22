@@ -235,7 +235,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     predictionlist_new = np.array(predictionlist) + 1
     label_list = np.array(label_list)
 
-    return map_array(np.array(label_image), label_list, predictionlist_new).astype(
+    return map_array(np.asarray(label_image), label_list, predictionlist_new).astype(
         "uint64"
     )
 

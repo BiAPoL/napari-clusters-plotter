@@ -1,16 +1,13 @@
 import os
-import typing
 import warnings
 from enum import Enum, auto
-from typing import List
 
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
-from PIL import ImageColor
 from qtpy import QtWidgets
-from qtpy.QtCore import Qt
+from qtpy.QtCore import QSignalBlocker, Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -28,6 +25,7 @@ from qtpy.QtWidgets import (
 from ._plotter_utilities import (
     clustered_plot_parameters,
     estimate_number_bins,
+    make_cluster_overlay_img,
     unclustered_plot_parameters,
 )
 from ._Qt_code import (
@@ -182,7 +180,6 @@ class PlotterWidget(QMainWindow):
             clustering_ID = None
             if self.cluster_ids is not None:
                 clustering_ID = self.cluster_ids.name
-                features = get_layer_tabular_data(self.analysed_layer)
 
             features = get_layer_tabular_data(self.analysed_layer)
 
@@ -209,6 +206,8 @@ class PlotterWidget(QMainWindow):
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
+                with QSignalBlocker(self.plot_hide_non_selected):
+                    self.plot_hide_non_selected.setChecked(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
@@ -234,7 +233,7 @@ class PlotterWidget(QMainWindow):
 
         self.bin_number_container = QWidget()
         self.bin_number_container.setLayout(QHBoxLayout())
-        self.bin_number_container.layout().addWidget(QLabel("Number of bins:"))
+        self.bin_number_container.layout().addWidget(QLabel("Number of bins"))
 
         self.bin_number_manual_container = QWidget()
         self.bin_number_manual_container.setLayout(QHBoxLayout())
@@ -260,7 +259,7 @@ class PlotterWidget(QMainWindow):
 
         self.log_scale_container = QWidget()
         self.log_scale_container.setLayout(QHBoxLayout())
-        self.log_scale_container.layout().addWidget(QLabel("Log scale:"))
+        self.log_scale_container.layout().addWidget(QLabel("Log scale"))
         self.log_scale = QCheckBox("")
         self.log_scale.setChecked(False)
         self.log_scale.stateChanged.connect(replot)
@@ -426,42 +425,6 @@ class PlotterWidget(QMainWindow):
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
 
-    def make_cluster_overlay_img(
-        self,
-        cluster_id: str,
-        features: pd.DataFrame,
-        histogram_data: typing.Tuple,
-        feature_x: str,
-        feature_y: str,
-        colors: List[str],
-    ) -> np.array:
-        h, xedges, yedges = histogram_data
-
-        relevant_entries = features.loc[
-            features[cluster_id] != features[cluster_id].min(),
-            [cluster_id, feature_x, feature_y],
-        ]
-
-        cluster_overlay_rgba = np.zeros((*h.shape, 4), dtype=float)
-        output_max = np.zeros(h.shape, dtype=float)
-
-        for cluster, entries in relevant_entries.groupby(cluster_id):
-            h2, _, _ = np.histogram2d(
-                entries[feature_x], entries[feature_y], bins=[xedges, yedges]
-            )
-            mask = h2 > output_max
-            np.maximum(h2, output_max, out=output_max)
-            rgba = [
-                float(v) / 255
-                for v in list(
-                    ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB")
-                )
-            ]
-            rgba.append(0.9)
-            cluster_overlay_rgba[mask] = rgba
-
-        return cluster_overlay_rgba.swapaxes(0, 1)
-
     def run(
         self,
         features: pd.DataFrame,
@@ -521,7 +484,6 @@ class PlotterWidget(QMainWindow):
             self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
-            # get long colormap from function
             if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
@@ -565,13 +527,14 @@ class PlotterWidget(QMainWindow):
                     log_scale=self.log_scale.isChecked(),
                 )
 
-                rgb_img = self.make_cluster_overlay_img(
+                rgb_img = make_cluster_overlay_img(
                     cluster_id=plot_cluster_name,
                     features=features,
                     feature_x=self.plot_x_axis_name,
                     feature_y=self.plot_y_axis_name,
                     colors=colors,
                     histogram_data=self.graphics_widget.histogram,
+                    hide_first_cluster=self.plot_hide_non_selected.isChecked(),
                 )
                 xedges = self.graphics_widget.histogram[1]
                 yedges = self.graphics_widget.histogram[2]

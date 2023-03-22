@@ -1,4 +1,8 @@
+import typing
+
 import numpy as np
+import pandas as pd
+from PIL import ImageColor
 from scipy import stats
 
 
@@ -371,3 +375,63 @@ def gen_highlight():
     Currently, it is color white.
     """
     return "#FFFFFF"
+
+
+def make_cluster_overlay_img(
+    cluster_id: str,
+    features: pd.DataFrame,
+    histogram_data: typing.Tuple,
+    feature_x: str,
+    feature_y: str,
+    colors: typing.List[str],
+    hide_first_cluster: bool = True,
+) -> np.array:
+    """
+    Calculates in RGBA image of the clustering result based the results of np.histogram2d.
+
+    Parameters
+    ----------
+    cluster_id Column of the clustering result
+    features Feature dataframe
+    histogram_data 3 element tuple with the histogram itself, x- and -y edges.
+    feature_x Feature column for x-axis
+    feature_y Feature column for y-axis
+    colors Colors for cluster color mapping
+
+    Returns
+    -------
+    numpy array with shape (W,H,4) which represents an RGBA image.
+    """
+
+    assert cluster_id in features, f"Column {cluster_id} not in features."
+    assert feature_x in features, f"Column {feature_x} not in features."
+    assert feature_y in features, f"Column {feature_y} not in features."
+
+    h, xedges, yedges = histogram_data
+
+    relevant_entries = features[[cluster_id, feature_x, feature_y]]
+    if hide_first_cluster:
+        relevant_entries = features.loc[
+            features[cluster_id] != features[cluster_id].min(),
+            [cluster_id, feature_x, feature_y],
+        ]
+
+    cluster_overlay_rgba = np.zeros((*h.shape, 4), dtype=float)
+    output_max = np.zeros(h.shape, dtype=float)
+
+    for cluster, entries in relevant_entries.groupby(cluster_id):
+        h2, _, _ = np.histogram2d(
+            entries[feature_x], entries[feature_y], bins=[xedges, yedges]
+        )
+        mask = h2 > output_max
+        np.maximum(h2, output_max, out=output_max)
+        rgba = [
+            float(v) / 255
+            for v in list(
+                ImageColor.getcolor(colors[int(cluster) % len(colors)], "RGB")
+            )
+        ]
+        rgba.append(0.9)
+        cluster_overlay_rgba[mask] = rgba
+
+    return cluster_overlay_rgba.swapaxes(0, 1)
