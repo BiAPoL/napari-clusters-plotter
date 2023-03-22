@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import QSignalBlocker, Qt
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -208,16 +208,14 @@ class PlotterWidget(QMainWindow):
             replot()
 
         def plotting_type_changed():
-            replot()
-
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
-                with QSignalBlocker(self.plot_hide_non_selected):
-                    self.plot_hide_non_selected.setChecked(True)
+                self.plot_hide_non_selected.setChecked(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
+            replot()
 
         def bin_number_set():
             replot()
