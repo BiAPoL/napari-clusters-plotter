@@ -270,6 +270,8 @@ class PlotterWidget(QMainWindow):
         self.log_scale.stateChanged.connect(replot)
         self.log_scale_container.layout().addWidget(self.log_scale)
 
+        self.log_scale_container.setVisible(False)
+
         # Checkbox to hide non-selected clusters
         checkbox_container = QWidget()
         checkbox_container.setLayout(QHBoxLayout())
