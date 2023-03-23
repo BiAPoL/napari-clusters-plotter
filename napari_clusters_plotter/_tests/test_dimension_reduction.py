@@ -59,7 +59,7 @@ def test_bad_measurements(qtbot, make_napari_viewer):
     widget = DimensionalityReductionWidget(napari_viewer=viewer)
     widget.run(
         viewer=viewer,
-        labels_layer=labels_layer,
+        layer=labels_layer,
         selected_measurements_list=list(measurements.keys()),
         n_neighbours=2,
         perplexity=5,
