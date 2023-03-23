@@ -424,7 +424,7 @@ class DimensionalityReductionWidget(QWidget):
     def run(
         self,
         viewer,
-        labels_layer,
+        layer,
         selected_measurements_list,
         n_neighbours,
         perplexity,
@@ -442,7 +442,7 @@ class DimensionalityReductionWidget(QWidget):
         """
         The function triggered by clicking the run button.
         """
-        print("Selected labels layer: " + str(labels_layer))
+        print("Selected labels layer: " + str(layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
         def activate_buttons(error=None, active=True):
@@ -465,7 +465,7 @@ class DimensionalityReductionWidget(QWidget):
 
         # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
         try:
-            features = get_layer_tabular_data(labels_layer)
+            features = get_layer_tabular_data(layer)
 
             # only select the columns the user requested
             properties_to_reduce = features[selected_measurements_list]
@@ -496,7 +496,7 @@ class DimensionalityReductionWidget(QWidget):
                 if result[0] == "PCA":
                     # check if principal components are already present
                     # and remove them by overwriting the features
-                    tabular_data = get_layer_tabular_data(labels_layer)
+                    tabular_data = get_layer_tabular_data(layer)
                     dropkeys = [
                         column
                         for column in tabular_data.keys()
@@ -505,12 +505,12 @@ class DimensionalityReductionWidget(QWidget):
                     df_principal_components_removed = tabular_data.drop(
                         dropkeys, axis=1
                     )
-                    set_features(labels_layer, df_principal_components_removed)
+                    set_features(layer, df_principal_components_removed)
 
                     # write result back to properties/features of the layer
                     for i in range(0, len(result[1].T)):
                         add_column_to_layer_tabular_data(
-                            labels_layer, "PC_" + str(i), result[1][:, i]
+                            layer, "PC_" + str(i), result[1][:, i]
                         )
 
                 elif (
@@ -522,7 +522,7 @@ class DimensionalityReductionWidget(QWidget):
                     # write result back to properties/features of the layer
                     for i in range(0, n_components):
                         add_column_to_layer_tabular_data(
-                            labels_layer, result[0] + "_" + str(i), result[1][:, i]
+                            layer, result[0] + "_" + str(i), result[1][:, i]
                         )
 
                 else:
@@ -530,7 +530,7 @@ class DimensionalityReductionWidget(QWidget):
                     return
 
                 # add a table to napari viewer
-                show_table(viewer, labels_layer)
+                show_table(viewer, layer)
                 print("Dimensionality reduction finished")
 
             # depending on the selected dim red algorithm start either a secondary thread or run in the same as napari
