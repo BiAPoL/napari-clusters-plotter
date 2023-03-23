@@ -70,7 +70,7 @@ jobs:
         run: |
           python --version
           conda install -y pyopencl hdbscan pip setuptools wheel pytest pytest-cov pytest-benchmark pytest-qt pyqt pytest-xvfb pandas
-          # pip install setuptools tox tox-gh-actions napari_process_points_and_surfaces
+          # pip install setuptools tox tox-gh-actions
 
           pip install -e .
       #   pip install setuptools tox tox-gh-actions
