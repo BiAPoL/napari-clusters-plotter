@@ -47,11 +47,6 @@ def test_plotting(make_napari_viewer):
 
     for widget in widget_list:
         _widget = widget(viewer)
-        # Doesn't work for now to use in tests because MeasureWidget uses cle function
-        # if isinstance(_widget, ncp._measure.MeasureWidget):
-        #     _widget.run(
-        #         image_layer, label_layer, "Measure now intensity shape", None, None
-        #     )
 
         if isinstance(_widget, ncp._plotter.PlotterWidget):
             plot_widget = _widget
