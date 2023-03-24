@@ -158,11 +158,7 @@ def test_plotting_histogram(make_napari_viewer):
 
     viewer.window.add_dock_widget(PlotterWidget(viewer), area="right")
     plotter_widget = PlotterWidget(viewer)
-
     plotter_widget.plotting_type.setCurrentText("HISTOGRAM_2D")
-
-    viewer.window.add_dock_widget(PlotterWidget(viewer), area="right")
-    plotter_widget = PlotterWidget(viewer)
 
     plotter_widget.run(
         features=pd.DataFrame(measurements),
@@ -172,3 +168,32 @@ def test_plotting_histogram(make_napari_viewer):
     )
 
     assert plotter_widget.graphics_widget.axes.has_data()
+
+
+def test_cluster_image_generation_for_histogram(make_napari_viewer):
+    from napari_clusters_plotter._plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+
+    label = get_labels_array()
+    measurements = measure.regionprops_table(
+        label, properties=(["label", "area", "perimeter"])
+    )
+    measurements["MANUAL_CLUSTER_ID"] = np.array([1, 0, 2, -1, 0, 1, 2])
+    viewer.add_labels(label, properties=measurements)
+
+    viewer.window.add_dock_widget(PlotterWidget(viewer), area="right")
+    plotter_widget = PlotterWidget(viewer)
+    plotter_widget.plotting_type.setCurrentText("HISTOGRAM_2D")
+    plotter_widget.log_scale.value = True
+
+    plotter_widget.run(
+        features=pd.DataFrame(measurements),
+        plot_x_axis_name="area",
+        plot_y_axis_name="perimeter",
+        plot_cluster_name="MANUAL_CLUSTER_ID",
+        force_redraw=True,
+    )
+
+    assert plotter_widget.graphics_widget.axes.has_data()
+    assert "cluster_ids_in_space" in viewer.layers
