@@ -82,3 +82,34 @@ def test_dimensionality_reduction_for_surface_data(make_napari_viewer):
 
     assert "UMAP_0" in list(surface_layer.features.keys())
     assert "UMAP_1" in list(surface_layer.features.keys())
+
+
+def test_cluster_ids_layer_generation_for_surface_data(make_napari_viewer):
+    from napari_clusters_plotter._plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    surface = create_fake_surface()
+    measurements = get_fake_surface_measurements()
+
+    measurements["MANUAL_CLUSTER_ID"] = 1
+    measurements["MANUAL_CLUSTER_ID"].loc[1] = 2
+    measurements["MANUAL_CLUSTER_ID"].loc[3] = 2
+
+    surface_layer = viewer.add_surface(surface)
+    surface_layer.features = measurements
+
+    viewer.window.add_dock_widget(PlotterWidget(viewer), area="right")
+    plotter_widget = PlotterWidget(viewer)
+
+    plotter_widget.run(
+        features=measurements,
+        plot_x_axis_name="Quality.ASPECT_RATIO",
+        plot_y_axis_name="Quality.AREA",
+        plot_cluster_name="MANUAL_CLUSTER_ID",
+        redraw_cluster_image=True,
+        force_redraw=True,
+    )
+
+    assert plotter_widget.graphics_widget.axes.has_data()
+    assert len(viewer.layers) == 2
+    assert "cluster_ids_in_space" in viewer.layers
