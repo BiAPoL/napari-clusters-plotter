@@ -169,6 +169,16 @@ def test_plotting_histogram(make_napari_viewer):
 
     assert plotter_widget.graphics_widget.axes.has_data()
 
+    # test plotting 1D histogram
+    plotter_widget.run(
+        features=pd.DataFrame(measurements),
+        plot_x_axis_name="area",
+        plot_y_axis_name="area",
+        force_redraw=True,
+    )
+
+    assert plotter_widget.graphics_widget.axes.has_data()
+
 
 def test_cluster_image_generation_for_histogram(make_napari_viewer):
     from napari_clusters_plotter._plotter import PlotterWidget
