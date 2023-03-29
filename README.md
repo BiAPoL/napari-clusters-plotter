@@ -71,13 +71,13 @@ If you don't specify this column it will be assumed that measurements start at 1
 row describes the next label.
 
 Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
-time the given row refers to.
+time the given row refers to. This column is already included in the table if you use recommended plugins for deriving measurements.
 
 #### Time-Lapse Measurements
 In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
 which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
 
-Note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
+Again, note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
 time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
 If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
 this column must not be added.
@@ -91,13 +91,22 @@ analysed. You can then plot these measurements using the menu `Tools > Measureme
 
 In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
 on the X- and Y-axis. If you cannot see any options in axes selection boxes, but you have performed measurements, click
-on `Update Axes/Clustering Selection Boxes` to refresh them. Click on `Run` to draw the data points in the plot area.
+on `Update Axes/Clustering Options` to refresh them. Click on `Plot` to draw the data points in the plot area.
+
+Currently, you can select between two types of plots: scatter plot and 2D histogram. Click on "expand for advanced
+options" to see the selection of the plot type. Clustering (manual and automatic) is possible using both types of plots.
+2D histogram is recommended if you have a very high number of data points. Under advanced options you will also find the
+checkbox determining whether unselected data points should be automatically clustered as another cluster or displayed as
+gray data points and not visualized in the generated clusters IDs layer.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_plain.png)
 
 You can also manually select a region in the plot. To use lasso (freehand) tool use left mouse click, and to use a
 rectangle - right click. The resulting manual clustering will also be visualized in the original image. To optimize
 visualization in the image, turn off the visibility of the analysed labels layer.
+
+Manual clustering results can be saved by going to `Tools > Measurement > Show table (nsr)`, and clicking on `Save as csv`.
+Saved table will contain "MANUAL_CLUSTER_ID" column. This column is overwritten as soon as different clusters are manually selected.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
 
@@ -155,7 +164,7 @@ Afterwards, you can again save and/or close the table. Also, close the clusterin
 
 ### Plotting clustering results
 Return to the Plotter widget using the menu `Tools > Measurement tables > Plot measurement (ncp)`.
-Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Clustering`, and click on `Run`.
+Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Clustering`, and click on `Plot`.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/hdbscan_clusters_plot.png)
 
