@@ -194,9 +194,10 @@ class PlotterWidget(QMainWindow):
                 clustering_ID = self.plot_cluster_id.currentText()
 
             features = get_layer_tabular_data(self.analysed_layer)
+            if self.plot_x_axis_name == self.plot_y_axis_name:
+                self.plot_cluster_id.setCurrentText("")
 
             # redraw the whole plot
-
             try:
                 self.run(
                     features,
@@ -431,7 +432,10 @@ class PlotterWidget(QMainWindow):
     def change_state_of_nonselected_checkbox(self):
         # make the checkbox visible only if clustering is done manually
         visible = (
-            True if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText() else False
+            True
+            if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText()
+            or self.plot_cluster_id.currentText() == ""
+            else False
         )
         self.hide_nonselected_checkbox_container.setVisible(visible)
 
@@ -503,6 +507,15 @@ class PlotterWidget(QMainWindow):
                 "Selected measurements do not exist in layer's properties/features. The plot is not (re)drawn."
             )
             return
+
+        # check if the same measurement was selected for both axis,
+        # because clustering in this case is not implemented yet
+        if (
+            plot_x_axis_name == plot_y_axis_name
+            and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
+        ):
+            self.plot_cluster_id.setCurrentText("")
+            plot_cluster_name = None
 
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
