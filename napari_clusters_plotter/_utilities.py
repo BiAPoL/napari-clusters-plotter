@@ -297,29 +297,28 @@ def reshape_2D_timelapse(timelapse_2d):
 
 def get_nice_colormap():
     colours_w_old_colors = [
-        "#1f77b4",  # blue
-        "#2ca02c",  # green
-        "#d62728",  # red
-        "#17becf",  # cyan
-        "#0054b6",  # dark blue
-        "#6aa866",  # dark green
-        "#8d472a",  # dark brown
-        "#a1e9f6",  # light blue
-        "#417239",  # dark green
-        "#8b7e32",  # dark brown
-        # after this line some colors overlap with the magma colormap
-        "#ff7f0e",  # orange
-        "#8c564b",  # brown
+        "#ff7f0e",
+        "#1f77b4",
+        "#2ca02c",
+        "#d62728",
         "#9467bd",
+        "#8c564b",
         "#e377c2",
         "#7f7f7f",
         "#bcbd22",
-        "#ccebc5",  # light green
+        "#17becf",
+        "#ccebc5",
         "#ffed6f",
+        "#0054b6",
+        "#6aa866",
         "#ffbfff",
+        "#8d472a",
+        "#417239",
         "#d48fd0",
+        "#8b7e32",
         "#7989dc",
         "#f1d200",
+        "#a1e9f6",
         "#924c28",
         "#dc797e",
         "#b86e85",

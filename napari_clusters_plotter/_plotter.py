@@ -7,7 +7,7 @@ import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import QSignalBlocker, Qt
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -215,25 +215,23 @@ class PlotterWidget(QMainWindow):
         def checkbox_visibility_changed():
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 if self.plot_x_axis.currentText() == self.plot_y_axis.currentText():
-                    self.checkbox_container.setVisible(False)
+                    self.hide_nonselected_checkbox_container.setVisible(False)
                 else:
-                    self.checkbox_container.setVisible(True)
+                    self.hide_nonselected_checkbox_container.setVisible(True)
 
         def plotting_type_changed():
-            replot()
-
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
                 if self.plot_x_axis.currentText() == self.plot_y_axis.currentText():
-                    self.checkbox_container.setVisible(False)
+                    self.hide_nonselected_checkbox_container.setVisible(False)
                 else:
-                    self.checkbox_container.setVisible(True)
-                    with QSignalBlocker(self.plot_hide_non_selected):
-                        self.plot_hide_non_selected.setChecked(True)
+                    self.hide_nonselected_checkbox_container.setVisible(True)
+                    self.plot_hide_non_selected.setChecked(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
+            replot()
 
         def bin_number_set():
             replot()
@@ -290,19 +288,28 @@ class PlotterWidget(QMainWindow):
         self.log_scale.stateChanged.connect(replot)
         self.log_scale_container.layout().addWidget(self.log_scale)
 
+        self.log_scale_container.setVisible(False)
+
         # Checkbox to hide non-selected clusters
-        self.checkbox_container = QWidget()
-        self.checkbox_container.setLayout(QHBoxLayout())
-        self.checkbox_container.layout().addWidget(QLabel("Hide non-selected clusters"))
+        self.hide_nonselected_checkbox_container = QWidget()
+        self.hide_nonselected_checkbox_container.setLayout(QHBoxLayout())
+        self.hide_nonselected_checkbox_container.layout().addWidget(
+            QLabel("Hide non-selected clusters")
+        )
         self.plot_hide_non_selected = QCheckBox()
+        self.plot_hide_non_selected.setToolTip("Enabled only for manual clustering")
         self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
-        self.checkbox_container.layout().addWidget(self.plot_hide_non_selected)
+        self.hide_nonselected_checkbox_container.layout().addWidget(
+            self.plot_hide_non_selected
+        )
 
         self.advanced_options_container.addWidget(combobox_plotting_container)
         self.advanced_options_container.addWidget(self.log_scale_container)
         self.advanced_options_container.addWidget(self.bin_number_container)
 
-        self.advanced_options_container.addWidget(self.checkbox_container)
+        self.advanced_options_container.addWidget(
+            self.hide_nonselected_checkbox_container
+        )
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
@@ -398,8 +405,6 @@ class PlotterWidget(QMainWindow):
         self.plot_cluster_id.currentIndexChanged.connect(
             self.change_state_of_nonselected_checkbox
         )
-        # replot if the clustering ID has changed
-        self.plot_cluster_id.currentIndexChanged.connect(replot)
 
         # update axes combo boxes automatically if features of
         # layer are changed
@@ -424,26 +429,16 @@ class PlotterWidget(QMainWindow):
         self.labels_select.reset_choices(event)
 
     def change_state_of_nonselected_checkbox(self):
-        # enable the checkbox only if clustering is done manually or custom way/with a custom name,
-        # i.e., algorithm name is not in POSSIBLE_CLUSTER_IDS
-        enabled = (
-            False
-            if any(
-                name in self.plot_cluster_id.currentText()
-                for name in POSSIBLE_CLUSTER_IDS
-            )
-            else True
+        # make the checkbox visible only if clustering is done manually
+        visible = (
+            True if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText() else False
         )
-        self.plot_hide_non_selected.setEnabled(enabled)
+        self.hide_nonselected_checkbox_container.setVisible(visible)
 
         if any(
             name in self.plot_cluster_id.currentText() for name in POSSIBLE_CLUSTER_IDS
         ):
             self.plot_hide_non_selected.setChecked(False)
-        # except when HDBSCAN is selected, because HDBSCAN is the only
-        # implemented algorithm that predicts noise points
-        if "HDBSCAN" in self.plot_cluster_id.currentText():
-            self.plot_hide_non_selected.setChecked(True)
 
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
@@ -532,12 +527,9 @@ class PlotterWidget(QMainWindow):
             and plot_cluster_name in list(features.keys())
         ):
             if self.plot_hide_non_selected.isChecked():
-                if "HDBSCAN" in plot_cluster_name:
-                    pass  # this algorithm already predicts noise points as -1
-                else:
-                    features.loc[
-                        features[plot_cluster_name] == 0, plot_cluster_name
-                    ] = -1  # make unselected points to noise points
+                features.loc[
+                    features[plot_cluster_name] == 0, plot_cluster_name
+                ] = -1  # make unselected points to noise points
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
@@ -774,3 +766,4 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that when selector is disconnected
+        self.graphics_widget.reset_zoom()
