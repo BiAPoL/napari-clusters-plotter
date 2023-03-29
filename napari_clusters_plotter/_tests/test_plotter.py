@@ -197,3 +197,4 @@ def test_cluster_image_generation_for_histogram(make_napari_viewer):
 
     assert plotter_widget.graphics_widget.axes.has_data()
     assert "cluster_ids_in_space" in viewer.layers
+    assert int(viewer.layers["cluster_ids_in_space"].data.max()) == 3
