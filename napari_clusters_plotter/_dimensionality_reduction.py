@@ -38,7 +38,6 @@ from ._utilities import (
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
 
-DEBUG = False
 
 DEFAULTS = {
     "n_neighbors": 15,
@@ -471,13 +470,6 @@ class DimensionalityReductionWidget(QWidget):
             buttons_active(
                 self.run_button, self.defaults_button, self.update_button, active=active
             )
-            if DEBUG:
-                print(error)
-                print("Buttons are activated again")
-
-            if DEBUG:
-                print(error)
-                print("Buttons are activated again")
 
         # disable all the buttons while the computation is happening
         activate_buttons(active=False)
