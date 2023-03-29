@@ -715,3 +715,4 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that when selector is disconnected
+        self.graphics_widget.reset_zoom()
