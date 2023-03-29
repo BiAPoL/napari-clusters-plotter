@@ -51,6 +51,7 @@ DEFAULTS = {
     # therefore by default the following value is False.
     # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
     "umap_separate_thread": False,
+    "min_distance_umap": 0.1,
 }
 
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
@@ -196,7 +197,7 @@ class DimensionalityReductionWidget(QWidget):
             False
         )  # hide this container until umap is selected
 
-        self.settings_container_multithreading, self.multithreading = checkbox(
+        self.settings_container_multithreading, self.umap_separate_thread = checkbox(
             name="Enable Multi-threading",
             value=DEFAULTS["umap_separate_thread"],
             visible=True,
@@ -205,6 +206,20 @@ class DimensionalityReductionWidget(QWidget):
         )
         self.advanced_options_container.addWidget(
             self.settings_container_multithreading
+        )
+
+        (
+            self.min_distance_umap_container,
+            self.min_distance_umap,
+        ) = float_sbox_containter_and_selection(
+            name="Minimum Distance",
+            label="Minimum Distance",
+            value=DEFAULTS["min_distance_umap"],
+            step=0.01,
+            min=0,
+            visible=False,
+            tool_tip="The minimum distance apart that points are allowed to be in the low dimensional representation.",
+            tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#min-dist",
         )
 
         # additional options for MDS
@@ -286,7 +301,8 @@ class DimensionalityReductionWidget(QWidget):
                 self.explained_variance.value,
                 self.pca_components.value,
                 self.n_components.value,
-                self.multithreading.value,
+                self.umap_separate_thread.value,
+                self.min_distance_umap.value,
                 self.mds_metric.value,
                 self.mds_n_init.value,
                 self.mds_max_iter.value,
@@ -318,6 +334,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.n_neighbors_container)
         self.layout().addWidget(self.pca_components_container)
         self.layout().addWidget(self.n_components_container)
+        self.layout().addWidget(self.min_distance_umap_container)
         self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(self.mds_metric_container)
@@ -372,6 +389,7 @@ class DimensionalityReductionWidget(QWidget):
         """
         widgets_active(
             self.n_neighbors_container,
+            self.min_distance_umap_container,
             self.advanced_options_container,
             active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
@@ -434,6 +452,7 @@ class DimensionalityReductionWidget(QWidget):
         pca_components,
         n_components,
         umap_multithreading,
+        min_dist,
         mds_metric,
         mds_n_init,
         mds_max_iter,
@@ -544,6 +563,7 @@ class DimensionalityReductionWidget(QWidget):
                     properties_to_reduce,
                     n_neighbors=n_neighbours,
                     n_components=n_components,
+                    min_dist=min_dist,
                     verbose=True,
                     _progress=True,
                 )
@@ -562,6 +582,7 @@ class DimensionalityReductionWidget(QWidget):
                     properties_to_reduce,
                     n_neighbors=n_neighbours,
                     n_components=n_components,
+                    min_dist=min_dist,
                     verbose=False,
                 )
 
@@ -626,7 +647,11 @@ class DimensionalityReductionWidget(QWidget):
 
 @catch_NaNs
 def umap(
-    reg_props: pd.DataFrame, n_neighbors: int, n_components: int, verbose: bool = False
+    reg_props: pd.DataFrame,
+    n_neighbors: int,
+    n_components: int,
+    min_dist: float,
+    verbose: bool = False,
 ) -> Tuple[str, np.ndarray]:
     """
     Performs dimensionality reduction using the Uniform Manifold Approximation Projection (UMAP) on the given data.
@@ -664,6 +689,7 @@ def umap(
         n_components=n_components,
         n_neighbors=n_neighbors,
         verbose=verbose,
+        min_dist=min_dist,
         tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
     return "UMAP", reducer.fit_transform(reg_props)

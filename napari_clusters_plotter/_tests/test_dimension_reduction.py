@@ -73,6 +73,7 @@ def test_bad_measurements(qtbot, make_napari_viewer):
         mds_max_iter=300,
         mds_eps=0.001,
         umap_multithreading=True,
+        min_dist=0.1,
     )
 
     blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
@@ -181,7 +182,9 @@ def test_umap():
     nr_components = 2
 
     # umap returns (str, np.ndarray), where the first item is algorithm name
-    result = umap(pd.DataFrame(X), n_neighbors=2, n_components=nr_components)
+    result = umap(
+        pd.DataFrame(X), n_neighbors=2, n_components=nr_components, min_dist=0.1
+    )
 
     assert result[1].shape[-1] == nr_components
 
