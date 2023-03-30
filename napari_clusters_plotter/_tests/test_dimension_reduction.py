@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from skimage import measure
 
+from napari_clusters_plotter._utilities import get_layer_tabular_data
+
 sys.path.append("../")
 
 
@@ -74,10 +76,13 @@ def test_bad_measurements(qtbot, make_napari_viewer):
         mds_eps=0.001,
         umap_multithreading=True,
         min_dist=0.1,
+        custom_name="",
     )
 
     blocker = qtbot.waitSignal(widget.worker.finished, timeout=1000000)
     blocker.wait()
+
+    assert "UMAP_0" in get_layer_tabular_data(labels_layer)
 
 
 """
