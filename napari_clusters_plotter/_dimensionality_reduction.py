@@ -51,6 +51,10 @@ DEFAULTS = {
     # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
     "umap_separate_thread": False,
     "min_distance_umap": 0.1,
+    "mds_n_init": 4,
+    "mds_metric": True,
+    "mds_max_iter": 300,
+    "mds_eps": 0.001,
 }
 
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
@@ -214,7 +218,7 @@ class DimensionalityReductionWidget(QWidget):
             name="Minimum Distance",
             label="Minimum Distance",
             value=DEFAULTS["min_distance_umap"],
-            step=0.01,
+            step=0.1,
             min=0,
             visible=False,
             tool_tip="The minimum distance apart that points are allowed to be in the low dimensional representation.",
@@ -224,7 +228,7 @@ class DimensionalityReductionWidget(QWidget):
         # additional options for MDS
         (self.mds_metric_container, self.mds_metric) = checkbox(
             "Metric",
-            value=True,
+            value=DEFAULTS["mds_metric"],
             visible=False,
             tool_tip="If selected perform metric MDS; otherwise, nonmetric MDS, where dissimilarities with 0 "
             "are considered as missing values.",
@@ -237,7 +241,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = int_sbox_containter_and_selection(
             name="Number of Initializations",
             label="Number of Initializations",
-            value=4,
+            value=DEFAULTS["mds_n_init"],
             min=1,
             visible=False,
             tool_tip="Number of times the SMACOF algorithm will be run with different"
@@ -252,7 +256,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = int_sbox_containter_and_selection(
             name="Max Number of Iterations",
             label="Max Number of Iterations",
-            value=300,
+            value=DEFAULTS["mds_max_iter"],
             min=1,
             visible=False,
             tool_tip="Maximum number of iterations of the SMACOF algorithm for a "
@@ -263,7 +267,7 @@ class DimensionalityReductionWidget(QWidget):
         (self.mds_eps_container, self.mds_eps) = float_sbox_containter_and_selection(
             name="Relative Tolerance",
             label="Relative Tolerance",
-            value=0.001,
+            value=DEFAULTS["mds_eps"],
             min=0.00000001,
             visible=False,
             tool_tip="Relative tolerance with respect to stress at which to "
@@ -372,14 +376,18 @@ class DimensionalityReductionWidget(QWidget):
         the number of labeled objects, and if not it makes the widget red.
         """
         if self.algorithm_choice_list.current_choice == "t-SNE":
-            features = get_layer_tabular_data(self.labels_select.value)
-            widgets_valid(
-                self.perplexity, valid=self.perplexity.value <= features.shape[0]
-            )
-            if self.perplexity.value >= features.shape[0]:
-                warnings.warn(
-                    "Perplexity must be less than the number of labeled objects!"
+            if (
+                self.labels_select.value is not None
+                and get_layer_tabular_data(self.labels_select.value) is not None
+            ):
+                features = get_layer_tabular_data(self.labels_select.value)
+                widgets_valid(
+                    self.perplexity, valid=self.perplexity.value <= features.shape[0]
                 )
+                if self.perplexity.value >= features.shape[0]:
+                    warnings.warn(
+                        "Perplexity must be less than the number of labeled objects!"
+                    )
 
     def change_settings_visibility(self):
         """
