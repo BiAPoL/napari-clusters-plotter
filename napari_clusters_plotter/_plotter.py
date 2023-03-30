@@ -194,7 +194,7 @@ class PlotterWidget(QMainWindow):
                 clustering_ID = self.plot_cluster_id.currentText()
 
             features = get_layer_tabular_data(self.analysed_layer)
-            if self.plot_x_axis_name == self.plot_y_axis_name:
+            if self.plot_x_axis.currentText() == self.plot_y_axis.currentText():
                 self.plot_cluster_id.setCurrentText("")
 
             # redraw the whole plot
