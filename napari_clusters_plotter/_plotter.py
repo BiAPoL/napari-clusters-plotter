@@ -516,6 +516,7 @@ class PlotterWidget(QMainWindow):
         ):
             self.plot_cluster_id.setCurrentText("")
             plot_cluster_name = None
+            self.hide_nonselected_checkbox_container.setVisible(False)
 
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
