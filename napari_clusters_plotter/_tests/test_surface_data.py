@@ -78,6 +78,8 @@ def test_dimensionality_reduction_for_surface_data(make_napari_viewer):
         mds_max_iter=300,
         mds_eps=0.001,
         umap_multithreading=False,
+        min_dist=0.1,
+        custom_name="",
     )
 
     assert "UMAP_0" in list(surface_layer.features.keys())
