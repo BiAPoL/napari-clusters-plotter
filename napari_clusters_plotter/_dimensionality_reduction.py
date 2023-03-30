@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ._clustering import ID_NAME
 from ._plotter import POINTER
@@ -38,7 +38,6 @@ from ._utilities import (
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
 
-DEBUG = False
 
 DEFAULTS = {
     "n_neighbors": 15,
@@ -51,6 +50,12 @@ DEFAULTS = {
     # therefore by default the following value is False.
     # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
     "umap_separate_thread": False,
+    "min_distance_umap": 0.1,
+    "mds_n_init": 4,
+    "mds_metric": True,
+    "mds_max_iter": 300,
+    "mds_eps": 0.001,
+    "custom_name": "",
 }
 
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
@@ -196,7 +201,7 @@ class DimensionalityReductionWidget(QWidget):
             False
         )  # hide this container until umap is selected
 
-        self.settings_container_multithreading, self.multithreading = checkbox(
+        self.settings_container_multithreading, self.umap_separate_thread = checkbox(
             name="Enable Multi-threading",
             value=DEFAULTS["umap_separate_thread"],
             visible=True,
@@ -207,10 +212,24 @@ class DimensionalityReductionWidget(QWidget):
             self.settings_container_multithreading
         )
 
+        (
+            self.min_distance_umap_container,
+            self.min_distance_umap,
+        ) = float_sbox_containter_and_selection(
+            name="Minimum Distance",
+            label="Minimum Distance",
+            value=DEFAULTS["min_distance_umap"],
+            step=0.1,
+            min=0,
+            visible=False,
+            tool_tip="The minimum distance apart that points are allowed to be in the low dimensional representation.",
+            tool_link="https://umap-learn.readthedocs.io/en/latest/parameters.html#min-dist",
+        )
+
         # additional options for MDS
         (self.mds_metric_container, self.mds_metric) = checkbox(
             "Metric",
-            value=True,
+            value=DEFAULTS["mds_metric"],
             visible=False,
             tool_tip="If selected perform metric MDS; otherwise, nonmetric MDS, where dissimilarities with 0 "
             "are considered as missing values.",
@@ -223,7 +242,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = int_sbox_containter_and_selection(
             name="Number of Initializations",
             label="Number of Initializations",
-            value=4,
+            value=DEFAULTS["mds_n_init"],
             min=1,
             visible=False,
             tool_tip="Number of times the SMACOF algorithm will be run with different"
@@ -238,7 +257,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = int_sbox_containter_and_selection(
             name="Max Number of Iterations",
             label="Max Number of Iterations",
-            value=300,
+            value=DEFAULTS["mds_max_iter"],
             min=1,
             visible=False,
             tool_tip="Maximum number of iterations of the SMACOF algorithm for a "
@@ -249,13 +268,24 @@ class DimensionalityReductionWidget(QWidget):
         (self.mds_eps_container, self.mds_eps) = float_sbox_containter_and_selection(
             name="Relative Tolerance",
             label="Relative Tolerance",
-            value=0.001,
+            value=DEFAULTS["mds_eps"],
             min=0.00000001,
             visible=False,
             tool_tip="Relative tolerance with respect to stress at which to "
             "declare convergence.",
             tool_link="https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling",
         )
+
+        # custom result column name field
+        self.custom_name_container = QWidget()
+        self.custom_name_container.setLayout(QHBoxLayout())
+        self.custom_name_container.layout().addWidget(
+            QLabel("Optional Custom Results Name")
+        )
+        self.custom_name = QLineEdit()
+
+        self.custom_name_container.layout().addWidget(self.custom_name)
+        self.custom_name.setPlaceholderText("Algorithm_name")
 
         # making buttons
         run_container, self.run_button = button("Run")
@@ -286,11 +316,13 @@ class DimensionalityReductionWidget(QWidget):
                 self.explained_variance.value,
                 self.pca_components.value,
                 self.n_components.value,
-                self.multithreading.value,
+                self.umap_separate_thread.value,
+                self.min_distance_umap.value,
                 self.mds_metric.value,
                 self.mds_n_init.value,
                 self.mds_max_iter.value,
                 self.mds_eps.value,
+                self.custom_name.text(),
             )
 
         # connect buttons with functions that need to be triggered by them
@@ -318,6 +350,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.n_neighbors_container)
         self.layout().addWidget(self.pca_components_container)
         self.layout().addWidget(self.n_components_container)
+        self.layout().addWidget(self.min_distance_umap_container)
         self.layout().addWidget(self.explained_variance_container)
         self.layout().addWidget(self.settings_container_scaler)
         self.layout().addWidget(self.mds_metric_container)
@@ -326,6 +359,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.mds_eps_container)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(self.advanced_options_container)
+        self.layout().addWidget(self.custom_name_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
@@ -356,14 +390,18 @@ class DimensionalityReductionWidget(QWidget):
         the number of labeled objects, and if not it makes the widget red.
         """
         if self.algorithm_choice_list.current_choice == "t-SNE":
-            features = get_layer_tabular_data(self.layer_select.value)
-            widgets_valid(
-                self.perplexity, valid=self.perplexity.value <= features.shape[0]
-            )
-            if self.perplexity.value >= features.shape[0]:
-                warnings.warn(
-                    "Perplexity must be less than the number of labeled objects!"
+            if (
+                self.labels_select.value is not None
+                and get_layer_tabular_data(self.labels_select.value) is not None
+            ):
+                features = get_layer_tabular_data(self.labels_select.value)
+                widgets_valid(
+                    self.perplexity, valid=self.perplexity.value <= features.shape[0]
                 )
+                if self.perplexity.value >= features.shape[0]:
+                    warnings.warn(
+                        "Perplexity must be less than the number of labeled objects!"
+                    )
 
     def change_settings_visibility(self):
         """
@@ -372,6 +410,7 @@ class DimensionalityReductionWidget(QWidget):
         """
         widgets_active(
             self.n_neighbors_container,
+            self.min_distance_umap_container,
             self.advanced_options_container,
             active=self.algorithm_choice_list.current_choice == self.Options.UMAP.value,
         )
@@ -434,10 +473,12 @@ class DimensionalityReductionWidget(QWidget):
         pca_components,
         n_components,
         umap_multithreading,
+        min_dist,
         mds_metric,
         mds_n_init,
         mds_max_iter,
         mds_eps,
+        custom_name,
     ):
         """
         The function triggered by clicking the run button.
@@ -452,13 +493,6 @@ class DimensionalityReductionWidget(QWidget):
             buttons_active(
                 self.run_button, self.defaults_button, self.update_button, active=active
             )
-            if DEBUG:
-                print(error)
-                print("Buttons are activated again")
-
-            if DEBUG:
-                print(error)
-                print("Buttons are activated again")
 
         # disable all the buttons while the computation is happening
         activate_buttons(active=False)
@@ -507,10 +541,16 @@ class DimensionalityReductionWidget(QWidget):
                     )
                     set_features(layer, df_principal_components_removed)
 
+                    result_column_name = (
+                        "PC_" if custom_name == DEFAULTS["custom_name"] else custom_name
+                    )
+
                     # write result back to properties/features of the layer
                     for i in range(0, len(result[1].T)):
                         add_column_to_layer_tabular_data(
-                            layer, "PC_" + str(i), result[1][:, i]
+                            layer,
+                            str(result_column_name) + str(i),
+                            result[1][:, i],
                         )
 
                 elif (
@@ -520,10 +560,18 @@ class DimensionalityReductionWidget(QWidget):
                     or result[0] == "MDS"
                 ):
                     # write result back to properties/features of the layer
-                    for i in range(0, n_components):
-                        add_column_to_layer_tabular_data(
-                            layer, result[0] + "_" + str(i), result[1][:, i]
-                        )
+                    if custom_name == DEFAULTS["custom_name"]:
+                        for i in range(0, n_components):
+                            add_column_to_layer_tabular_data(
+                                layer, result[0] + "_" + str(i), result[1][:, i]
+                            )
+                    else:
+                        for i in range(0, n_components):
+                            add_column_to_layer_tabular_data(
+                                layer,
+                                custom_name + "_" + str(i),
+                                result[1][:, i],
+                            )
 
                 else:
                     "Dimensionality reduction not successful. Please try again"
@@ -544,6 +592,7 @@ class DimensionalityReductionWidget(QWidget):
                     properties_to_reduce,
                     n_neighbors=n_neighbours,
                     n_components=n_components,
+                    min_dist=min_dist,
                     verbose=True,
                     _progress=True,
                 )
@@ -562,6 +611,7 @@ class DimensionalityReductionWidget(QWidget):
                     properties_to_reduce,
                     n_neighbors=n_neighbours,
                     n_components=n_components,
+                    min_dist=min_dist,
                     verbose=False,
                 )
 
@@ -626,7 +676,11 @@ class DimensionalityReductionWidget(QWidget):
 
 @catch_NaNs
 def umap(
-    reg_props: pd.DataFrame, n_neighbors: int, n_components: int, verbose: bool = False
+    reg_props: pd.DataFrame,
+    n_neighbors: int,
+    n_components: int,
+    min_dist: float,
+    verbose: bool = False,
 ) -> Tuple[str, np.ndarray]:
     """
     Performs dimensionality reduction using the Uniform Manifold Approximation Projection (UMAP) on the given data.
@@ -664,6 +718,7 @@ def umap(
         n_components=n_components,
         n_neighbors=n_neighbors,
         verbose=verbose,
+        min_dist=min_dist,
         tqdm_kwds={"desc": "Dimensionality reduction progress"},
     )
     return "UMAP", reducer.fit_transform(reg_props)

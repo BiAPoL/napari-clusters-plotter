@@ -8,7 +8,7 @@ from matplotlib.figure import Figure
 from napari.layers import Labels, Surface
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
-from qtpy.QtCore import QSignalBlocker, Qt
+from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QCheckBox,
@@ -48,6 +48,8 @@ from ._utilities import (
 )
 
 POINTER = "frame"
+
+POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
 
 
 class PlottingType(Enum):
@@ -102,6 +104,11 @@ class PlotterWidget(QMainWindow):
             add_column_to_layer_tabular_data(
                 self.analysed_layer, clustering_ID, features[clustering_ID]
             )
+
+            # update the dropdown, so that the "MANUAL_CLUSTER_ID" is added
+            self.update_axes_and_clustering_id_lists()
+            # set the selected item of the "clustering" combobox
+            self.plot_cluster_id.setCurrentText(clustering_ID)
 
             # redraw the whole plot
             self.run(
@@ -170,8 +177,8 @@ class PlotterWidget(QMainWindow):
         cluster_container.layout().addWidget(self.plot_cluster_id)
 
         # making buttons
-        run_container, run_button = button("Run")
-        update_container, update_button = button("Update Measurements")
+        run_container, run_button = button("Plot")
+        update_container, update_button = button("Update Axes/Clustering Options")
 
         ############################
         # Advanced plotting options
@@ -182,7 +189,7 @@ class PlotterWidget(QMainWindow):
         def replot():
             clustering_ID = None
             if self.cluster_ids is not None:
-                clustering_ID = self.cluster_ids.name
+                clustering_ID = self.plot_cluster_id.currentText()
 
             features = get_layer_tabular_data(self.analysed_layer)
 
@@ -204,16 +211,14 @@ class PlotterWidget(QMainWindow):
             replot()
 
         def plotting_type_changed():
-            replot()
-
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
-                with QSignalBlocker(self.plot_hide_non_selected):
-                    self.plot_hide_non_selected.setChecked(True)
+                self.plot_hide_non_selected.setChecked(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
+            replot()
 
         def bin_number_set():
             replot()
@@ -268,19 +273,28 @@ class PlotterWidget(QMainWindow):
         self.log_scale.stateChanged.connect(replot)
         self.log_scale_container.layout().addWidget(self.log_scale)
 
+        self.log_scale_container.setVisible(False)
+
         # Checkbox to hide non-selected clusters
-        checkbox_container = QWidget()
-        checkbox_container.setLayout(QHBoxLayout())
-        checkbox_container.layout().addWidget(QLabel("Hide non-selected clusters"))
+        self.hide_nonselected_checkbox_container = QWidget()
+        self.hide_nonselected_checkbox_container.setLayout(QHBoxLayout())
+        self.hide_nonselected_checkbox_container.layout().addWidget(
+            QLabel("Hide non-selected clusters")
+        )
         self.plot_hide_non_selected = QCheckBox()
+        self.plot_hide_non_selected.setToolTip("Enabled only for manual clustering")
         self.plot_hide_non_selected.stateChanged.connect(checkbox_status_changed)
-        checkbox_container.layout().addWidget(self.plot_hide_non_selected)
+        self.hide_nonselected_checkbox_container.layout().addWidget(
+            self.plot_hide_non_selected
+        )
 
         self.advanced_options_container.addWidget(combobox_plotting_container)
         self.advanced_options_container.addWidget(self.log_scale_container)
         self.advanced_options_container.addWidget(self.bin_number_container)
 
-        self.advanced_options_container.addWidget(checkbox_container)
+        self.advanced_options_container.addWidget(
+            self.hide_nonselected_checkbox_container
+        )
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
@@ -371,7 +385,11 @@ class PlotterWidget(QMainWindow):
             self.old_frame = frame
 
         # update axes combo boxes once a new label layer is selected
-        self.layer_select.changed.connect(self.update_axes_list)
+        self.layer_select.changed.connect(self.update_axes_and_clustering_id_lists)
+        # depending on the select clustering ID, enable/disable the checkbox for hiding clusters
+        self.plot_cluster_id.currentIndexChanged.connect(
+            self.change_state_of_nonselected_checkbox
+        )
 
         # update axes combo boxes automatically if features of
         # layer are changed
@@ -379,14 +397,14 @@ class PlotterWidget(QMainWindow):
         self.layer_select.changed.connect(self.activate_property_autoupdate)
 
         # update axes combo boxes once update button is clicked
-        update_button.clicked.connect(self.update_axes_list)
+        update_button.clicked.connect(self.update_axes_and_clustering_id_lists)
 
         # select what happens when the run button is clicked
         run_button.clicked.connect(run_clicked)
 
         self.viewer.dims.events.current_step.connect(frame_changed)
 
-        self.update_axes_list()
+        self.update_axes_and_clustering_id_lists()
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -395,13 +413,29 @@ class PlotterWidget(QMainWindow):
     def reset_choices(self, event=None):
         self.layer_select.reset_choices(event)
 
+    def change_state_of_nonselected_checkbox(self):
+        # make the checkbox visible only if clustering is done manually
+        visible = (
+            True if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText() else False
+        )
+        self.hide_nonselected_checkbox_container.setVisible(visible)
+
+        if any(
+            name in self.plot_cluster_id.currentText() for name in POSSIBLE_CLUSTER_IDS
+        ):
+            self.plot_hide_non_selected.setChecked(False)
+
     def activate_property_autoupdate(self):
         if self.last_connected is not None:
-            self.last_connected.events.properties.disconnect(self.update_axes_list)
-        self.layer_select.value.events.properties.connect(self.update_axes_list)
+            self.last_connected.events.properties.disconnect(
+                self.update_axes_and_clustering_id_lists
+            )
+        self.layer_select.value.events.properties.connect(
+            self.update_axes_and_clustering_id_lists
+        )
         self.last_connected = self.layer_select.value
 
-    def update_axes_list(self):
+    def update_axes_and_clustering_id_lists(self):
         selected_layer = self.layer_select.value
 
         former_x_axis = self.plot_x_axis.currentIndex()
@@ -714,3 +748,4 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
             # because manual selection already does that when selector is disconnected
+        self.graphics_widget.reset_zoom()
