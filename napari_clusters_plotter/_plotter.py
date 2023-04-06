@@ -288,10 +288,19 @@ class PlotterWidget(QMainWindow):
         self.advanced_options_container.addWidget(combobox_plotting_container)
         self.advanced_options_container.addWidget(self.log_scale_container)
         self.advanced_options_container.addWidget(self.bin_number_container)
-
         self.advanced_options_container.addWidget(
             self.hide_nonselected_checkbox_container
         )
+
+        # selection of possible colormaps for 2D histogram
+        advanced_options_container, self.colormap_dropdown = algorithm_choice(
+            name="Colormap",
+            value=self.Options.EMPTY.value,
+            options={"choices": [e.value for e in self.Options]},
+            label="Colormap",
+        )
+
+        self.advanced_options_container.addWidget(self.colormap_dropdown)
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)

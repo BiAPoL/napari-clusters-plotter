@@ -472,6 +472,8 @@ class MplCanvas(FigureCanvas):
             spancoords="pixels",
             interactive=False,
         )
+        self.selected_colormap = "magma"
+
         self.reset()
 
     def reset_zoom(self):
@@ -519,7 +521,7 @@ class MplCanvas(FigureCanvas):
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
-            cmap="magma",
+            cmap=self.selected_colormap,
             aspect="auto",
             norm=norm,
         )
