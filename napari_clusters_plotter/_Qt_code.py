@@ -353,6 +353,40 @@ def algorithm_choice(name: str, value, options: dict, label: str):
     container.layout().addWidget(choice_list.native)
     return container, choice_list
 
+def colormap_choice(name: str, value, options: dict, label: str):
+    """
+    Create a widget for selecting a colormap from a set of options.
+
+    Parameters
+    ----------
+    name : str
+        The name to be used for the widget.
+    value :
+    The initial value of the widget.
+    options : dict
+        A dictionary of possible options, where the keys are option
+        names and the values are corresponding strings that are
+        actually displayed in the combobox.
+    label : str
+        The label to be displayed next to the widget.
+
+    Returns
+    ----------
+    A tuple containing the container widget and the choice widget. The container widget
+    is a QWidget that contains the label and the choice widget.
+    """
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    container.layout().addWidget(QLabel(label))
+    choice_list = create_widget(
+        widget_type="ComboBox",
+        name=name,
+        value=value,
+        options=options,
+    )
+    container.layout().addWidget(choice_list.native)
+    return container, choice_list
+
 
 class SelectFrom2DHistogram:
     def __init__(self, parent, ax, full_data):

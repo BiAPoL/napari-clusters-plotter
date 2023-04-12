@@ -36,6 +36,7 @@ from ._Qt_code import (
     collapsible_box,
     labels_container_and_selection,
     title,
+    colormap_choice
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,
@@ -58,6 +59,12 @@ class PlottingType(Enum):
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
 class PlotterWidget(QMainWindow):
+    class Options(Enum):
+        EMPTY = ""
+        magma = "magma"
+        viridis = "viridis"
+        plasma = "plasma"
+
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -293,14 +300,14 @@ class PlotterWidget(QMainWindow):
         )
 
         # selection of possible colormaps for 2D histogram
-        advanced_options_container, self.colormap_dropdown = algorithm_choice(
+        self.colormap_container, self.colormap_dropdown = colormap_choice(
             name="Colormap",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
             label="Colormap",
         )
 
-        self.advanced_options_container.addWidget(self.colormap_dropdown)
+        self.advanced_options_container.addWidget(self.colormap_container)
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
@@ -503,6 +510,9 @@ class PlotterWidget(QMainWindow):
         self.analysed_layer = self.labels_select.value
 
         self.graphics_widget.reset()
+
+        self.graphics_widget.selected_colormap = self.colormap_dropdown.value
+
         number_of_points = len(features)
 
         # if selected image is 4 dimensional, but does not contain frame column in its features
