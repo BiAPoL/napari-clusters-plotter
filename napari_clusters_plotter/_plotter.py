@@ -60,7 +60,6 @@ class PlottingType(Enum):
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
 class PlotterWidget(QMainWindow):
     class Options(Enum):
-        EMPTY = ""
         magma = "magma"
         viridis = "viridis"
         plasma = "plasma"
@@ -219,9 +218,11 @@ class PlotterWidget(QMainWindow):
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
                 self.plot_hide_non_selected.setChecked(True)
+                self.colormap_container.setVisible(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
+                self.colormap_container.setVisible(False)
             replot()
 
         def bin_number_set():
@@ -302,10 +303,11 @@ class PlotterWidget(QMainWindow):
         # selection of possible colormaps for 2D histogram
         self.colormap_container, self.colormap_dropdown = colormap_choice(
             name="Colormap",
-            value=self.Options.EMPTY.value,
+            value=self.Options.magma.value,
             options={"choices": [e.value for e in self.Options]},
             label="Colormap",
         )
+        self.colormap_container.setVisible(False)
 
         self.advanced_options_container.addWidget(self.colormap_container)
 
