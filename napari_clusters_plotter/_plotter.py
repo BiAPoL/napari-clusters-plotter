@@ -63,6 +63,9 @@ class PlotterWidget(QMainWindow):
         magma = "magma"
         viridis = "viridis"
         plasma = "plasma"
+        PRGn = "PRGn"
+        PuOr = "PuOr"
+        coolwarm = "coolwarm"
 
     def __init__(self, napari_viewer):
         super().__init__()
