@@ -34,9 +34,9 @@ from ._Qt_code import (
     MyNavigationToolbar,
     button,
     collapsible_box,
+    colormap_choice,
     labels_container_and_selection,
     title,
-    colormap_choice
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,

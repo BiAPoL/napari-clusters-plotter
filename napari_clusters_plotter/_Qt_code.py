@@ -353,6 +353,7 @@ def algorithm_choice(name: str, value, options: dict, label: str):
     container.layout().addWidget(choice_list.native)
     return container, choice_list
 
+
 def colormap_choice(name: str, value, options: dict, label: str):
     """
     Create a widget for selecting a colormap from a set of options.
