@@ -5,8 +5,8 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
+from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
-from napari.utils.colormaps import ALL_COLORMAPS 
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
@@ -60,7 +60,6 @@ class PlottingType(Enum):
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
 class PlotterWidget(QMainWindow):
-
     def __init__(self, napari_viewer):
         super().__init__()
 
