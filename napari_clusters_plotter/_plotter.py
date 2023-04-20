@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from napari_tools_menu import register_dock_widget
+from napari.utils.colormaps import ALL_COLORMAPS 
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QGuiApplication, QIcon
@@ -59,13 +60,6 @@ class PlottingType(Enum):
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")
 class PlotterWidget(QMainWindow):
-    class Options(Enum):
-        magma = "magma"
-        viridis = "viridis"
-        plasma = "plasma"
-        PRGn = "PRGn"
-        PuOr = "PuOr"
-        coolwarm = "coolwarm"
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -306,8 +300,8 @@ class PlotterWidget(QMainWindow):
         # selection of possible colormaps for 2D histogram
         self.colormap_container, self.colormap_dropdown = colormap_choice(
             name="Colormap",
-            value=self.Options.magma.value,
-            options={"choices": [e.value for e in self.Options]},
+            value="magma",
+            options={"choices": list(ALL_COLORMAPS.keys())},
             label="Colormap",
         )
         self.colormap_container.setVisible(False)
