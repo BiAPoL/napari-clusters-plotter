@@ -386,7 +386,9 @@ class SelectFrom1DHistogram:
         self.canvas = ax.figure.canvas
         self.xys = full_data
 
-        self.span_selector = SpanSelector(ax, onselect=self.onselect, direction="horizontal")
+        self.span_selector = SpanSelector(
+            ax, onselect=self.onselect, direction="horizontal"
+        )
 
     def onselect(self, vmin, vmax):
         print(vmin, vmax)
