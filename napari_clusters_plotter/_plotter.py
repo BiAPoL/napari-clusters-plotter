@@ -231,41 +231,6 @@ class PlotterWidget(QMainWindow):
         # Get frame from dims (assuming the following standard: (..., t, z, y, x))
         self.frame = self.viewer.dims.current_step[-4]
 
-        def frame_changed(event):
-            if self.viewer.dims.ndim <= 3:
-                return
-            frame = event.value[-4]
-            if (not self.old_frame) or (self.old_frame != frame):
-                if self.labels_select.value is None:
-                    warnings.warn("Please select labels layer!")
-                    return
-                if get_layer_tabular_data(self.labels_select.value) is None:
-                    warnings.warn(
-                        "No labels image with features/properties was selected! Consider doing measurements first."
-                    )
-                    return
-                if (
-                    self.plot_x_axis.currentText() == ""
-                    or self.plot_y_axis.currentText() == ""
-                ):
-                    warnings.warn(
-                        "No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
-                        "but you have performed measurements/dimensionality reduction before, try clicking "
-                        "Update Axes Selection Boxes"
-                    )
-                    return
-
-                self.frame = frame
-
-                self.run(
-                    get_layer_tabular_data(self.labels_select.value),
-                    self.plot_x_axis.currentText(),
-                    self.plot_y_axis.currentText(),
-                    self.plot_cluster_name,
-                    redraw_cluster_image=False,
-                )
-            self.old_frame = frame
-
         # update axes combo boxes once a new label layer is selected
         self.labels_select.changed.connect(self.update_axes_list)
 
@@ -280,9 +245,45 @@ class PlotterWidget(QMainWindow):
         # select what happens when the run button is clicked
         run_button.clicked.connect(run_clicked)
 
-        self.viewer.dims.events.current_step.connect(frame_changed)
+        self.viewer.dims.events.current_step.connect(self.frame_changed)
 
         self.update_axes_list()
+
+    def frame_changed(self, event):
+        print('event = ', event)
+        if self.viewer.dims.ndim <= 3:
+            return
+        frame = event.value[0]
+        if (not self.old_frame) or (self.old_frame != frame):
+            if self.labels_select.value is None:
+                warnings.warn("Please select labels layer!")
+                return
+            if get_layer_tabular_data(self.labels_select.value) is None:
+                warnings.warn(
+                    "No labels image with features/properties was selected! Consider doing measurements first."
+                )
+                return
+            if (
+                self.plot_x_axis.currentText() == ""
+                or self.plot_y_axis.currentText() == ""
+            ):
+                warnings.warn(
+                    "No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
+                    "but you have performed measurements/dimensionality reduction before, try clicking "
+                    "Update Axes Selection Boxes"
+                )
+                return
+
+            self.frame = frame
+
+            self.run(
+                get_layer_tabular_data(self.labels_select.value),
+                self.plot_x_axis.currentText(),
+                self.plot_y_axis.currentText(),
+                self.plot_cluster_name,
+                redraw_cluster_image=False,
+            )
+        self.old_frame = frame
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
