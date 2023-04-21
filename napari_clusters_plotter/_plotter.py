@@ -88,11 +88,11 @@ class PlotterWidget(QMainWindow):
 
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
-            if (
-                self.plot_x_axis.currentText() == self.plot_y_axis.currentText()
-                and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
-            ):
-                return  # if the histogram is 1D, leave
+            # if (
+            #     self.plot_x_axis.currentText() == self.plot_y_axis.currentText()
+            #     and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
+            # ):
+            #     return  # if the histogram is 1D, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
 
             features = get_layer_tabular_data(self.analysed_layer)
@@ -510,13 +510,13 @@ class PlotterWidget(QMainWindow):
 
         # check if the same measurement was selected for both axis,
         # because clustering in this case is not implemented yet
-        if (
-            plot_x_axis_name == plot_y_axis_name
-            and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
-        ):
-            self.plot_cluster_id.setCurrentText("")
-            plot_cluster_name = None
-            self.hide_nonselected_checkbox_container.setVisible(False)
+        # if (
+        #     plot_x_axis_name == plot_y_axis_name
+        #     and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
+        # ):
+        #     self.plot_cluster_id.setCurrentText("")
+        #     plot_cluster_name = None
+        #     self.hide_nonselected_checkbox_container.setVisible(False)
 
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]

@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.path import Path
-from matplotlib.widgets import LassoSelector, RectangleSelector
+from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
@@ -379,6 +379,28 @@ class SelectFrom2DHistogram:
         self.canvas.draw_idle()
 
 
+class SelectFrom1DHistogram:
+    def __init__(self, parent, ax, full_data):
+        self.parent = parent
+        self.ax = ax
+        self.canvas = ax.figure.canvas
+        self.xys = full_data
+
+        self.span_selector = SpanSelector(ax, onselect=self.onselect, direction="horizontal")
+
+    def onselect(self, vmin, vmax):
+        print(vmin, vmax)
+        self.ind_mask = np.logical_and(self.xys >= vmin, self.xys <= vmax).values
+        # self.ind = np.nonzero(self.ind_mask)[0]
+
+        if self.parent.manual_clustering_method is not None:
+            self.parent.manual_clustering_method(self.ind_mask)
+
+    def disconnect(self):
+        self.span_selector.disconnect_events()
+        self.canvas.draw_idle()
+
+
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
 class SelectFromCollection:
@@ -549,6 +571,7 @@ class MplCanvas(FigureCanvas):
             self.axes.set_yscale("log")
 
         self.selector.disconnect()
+        self.selector = SelectFrom1DHistogram(self, self.axes, data)
         self.axes.figure.canvas.draw_idle()
 
     def make_scatter_plot(
