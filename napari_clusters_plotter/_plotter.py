@@ -27,6 +27,7 @@ from ._plotter_utilities import (
     estimate_number_bins,
     make_cluster_overlay_img,
     unclustered_plot_parameters,
+    apply_cluster_colors_to_bars,
 )
 from ._Qt_code import (
     ICON_ROOT,
@@ -88,11 +89,6 @@ class PlotterWidget(QMainWindow):
 
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
-            # if (
-            #     self.plot_x_axis.currentText() == self.plot_y_axis.currentText()
-            #     and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
-            # ):
-            #     return  # if the histogram is 1D, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
 
             features = get_layer_tabular_data(self.analysed_layer)
@@ -194,8 +190,6 @@ class PlotterWidget(QMainWindow):
                 clustering_ID = self.plot_cluster_id.currentText()
 
             features = get_layer_tabular_data(self.analysed_layer)
-            if self.plot_x_axis.currentText() == self.plot_y_axis.currentText():
-                self.plot_cluster_id.setCurrentText("")
 
             # redraw the whole plot
             try:
@@ -213,22 +207,10 @@ class PlotterWidget(QMainWindow):
         def checkbox_status_changed():
             replot()
 
-        def checkbox_visibility_changed():
-            if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
-                if self.plot_x_axis.currentText() == self.plot_y_axis.currentText():
-                    self.hide_nonselected_checkbox_container.setVisible(False)
-                else:
-                    self.hide_nonselected_checkbox_container.setVisible(True)
-
         def plotting_type_changed():
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
-                if self.plot_x_axis.currentText() == self.plot_y_axis.currentText():
-                    self.hide_nonselected_checkbox_container.setVisible(False)
-                else:
-                    self.hide_nonselected_checkbox_container.setVisible(True)
-                    self.plot_hide_non_selected.setChecked(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
@@ -251,8 +233,6 @@ class PlotterWidget(QMainWindow):
             [PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name]
         )
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
-        self.plot_x_axis.currentIndexChanged.connect(checkbox_visibility_changed)
-        self.plot_y_axis.currentIndexChanged.connect(checkbox_visibility_changed)
         combobox_plotting_container.layout().addWidget(self.plotting_type)
 
         self.bin_number_container = QWidget()
@@ -508,16 +488,6 @@ class PlotterWidget(QMainWindow):
             )
             return
 
-        # check if the same measurement was selected for both axis,
-        # because clustering in this case is not implemented yet
-        # if (
-        #     plot_x_axis_name == plot_y_axis_name
-        #     and self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name
-        # ):
-        #     self.plot_cluster_id.setCurrentText("")
-        #     plot_cluster_name = None
-        #     self.hide_nonselected_checkbox_container.setVisible(False)
-
         self.data_x = features[plot_x_axis_name]
         self.data_y = features[plot_y_axis_name]
         self.plot_x_axis_name = plot_x_axis_name
@@ -598,6 +568,16 @@ class PlotterWidget(QMainWindow):
                         bin_number=number_bins,
                         log_scale=self.log_scale.isChecked(),
                     )
+                    # update bar colors to cluster ids
+                    self.graphics_widget.axes = apply_cluster_colors_to_bars(
+                        self.graphics_widget.axes,
+                        cluster_name=plot_cluster_name,
+                        features=features,
+                        number_bins=number_bins,
+                        feature_x=self.plot_x_axis_name,
+                        colors=colors,
+                    )
+                    self.graphics_widget.figure.canvas.draw_idle()
                     self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
                     self.graphics_widget.axes.set_ylabel("frequency")
                 else:
@@ -778,6 +758,5 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.match_napari_layout()
 
-            self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
-            # because manual selection already does that when selector is disconnected
+        self.graphics_widget.draw()  # Always redraws, oterwise y-axis may not get updated in histograms
         self.graphics_widget.reset_zoom()

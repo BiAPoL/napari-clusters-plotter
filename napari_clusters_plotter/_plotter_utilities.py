@@ -377,6 +377,87 @@ def gen_highlight():
     return "#FFFFFF"
 
 
+def get_most_frequent_cluster_id_within_feature_interval(cluster_name: str,
+                                                         features: pd.DataFrame,
+                                                         feature_x: str,
+                                                         interval: typing.Tuple[int]) -> int:
+    """Get the most frequent cluster id within a feature interval.
+
+    Parameters
+    ----------
+    cluster_name : str
+        cluster column name
+    features : pd.DataFrame
+        features dataframe
+    feature_x : str
+        feature x column name
+    interval : typing.Tuple[int]
+        tuple of (min, max) values
+
+    Returns
+    -------
+    int
+        the most frequent cluster id number within the interval
+    """
+    relevant_entries = features[[cluster_name, feature_x]]
+    interval_mask = (relevant_entries[feature_x] >= interval[0]) & (relevant_entries[feature_x] <= interval[1])
+
+    cluster_id_list = features.loc[interval_mask, cluster_name].values.tolist()
+    # Efficient way of getting most frequent element in a list
+    most_frequent_cluster = max(set(cluster_id_list), key=cluster_id_list.count)
+    return most_frequent_cluster
+
+
+def apply_cluster_colors_to_bars(
+    axes: "matplotlib.axes.Axes",
+    cluster_name: str,
+    features: pd.DataFrame,
+    number_bins: int,
+    feature_x: str,
+    colors: typing.List[str],
+) -> "matplotlib.axes.Axes":
+    """Apply cluster colors to bars in a histogram.
+
+    Parameters
+    ----------
+    axes : matplotlib.axes.Axes
+        the axes to which the histogram belongs
+    cluster_name : str
+        cluster column name
+    features : pd.DataFrame
+        features dataframe
+    number_bins : int
+        number of bins in the histogram
+    feature_x : str
+        feature x column name
+    colors : typing.List[str]
+        list of colors
+
+    Returns
+    -------
+    "matplotlib.axes.Axes"
+        the axes to which the histogram belongs with updated colors
+    """
+    assert cluster_name in features, f"Column {cluster_name} not in features."
+    assert feature_x in features, f"Column {feature_x} not in features."
+    # update bar colors
+    for bar in axes.containers[0]:
+        x_left = bar.get_x()
+        x_right = x_left + bar.get_width()
+        interval = (x_left, x_right)
+        if bar.get_height() == 0:
+            continue
+        most_frequent_cluster = get_most_frequent_cluster_id_within_feature_interval(
+            cluster_name=cluster_name,
+            features=features,
+            feature_x=feature_x,
+            interval=interval)
+        bar.set_color(colors[most_frequent_cluster])
+        if number_bins < 100:
+            bar.set_edgecolor('white')
+    return axes
+
+
 def make_cluster_overlay_img(
     cluster_id: str,
     features: pd.DataFrame,

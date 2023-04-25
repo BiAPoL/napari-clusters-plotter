@@ -386,18 +386,29 @@ class SelectFrom1DHistogram:
         self.canvas = ax.figure.canvas
         self.xys = full_data
 
-        self.span_selector = SpanSelector(ax, onselect=self.onselect, direction="horizontal")
+        self.span_selector = SpanSelector(ax, onselect=self.onselect, direction="horizontal",
+                                          props=dict(facecolor='#1f77b4', alpha=0.5))
+        self.click_id = self.canvas.mpl_connect('button_press_event', self.on_click)
 
     def onselect(self, vmin, vmax):
-        print(vmin, vmax)
         self.ind_mask = np.logical_and(self.xys >= vmin, self.xys <= vmax).values
-        # self.ind = np.nonzero(self.ind_mask)[0]
 
         if self.parent.manual_clustering_method is not None:
             self.parent.manual_clustering_method(self.ind_mask)
 
+    def on_click(self, event):
+        # Clear selection if user right-clicks (without moving) outside of the histogram
+        if event.inaxes != self.ax:
+            return
+        if event.button == 3:
+            # clear selection
+            self.ind_mask = np.zeros_like(self.xys, dtype=bool)
+            if self.parent.manual_clustering_method is not None:
+                self.parent.manual_clustering_method(self.ind_mask)
+
     def disconnect(self):
         self.span_selector.disconnect_events()
+        self.canvas.mpl_disconnect(self.click_id)
         self.canvas.draw_idle()
 
 
@@ -562,10 +573,16 @@ class MplCanvas(FigureCanvas):
     ):
         counts, bins = np.histogram(data, bins=bin_number)
         self.axes.hist(
-            bins[:-1], bins, edgecolor="white", weights=counts, log=log_scale
+            bins[:-1], bins, edgecolor="white", weights=counts, log=log_scale, color='#9A9A9A'
         )
         self.histogram = (counts, bins)
-        self.axes.set_xlim(min(bins), max(bins))
+        bin_width = bins[1] - bins[0]
+        self.axes.set_xlim(min(bins) - (bin_width / 2), max(bins) + (bin_width / 2))
+        ymin = 0
+        if log_scale:
+            ymin = 1
+        self.axes.set_ylim(ymin, max(counts) * 1.1)
+
         if log_scale:
             self.axes.set_xscale("linear")
             self.axes.set_yscale("log")
@@ -618,6 +635,7 @@ class MplCanvas(FigureCanvas):
         # changing colors of axes labels
         self.axes.xaxis.label.set_color("white")
         self.axes.yaxis.label.set_color("white")
+        self.fig.canvas.draw_idle()
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
