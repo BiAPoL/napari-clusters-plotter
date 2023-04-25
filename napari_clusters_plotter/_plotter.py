@@ -23,11 +23,11 @@ from qtpy.QtWidgets import (
 )
 
 from ._plotter_utilities import (
+    apply_cluster_colors_to_bars,
     clustered_plot_parameters,
     estimate_number_bins,
     make_cluster_overlay_img,
     unclustered_plot_parameters,
-    apply_cluster_colors_to_bars,
 )
 from ._Qt_code import (
     ICON_ROOT,
