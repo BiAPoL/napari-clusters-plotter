@@ -400,7 +400,7 @@ def get_most_frequent_cluster_id_within_feature_interval(cluster_name: str,
         the most frequent cluster id number within the interval
     """
     relevant_entries = features[[cluster_name, feature_x]]
-    interval_mask = (relevant_entries[feature_x] >= interval[0]) & (relevant_entries[feature_x] <= interval[1])
+    interval_mask = (relevant_entries[feature_x] >= interval[0]) & (relevant_entries[feature_x] < interval[1])
 
     cluster_id_list = features.loc[interval_mask, cluster_name].values.tolist()
     # Efficient way of getting most frequent element in a list
@@ -441,9 +441,12 @@ def apply_cluster_colors_to_bars(
     assert cluster_name in features, f"Column {cluster_name} not in features."
     assert feature_x in features, f"Column {feature_x} not in features."
     # update bar colors
-    for bar in axes.containers[0]:
+    for i, bar in enumerate(axes.containers[0]):
         x_left = bar.get_x()
         x_right = x_left + bar.get_width()
+        # Ensures it gets the last edge of the last bar
+        if i == number_bins - 1:
+            x_right = x_left + 1.5 * bar.get_width()
         interval = (x_left, x_right)
         if bar.get_height() == 0:
             continue

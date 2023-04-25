@@ -52,7 +52,7 @@ POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including
 
 
 class PlottingType(Enum):
-    HISTOGRAM_2D = auto()
+    HISTOGRAM = auto()
     SCATTER = auto()
 
 
@@ -208,7 +208,7 @@ class PlotterWidget(QMainWindow):
             replot()
 
         def plotting_type_changed():
-            if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
+            if self.plotting_type.currentText() == PlottingType.HISTOGRAM.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
             else:
@@ -230,7 +230,7 @@ class PlotterWidget(QMainWindow):
         combobox_plotting_container.layout().addWidget(QLabel("Plotting type"))
         self.plotting_type = QComboBox()
         self.plotting_type.addItems(
-            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name]
+            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM.name]
         )
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
         combobox_plotting_container.layout().addWidget(self.plotting_type)
