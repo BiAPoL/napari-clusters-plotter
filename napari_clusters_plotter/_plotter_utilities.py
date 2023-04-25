@@ -378,10 +378,12 @@ def gen_highlight():
     return "#FFFFFF"
 
 
-def get_most_frequent_cluster_id_within_feature_interval(cluster_name: str,
-                                                         features: pd.DataFrame,
-                                                         feature_x: str,
-                                                         interval: typing.Tuple[int]) -> int:
+def get_most_frequent_cluster_id_within_feature_interval(
+    cluster_name: str,
+    features: pd.DataFrame,
+    feature_x: str,
+    interval: typing.Tuple[int],
+) -> int:
     """Get the most frequent cluster id within a feature interval.
 
     Parameters
@@ -401,7 +403,9 @@ def get_most_frequent_cluster_id_within_feature_interval(cluster_name: str,
         the most frequent cluster id number within the interval
     """
     relevant_entries = features[[cluster_name, feature_x]]
-    interval_mask = (relevant_entries[feature_x] >= interval[0]) & (relevant_entries[feature_x] < interval[1])
+    interval_mask = (relevant_entries[feature_x] >= interval[0]) & (
+        relevant_entries[feature_x] < interval[1]
+    )
 
     cluster_id_list = features.loc[interval_mask, cluster_name].values.tolist()
     # Efficient way of getting most frequent element in a list
@@ -455,10 +459,11 @@ def apply_cluster_colors_to_bars(
             cluster_name=cluster_name,
             features=features,
             feature_x=feature_x,
-            interval=interval)
+            interval=interval,
+        )
         bar.set_color(colors[most_frequent_cluster])
         if number_bins < 100:
-            bar.set_edgecolor('white')
+            bar.set_edgecolor("white")
     return axes
 
 

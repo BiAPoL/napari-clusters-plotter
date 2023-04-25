@@ -386,9 +386,13 @@ class SelectFrom1DHistogram:
         self.canvas = ax.figure.canvas
         self.xys = full_data
 
-        self.span_selector = SpanSelector(ax, onselect=self.onselect, direction="horizontal",
-                                          props=dict(facecolor='#1f77b4', alpha=0.5))
-        self.click_id = self.canvas.mpl_connect('button_press_event', self.on_click)
+        self.span_selector = SpanSelector(
+            ax,
+            onselect=self.onselect,
+            direction="horizontal",
+            props=dict(facecolor="#1f77b4", alpha=0.5),
+        )
+        self.click_id = self.canvas.mpl_connect("button_press_event", self.on_click)
 
     def onselect(self, vmin, vmax):
         self.ind_mask = np.logical_and(self.xys >= vmin, self.xys <= vmax).values
@@ -573,7 +577,12 @@ class MplCanvas(FigureCanvas):
     ):
         counts, bins = np.histogram(data, bins=bin_number)
         self.axes.hist(
-            bins[:-1], bins, edgecolor="white", weights=counts, log=log_scale, color='#9A9A9A'
+            bins[:-1],
+            bins,
+            edgecolor="white",
+            weights=counts,
+            log=log_scale,
+            color="#9A9A9A",
         )
         self.histogram = (counts, bins)
         bin_width = bins[1] - bins[0]
