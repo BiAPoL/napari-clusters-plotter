@@ -2,6 +2,7 @@ import typing
 
 import numpy as np
 import pandas as pd
+import matplotlib
 from PIL import ImageColor
 from scipy import stats
 
