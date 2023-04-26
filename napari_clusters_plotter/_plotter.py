@@ -228,8 +228,8 @@ class PlotterWidget(QMainWindow):
         # takes care of case where this isn't set yet directly after init
         self.plot_cluster_name = None
         self.old_frame = None
-        # Get frame from dims (assuming the following standard: (..., t, z, y, x))
-        self.frame = self.viewer.dims.current_step[-4]
+        # Assume time is the first axis
+        self.frame = self.viewer.dims.current_step[0]
 
         # update axes combo boxes once a new label layer is selected
         self.labels_select.changed.connect(self.update_axes_list)
