@@ -250,7 +250,6 @@ class PlotterWidget(QMainWindow):
         self.update_axes_list()
 
     def frame_changed(self, event):
-        print('event = ', event)
         if self.viewer.dims.ndim <= 3:
             return
         frame = event.value[0]
