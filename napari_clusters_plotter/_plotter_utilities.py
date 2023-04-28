@@ -2,9 +2,10 @@ import typing
 
 import numpy as np
 import pandas as pd
+from matplotlib.colors import to_hex, to_rgb
 from PIL import ImageColor
 from scipy import stats
-from matplotlib.colors import to_hex, to_rgb
+
 
 def unclustered_plot_parameters(
     frame_id: list,
@@ -288,7 +289,6 @@ def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
         colors = [color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id]
         return colors
 
-    
     colors = [
         gen_highlight(color_hex_list[int(x) % len(color_hex_list)])
         if tp == current_frame
@@ -369,7 +369,7 @@ def gen_spot_size(n_datapoints):
     return min(10, (max(0.1, 8000 / n_datapoints))) * 2
 
 
-def gen_highlight(hex_color = None, brightness_offset = 0.2):
+def gen_highlight(hex_color=None, brightness_offset=0.2):
     """
     Returns a default color for the current timepoint visualization.
     Currently, it is color white.
@@ -377,9 +377,10 @@ def gen_highlight(hex_color = None, brightness_offset = 0.2):
     if hex_color is None:
         return "#FFFFFF"
     else:
-        return change_brightness(hex_color,brightness_offset)
+        return change_brightness(hex_color, brightness_offset)
 
-def change_brightness(hex_color: str,brightness_offset: float):
+
+def change_brightness(hex_color: str, brightness_offset: float):
     """
     Changes the brightness of a given color in hexadecimal format.
 
@@ -402,9 +403,10 @@ def change_brightness(hex_color: str,brightness_offset: float):
     '#FF3333'
     """
     float_color = to_rgb(hex_color)
-    brighter = np.minimum([1,1,1],np.array(float_color) + brightness_offset)
+    brighter = np.minimum([1, 1, 1], np.array(float_color) + brightness_offset)
 
     return to_hex(brighter).upper()
+
 
 def make_cluster_overlay_img(
     cluster_id: str,
