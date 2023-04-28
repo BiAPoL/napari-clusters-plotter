@@ -500,7 +500,7 @@ class PlotterWidget(QMainWindow):
         # it will be considered to be tracking data, where all labels of the same track have
         # the same label, and each column represent track's features
         tracking_data = (
-            len(self.analysed_layer.data.shape) == 4 and "frame" not in features.keys()
+            len(self.analysed_layer.data.shape) == 4 and "frame" not in [key.lower() for key in features.keys()]
         )
         colors = get_nice_colormap()
         if (
