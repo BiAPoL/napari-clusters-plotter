@@ -12,10 +12,10 @@ from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ._clustering import ID_NAME
 from ._plotter import POINTER
 from ._Qt_code import (
-    create_options_dropdown,
     button,
     checkbox,
     collapsible_box,
+    create_options_dropdown,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
     labels_container_and_selection,
