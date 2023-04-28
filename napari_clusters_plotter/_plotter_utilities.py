@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from PIL import ImageColor
 from scipy import stats
-
+from matplotlib.colors import to_hex, to_rgb
 
 def unclustered_plot_parameters(
     frame_id: list,
@@ -288,9 +288,9 @@ def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
         colors = [color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id]
         return colors
 
-    highlight = gen_highlight()
+    
     colors = [
-        highlight
+        gen_highlight(color_hex_list[int(x) % len(color_hex_list)])
         if tp == current_frame
         else color_hex_list[int(x) % len(color_hex_list)]
         for x, tp in zip(cluster_id, frame_id)
@@ -369,13 +369,42 @@ def gen_spot_size(n_datapoints):
     return min(10, (max(0.1, 8000 / n_datapoints))) * 2
 
 
-def gen_highlight():
+def gen_highlight(hex_color = None, brightness_offset = 0.2):
     """
     Returns a default color for the current timepoint visualization.
     Currently, it is color white.
     """
-    return "#FFFFFF"
+    if hex_color is None:
+        return "#FFFFFF"
+    else:
+        return change_brightness(hex_color,brightness_offset)
 
+def change_brightness(hex_color: str,brightness_offset: float):
+    """
+    Changes the brightness of a given color in hexadecimal format.
+
+    Parameters:
+    -----------
+    hex_color : str
+        A hexadecimal string representing the original color. The string should be of the format '#RRGGBB'
+    brightness_offset : float
+        A floating-point number representing the amount by which to adjust the brightness of the color. The value
+        can be positive or negative, and it will be added to or subtracted from the color's RGB values.
+
+    Returns:
+    --------
+    str
+        A hexadecimal string representing the new color with the adjusted brightness. The string will be of the format '#RRGGBB'.
+
+    Example:
+    --------
+    >>> change_brightness('#FF0000', 0.2)
+    '#FF3333'
+    """
+    float_color = to_rgb(hex_color)
+    brighter = np.minimum([1,1,1],np.array(float_color) + brightness_offset)
+
+    return to_hex(brighter).upper()
 
 def make_cluster_overlay_img(
     cluster_id: str,
