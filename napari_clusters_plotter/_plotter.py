@@ -35,7 +35,7 @@ from ._Qt_code import (
     MyNavigationToolbar,
     button,
     collapsible_box,
-    colormap_choice,
+    create_options_dropdown,
     labels_container_and_selection,
     title,
 )
@@ -297,7 +297,7 @@ class PlotterWidget(QMainWindow):
         )
 
         # selection of possible colormaps for 2D histogram
-        self.colormap_container, self.colormap_dropdown = colormap_choice(
+        self.colormap_container, self.colormap_dropdown = create_options_dropdown(
             name="Colormap",
             value="magma",
             options={"choices": list(ALL_COLORMAPS.keys())},

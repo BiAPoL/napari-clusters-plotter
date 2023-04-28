@@ -354,16 +354,16 @@ def algorithm_choice(name: str, value, options: dict, label: str):
     return container, choice_list
 
 
-def colormap_choice(name: str, value, options: dict, label: str):
+def create_options_dropdown(name: str, value, options: dict, label: str):
     """
-    Create a widget for selecting a colormap from a set of options.
+    Create a widget for selecting a value from a set of options.
 
     Parameters
     ----------
     name : str
         The name to be used for the widget.
     value :
-    The initial value of the widget.
+        The initial value of the widget.
     options : dict
         A dictionary of possible options, where the keys are option
         names and the values are corresponding strings that are

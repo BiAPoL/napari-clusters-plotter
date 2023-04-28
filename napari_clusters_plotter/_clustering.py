@@ -10,7 +10,7 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ._Qt_code import (
-    algorithm_choice,
+    create_options_dropdown,
     button,
     checkbox,
     float_sbox_containter_and_selection,
@@ -77,7 +77,7 @@ class ClusteringWidget(QWidget):
         ) = measurements_container_and_list()
 
         # selection of the clustering methods
-        self.clust_method_container, self.clust_method_choice_list = algorithm_choice(
+        self.clust_method_container, self.clust_method_choice_list = create_options_dropdown(
             name="Clustering_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
