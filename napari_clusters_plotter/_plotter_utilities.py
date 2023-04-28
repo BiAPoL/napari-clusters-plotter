@@ -386,15 +386,17 @@ def change_brightness(hex_color: str,brightness_offset: float):
     Parameters:
     -----------
     hex_color : str
-        A hexadecimal string representing the original color. The string should be of the format '#RRGGBB'
+        A hexadecimal string representing the original color. The string 
+        should be of the format '#RRGGBB'
     brightness_offset : float
-        A floating-point number representing the amount by which to adjust the brightness of the color. The value
-        can be positive or negative, and it will be added to or subtracted from the color's RGB values.
+        A floating-point number representing the amount by which to adjust 
+        the brightness of the color. The value can be positive or negative, 
+        and it will be added to or subtracted from the color's RGB values.
 
     Returns:
     --------
     str
-        A hexadecimal string representing the new color with the adjusted brightness. The string will be of the format '#RRGGBB'.
+        A hexadecimal string representing the new color with the adjusted brightness.
 
     Example:
     --------
