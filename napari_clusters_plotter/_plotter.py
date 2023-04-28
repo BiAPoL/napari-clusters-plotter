@@ -304,7 +304,7 @@ class PlotterWidget(QMainWindow):
             label="Colormap",
         )
         self.colormap_container.setVisible(False)
-
+        self.colormap_dropdown.native.currentIndexChanged.connect(replot)
         self.advanced_options_container.addWidget(self.colormap_container)
 
         # adding all widgets to the layout
