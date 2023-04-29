@@ -184,12 +184,14 @@ class PlotterWidget(QMainWindow):
         # Advanced plotting options
         ############################
 
-        self.advanced_options_container_box = collapsible_box("Expand for advanced options")
+        self.advanced_options_container_box = collapsible_box(
+            "Expand for advanced options"
+        )
         self.advanced_options_container = QWidget(self)
         self.advanced_options_container.setLayout(QVBoxLayout())
         self.advanced_options_container_box.addWidget(self.advanced_options_container)
         self.advanced_options_container.layout().setSpacing(0)
-        self.advanced_options_container.layout().setContentsMargins(0,0,0,0)
+        self.advanced_options_container.layout().setContentsMargins(0, 0, 0, 0)
 
         def replot():
             clustering_ID = None
@@ -318,7 +320,9 @@ class PlotterWidget(QMainWindow):
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
 
-        self.layout.addWidget(self.advanced_options_container_box, alignment=Qt.AlignTop)
+        self.layout.addWidget(
+            self.advanced_options_container_box, alignment=Qt.AlignTop
+        )
 
         self.layout.addWidget(update_container, alignment=Qt.AlignTop)
         self.layout.addWidget(run_container, alignment=Qt.AlignTop)
