@@ -184,7 +184,14 @@ class PlotterWidget(QMainWindow):
         # Advanced plotting options
         ############################
 
-        self.advanced_options_container = collapsible_box("Expand for advanced options")
+        self.advanced_options_container_box = collapsible_box(
+            "Expand for advanced options"
+        )
+        self.advanced_options_container = QWidget(self)
+        self.advanced_options_container.setLayout(QVBoxLayout())
+        self.advanced_options_container_box.addWidget(self.advanced_options_container)
+        self.advanced_options_container.layout().setSpacing(0)
+        self.advanced_options_container.layout().setContentsMargins(0, 0, 0, 0)
 
         def replot():
             clustering_ID = None
@@ -289,10 +296,10 @@ class PlotterWidget(QMainWindow):
             self.plot_hide_non_selected
         )
 
-        self.advanced_options_container.addWidget(combobox_plotting_container)
-        self.advanced_options_container.addWidget(self.log_scale_container)
-        self.advanced_options_container.addWidget(self.bin_number_container)
-        self.advanced_options_container.addWidget(
+        self.advanced_options_container.layout().addWidget(combobox_plotting_container)
+        self.advanced_options_container.layout().addWidget(self.log_scale_container)
+        self.advanced_options_container.layout().addWidget(self.bin_number_container)
+        self.advanced_options_container.layout().addWidget(
             self.hide_nonselected_checkbox_container
         )
 
@@ -305,7 +312,7 @@ class PlotterWidget(QMainWindow):
         )
         self.colormap_container.setVisible(False)
         self.colormap_dropdown.native.currentIndexChanged.connect(replot)
-        self.advanced_options_container.addWidget(self.colormap_container)
+        self.advanced_options_container.layout().addWidget(self.colormap_container)
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
@@ -313,17 +320,21 @@ class PlotterWidget(QMainWindow):
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
 
-        self.layout.addWidget(self.advanced_options_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(
+            self.advanced_options_container_box, alignment=Qt.AlignTop
+        )
 
         self.layout.addWidget(update_container, alignment=Qt.AlignTop)
         self.layout.addWidget(run_container, alignment=Qt.AlignTop)
         self.layout.setSpacing(0)
 
         # go through all widgets and change spacing
-        for i in range(self.layout.count()):
-            item = self.layout.itemAt(i).widget()
-            item.layout().setSpacing(0)
-            item.layout().setContentsMargins(3, 3, 3, 3)
+        for widget_list in [self.layout, self.advanced_options_container.layout()]:
+            for i in range(widget_list.count()):
+                item = widget_list.itemAt(i).widget()
+                if item.layout() is not None:
+                    item.layout().setSpacing(0)
+                    item.layout().setContentsMargins(3, 3, 3, 3)
 
         # adding spacing between fields for selecting two axes
         axes_container.layout().setSpacing(6)
