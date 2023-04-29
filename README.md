@@ -95,9 +95,11 @@ on `Update Axes/Clustering Options` to refresh them. Click on `Plot` to draw the
 
 Currently, you can select between two types of plots: scatter plot and 2D histogram. Click on "expand for advanced
 options" to see the selection of the plot type. Clustering (manual and automatic) is possible using both types of plots.
-2D histogram is recommended if you have a very high number of data points. Under advanced options you will also find the
-checkbox determining whether not selected data points should be automatically clustered as another cluster or displayed as
-gray data points and not visualized in the generated clusters IDs layer.
+2D histogram is recommended if you have a very high number of data points. If you select the same measurement for both axes,
+and histogram is selected as the plotting type, 1D histogram will be plotted. Clustering 1D histogram is not yet possible.
+
+Under advanced options you will also find the checkbox determining whether not-selected data points should be automatically
+clustered as another cluster or displayed as gray data points and not visualized in the generated clusters IDs layer.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_plain.png)
 

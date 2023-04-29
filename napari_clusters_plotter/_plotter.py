@@ -24,6 +24,7 @@ from qtpy.QtWidgets import (
 )
 
 from ._plotter_utilities import (
+    apply_cluster_colors_to_bars,
     clustered_plot_parameters,
     estimate_number_bins,
     make_cluster_overlay_img,
@@ -53,7 +54,7 @@ POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including
 
 
 class PlottingType(Enum):
-    HISTOGRAM_2D = auto()
+    HISTOGRAM = auto()
     SCATTER = auto()
 
 
@@ -193,7 +194,6 @@ class PlotterWidget(QMainWindow):
             features = get_layer_tabular_data(self.analysed_layer)
 
             # redraw the whole plot
-
             try:
                 self.run(
                     features,
@@ -210,7 +210,7 @@ class PlotterWidget(QMainWindow):
             replot()
 
         def plotting_type_changed():
-            if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
+            if self.plotting_type.currentText() == PlottingType.HISTOGRAM.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
                 self.plot_hide_non_selected.setChecked(True)
@@ -235,7 +235,7 @@ class PlotterWidget(QMainWindow):
         combobox_plotting_container.layout().addWidget(QLabel("Plotting type"))
         self.plotting_type = QComboBox()
         self.plotting_type.addItems(
-            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name]
+            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM.name]
         )
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
         combobox_plotting_container.layout().addWidget(self.plotting_type)
@@ -427,7 +427,10 @@ class PlotterWidget(QMainWindow):
     def change_state_of_nonselected_checkbox(self):
         # make the checkbox visible only if clustering is done manually
         visible = (
-            True if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText() else False
+            True
+            if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText()
+            or self.plot_cluster_id.currentText() == ""
+            else False
         )
         self.hide_nonselected_checkbox_container.setVisible(visible)
 
@@ -556,51 +559,77 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
+
+                self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             else:
                 if self.bin_auto.isChecked():
-                    number_bins = int(
-                        np.max(
-                            [
-                                estimate_number_bins(self.data_x),
-                                estimate_number_bins(self.data_y),
-                            ]
+                    if plot_x_axis_name == plot_y_axis_name:
+                        number_bins = int(estimate_number_bins(self.data_x))
+                    else:
+                        number_bins = int(
+                            np.max(
+                                [
+                                    estimate_number_bins(self.data_x),
+                                    estimate_number_bins(self.data_y),
+                                ]
+                            )
                         )
-                    )
-                    self.bin_number_spinner.setValue(number_bins)
+                        self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
 
-                self.graphics_widget.make_2d_histogram(
-                    self.data_x,
-                    self.data_y,
-                    colors,
-                    bin_number=number_bins,
-                    log_scale=self.log_scale.isChecked(),
-                )
+                # if both axes are the same, plot 1D histogram
+                if plot_x_axis_name == plot_y_axis_name:
+                    self.graphics_widget.make_1d_histogram(
+                        self.data_x,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
+                    # update bar colors to cluster ids
+                    self.graphics_widget.axes = apply_cluster_colors_to_bars(
+                        self.graphics_widget.axes,
+                        cluster_name=plot_cluster_name,
+                        features=features,
+                        number_bins=number_bins,
+                        feature_x=self.plot_x_axis_name,
+                        colors=colors,
+                    )
+                    self.graphics_widget.figure.canvas.draw_idle()
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel("frequency")
+                else:
+                    self.graphics_widget.make_2d_histogram(
+                        self.data_x,
+                        self.data_y,
+                        colors,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
 
-                rgb_img = make_cluster_overlay_img(
-                    cluster_id=plot_cluster_name,
-                    features=features,
-                    feature_x=self.plot_x_axis_name,
-                    feature_y=self.plot_y_axis_name,
-                    colors=colors,
-                    histogram_data=self.graphics_widget.histogram,
-                    hide_first_cluster=self.plot_hide_non_selected.isChecked(),
-                )
-                xedges = self.graphics_widget.histogram[1]
-                yedges = self.graphics_widget.histogram[2]
+                    rgb_img = make_cluster_overlay_img(
+                        cluster_id=plot_cluster_name,
+                        features=features,
+                        feature_x=self.plot_x_axis_name,
+                        feature_y=self.plot_y_axis_name,
+                        colors=colors,
+                        histogram_data=self.graphics_widget.histogram,
+                        hide_first_cluster=self.plot_hide_non_selected.isChecked(),
+                    )
+                    xedges = self.graphics_widget.histogram[1]
+                    yedges = self.graphics_widget.histogram[2]
 
-                self.graphics_widget.axes.imshow(
-                    rgb_img,
-                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
-                    origin="lower",
-                    alpha=1,
-                    aspect="auto",
-                )
-                self.graphics_widget.figure.canvas.draw_idle()
+                    self.graphics_widget.axes.imshow(
+                        rgb_img,
+                        extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
+                        origin="lower",
+                        alpha=1,
+                        aspect="auto",
+                    )
+                    self.graphics_widget.figure.canvas.draw_idle()
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
-            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             self.graphics_widget.match_napari_layout()
 
             from vispy.color import Color
@@ -705,31 +734,47 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
+
+                self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             else:
                 if self.bin_auto.isChecked():
-                    number_bins = int(
-                        np.max(
-                            [
-                                estimate_number_bins(self.data_x),
-                                estimate_number_bins(self.data_y),
-                            ]
+                    if plot_x_axis_name == plot_y_axis_name:
+                        number_bins = int(estimate_number_bins(self.data_x))
+                    else:
+                        number_bins = int(
+                            np.max(
+                                [
+                                    estimate_number_bins(self.data_x),
+                                    estimate_number_bins(self.data_y),
+                                ]
+                            )
                         )
-                    )
                     self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
 
-                self.graphics_widget.make_2d_histogram(
-                    self.data_x,
-                    self.data_y,
-                    colors,
-                    bin_number=number_bins,
-                    log_scale=self.log_scale.isChecked(),
-                )
-            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+                # if both axes are the same, plot 1D histogram
+                if plot_x_axis_name == plot_y_axis_name:
+                    self.graphics_widget.make_1d_histogram(
+                        self.data_x,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel("frequency")
+                else:
+                    self.graphics_widget.make_2d_histogram(
+                        self.data_x,
+                        self.data_y,
+                        colors,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+
             self.graphics_widget.match_napari_layout()
 
-            self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
-            # because manual selection already does that when selector is disconnected
+        self.graphics_widget.draw()  # Always redraws, oterwise y-axis may not get updated in histograms
         self.graphics_widget.reset_zoom()

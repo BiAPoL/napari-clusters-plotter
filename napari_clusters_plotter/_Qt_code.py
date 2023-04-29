@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.path import Path
-from matplotlib.widgets import LassoSelector, RectangleSelector
+from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
@@ -414,6 +414,43 @@ class SelectFrom2DHistogram:
         self.canvas.draw_idle()
 
 
+class SelectFrom1DHistogram:
+    def __init__(self, parent, ax, full_data):
+        self.parent = parent
+        self.ax = ax
+        self.canvas = ax.figure.canvas
+        self.xys = full_data
+
+        self.span_selector = SpanSelector(
+            ax,
+            onselect=self.onselect,
+            direction="horizontal",
+            props=dict(facecolor="#1f77b4", alpha=0.5),
+        )
+        self.click_id = self.canvas.mpl_connect("button_press_event", self.on_click)
+
+    def onselect(self, vmin, vmax):
+        self.ind_mask = np.logical_and(self.xys >= vmin, self.xys <= vmax).values
+
+        if self.parent.manual_clustering_method is not None:
+            self.parent.manual_clustering_method(self.ind_mask)
+
+    def on_click(self, event):
+        # Clear selection if user right-clicks (without moving) outside of the histogram
+        if event.inaxes != self.ax:
+            return
+        if event.button == 3:
+            # clear selection
+            self.ind_mask = np.zeros_like(self.xys, dtype=bool)
+            if self.parent.manual_clustering_method is not None:
+                self.parent.manual_clustering_method(self.ind_mask)
+
+    def disconnect(self):
+        self.span_selector.disconnect_events()
+        self.canvas.mpl_disconnect(self.click_id)
+        self.canvas.draw_idle()
+
+
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
 class SelectFromCollection:
@@ -564,9 +601,40 @@ class MplCanvas(FigureCanvas):
         self.axes.set_ylim(yedges[0], yedges[-1])
         self.histogram = (h, xedges, yedges)
 
-        full_data = pd.concat([data_x, data_y], axis=1)
+        full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+        self.axes.figure.canvas.draw_idle()
+
+    def make_1d_histogram(
+        self,
+        data: "numpy.typing.ArrayLike",
+        bin_number: int = 400,
+        log_scale: bool = False,
+    ):
+        counts, bins = np.histogram(data, bins=bin_number)
+        self.axes.hist(
+            bins[:-1],
+            bins,
+            edgecolor="white",
+            weights=counts,
+            log=log_scale,
+            color="#9A9A9A",
+        )
+        self.histogram = (counts, bins)
+        bin_width = bins[1] - bins[0]
+        self.axes.set_xlim(min(bins) - (bin_width / 2), max(bins) + (bin_width / 2))
+        ymin = 0
+        if log_scale:
+            ymin = 1
+        self.axes.set_ylim(ymin, max(counts) * 1.1)
+
+        if log_scale:
+            self.axes.set_xscale("linear")
+            self.axes.set_yscale("log")
+
+        self.selector.disconnect()
+        self.selector = SelectFrom1DHistogram(self, self.axes, data)
         self.axes.figure.canvas.draw_idle()
 
     def make_scatter_plot(
@@ -613,6 +681,7 @@ class MplCanvas(FigureCanvas):
         # changing colors of axes labels
         self.axes.xaxis.label.set_color("white")
         self.axes.yaxis.label.set_color("white")
+        self.fig.canvas.draw_idle()
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
