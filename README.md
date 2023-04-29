@@ -44,6 +44,8 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
 
+In case you have 2D time-lapse data you need to convert it into a suitable shape using the menu `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)` ([documentation](https://www.napari-hub.org/plugins/napari-time-slicer)).
+
 ### Measurements
 The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image. 
 Use the menu `Tools > Measurement tables > Regionprops (scikit-image, nsr)` to get to the measurement widget ([documentation](https://www.napari-hub.org/plugins/napari-skimage-regionprops)).
@@ -54,12 +56,6 @@ At this point it is recommended to close the table and the Measure widget to fre
 You can also load your own measurements you can do this using the menu `Tools > Measurement tables > Load from CSV (nsr)`.
 If you load custom measurements, please make sure that there is a `label` column that specifies the which measurement belongs to which labeled object.
 Tables for time-lapse data need to include an additional column named `frame`.
-
-#### Time-Lapse Measurements
-In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)` ([documentation](https://www.napari-hub.org/plugins/napari-time-slicer)).
-
-If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
-the `frame` column must not be added.
 
 ### Plotting
 
@@ -89,16 +85,16 @@ visualization in the image, turn off the visibility of the analysed labels layer
 
 <img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif" width="700"/>
 
-Manual clustering results can be saved by going to `Tools > Measurement > Show table (nsr)`, and clicking on `Save as csv`.
-The saved table will contain a "MANUAL_CLUSTER_ID" column. This column is overwritten every time different clusters are manually selected.
-
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
-
 Hold down the SHIFT key while annotating regions in the plot to manually select multiple clusters.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
 
-#### Time-Lapse analysis
+### Saving manual clustering
+
+Manual clustering results can be saved by going to `Tools > Measurement > Show table (nsr)`, and clicking on `Save as csv`.
+The saved table will contain a "MANUAL_CLUSTER_ID" column. This column is overwritten every time different clusters are manually selected.
+
+### Time-Lapse analysis
 
 When you plot your time-lapse datasets you will notice that the plots look slightly different.
 Datapoints of the current time frame are highlighted in bright color and you can see the datapoints move through the plot while you navigate through time:
@@ -110,23 +106,27 @@ Furthermore, you could also select a group in time and see where the datapoints 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse_manual_clustering_tips.gif)
 
-### Dimensionality reduction: UMAP, t-SNE or PCA
+If you have custom measurements from tracking data where each column specifies measurements for a track instead of a label at a specific time point, the `frame` column must not be added.
 
-For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
-using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/), [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
-or [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
-To apply it to your data use the menu `Tools > Measurement post-processing > Dimensionality reduction (ncp)`.
-Select the label image that was analysed and in the list below, select all measurements that should be
-dimensionality reduced. By default, all measurements are selected in the box. If you cannot see any measurements, but
-you have performed them, click on `Update Measurements` to refresh the box. You can read more about parameters of both
-algorithms by hovering over question marks or by clicking on them. When you are done with the selection, click on `Run`
-and after a moment, the table of measurements will re-appear with two additional columns representing the reduced
-dimensions of the dataset. These columns are automatically saved in the `properties` of the labels layer so there is no
-need to save them for usage in other widgets unless you wish to do so.
+### Dimensionality reduction
+
+For getting more insights into your data, you can reduce the dimensionality of the measurements, using these algorithms:
+* [Uniform Manifold Approximation Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/)
+* [t-distributed stochastic neighbor embedding (t-SNE)](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
+* [Principal Component Analysis (PCA)](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html)
+* [Non-linear dimensionality reduction through Isometric Mapping (Isomap)](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.Isomap.html)
+* [Multi-dimensional Scaling (MDS)](https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling)
+
+To apply them to your data use the menu `Tools > Measurement post-processing > Dimensionality reduction (ncp)`.
+Select the label image that was analysed and in the list below, select all measurements that should be dimensionality reduced. 
+By default, all measurements are selected in the box. 
+You can read more about parameters of both algorithms by hovering over question marks or by clicking on them. 
+When you are done with the selection, click on `Run` and after a moment, the table of measurements will re-appear with two additional columns representing the reduced dimensions of the dataset. 
+These columns are automatically saved in the labels layer and can be further processed by other plugins.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/umap.png)
 
-Afterwards, you can again save and/or close the table. Also, close the Dimensionality Reduction widget.
+Afterwards, you can again save and/or close the table.
 
 ### Clustering
 If manual clustering, as shown above, is not an option, you can automatically cluster your data, using these implemented algorithms:
@@ -157,7 +157,7 @@ Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING
 ## Installation
 ### Devbio-napari installation
 
-The easiest way to install this plugin is to install the [devbio-napari](https://github.com/haesleinhuepf/devbio-napari) plugin collection.
+The easiest way to install this plugin is to install the [devbio-napari](https://github.com/haesleinhuepf/devbio-napari) plugin collection. The napari-clusters-plotter is part of it.
 
 ### Minimal installation
 * Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html).
