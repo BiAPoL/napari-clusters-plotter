@@ -7,15 +7,15 @@ import numpy as np
 import pandas as pd
 from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
-from qtpy.QtWidgets import QVBoxLayout, QWidget
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ._clustering import ID_NAME
 from ._plotter import POINTER
 from ._Qt_code import (
-    algorithm_choice,
     button,
     checkbox,
     collapsible_box,
+    create_options_dropdown,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
     labels_container_and_selection,
@@ -55,6 +55,7 @@ DEFAULTS = {
     "mds_metric": True,
     "mds_max_iter": 300,
     "mds_eps": 0.001,
+    "custom_name": "",
 }
 
 EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
@@ -95,7 +96,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = measurements_container_and_list()
 
         # selection of dimension reduction algorithm
-        algorithm_container, self.algorithm_choice_list = algorithm_choice(
+        algorithm_container, self.algorithm_choice_list = create_options_dropdown(
             name="Dimensionality_reduction_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
@@ -275,6 +276,17 @@ class DimensionalityReductionWidget(QWidget):
             tool_link="https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling",
         )
 
+        # custom result column name field
+        self.custom_name_container = QWidget()
+        self.custom_name_container.setLayout(QHBoxLayout())
+        self.custom_name_container.layout().addWidget(
+            QLabel("Optional Custom Results Name")
+        )
+        self.custom_name = QLineEdit()
+
+        self.custom_name_container.layout().addWidget(self.custom_name)
+        self.custom_name.setPlaceholderText("Algorithm_name")
+
         # making buttons
         run_container, self.run_button = button("Run")
         update_container, self.update_button = button("Update Measurements")
@@ -310,6 +322,7 @@ class DimensionalityReductionWidget(QWidget):
                 self.mds_n_init.value,
                 self.mds_max_iter.value,
                 self.mds_eps.value,
+                self.custom_name.text(),
             )
 
         # connect buttons with functions that need to be triggered by them
@@ -346,6 +359,7 @@ class DimensionalityReductionWidget(QWidget):
         self.layout().addWidget(self.mds_eps_container)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(self.advanced_options_container)
+        self.layout().addWidget(self.custom_name_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(defaults_container)
         self.layout().addWidget(run_container)
@@ -464,6 +478,7 @@ class DimensionalityReductionWidget(QWidget):
         mds_n_init,
         mds_max_iter,
         mds_eps,
+        custom_name,
     ):
         """
         The function triggered by clicking the run button.
@@ -526,10 +541,16 @@ class DimensionalityReductionWidget(QWidget):
                     )
                     set_features(labels_layer, df_principal_components_removed)
 
+                    result_column_name = (
+                        "PC_" if custom_name == DEFAULTS["custom_name"] else custom_name
+                    )
+
                     # write result back to properties/features of the layer
                     for i in range(0, len(result[1].T)):
                         add_column_to_layer_tabular_data(
-                            labels_layer, "PC_" + str(i), result[1][:, i]
+                            labels_layer,
+                            str(result_column_name) + str(i),
+                            result[1][:, i],
                         )
 
                 elif (
@@ -539,10 +560,18 @@ class DimensionalityReductionWidget(QWidget):
                     or result[0] == "MDS"
                 ):
                     # write result back to properties/features of the layer
-                    for i in range(0, n_components):
-                        add_column_to_layer_tabular_data(
-                            labels_layer, result[0] + "_" + str(i), result[1][:, i]
-                        )
+                    if custom_name == DEFAULTS["custom_name"]:
+                        for i in range(0, n_components):
+                            add_column_to_layer_tabular_data(
+                                labels_layer, result[0] + "_" + str(i), result[1][:, i]
+                            )
+                    else:
+                        for i in range(0, n_components):
+                            add_column_to_layer_tabular_data(
+                                labels_layer,
+                                custom_name + "_" + str(i),
+                                result[1][:, i],
+                            )
 
                 else:
                     "Dimensionality reduction not successful. Please try again"

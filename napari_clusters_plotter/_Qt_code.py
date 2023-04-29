@@ -354,6 +354,41 @@ def algorithm_choice(name: str, value, options: dict, label: str):
     return container, choice_list
 
 
+def create_options_dropdown(name: str, value, options: dict, label: str):
+    """
+    Create a widget for selecting a value from a set of options.
+
+    Parameters
+    ----------
+    name : str
+        The name to be used for the widget.
+    value :
+        The initial value of the widget.
+    options : dict
+        A dictionary of possible options, where the keys are option
+        names and the values are corresponding strings that are
+        actually displayed in the combobox.
+    label : str
+        The label to be displayed next to the widget.
+
+    Returns
+    ----------
+    A tuple containing the container widget and the choice widget. The container widget
+    is a QWidget that contains the label and the choice widget.
+    """
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    container.layout().addWidget(QLabel(label))
+    choice_list = create_widget(
+        widget_type="ComboBox",
+        name=name,
+        value=value,
+        options=options,
+    )
+    container.layout().addWidget(choice_list.native)
+    return container, choice_list
+
+
 class SelectFrom2DHistogram:
     def __init__(self, parent, ax, full_data):
         self.parent = parent
@@ -509,6 +544,8 @@ class MplCanvas(FigureCanvas):
             spancoords="pixels",
             interactive=False,
         )
+        self.selected_colormap = "magma"
+
         self.reset()
 
     def reset_zoom(self):
@@ -556,7 +593,7 @@ class MplCanvas(FigureCanvas):
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
-            cmap="magma",
+            cmap=self.selected_colormap,
             aspect="auto",
             norm=norm,
         )

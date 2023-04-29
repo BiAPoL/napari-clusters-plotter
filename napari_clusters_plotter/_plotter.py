@@ -5,6 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
+from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
@@ -35,6 +36,7 @@ from ._Qt_code import (
     MyNavigationToolbar,
     button,
     collapsible_box,
+    create_options_dropdown,
     labels_container_and_selection,
     title,
 )
@@ -211,9 +213,12 @@ class PlotterWidget(QMainWindow):
             if self.plotting_type.currentText() == PlottingType.HISTOGRAM.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
+                self.plot_hide_non_selected.setChecked(True)
+                self.colormap_container.setVisible(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
+                self.colormap_container.setVisible(False)
             replot()
 
         def bin_number_set():
@@ -287,10 +292,20 @@ class PlotterWidget(QMainWindow):
         self.advanced_options_container.addWidget(combobox_plotting_container)
         self.advanced_options_container.addWidget(self.log_scale_container)
         self.advanced_options_container.addWidget(self.bin_number_container)
-
         self.advanced_options_container.addWidget(
             self.hide_nonselected_checkbox_container
         )
+
+        # selection of possible colormaps for 2D histogram
+        self.colormap_container, self.colormap_dropdown = create_options_dropdown(
+            name="Colormap",
+            value="magma",
+            options={"choices": list(ALL_COLORMAPS.keys())},
+            label="Colormap",
+        )
+        self.colormap_container.setVisible(False)
+        self.colormap_dropdown.native.currentIndexChanged.connect(replot)
+        self.advanced_options_container.addWidget(self.colormap_container)
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
@@ -496,6 +511,9 @@ class PlotterWidget(QMainWindow):
         self.analysed_layer = self.labels_select.value
 
         self.graphics_widget.reset()
+
+        self.graphics_widget.selected_colormap = self.colormap_dropdown.value
+
         number_of_points = len(features)
 
         # if selected image is 4 dimensional, but does not contain frame column in its features
