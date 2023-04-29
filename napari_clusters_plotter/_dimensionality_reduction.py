@@ -12,10 +12,10 @@ from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 from ._clustering import ID_NAME
 from ._plotter import POINTER
 from ._Qt_code import (
-    algorithm_choice,
     button,
     checkbox,
     collapsible_box,
+    create_options_dropdown,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
     labels_container_and_selection,
@@ -96,7 +96,7 @@ class DimensionalityReductionWidget(QWidget):
         ) = measurements_container_and_list()
 
         # selection of dimension reduction algorithm
-        algorithm_container, self.algorithm_choice_list = algorithm_choice(
+        algorithm_container, self.algorithm_choice_list = create_options_dropdown(
             name="Dimensionality_reduction_method",
             value=self.Options.EMPTY.value,
             options={"choices": [e.value for e in self.Options]},
