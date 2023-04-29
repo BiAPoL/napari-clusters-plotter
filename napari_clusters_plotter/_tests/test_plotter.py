@@ -121,7 +121,7 @@ def test_plotter_utilities():
     colors_cl = colors_clustered(predicts, frame_ids, current_frame, colors)
     result = [colors[pred] if pred >= 0 else "#bcbcbc" for pred in predicts]
     result_cc = [
-        result[i] if frame != current_frame else highlight
+        result[i] if frame != current_frame else gen_highlight(result[i])
         for i, frame in enumerate(frame_ids)
     ]
 
