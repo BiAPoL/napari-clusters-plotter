@@ -257,8 +257,9 @@ def estimate_number_bins(data) -> int:
     -------
     Estimated number of bins
     """
-
     est_a = (np.max(data) - np.min(data)) / (2 * stats.iqr(data) / np.cbrt(len(data)))
+    if np.isnan(est_a):
+        return 256
     return int(est_a)
 
 
