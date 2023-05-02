@@ -47,10 +47,10 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 In case you have 2D time-lapse data you need to convert it into a suitable shape using the menu `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)` ([documentation](https://www.napari-hub.org/plugins/napari-time-slicer)).
 
 ### Measurements
-The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image. 
+The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
 Use the menu `Tools > Measurement tables > Regionprops (scikit-image, nsr)` to get to the measurement widget ([documentation](https://www.napari-hub.org/plugins/napari-skimage-regionprops)).
 Select the image, the corresponding label image and the measurements to analyse and click on `Run`.
-A table with the measurements will open and afterwards, you can save and/or close the measurement table. 
+A table with the measurements will open and afterwards, you can save and/or close the measurement table.
 At this point it is recommended to close the table and the Measure widget to free space for following steps.
 
 You can also load your own measurements you can do this using the menu `Tools > Measurement tables > Load from CSV (nsr)`.
@@ -118,10 +118,10 @@ For getting more insights into your data, you can reduce the dimensionality of t
 * [Multi-dimensional Scaling (MDS)](https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling)
 
 To apply them to your data use the menu `Tools > Measurement post-processing > Dimensionality reduction (ncp)`.
-Select the label image that was analysed and in the list below, select all measurements that should be dimensionality reduced. 
-By default, all measurements are selected in the box. 
-You can read more about parameters of both algorithms by hovering over question marks or by clicking on them. 
-When you are done with the selection, click on `Run` and after a moment, the table of measurements will re-appear with two additional columns representing the reduced dimensions of the dataset. 
+Select the label image that was analysed and in the list below, select all measurements that should be dimensionality reduced.
+By default, all measurements are selected in the box.
+You can read more about parameters of both algorithms by hovering over question marks or by clicking on them.
+When you are done with the selection, click on `Run` and after a moment, the table of measurements will re-appear with two additional columns representing the reduced dimensions of the dataset.
 These columns are automatically saved in the labels layer and can be further processed by other plugins.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/umap.png)
@@ -136,7 +136,7 @@ If manual clustering, as shown above, is not an option, you can automatically cl
 * [Mean Shift (MS)](https://scikit-learn.org/stable/auto_examples/cluster/plot_mean_shift.html#sphx-glr-auto-examples-cluster-plot-mean-shift-py)
 * [Agglomerative clustering (AC)](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html)
 
-Therefore, click the menu `Tools > Measurement post-processing > Clustering (ncp)`, 
+Therefore, click the menu `Tools > Measurement post-processing > Clustering (ncp)`,
 select the analysed labels layer.
 Select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
 Select the clustering method `KMeans` and click on `Run`.
@@ -162,7 +162,7 @@ The easiest way to install this plugin is to install the [devbio-napari](https:/
 ### Minimal installation
 * Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html).
   If you never used mamba/conda environments before, please follow the instructions
-  [in this blog post](https://biapol.github.io/blog/mara_lampert/getting_started_with_mambaforge_and_python/readme.html) first. 
+  [in this blog post](https://biapol.github.io/blog/mara_lampert/getting_started_with_mambaforge_and_python/readme.html) first.
 
 * Create a new environment, for example, like this:
 
