@@ -1,3 +1,4 @@
+import copy
 import os
 import warnings
 from enum import Enum, auto
@@ -787,6 +788,9 @@ class PlotterWidget(QMainWindow):
                     self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
             self.graphics_widget.match_napari_layout()
+            self.graphics_widget.draw()
 
-        self.graphics_widget.draw()  # Always redraws, oterwise y-axis may not get updated in histograms
+        if plot_x_axis_name == plot_y_axis_name:
+            self.graphics_widget.draw()  # Additional redraw in case of 1D hist, otherwise y-axis may not get updated in histograms
         self.graphics_widget.reset_zoom()
+
