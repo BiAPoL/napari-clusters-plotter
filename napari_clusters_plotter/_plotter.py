@@ -790,7 +790,7 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.match_napari_layout()
             self.graphics_widget.draw()
 
-        if plot_x_axis_name == plot_y_axis_name:
-            self.graphics_widget.draw()  # Additional redraw in case of 1D hist, otherwise y-axis may not get updated in histograms
+        if self.graphics_widget.last_xy_labels != (plot_x_axis_name,plot_y_axis_name):
+            self.graphics_widget.draw()  # Additional redraw in case axis have changed, otherwise y-axis may not get updated. General redraw would resets the zoom, which needs to be avoided.
         self.graphics_widget.reset_zoom()
 
