@@ -15,15 +15,28 @@ authors:
     family-names: Zoccoler
   - given-names: Thorsten
     family-names: Wagner
+    email: thorsten.wagner@mpi-dortmund.mpg.de
   - given-names: Robert
     family-names: Haase
     email: robert.haase@tu-dresden.de
-version: 0.5.1
-date-released: 2021-11-15
+version: 0.7.1
+date-released: 2023-05-01
 identifiers:
   - description: This is the collection of archived snapshots of all versions of napari-clusters-plotter
     type: doi
     value: "10.5281/zenodo.5884657"
+  - description: This is the archived snapshot of version 0.7.1 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.7882626"
+  - description: This is the archived snapshot of version 0.7.0 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.7879227"
+  - description: This is the archived snapshot of version 0.6.2 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.7745633"
+  - description: This is the archived snapshot of version 0.6.1 of napari-clusters-plotter
+    type: doi
+    value: "10.5281/zenodo.7646982"
   - description: This is the archived snapshot of version 0.5.1 of napari-clusters-plotter
     type: doi
     value: "10.5281/zenodo.6620442"
