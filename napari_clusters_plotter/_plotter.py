@@ -787,6 +787,11 @@ class PlotterWidget(QMainWindow):
                     self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
             self.graphics_widget.match_napari_layout()
+            self.graphics_widget.draw()
 
-        self.graphics_widget.draw()  # Always redraws, oterwise y-axis may not get updated in histograms
+        if self.graphics_widget.last_xy_labels != (plot_x_axis_name, plot_y_axis_name):
+            # Additional redraw in case axis have changed, otherwise y-axis may not get updated. General redraw would
+            # resets the zoom, which needs to be avoided.
+            self.graphics_widget.draw()
+
         self.graphics_widget.reset_zoom()

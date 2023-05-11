@@ -527,6 +527,7 @@ class MplCanvas(FigureCanvas):
 
         self.match_napari_layout()
         self.xylim = None
+        self.last_xy_labels = None
 
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
@@ -554,6 +555,7 @@ class MplCanvas(FigureCanvas):
             self.axes.set_ylim(self.xylim[1])
 
     def on_draw(self, event):
+        self.last_xy_labels = (self.axes.get_xlabel(), self.axes.get_ylabel())
         self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
 
     def draw_rectangle(self, eclick, erelease):
