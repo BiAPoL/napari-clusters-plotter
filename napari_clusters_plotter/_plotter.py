@@ -2,6 +2,7 @@ import os
 import warnings
 from enum import Enum, auto
 from vispy.color import Color
+from napari_skimage_regionprops._parametric_images import map_measurements_on_labels
 
 import numpy as np
 import pandas as pd
@@ -87,6 +88,7 @@ class PlotterWidget(QMainWindow):
 
         self.analysed_layer = None
         self.visualized_labels_layer = None
+        self.visualized_feature_layer = None
 
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
@@ -731,6 +733,11 @@ class PlotterWidget(QMainWindow):
                     warnings.warn("Image dimensions too high for processing!")
                     return
 
+
+                # hiding the feature layer:
+                if self.visualized_feature_layer is not None:
+                    self.visualized_feature_layer.opacity = 0
+
                 # Adding the cluster image
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
@@ -802,6 +809,49 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
         
+            keep_selection = list(self.viewer.layers.selection)
+
+                
+            if redraw_cluster_image:
+                # depending on the dimensionality of the data
+                # generate the cluster image
+                if len(self.analysed_layer.data.shape) > 4:
+                    warnings.warn("Image dimensions too high for processing!")
+                    return
+                else:
+                    feature_image = map_measurements_on_labels(self.analysed_layer, plot_cluster_name, self.viewer)
+                    # Adding the feature image
+                    # if the feature image layer doesn't yet exist make it
+                    # otherwise just update it
+                    if (
+                        self.visualized_feature_layer is None
+                        or self.visualized_feature_layer not in self.viewer.layers
+                    ):
+                        
+                        self.visualized_feature_layer = self.viewer.add_image(feature_image,
+                                                            name="feature visualisation",
+                                                            scale=self.analysed_layer.scale,
+                                                            )
+                    else:
+                        if self.viewer.layers[-1] != self.visualized_feature_layer:
+                            for i,layer in enumerate(self.viewer.layers):
+                                if layer == self.visualized_feature_layer:
+                                    feature_layer_index = i
+                            self.viewer.layers.move(feature_layer_index,len(self.viewer.layers))
+                        # updating data
+                        self.visualized_feature_layer.data = feature_image
+                    
+                    # Adjusting the Layer
+                    self.visualized_feature_layer.contrast_limits = np.percentile(
+                        features[plot_cluster_name].to_numpy(), (1, 99)
+                    )
+                    self.visualized_feature_layer.colormap = self.colormap_dropdown.value
+                    self.visualized_feature_layer.opacity = 1
+
+            self.viewer.layers.selection.clear()
+            for s in keep_selection:
+                self.viewer.layers.selection.add(s)
+
         ###########################
         # Unclustered Visualisation
         ###########################
