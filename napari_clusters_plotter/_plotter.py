@@ -1,6 +1,7 @@
 import os
 import warnings
 from enum import Enum, auto
+from vispy.color import Color
 
 import numpy as np
 import pandas as pd
@@ -29,6 +30,7 @@ from ._plotter_utilities import (
     estimate_number_bins,
     make_cluster_overlay_img,
     unclustered_plot_parameters,
+    feature_plot_parameters,
 )
 from ._Qt_code import (
     ICON_ROOT,
@@ -225,7 +227,7 @@ class PlotterWidget(QMainWindow):
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
-                self.colormap_container.setVisible(False)
+                self.colormap_container.setVisible(False) 
             replot()
 
         def bin_number_set():
@@ -477,13 +479,19 @@ class PlotterWidget(QMainWindow):
                 self.plot_y_axis.addItems(list(features.keys()))
                 self.plot_cluster_id.clear()
                 self.plot_cluster_id.addItem("")
-                self.plot_cluster_id.addItems(
-                    [
+                self.plot_cluster_id.addItems([
                         feature
                         for feature in list(features.keys())
                         if "CLUSTER" in feature
-                    ]
-                )
+                ])
+                self.plot_cluster_id.addItems([
+                        feature
+                        for feature in list(features.keys())
+                        if "frame" not in feature.lower() 
+                        and "label" not in feature.lower()
+                        and "CLUSTER" not in feature
+                ])
+
         self.plot_x_axis.setCurrentIndex(former_x_axis)
         self.plot_y_axis.setCurrentIndex(former_y_axis)
         self.plot_cluster_id.setCurrentIndex(former_cluster_id)
@@ -500,6 +508,10 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
+
+        ###############
+        #INITIALISATION
+        ###############
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -534,11 +546,17 @@ class PlotterWidget(QMainWindow):
         tracking_data = len(self.analysed_layer.data.shape) == 4 and "frame" not in [
             key.lower() for key in features.keys()
         ]
+
+        ##########################
+        # CLUSTERING VISUALISATION
+        ##########################
+
         colors = get_nice_colormap()
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
             and plot_cluster_name in list(features.keys())
+            and "CLUSTER" in plot_cluster_name
         ):
             if self.plot_hide_non_selected.isChecked():
                 features.loc[
@@ -550,6 +568,7 @@ class PlotterWidget(QMainWindow):
             self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
 
+            # Determine Current Frame
             if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
                 frame_id = features[POINTER].tolist()
                 current_frame = self.frame
@@ -559,6 +578,8 @@ class PlotterWidget(QMainWindow):
             else:
                 warnings.warn("Image dimensions too high for processing!")
 
+            ############################
+            # Scatter Plot Visualisation
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = clustered_plot_parameters(
                     cluster_id=self.cluster_ids,
@@ -574,6 +595,9 @@ class PlotterWidget(QMainWindow):
 
                 self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
                 self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+
+            #########################
+            # Histogram Visualisation
             else:
                 if self.bin_auto.isChecked():
                     if plot_x_axis_name == plot_y_axis_name:
@@ -644,8 +668,8 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.match_napari_layout()
 
-            from vispy.color import Color
-
+            ##############################
+            # Generating the cluster image
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
             # generate dictionary mapping each prediction to its respective color
@@ -663,11 +687,12 @@ class PlotterWidget(QMainWindow):
 
             keep_selection = list(self.viewer.layers.selection)
 
-            # Generating the cluster image
+            
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the cluster image
                 if len(self.analysed_layer.data.shape) == 4:
+                    # Check which kind of timelapse and modify labels accordingly
                     if not tracking_data:
                         max_timepoint = features[POINTER].max() + 1
                         label_id_list_per_timepoint = [
@@ -690,12 +715,14 @@ class PlotterWidget(QMainWindow):
                             for i in range(self.analysed_layer.data.shape[0])
                         ]
 
+                    # Generate the dask image
                     cluster_image = dask_cluster_image_timelapse(
                         self.analysed_layer.data,
                         label_id_list_per_timepoint,
                         prediction_lists_per_timepoint,
                     )
 
+                # 3d case -> no dask needed
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_image = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
@@ -704,6 +731,7 @@ class PlotterWidget(QMainWindow):
                     warnings.warn("Image dimensions too high for processing!")
                     return
 
+                # Adding the cluster image
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
                 if (
@@ -725,6 +753,58 @@ class PlotterWidget(QMainWindow):
             self.viewer.layers.selection.clear()
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
+        
+        #######################
+        # FEATURE VISUALISATION
+        #######################        
+        elif (
+            plot_cluster_name is not None
+            and plot_cluster_name != "label"
+            and plot_cluster_name in list(features.keys())
+            and "CLUSTER" not in plot_cluster_name
+        ):
+            ################
+            # INITIALISATION
+            if self.plotting_type.currentText() != PlottingType.SCATTER.name:
+                warnings.warn(
+                    "Feature Visualisation Only Availible in Scatter Plot!"
+                )
+                return
+
+            self.label_ids = features["label"]
+            feature_values = features[plot_cluster_name].fillna(0)
+
+            # Determine Current Frame
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
+                frame_id = features[POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
+                frame_id = None
+                current_frame = None
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+            
+            ############################
+            # Scatter Plot Visualisation
+            
+            a, sizes, colors_plot = feature_plot_parameters(
+                feature_values=feature_values,
+                frame_id=frame_id,
+                current_frame=current_frame,
+                n_datapoints=number_of_points,
+                colormap=self.colormap_dropdown.value,
+            )
+
+            self.graphics_widget.make_scatter_plot(
+                self.data_x, self.data_y, colors_plot, sizes, a
+            )
+
+            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
+        
+        ###########################
+        # Unclustered Visualisation
+        ###########################
 
         else:
             if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
