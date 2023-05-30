@@ -770,15 +770,11 @@ class PlotterWidget(QMainWindow):
             and plot_cluster_name in list(features.keys())
             and "CLUSTER" not in plot_cluster_name
         ):
-            ################
-            # INITIALISATION
             if self.plotting_type.currentText() != PlottingType.SCATTER.name:
                 warnings.warn(
                     "Feature Visualisation Only Availible in Scatter Plot!"
                 )
                 return
-
-            self.label_ids = features["label"]
             feature_values = features[plot_cluster_name].fillna(0)
 
             # Determine Current Frame
@@ -810,11 +806,9 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
         
             keep_selection = list(self.viewer.layers.selection)
-
-                
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
-                # generate the cluster image
+                # generate the feature image
                 if len(self.analysed_layer.data.shape) > 4:
                     warnings.warn("Image dimensions too high for processing!")
                     return
