@@ -474,6 +474,9 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
+        from napari.layers import Labels, Surface, Points
+        from vispy.color import Color
+        from ._utilities import get_surface_color_map
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -498,8 +501,6 @@ class PlotterWidget(QMainWindow):
 
         self.graphics_widget.reset()
         number_of_points = len(features)
-
-        from napari.layers import Labels
 
         # if selected image is 4 dimensional, but does not contain frame column in its features
         # it will be considered to be tracking data, where all labels of the same track have
@@ -601,8 +602,6 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             self.graphics_widget.match_napari_layout()
 
-            from vispy.color import Color
-
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
             # generate dictionary mapping each prediction to its respective color
@@ -667,8 +666,6 @@ class PlotterWidget(QMainWindow):
                 else:
                     warnings.warn("Image dimensions too high for processing!")
                     return
-
-                from ._utilities import get_surface_color_map
 
                 napari_colormap = get_surface_color_map(max(self.cluster_ids))
 
