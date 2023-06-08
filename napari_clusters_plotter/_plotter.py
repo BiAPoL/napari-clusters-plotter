@@ -474,9 +474,10 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
-        from napari.layers import Labels, Surface, Points
+        from napari.layers import Labels, Surface, Points, Layer
         from vispy.color import Color
-        from ._utilities import get_surface_color_map
+        from ._utilities import get_surface_color_map, get_nice_colormap
+        from matplotlib.colors import to_rgba_array
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -623,6 +624,9 @@ class PlotterWidget(QMainWindow):
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the cluster image
+                napari_colormap = get_surface_color_map(max(self.cluster_ids))
+                nice_colormap = get_nice_colormap()
+
                 if (
                     isinstance(self.analysed_layer, Labels)
                     and len(self.analysed_layer.data.shape) == 4
@@ -659,6 +663,16 @@ class PlotterWidget(QMainWindow):
                     cluster_data = generate_cluster_surface(
                         self.analysed_layer.data, self.cluster_ids
                     )
+                
+                elif isinstance(self.analysed_layer, Points):
+                    face_colors = to_rgba_array(np.asarray(nice_colormap)[self.cluster_ids])
+                    cluster_layer = Layer.create(
+                        self.analysed_layer.data,
+                        {'face_color': face_colors,
+                        'size': self.layer_select.value.size,
+                        'name': "cluster_ids_in_space",
+                        'scale': self.layer_select.value.scale},
+                        'points')
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_data = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
@@ -666,8 +680,6 @@ class PlotterWidget(QMainWindow):
                 else:
                     warnings.warn("Image dimensions too high for processing!")
                     return
-
-                napari_colormap = get_surface_color_map(max(self.cluster_ids))
 
                 # if the cluster image layer doesn't yet exist make it
                 # otherwise just update it
@@ -683,6 +695,9 @@ class PlotterWidget(QMainWindow):
                             name="cluster_ids_in_space",
                             scale=self.layer_select.value.scale,
                         )
+                    elif isinstance(self.analysed_layer, Points):
+                        self.visualized_layer = self.viewer.add_layer(cluster_layer)
+
                     else:
                         # visualising cluster image
                         self.visualized_layer = self.viewer.add_labels(
@@ -693,10 +708,14 @@ class PlotterWidget(QMainWindow):
                         )
                 else:
                     # updating data
-                    self.visualized_layer.data = cluster_data
                     if isinstance(self.analysed_layer, Labels):
+                        self.visualized_layer.data = cluster_data
                         self.visualized_layer.color = cmap_dict
+                    elif isinstance(self.analysed_layer, Points):
+                        face_colors = to_rgba_array(np.asarray(nice_colormap)[self.cluster_ids])
+                        self.visualized_layer.face_color = face_colors
                     else:
+                        self.visualized_layer.data = cluster_data
                         self.visualized_layer.colormap = napari_colormap
                         self.visualized_layer.contrast_limits = [
                             0,
