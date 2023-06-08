@@ -225,11 +225,11 @@ class PlotterWidget(QMainWindow):
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
                 self.plot_hide_non_selected.setChecked(True)
-                self.colormap_container.setVisible(True)
+                # self.colormap_container.setVisible(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
-                self.colormap_container.setVisible(False) 
+                # self.colormap_container.setVisible(False) 
             replot()
 
         def bin_number_set():
@@ -314,7 +314,7 @@ class PlotterWidget(QMainWindow):
             options={"choices": list(ALL_COLORMAPS.keys())},
             label="Colormap",
         )
-        self.colormap_container.setVisible(False)
+        self.colormap_container.setVisible(True)
         self.colormap_dropdown.native.currentIndexChanged.connect(replot)
         self.advanced_options_container.layout().addWidget(self.colormap_container)
 
@@ -806,6 +806,9 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
         
             keep_selection = list(self.viewer.layers.selection)
+
+            self.graphics_widget.match_napari_layout()
+            
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the feature image
@@ -827,6 +830,7 @@ class PlotterWidget(QMainWindow):
                                                             scale=self.analysed_layer.scale,
                                                             )
                     else:
+                        # Making sure that the feature visualisation layer is on top
                         if self.viewer.layers[-1] != self.visualized_feature_layer:
                             for i,layer in enumerate(self.viewer.layers):
                                 if layer == self.visualized_feature_layer:

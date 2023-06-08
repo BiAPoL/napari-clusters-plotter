@@ -393,7 +393,7 @@ def colors_feature(feature_values, frame_id, current_frame, continuous_cmap):
     Returns
     -------
     list
-        A list of hex color codes for each data point based on the cluster they belong to.
+        A list of hex color codes for each data point based on the feature values of the points.
         The color of the data point at the current frame is highlighted.
     """
     scaled_values = scale_array(feature_values)
