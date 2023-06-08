@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Surface
+from napari.layers import Labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
@@ -474,8 +474,9 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
-        from napari.layers import Labels, Surface, Points
+        from napari.layers import Labels, Surface
         from vispy.color import Color
+
         from ._utilities import get_surface_color_map
 
         if not self.isVisible() and force_redraw is False:
