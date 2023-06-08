@@ -44,7 +44,6 @@ from ._utilities import (
     generate_cluster_image,
     generate_cluster_surface,
     get_layer_tabular_data,
-    get_nice_colormap,
 )
 
 POINTER = "frame"
@@ -474,10 +473,11 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
-        from napari.layers import Labels, Surface, Points, Layer
-        from vispy.color import Color
-        from ._utilities import get_surface_color_map, get_nice_colormap
         from matplotlib.colors import to_rgba_array
+        from napari.layers import Labels, Layer, Points, Surface
+        from vispy.color import Color
+
+        from ._utilities import get_nice_colormap, get_surface_color_map
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -663,16 +663,21 @@ class PlotterWidget(QMainWindow):
                     cluster_data = generate_cluster_surface(
                         self.analysed_layer.data, self.cluster_ids
                     )
-                
+
                 elif isinstance(self.analysed_layer, Points):
-                    face_colors = to_rgba_array(np.asarray(nice_colormap)[self.cluster_ids])
+                    face_colors = to_rgba_array(
+                        np.asarray(nice_colormap)[self.cluster_ids]
+                    )
                     cluster_layer = Layer.create(
                         self.analysed_layer.data,
-                        {'face_color': face_colors,
-                        'size': self.layer_select.value.size,
-                        'name': "cluster_ids_in_space",
-                        'scale': self.layer_select.value.scale},
-                        'points')
+                        {
+                            "face_color": face_colors,
+                            "size": self.layer_select.value.size,
+                            "name": "cluster_ids_in_space",
+                            "scale": self.layer_select.value.scale,
+                        },
+                        "points",
+                    )
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_data = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
@@ -712,7 +717,9 @@ class PlotterWidget(QMainWindow):
                         self.visualized_layer.data = cluster_data
                         self.visualized_layer.color = cmap_dict
                     elif isinstance(self.analysed_layer, Points):
-                        face_colors = to_rgba_array(np.asarray(nice_colormap)[self.cluster_ids])
+                        face_colors = to_rgba_array(
+                            np.asarray(nice_colormap)[self.cluster_ids]
+                        )
                         self.visualized_layer.face_color = face_colors
                     else:
                         self.visualized_layer.data = cluster_data
