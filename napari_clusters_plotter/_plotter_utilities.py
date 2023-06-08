@@ -1,6 +1,7 @@
 import typing
-import matplotlib as mpl
+
 import matplotlib
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from matplotlib.colors import to_hex, to_rgb
@@ -93,6 +94,7 @@ def clustered_plot_parameters(
     )
     return a, s, c
 
+
 def feature_plot_parameters(
     feature_values: list,
     frame_id: list,
@@ -139,6 +141,7 @@ def feature_plot_parameters(
         mpl_colormap,
     )
     return a, s, c
+
 
 def alphas_clustered(
     cluster_id: list, frame_id: list, current_frame: int, n_datapoints: int
@@ -309,6 +312,7 @@ def estimate_number_bins(data) -> int:
         return 256
     return int(est_a)
 
+
 def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
     """
     Calculates the size of each data point in a clustered visualization.
@@ -373,6 +377,7 @@ def colors_unclustered(frame_id, current_frame):
         colors = [highlight if tp == current_frame else grey for tp in frame_id]
         return colors
 
+
 def colors_feature(feature_values, frame_id, current_frame, continuous_cmap):
     """
     Calculates the size of each data point in a clustered visualization.
@@ -409,6 +414,7 @@ def colors_feature(feature_values, frame_id, current_frame, continuous_cmap):
         for x, tp in zip(scaled_values, frame_id)
     ]
     return colors
+
 
 def initial_and_noise_alpha():
     """
@@ -649,17 +655,18 @@ def make_cluster_overlay_img(
 
     return cluster_overlay_rgba.swapaxes(0, 1)
 
-def scale_array(arr,percentile = 1):
+
+def scale_array(arr, percentile=1):
     """
     Scales an input array between 0 and 1 using percentiles.
-    
+
     Parameters:
     arr (numpy.ndarray): The input array to scale.
-    
+
     Returns:
     numpy.ndarray: The scaled array.
     """
-    p1, p99 = np.percentile(arr, (percentile, 100-percentile))
+    p1, p99 = np.percentile(arr, (percentile, 100 - percentile))
     scaled_arr = (arr - p1) / (p99 - p1)
     scaled_arr = np.clip(scaled_arr, 0, 1)
     return scaled_arr

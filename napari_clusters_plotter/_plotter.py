@@ -1,13 +1,12 @@
 import os
 import warnings
 from enum import Enum, auto
-from vispy.color import Color
-from napari_skimage_regionprops._parametric_images import map_measurements_on_labels
 
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from napari.utils.colormaps import ALL_COLORMAPS
+from napari_skimage_regionprops._parametric_images import map_measurements_on_labels
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
@@ -24,14 +23,15 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from vispy.color import Color
 
 from ._plotter_utilities import (
     apply_cluster_colors_to_bars,
     clustered_plot_parameters,
     estimate_number_bins,
+    feature_plot_parameters,
     make_cluster_overlay_img,
     unclustered_plot_parameters,
-    feature_plot_parameters,
 )
 from ._Qt_code import (
     ICON_ROOT,
@@ -229,7 +229,7 @@ class PlotterWidget(QMainWindow):
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
-                # self.colormap_container.setVisible(False) 
+                # self.colormap_container.setVisible(False)
             replot()
 
         def bin_number_set():
@@ -481,18 +481,22 @@ class PlotterWidget(QMainWindow):
                 self.plot_y_axis.addItems(list(features.keys()))
                 self.plot_cluster_id.clear()
                 self.plot_cluster_id.addItem("")
-                self.plot_cluster_id.addItems([
+                self.plot_cluster_id.addItems(
+                    [
                         feature
                         for feature in list(features.keys())
                         if "CLUSTER" in feature
-                ])
-                self.plot_cluster_id.addItems([
+                    ]
+                )
+                self.plot_cluster_id.addItems(
+                    [
                         feature
                         for feature in list(features.keys())
-                        if "frame" not in feature.lower() 
+                        if "frame" not in feature.lower()
                         and "label" not in feature.lower()
                         and "CLUSTER" not in feature
-                ])
+                    ]
+                )
 
         self.plot_x_axis.setCurrentIndex(former_x_axis)
         self.plot_y_axis.setCurrentIndex(former_y_axis)
@@ -512,7 +516,7 @@ class PlotterWidget(QMainWindow):
         """
 
         ###############
-        #INITIALISATION
+        # INITIALISATION
         ###############
 
         if not self.isVisible() and force_redraw is False:
@@ -689,7 +693,6 @@ class PlotterWidget(QMainWindow):
 
             keep_selection = list(self.viewer.layers.selection)
 
-            
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the cluster image
@@ -733,7 +736,6 @@ class PlotterWidget(QMainWindow):
                     warnings.warn("Image dimensions too high for processing!")
                     return
 
-
                 # hiding the feature layer:
                 if self.visualized_feature_layer is not None:
                     self.visualized_feature_layer.opacity = 0
@@ -760,10 +762,10 @@ class PlotterWidget(QMainWindow):
             self.viewer.layers.selection.clear()
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
-        
+
         #######################
         # FEATURE VISUALISATION
-        #######################        
+        #######################
         elif (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -771,9 +773,7 @@ class PlotterWidget(QMainWindow):
             and "CLUSTER" not in plot_cluster_name
         ):
             if self.plotting_type.currentText() != PlottingType.SCATTER.name:
-                warnings.warn(
-                    "Feature Visualisation Only Availible in Scatter Plot!"
-                )
+                warnings.warn("Feature Visualisation Only Availible in Scatter Plot!")
                 return
             feature_values = features[plot_cluster_name].fillna(0)
 
@@ -786,10 +786,10 @@ class PlotterWidget(QMainWindow):
                 current_frame = None
             else:
                 warnings.warn("Image dimensions too high for processing!")
-            
+
             ############################
             # Scatter Plot Visualisation
-            
+
             a, sizes, colors_plot = feature_plot_parameters(
                 feature_values=feature_values,
                 frame_id=frame_id,
@@ -804,11 +804,11 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
             self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-        
+
             keep_selection = list(self.viewer.layers.selection)
 
             self.graphics_widget.match_napari_layout()
-            
+
             if redraw_cluster_image:
                 # depending on the dimensionality of the data
                 # generate the feature image
@@ -816,7 +816,9 @@ class PlotterWidget(QMainWindow):
                     warnings.warn("Image dimensions too high for processing!")
                     return
                 else:
-                    feature_image = map_measurements_on_labels(self.analysed_layer, plot_cluster_name, self.viewer)
+                    feature_image = map_measurements_on_labels(
+                        self.analysed_layer, plot_cluster_name, self.viewer
+                    )
                     # Adding the feature image
                     # if the feature image layer doesn't yet exist make it
                     # otherwise just update it
@@ -824,26 +826,30 @@ class PlotterWidget(QMainWindow):
                         self.visualized_feature_layer is None
                         or self.visualized_feature_layer not in self.viewer.layers
                     ):
-                        
-                        self.visualized_feature_layer = self.viewer.add_image(feature_image,
-                                                            name="feature visualisation",
-                                                            scale=self.analysed_layer.scale,
-                                                            )
+                        self.visualized_feature_layer = self.viewer.add_image(
+                            feature_image,
+                            name="feature visualisation",
+                            scale=self.analysed_layer.scale,
+                        )
                     else:
                         # Making sure that the feature visualisation layer is on top
                         if self.viewer.layers[-1] != self.visualized_feature_layer:
-                            for i,layer in enumerate(self.viewer.layers):
+                            for i, layer in enumerate(self.viewer.layers):
                                 if layer == self.visualized_feature_layer:
                                     feature_layer_index = i
-                            self.viewer.layers.move(feature_layer_index,len(self.viewer.layers))
+                            self.viewer.layers.move(
+                                feature_layer_index, len(self.viewer.layers)
+                            )
                         # updating data
                         self.visualized_feature_layer.data = feature_image
-                    
+
                     # Adjusting the Layer
                     self.visualized_feature_layer.contrast_limits = np.percentile(
                         features[plot_cluster_name].to_numpy(), (1, 99)
                     )
-                    self.visualized_feature_layer.colormap = self.colormap_dropdown.value
+                    self.visualized_feature_layer.colormap = (
+                        self.colormap_dropdown.value
+                    )
                     self.visualized_feature_layer.opacity = 1
 
             self.viewer.layers.selection.clear()
