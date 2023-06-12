@@ -208,6 +208,44 @@ def test_plotter_on_points_data(make_napari_viewer):
                force_redraw=True)
 
 
+def test_plotter_on_surface_data(make_napari_viewer):
+    from napari_clusters_plotter._plotter import PlotterWidget
+    from napari_clusters_plotter._utilities import get_layer_tabular_data
+
+    viewer = make_napari_viewer()
+
+    # Create a random mesh
+    vertices = np.random.rand(100, 3)
+    faces = np.random.randint(0, 100, (100, 3))
+
+    feature1 = np.random.normal(size=100)
+    feature2 = np.random.normal(size=100, loc=1)
+    annotations = 1 * (np.random.uniform(size=100) > 0.5)
+
+    layer = viewer.add_surface((vertices, faces))
+    layer.features = pd.DataFrame({"feature1": feature1, "feature2": feature2})
+
+    widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
+
+    # Put the surface layer into the layer selection widget
+    widget.analysed_layer = viewer.layers[0]
+    widget.plot_x_axis.setCurrentText("feature1")
+    widget.plot_y_axis.setCurrentText("feature2")
+    widget.analysed_layer.features['MANUAL_CLUSTER_ID'] = annotations
+    
+    # check that the features are found
+    features = get_layer_tabular_data(widget.analysed_layer)
+    assert "feature1" in features.columns
+    assert "feature2" in features.columns
+
+    widget.run(widget.analysed_layer.features,
+                plot_x_axis_name="feature1",
+                plot_y_axis_name="feature2",
+                plot_cluster_name="MANUAL_CLUSTER_ID",
+                force_redraw=True)
+
+
 def test_cluster_image_generation_for_histogram(make_napari_viewer):
     from napari_clusters_plotter._plotter import PlotterWidget
 
