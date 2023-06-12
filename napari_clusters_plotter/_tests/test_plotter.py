@@ -182,10 +182,7 @@ def test_plotter_on_points_data(make_napari_viewer):
     feature2 = np.random.normal(size=n_points, loc=1)
     annotations = 1 * (np.random.uniform(size=100) > 0.5)
 
-    viewer.add_points(points,
-                        properties={
-                            "feature1": feature1,
-                            "feature2": feature2})
+    viewer.add_points(points, properties={"feature1": feature1, "feature2": feature2})
 
     widget = PlotterWidget(viewer)
     viewer.window.add_dock_widget(widget, area="right")
@@ -194,18 +191,20 @@ def test_plotter_on_points_data(make_napari_viewer):
     widget.analysed_layer = viewer.layers[0]
     widget.plot_x_axis.setCurrentText("feature1")
     widget.plot_y_axis.setCurrentText("feature2")
-    widget.analysed_layer.features['MANUAL_CLUSTER_ID'] = annotations
+    widget.analysed_layer.features["MANUAL_CLUSTER_ID"] = annotations
 
     # check that the features are found
     features = get_layer_tabular_data(widget.analysed_layer)
     assert "feature1" in features.columns
     assert "feature2" in features.columns
 
-    widget.run(widget.analysed_layer.features,
-               plot_x_axis_name="feature1",
-               plot_y_axis_name="feature2",
-               plot_cluster_name="MANUAL_CLUSTER_ID",
-               force_redraw=True)
+    widget.run(
+        widget.analysed_layer.features,
+        plot_x_axis_name="feature1",
+        plot_y_axis_name="feature2",
+        plot_cluster_name="MANUAL_CLUSTER_ID",
+        force_redraw=True,
+    )
 
 
 def test_plotter_on_surface_data(make_napari_viewer):
