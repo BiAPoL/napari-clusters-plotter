@@ -1,6 +1,6 @@
 import os
 import warnings
-from enum import Enum, auto
+
 
 import numpy as np
 import pandas as pd
@@ -32,6 +32,7 @@ from ._plotter_utilities import (
 )
 from ._Qt_code import (
     ICON_ROOT,
+    PlottingType,
     MplCanvas,
     MyNavigationToolbar,
     button,
@@ -51,12 +52,6 @@ from ._utilities import (
 POINTER = "frame"
 
 POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
-
-
-class PlottingType(Enum):
-    HISTOGRAM = auto()
-    SCATTER = auto()
-
 
 @register_dock_widget(menu="Measurement > Plot measurements (ncp)")
 @register_dock_widget(menu="Visualization > Plot measurements (ncp)")

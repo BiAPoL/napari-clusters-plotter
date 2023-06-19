@@ -1,6 +1,7 @@
 import os
 import typing
 from pathlib import Path as PathL
+from enum import Enum, auto
 
 import numpy as np
 import numpy.typing
@@ -12,7 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Labels
-from qtpy.QtCore import QRect
+from qtpy.QtCore import QRect, pyqtSignal, QObject
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -27,6 +28,11 @@ from superqt import QCollapsible
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 MAX_WIDTH = 100
+
+
+class PlottingType(Enum):
+    HISTOGRAM = auto()
+    SCATTER = auto()
 
 
 def collapsible_box(name):
@@ -450,6 +456,38 @@ class SelectFrom1DHistogram:
         self.canvas.mpl_disconnect(self.click_id)
         self.canvas.draw_idle()
 
+class HoverData:
+    def __init__(self,parent,mpl_canvas,labels_layer,image_layer,checkbox):
+        self.parent = parent
+        self.mpl_object = mpl_canvas
+        self.fig = mpl_canvas.fig
+        self.ax = mpl_canvas.axes
+        self.cid = None
+        self.labels = labels_layer
+        self.image = image_layer
+
+    def motion_hover(self,event):
+        
+        if event.inaxes == self.ax:
+            is_contained, annotation_index = self.mpl_object.pts.contains(event)
+            if is_contained:
+                # make event that can be picked up in plotter
+                pass
+            else:
+                # make same event but with false for displaying
+                pass
+    
+
+    def connect(self):
+        self.disconnect()
+        if checkbox.value and self.parentplotting_type.currentText() == PlottingType.SCATTER.name:
+            self.cid = self.fig.canvas.mpl_connect('motion_notify_event', self.motion_hover)
+
+    def disconnect(self):
+        if self.cid is not None:
+            self.fig.canvas.mpl_disconnect(self.cid)
+        
+
 
 # Class below was based upon matplotlib lasso selection example:
 # https://matplotlib.org/stable/gallery/widgets/lasso_selector_demo_sgskip.html
@@ -532,7 +570,7 @@ class MplCanvas(FigureCanvas):
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
 
-        self.pts = self.axes.scatter([], [])
+        self.pts = self.axes.self.parents.pts([], [])
         self.selector = SelectFromCollection(self, self.axes, self.pts)
         self.rectangle_selector = RectangleSelector(
             self.axes,
@@ -647,7 +685,7 @@ class MplCanvas(FigureCanvas):
         sizes: "typing.List[float]",
         alpha: "typing.List[float]",
     ):
-        self.pts = self.axes.scatter(
+        self.pts = self.axes.self.parents.pts(
             data_x,
             data_y,
             c=colors,
