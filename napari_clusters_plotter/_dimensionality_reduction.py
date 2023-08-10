@@ -505,11 +505,15 @@ class DimensionalityReductionWidget(QWidget):
             properties_to_reduce = features[selected_measurements_list]
 
             if np.any(np.isinf(properties_to_reduce)):
-                properties_with_inf = properties_to_reduce.columns.to_series(
-                )[np.isinf(properties_to_reduce).any()].to_list()
+                properties_with_inf = properties_to_reduce.columns.to_series()[
+                    np.isinf(properties_to_reduce).any()
+                ].to_list()
                 warnings.warn(
-                    f"These features contain inf values: {properties_with_inf}. They will be excluded from the analysis.")
-                properties_to_reduce = properties_to_reduce.drop(properties_with_inf, axis=1)
+                    f"These features contain inf values: {properties_with_inf}. They will be excluded from the analysis."
+                )
+                properties_to_reduce = properties_to_reduce.drop(
+                    properties_with_inf, axis=1
+                )
 
             # perform standard scaling, if selected
             if standardize:
