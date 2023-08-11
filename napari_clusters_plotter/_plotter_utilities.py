@@ -1,6 +1,7 @@
 import typing
 
 import matplotlib
+import matplotlib as mpl
 import numpy as np
 import pandas as pd
 from matplotlib.colors import to_hex, to_rgb
@@ -90,6 +91,54 @@ def clustered_plot_parameters(
         frame_id,
         current_frame,
         color_hex_list,
+    )
+    return a, s, c
+
+
+def feature_plot_parameters(
+    feature_values: list,
+    frame_id: list,
+    current_frame: int,
+    n_datapoints: int,
+    colormap: str,
+):
+    """
+    Returns a tuple containing alpha values, spot sizes, and colors for clustered data points.
+
+    Parameters
+    __________
+    feature_values : list
+        A list of feature values for all the data points.
+    frame_id : list or None
+        A list of frames for all the data points. If None, a constant spot size and color will be returned.
+    current_frame : int or None
+        The current frame to highlight in the visualization. If None, all frames will be the same color.
+    n_datapoints : int
+        The number of data points.
+    colormap : str
+        Name of Matplotlib Colormap to use
+
+    Returns
+    __________
+    A tuple containing three lists: a list of alpha values, a list of spot sizes, and a list of colors.
+    """
+    mpl_colormap = mpl.colormaps[colormap]
+
+    a = alphas_unclustered(
+        frame_id,
+        current_frame,
+        n_datapoints,
+    )
+    s = spot_size_unclustered(
+        frame_id,
+        current_frame,
+        n_datapoints,
+    )
+    c = colors_feature(
+        feature_values,
+        frame_id,
+        current_frame,
+        mpl_colormap,
     )
     return a, s, c
 
@@ -327,6 +376,44 @@ def colors_unclustered(frame_id, current_frame):
         highlight = gen_highlight()
         colors = [highlight if tp == current_frame else grey for tp in frame_id]
         return colors
+
+
+def colors_feature(feature_values, frame_id, current_frame, continuous_cmap):
+    """
+    Calculates the size of each data point in a clustered visualization.
+    If both frame_id and current_frame are None, returns the default colors based on the cluster_id.
+    Otherwise, adjusts the colors based on the current frame and highlights it.
+
+    Parameters
+    ----------
+    cluster_id : list
+        A list of cluster IDs for all the data points.
+    frame_id : list or None
+        A list of frames for all the data points.
+    current_frame : int or None
+        The current frame to highlight in the visualization.
+    color_hex_list : list
+        A list of hex color codes to be used for coloring the clusters.
+
+    Returns
+    -------
+    list
+        A list of hex color codes for each data point based on the feature values of the points.
+        The color of the data point at the current frame is highlighted.
+    """
+    scaled_values = scale_array(feature_values)
+
+    if (frame_id is None) and (current_frame is None):
+        colors = continuous_cmap(scaled_values)
+        return colors
+
+    colors = [
+        gen_highlight(to_hex(continuous_cmap(x)))
+        if tp == current_frame
+        else to_hex(continuous_cmap(x))
+        for x, tp in zip(scaled_values, frame_id)
+    ]
+    return colors
 
 
 def initial_and_noise_alpha():
@@ -567,3 +654,19 @@ def make_cluster_overlay_img(
         cluster_overlay_rgba[mask] = rgba
 
     return cluster_overlay_rgba.swapaxes(0, 1)
+
+
+def scale_array(arr, percentile=1):
+    """
+    Scales an input array between 0 and 1 using percentiles.
+
+    Parameters:
+    arr (numpy.ndarray): The input array to scale.
+
+    Returns:
+    numpy.ndarray: The scaled array.
+    """
+    p1, p99 = np.percentile(arr, (percentile, 100 - percentile))
+    scaled_arr = (arr - p1) / (p99 - p1)
+    scaled_arr = np.clip(scaled_arr, 0, 1)
+    return scaled_arr
