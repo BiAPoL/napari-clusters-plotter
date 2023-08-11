@@ -699,7 +699,7 @@ class PlotterWidget(QMainWindow):
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_image = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
-                    )
+                    ).astype(int)
                 else:
                     warnings.warn("Image dimensions too high for processing!")
                     return
