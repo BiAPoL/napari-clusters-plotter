@@ -69,7 +69,7 @@ jobs:
         shell: bash -l {0}
         run: |
           python --version
-          conda install -y pyopencl hdbscan pip setuptools wheel pytest pytest-cov pytest-benchmark pytest-qt pyqt pytest-xvfb pandas  napari=0.4.17
+          conda install -y pyopencl hdbscan=0.8.29 pip setuptools wheel pytest pytest-cov pytest-benchmark pytest-qt pyqt pytest-xvfb pandas  napari=0.4.17
           # pip install setuptools tox tox-gh-actions
 
           pip install -e .
