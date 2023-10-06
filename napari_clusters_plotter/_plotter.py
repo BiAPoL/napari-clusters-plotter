@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Surface
+from napari.layers import Labels
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -37,9 +37,8 @@ from ._Qt_code import (
     MyNavigationToolbar,
     button,
     collapsible_box,
-    layer_container_and_selection,
     create_options_dropdown,
-    labels_container_and_selection,
+    layer_container_and_selection,
     title,
 )
 from ._utilities import (
