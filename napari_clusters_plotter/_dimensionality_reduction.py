@@ -10,7 +10,7 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ._clustering import ID_NAME
-from ._plotter import POINTER
+_POINTER = "frame"
 from ._Qt_code import (
     button,
     checkbox,
@@ -58,7 +58,7 @@ DEFAULTS = {
     "custom_name": "",
 }
 
-EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
+EXCLUDE = [ID_NAME, _POINTER, "UMAP", "t-SNE", "PCA"]
 
 
 @register_dock_widget(
