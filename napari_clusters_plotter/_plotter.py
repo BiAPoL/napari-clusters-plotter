@@ -50,7 +50,7 @@ from ._utilities import (
     get_layer_tabular_data,
 )
 
-POINTER = "frame"
+_POINTER = "frame"
 
 POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
 
