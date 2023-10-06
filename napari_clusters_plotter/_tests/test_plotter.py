@@ -41,6 +41,7 @@ def test_plotting(make_napari_viewer):
     widget_list = ncp.napari_experimental_provide_dock_widget()
 
     label = get_labels_array()
+    annotations = np.random.randint(0, 2, size=label.max())
 
     props = measure.regionprops_table(
         label, properties=(["label", "area", "perimeter"])
@@ -62,6 +63,20 @@ def test_plotting(make_napari_viewer):
     assert "label" in result.columns
     assert "area" in result.columns
     assert "perimeter" in result.columns
+
+    plot_widget.analysed_layer = viewer.layers[0]
+    plot_widget.plot_x_axis.setCurrentText("area")
+    plot_widget.plot_y_axis.setCurrentText("perimeter")
+    plot_widget.analysed_layer.features["MANUAL_CLUSTER_ID"] = annotations
+
+    plot_widget.run(
+        plot_widget.analysed_layer.features,
+        plot_x_axis_name="area",
+        plot_y_axis_name="perimeter",
+        plot_cluster_name="MANUAL_CLUSTER_ID"
+    )
+
+    print('check')
 
 
 def test_plotter_utilities():
@@ -195,13 +210,14 @@ def test_plotter_on_points_data(make_napari_viewer):
     viewer.add_points(points, properties={"feature1": feature1, "feature2": feature2})
 
     widget = PlotterWidget(viewer)
-    viewer.window.add_dock_widget(widget, area="right")
+    viewer.window.add_dock_widget(widget)
 
     # Put the points layer into the layer selection widget
     widget.analysed_layer = viewer.layers[0]
     widget.plot_x_axis.setCurrentText("feature1")
     widget.plot_y_axis.setCurrentText("feature2")
     widget.analysed_layer.features["MANUAL_CLUSTER_ID"] = annotations
+    
 
     # check that the features are found
     features = get_layer_tabular_data(widget.analysed_layer)
@@ -285,3 +301,7 @@ def test_cluster_image_generation_for_histogram(make_napari_viewer):
     assert plotter_widget.graphics_widget.axes.has_data()
     assert "cluster_ids_in_space" in viewer.layers
     assert int(viewer.layers["cluster_ids_in_space"].data.max()) == 3
+
+if __name__ == '__main__':
+    import napari
+    test_plotting(napari.Viewer)
