@@ -588,7 +588,7 @@ class PlotterWidget(QMainWindow):
         current_frame = None
         if isinstance(self.analysed_layer, Labels):
             if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
-                frame_id = features[POINTER].tolist()
+                frame_id = features[_POINTER].tolist()
                 current_frame = self.frame
             elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
                 pass
