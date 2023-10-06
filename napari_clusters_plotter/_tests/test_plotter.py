@@ -121,7 +121,7 @@ def test_plotter_utilities():
     colors_cl = colors_clustered(predicts, frame_ids, current_frame, colors)
     result = [colors[pred] if pred >= 0 else "#bcbcbc" for pred in predicts]
     result_cc = [
-        result[i] if frame != current_frame else highlight
+        result[i] if frame != current_frame else gen_highlight(result[i])
         for i, frame in enumerate(frame_ids)
     ]
 
@@ -164,6 +164,16 @@ def test_plotting_histogram(make_napari_viewer):
         features=pd.DataFrame(measurements),
         plot_x_axis_name="area",
         plot_y_axis_name="perimeter",
+        force_redraw=True,
+    )
+
+    assert plotter_widget.graphics_widget.axes.has_data()
+
+    # test plotting 1D histogram
+    plotter_widget.run(
+        features=pd.DataFrame(measurements),
+        plot_x_axis_name="area",
+        plot_y_axis_name="area",
         force_redraw=True,
     )
 

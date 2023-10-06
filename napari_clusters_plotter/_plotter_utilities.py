@@ -1,7 +1,9 @@
 import typing
 
+import matplotlib
 import numpy as np
 import pandas as pd
+from matplotlib.colors import to_hex, to_rgb
 from PIL import ImageColor
 from scipy import stats
 
@@ -256,8 +258,9 @@ def estimate_number_bins(data) -> int:
     -------
     Estimated number of bins
     """
-
     est_a = (np.max(data) - np.min(data)) / (2 * stats.iqr(data) / np.cbrt(len(data)))
+    if np.isnan(est_a):
+        return 256
     return int(est_a)
 
 
@@ -288,9 +291,8 @@ def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
         colors = [color_hex_list[int(x) % len(color_hex_list)] for x in cluster_id]
         return colors
 
-    highlight = gen_highlight()
     colors = [
-        highlight
+        gen_highlight(color_hex_list[int(x) % len(color_hex_list)])
         if tp == current_frame
         else color_hex_list[int(x) % len(color_hex_list)]
         for x, tp in zip(cluster_id, frame_id)
@@ -369,12 +371,134 @@ def gen_spot_size(n_datapoints):
     return min(10, (max(0.1, 8000 / n_datapoints))) * 2
 
 
-def gen_highlight():
+def gen_highlight(hex_color=None, brightness_offset=0.2):
     """
     Returns a default color for the current timepoint visualization.
     Currently, it is color white.
     """
-    return "#FFFFFF"
+    if hex_color is None:
+        return "#FFFFFF"
+    else:
+        return change_brightness(hex_color, brightness_offset)
+
+
+def change_brightness(hex_color: str, brightness_offset: float):
+    """
+    Changes the brightness of a given color in hexadecimal format.
+
+    Parameters:
+    -----------
+    hex_color : str
+        A hexadecimal string representing the original color. The string
+        should be of the format '#RRGGBB'
+    brightness_offset : float
+        A floating-point number representing the amount by which to adjust
+        the brightness of the color. The value can be positive or negative,
+        and it will be added to or subtracted from the color's RGB values.
+
+    Returns:
+    --------
+    str
+        A hexadecimal string representing the new color with the adjusted brightness.
+
+    Example:
+    --------
+    >>> change_brightness('#FF0000', 0.2)
+    '#FF3333'
+    """
+    float_color = to_rgb(hex_color)
+    brighter = np.minimum([1, 1, 1], np.array(float_color) + brightness_offset)
+
+    return to_hex(brighter).upper()
+
+
+def get_most_frequent_cluster_id_within_feature_interval(
+    cluster_name: str,
+    features: pd.DataFrame,
+    feature_x: str,
+    interval: typing.Tuple[int],
+) -> int:
+    """Get the most frequent cluster id within a feature interval.
+
+    Parameters
+    ----------
+    cluster_name : str
+        cluster column name
+    features : pd.DataFrame
+        features dataframe
+    feature_x : str
+        feature x column name
+    interval : typing.Tuple[int]
+        tuple of (min, max) values
+
+    Returns
+    -------
+    int
+        the most frequent cluster id number within the interval
+    """
+    relevant_entries = features[[cluster_name, feature_x]]
+    interval_mask = (relevant_entries[feature_x] >= interval[0]) & (
+        relevant_entries[feature_x] < interval[1]
+    )
+
+    cluster_id_list = features.loc[interval_mask, cluster_name].values.tolist()
+    # Efficient way of getting most frequent element in a list
+    most_frequent_cluster = max(set(cluster_id_list), key=cluster_id_list.count)
+    return most_frequent_cluster
+
+
+def apply_cluster_colors_to_bars(
+    axes: "matplotlib.axes.Axes",
+    cluster_name: str,
+    features: pd.DataFrame,
+    number_bins: int,
+    feature_x: str,
+    colors: typing.List[str],
+) -> "matplotlib.axes.Axes":
+    """Apply cluster colors to bars in a histogram.
+
+    Parameters
+    ----------
+    axes : matplotlib.axes.Axes
+        the axes to which the histogram belongs
+    cluster_name : str
+        cluster column name
+    features : pd.DataFrame
+        features dataframe
+    number_bins : int
+        number of bins in the histogram
+    feature_x : str
+        feature x column name
+    colors : typing.List[str]
+        list of colors
+
+    Returns
+    -------
+    "matplotlib.axes.Axes"
+        the axes to which the histogram belongs with updated colors
+    """
+    assert cluster_name in features, f"Column {cluster_name} not in features."
+    assert feature_x in features, f"Column {feature_x} not in features."
+    # update bar colors
+    for i, bar in enumerate(axes.containers[0]):
+        x_left = bar.get_x()
+        x_right = x_left + bar.get_width()
+        # Ensures it gets the last edge of the last bar
+        if i == number_bins - 1:
+            x_right = x_left + 1.5 * bar.get_width()
+        interval = (x_left, x_right)
+        if bar.get_height() == 0:
+            continue
+        most_frequent_cluster = get_most_frequent_cluster_id_within_feature_interval(
+            cluster_name=cluster_name,
+            features=features,
+            feature_x=feature_x,
+            interval=interval,
+        )
+        bar.set_color(colors[most_frequent_cluster])
+        if number_bins < 100:
+            bar.set_edgecolor("white")
+    return axes
 
 
 def make_cluster_overlay_img(
@@ -391,12 +515,20 @@ def make_cluster_overlay_img(
 
     Parameters
     ----------
-    cluster_id Column of the clustering result
-    features Feature dataframe
-    histogram_data 3 element tuple with the histogram itself, x- and -y edges.
-    feature_x Feature column for x-axis
-    feature_y Feature column for y-axis
-    colors Colors for cluster color mapping
+    cluster_id : str
+        Column of the clustering result
+    features : pd.DataFrame
+        Feature dataframe
+    histogram_data : tuple
+        3 element tuple with the histogram itself, x- and -y edges.
+    feature_x : str
+        Feature column for x-axis
+    feature_y : str
+        Feature column for y-axis
+    colors : list
+        Colors for cluster color mapping
+    hide_first_cluster : bool
+        Whether non-selected points are not visualized as a cluster
 
     Returns
     -------

@@ -11,15 +11,7 @@
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-clusters-plotter)](https://www.napari-hub.org/plugins/napari-clusters-plotter)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7011471.svg)](https://doi.org/10.5281/zenodo.7011471)
 
-A plugin to use with napari for clustering objects according to their properties.
-
-----------------------------------
-
-This [napari] plugin was generated with [Cookiecutter] using with [@napari]'s [cookiecutter-napari-plugin] template.
-
-<img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif" width="700"/>
-
-Demonstration of handling 3D time-lapse data:
+A napari-plugin for clustering objects according to their properties.
 
 <img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif" width="700"/>
 
@@ -52,71 +44,60 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
 
+In case you have 2D time-lapse data you need to convert it into a suitable shape using the menu `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)` ([documentation](https://www.napari-hub.org/plugins/napari-time-slicer)).
+
 ### Measurements
-The first step is deriving measurements from the labelled image and the corresponding pixels in the grey-value image.
-Since the 0.6.0 release measurements widget is no longer part of this plugin and you will have to use other napari plugins to measure your data.
-One way is to use the measurement functions in [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops), which comes pre-installed with the napari cluster plotter.
-Use the menu `Tools > Measurement tables > Regionprops (scikit-image, nsr)` to get to the measurement widget.
-Just select the image, the corresponding label image and the measurements to analyse and click on `Run`.
+The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
+Use the menu `Tools > Measurement tables > Regionprops (scikit-image, nsr)` to get to the measurement widget ([documentation](https://www.napari-hub.org/plugins/napari-skimage-regionprops)).
+Select the image, the corresponding label image and the measurements to analyse and click on `Run`.
+A table with the measurements will open and afterwards, you can save and/or close the measurement table.
+At this point it is recommended to close the table and the Measure widget to free space for following steps.
 
-In the previous napari-cluster-plotter release a GPU dependant measurement function was implemented which you can find in the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
-To use this function you will need to install this library (see optional installation steps) and you can find the widget under the menu `Tools > Measurement tables > Label statistics (clEsperanto)`. As before, select the image, the corresponding label image and the measurements to analyse and click on `Run`.
-
-A table with the measurements will open and afterwards, you can save and/or close the measurement table. Also, close the Measure widget.
-
-If you want to upload your own measurements you can do this using [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops).
-Under the menu `Tools > Measurement tables > Load from CSV (nsr)` you can find a widget to upload your own csv file.
-Make sure that there is a column that specifies the which measurement belongs to which label by adding a column with the name "label".
-If you don't specify this column it will be assumed that measurements start at 1 and each
-row describes the next label.
-
-Note that tables for time-lapse data need to include an **additional column named "frame"**, which indicates which slice in
-time the given row refers to. This column is already included in the table if you use recommended plugins for deriving measurements.
-
-#### Time-Lapse Measurements
-In case you have 2D time-lapse data you need to convert it into a suitable shape using the function: `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)`,
-which can be found in the [napari time slicer](https://www.napari-hub.org/plugins/napari-time-slicer).
-
-Again, note that tables for time-lapse data will include an additional column named "frame", which indicates which slice in
-time the given row refers to. If you want to import your own csv files for time-lapse data make sure to include this column!
-If you have tracking data where each column specifies measurements for a track instead of a label at a specific time point,
-this column must not be added.
-
-Both [napari-skimage-regionprops](https://www.napari-hub.org/plugins/napari-skimage-regionprops) and [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant) include measuring widgets for timelapse data.
+You can also load your own measurements you can do this using the menu `Tools > Measurement tables > Load from CSV (nsr)`.
+If you load custom measurements, please make sure that there is a `label` column that specifies the which measurement belongs to which labeled object.
+Tables for time-lapse data need to include an additional column named `frame`.
 
 ### Plotting
 
-Once measurements were made or uploaded, these measurements were saved in the `properties/features` of the labels layer which was
-analysed. You can then plot these measurements using the menu `Tools > Measurement tables > Plot measurement (ncp)`.
+Once measurements were saved in the labels layer which was analysed, you can then plot these measurements using the menu `Tools > Visualization > Plot measurements (ncp)`.
 
 In this widget, you can select the labels layer which was analysed and the measurements which should be plotted
-on the X- and Y-axis. If you cannot see any options in axes selection boxes, but you have performed measurements, click
-on `Update Axes/Clustering Options` to refresh them. Click on `Plot` to draw the data points in the plot area.
-
-Currently, you can select between two types of plots: scatter plot and 2D histogram. Click on "expand for advanced
-options" to see the selection of the plot type. Clustering (manual and automatic) is possible using both types of plots.
-2D histogram is recommended if you have a very high number of data points. Under advanced options you will also find the
-checkbox determining whether not selected data points should be automatically clustered as another cluster or displayed as
-gray data points and not visualized in the generated clusters IDs layer.
+on the X- and Y-axis. Click on `Plot` to draw the data points in the plot area.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_plain.png)
 
-You can also manually select a region in the plot. To use lasso (freehand) tool use left mouse click, and to use a
+Under advanced options, you can also select the plot type histogram which will visualize a 2D histogram. 2D histogram visualization is recommended if you have a very high number of data points.
+
+![img.png](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/histogram_2d.png)
+
+If you choose the same measurement for the X and the Y axis, a histogram will be shown.
+
+![img.png](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/histogram_1d.png)
+
+Under advanced options you will also find the checkbox determining whether not-selected data points should be hidden (shown in grey) or automatically
+clustered as another cluster.
+
+### Manual clustering
+
+You can manually select a region in the plot. To use lasso (freehand) tool use left mouse click, and to use a
 rectangle - right click. The resulting manual clustering will also be visualized in the original image. To optimize
 visualization in the image, turn off the visibility of the analysed labels layer.
 
-Manual clustering results can be saved by going to `Tools > Measurement > Show table (nsr)`, and clicking on `Save as csv`.
-Saved table will contain "MANUAL_CLUSTER_ID" column. This column is overwritten as soon as different clusters are manually selected.
-
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plot_interactive.png)
+<img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast.gif" width="700"/>
 
 Hold down the SHIFT key while annotating regions in the plot to manually select multiple clusters.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
 
-#### Time-Lapse Plotting
+### Saving manual clustering
+
+Manual clustering results can be saved by going to `Tools > Measurement > Show table (nsr)`, and clicking on `Save as csv`.
+The saved table will contain a "MANUAL_CLUSTER_ID" column. This column is overwritten every time different clusters are manually selected.
+
+### Time-Lapse analysis
+
 When you plot your time-lapse datasets you will notice that the plots look slightly different.
-Datapoints of the current time frame are highlighted in white and you can see the datapoints move through the plot if you press play:
+Datapoints of the current time frame are highlighted in bright color and you can see the datapoints move through the plot while you navigate through time:
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/plotting_time-lapse_data_as_movie.gif)
 
@@ -125,23 +106,27 @@ Furthermore, you could also select a group in time and see where the datapoints 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse_manual_clustering_tips.gif)
 
-### Dimensionality reduction: UMAP, t-SNE or PCA
+If you have custom measurements from tracking data where each column specifies measurements for a track instead of a label at a specific time point, the `frame` column must not be added.
 
-For getting more insights into your data, you can reduce the dimensionality of the measurements, e.g.
-using the [UMAP algorithm](https://umap-learn.readthedocs.io/en/latest/), [t-SNE](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
-or [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html).
-To apply it to your data use the menu `Tools > Measurement post-processing > Dimensionality reduction (ncp)`.
-Select the label image that was analysed and in the list below, select all measurements that should be
-dimensionality reduced. By default, all measurements are selected in the box. If you cannot see any measurements, but
-you have performed them, click on `Update Measurements` to refresh the box. You can read more about parameters of both
-algorithms by hovering over question marks or by clicking on them. When you are done with the selection, click on `Run`
-and after a moment, the table of measurements will re-appear with two additional columns representing the reduced
-dimensions of the dataset. These columns are automatically saved in the `properties` of the labels layer so there is no
-need to save them for usage in other widgets unless you wish to do so.
+### Dimensionality reduction
+
+For getting more insights into your data, you can reduce the dimensionality of the measurements, using these algorithms:
+* [Uniform Manifold Approximation Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/)
+* [t-distributed stochastic neighbor embedding (t-SNE)](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html)
+* [Principal Component Analysis (PCA)](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html)
+* [Non-linear dimensionality reduction through Isometric Mapping (Isomap)](https://scikit-learn.org/stable/modules/generated/sklearn.manifold.Isomap.html)
+* [Multi-dimensional Scaling (MDS)](https://scikit-learn.org/stable/modules/manifold.html#multidimensional-scaling)
+
+To apply them to your data use the menu `Tools > Measurement post-processing > Dimensionality reduction (ncp)`.
+Select the label image that was analysed and in the list below, select all measurements that should be dimensionality reduced.
+By default, all measurements are selected in the box.
+You can read more about parameters of both algorithms by hovering over question marks or by clicking on them.
+When you are done with the selection, click on `Run` and after a moment, the table of measurements will re-appear with two additional columns representing the reduced dimensions of the dataset.
+These columns are automatically saved in the labels layer and can be further processed by other plugins.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/umap.png)
 
-Afterwards, you can again save and/or close the table. Also, close the Dimensionality Reduction widget.
+Afterwards, you can again save and/or close the table.
 
 ### Clustering
 If manual clustering, as shown above, is not an option, you can automatically cluster your data, using these implemented algorithms:
@@ -152,147 +137,73 @@ If manual clustering, as shown above, is not an option, you can automatically cl
 * [Agglomerative clustering (AC)](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html)
 
 Therefore, click the menu `Tools > Measurement post-processing > Clustering (ncp)`,
-again, select the analysed labels layer.
-This time select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
+select the analysed labels layer.
+Select the measurements for clustering, e.g. select _only_ the `UMAP` measurements.
 Select the clustering method `KMeans` and click on `Run`.
 The table of measurements will reappear with an additional column `ALGORITHM_NAME_CLUSTERING_ID` containing the cluster
 ID of each datapoint.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/clustering.png)
 
-Afterwards, you can again save and/or close the table. Also, close the clustering widget.
+Afterwards, you can save and/or close the table.
 
 ### Plotting clustering results
-Return to the Plotter widget using the menu `Tools > Measurement tables > Plot measurement (ncp)`.
+
+Return to the Plotter widget using the menu `Tools > Visualization > Plot measurement (ncp)`.
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Clustering`, and click on `Plot`.
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/hdbscan_clusters_plot.png)
 
-Example of k-means clustering results:
-
-![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/kmeans_clusters_plot.png)
-
 ## Installation
 ### Devbio-napari installation
-The easiest way to install this plugin is to install the [devbio-napari](https://github.com/haesleinhuepf/devbio-napari) library.
-This library installs napari alongside many other useful plugins, including the napari-clusters-plotter.
-We recommend this library as it is not only the easiest way to install the napari-cluster-plotter, but it includes plugins for segmentation and measurement, which we don't provide.
-There are detailed installation instructions on the [napari-hub-page](https://www.napari-hub.org/plugins/devbio-napari) if you have any problems installing it.
-In case you want to have a minimal installation of our plugin you can find other installation options below.
+
+The easiest way to install this plugin is to install the [devbio-napari](https://github.com/haesleinhuepf/devbio-napari) plugin collection. The napari-clusters-plotter is part of it.
 
 ### Minimal installation
 * Get a python environment, e.g. via [mini-conda](https://docs.conda.io/en/latest/miniconda.html).
-  If you never used python/conda environments before, please follow the instructions
-  [here](https://mpicbg-scicomp.github.io/ipf_howtoguides/guides/Python_Conda_Environments) first. It is recommended to
-  install python 3.9 to your new conda environment from the start. The plugin is not yet supported with Python 3.10.
-  Create a new environment, for example, like this:
+  If you never used mamba/conda environments before, please follow the instructions
+  [in this blog post](https://biapol.github.io/blog/mara_lampert/getting_started_with_mambaforge_and_python/readme.html) first.
+
+* Create a new environment, for example, like this:
 
 ```
-conda create --name ncp-env python=3.9
+mamba create --name ncp-env python=3.9
 ```
 
 * Activate the new environment via conda:
 
 ```
-conda activate ncp-env
+mamba activate ncp-env
 ```
 
 * Install [napari], e.g. via [conda]:
 
 ```
-conda install -c conda-forge napari
+mamba install -c conda-forge napari
 ```
 
 Afterwards, you can install `napari-clusters-plotter`, e.g. via [conda]:
 
 ```
-conda install -c conda-forge napari-clusters-plotter
-```
-
-### Optional installation
-Follow these steps instead of the regular installation to include the [napari-pyclesperanto-assistant](https://www.napari-hub.org/plugins/napari-pyclesperanto-assistant).
-Creating the environment like this will allow you to use your GPU to render your cluster results.
-Furthermore, you can access the deprecated measurement functions of the napari-cluster-plotter in releases < 0.6.0.
-If you have trouble with this library you can use the regular installation above.
-
-```
-conda create --name ncp-env python==3.9
-```
-
-
-* Activate the new environment via conda:
-
-```
-conda activate ncp-env
-```
-
-* Install napari-pyclesperanto-assistant, e.g. with pip:
-
-```
-pip install napari-pyclesperanto-assistant
-```
-
-* Mac-users please also install this:
-
-```
-conda install -c conda-forge ocl_icd_wrapper_apple
-```
-
-* Linux users please also install this:
-
-```
-conda install -c conda-forge ocl-icd-system
-```
-
-* Install [napari], e.g. via [pip] or [conda]:
-
-```
-python -m pip install "napari[all]"
-```
-```
-conda install -c conda-forge napari
-```
-
-Afterwards, you can install `napari-clusters-plotter`, e.g. via [conda]:
-
-```
-conda install -c conda-forge napari-clusters-plotter
+mamba install -c conda-forge napari-clusters-plotter
 ```
 
 ## Troubleshooting installation
-
-- If the plugin does not appear in napari 'Plugins' menu, and in 'Plugin errors...' you can see such an error:
-
-```
-ImportError: DLL load failed while importing _cl
-```
-
-Try downloading and installing a pyopencl with a lower cl version, e.g. cl12 : pyopencl=2020.1. However, in this case,
-you will need an environment with a lower python version (python=3.8).
 
 - `Error: Could not build wheels for hdbscan which use PEP 517 and cannot be installed directly`
 
 This can happen if you used pip for the installation. To solve this error, install hdbscan via conda before installing the plugin:
 
 ```
-conda install -c conda-forge hdbscan
+mamba install -c conda-forge hdbscan
 ```
 
 - `ValueError: numpy.ndarray size changed, may indicate binary incompatibility. Expected 96 from C header, got 88 from PyObject`
 
 Similar to the above-described error, this error can occur when importing hdbscan through pip or in the wrong order. This can be fixed by installing packages separately through conda and in the following order:
 ```bash
-conda install -c conda-forge napari pyopencl hdbscan
+mamba install -c conda-forge napari hdbscan
 pip install napari-clusters-plotter
-```
-
-- `WARNING: No ICDs were found` or `LogicError: clGetPlatformIDs failed: PLATFORM_NOT_FOUND_KHR`
-
-Make your system-wide implementation visible by installing either of the following conda packages:
-
-```
-conda install -c conda-forge ocl-icd-system
-conda install -c conda-forge ocl_icd_wrapper_apple
 ```
 
 ## Contributing

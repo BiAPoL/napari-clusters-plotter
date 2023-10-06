@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from napari.layers import Labels, Surface
+from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
 from qtpy.QtCore import Qt
@@ -24,6 +25,7 @@ from qtpy.QtWidgets import (
 )
 
 from ._plotter_utilities import (
+    apply_cluster_colors_to_bars,
     clustered_plot_parameters,
     estimate_number_bins,
     make_cluster_overlay_img,
@@ -36,6 +38,8 @@ from ._Qt_code import (
     button,
     collapsible_box,
     layer_container_and_selection,
+    create_options_dropdown,
+    labels_container_and_selection,
     title,
 )
 from ._utilities import (
@@ -53,7 +57,7 @@ POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including
 
 
 class PlottingType(Enum):
-    HISTOGRAM_2D = auto()
+    HISTOGRAM = auto()
     SCATTER = auto()
 
 
@@ -70,7 +74,7 @@ class PlotterWidget(QMainWindow):
         self.scrollArea = QScrollArea()
         self.setCentralWidget(self.scrollArea)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setMinimumWidth(400)
+        self.scrollArea.setMinimumWidth(450)
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.contents = QWidget()
@@ -184,7 +188,14 @@ class PlotterWidget(QMainWindow):
         # Advanced plotting options
         ############################
 
-        self.advanced_options_container = collapsible_box("Expand for advanced options")
+        self.advanced_options_container_box = collapsible_box(
+            "Expand for advanced options"
+        )
+        self.advanced_options_container = QWidget(self)
+        self.advanced_options_container.setLayout(QVBoxLayout())
+        self.advanced_options_container_box.addWidget(self.advanced_options_container)
+        self.advanced_options_container.layout().setSpacing(0)
+        self.advanced_options_container.layout().setContentsMargins(0, 0, 0, 0)
 
         def replot():
             clustering_ID = None
@@ -194,7 +205,6 @@ class PlotterWidget(QMainWindow):
             features = get_layer_tabular_data(self.analysed_layer)
 
             # redraw the whole plot
-
             try:
                 self.run(
                     features,
@@ -211,13 +221,15 @@ class PlotterWidget(QMainWindow):
             replot()
 
         def plotting_type_changed():
-            if self.plotting_type.currentText() == PlottingType.HISTOGRAM_2D.name:
+            if self.plotting_type.currentText() == PlottingType.HISTOGRAM.name:
                 self.bin_number_container.setVisible(True)
                 self.log_scale_container.setVisible(True)
                 self.plot_hide_non_selected.setChecked(True)
+                self.colormap_container.setVisible(True)
             else:
                 self.bin_number_container.setVisible(False)
                 self.log_scale_container.setVisible(False)
+                self.colormap_container.setVisible(False)
             replot()
 
         def bin_number_set():
@@ -234,7 +246,7 @@ class PlotterWidget(QMainWindow):
         combobox_plotting_container.layout().addWidget(QLabel("Plotting type"))
         self.plotting_type = QComboBox()
         self.plotting_type.addItems(
-            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM_2D.name]
+            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM.name]
         )
         self.plotting_type.currentIndexChanged.connect(plotting_type_changed)
         combobox_plotting_container.layout().addWidget(self.plotting_type)
@@ -288,13 +300,23 @@ class PlotterWidget(QMainWindow):
             self.plot_hide_non_selected
         )
 
-        self.advanced_options_container.addWidget(combobox_plotting_container)
-        self.advanced_options_container.addWidget(self.log_scale_container)
-        self.advanced_options_container.addWidget(self.bin_number_container)
-
-        self.advanced_options_container.addWidget(
+        self.advanced_options_container.layout().addWidget(combobox_plotting_container)
+        self.advanced_options_container.layout().addWidget(self.log_scale_container)
+        self.advanced_options_container.layout().addWidget(self.bin_number_container)
+        self.advanced_options_container.layout().addWidget(
             self.hide_nonselected_checkbox_container
         )
+
+        # selection of possible colormaps for 2D histogram
+        self.colormap_container, self.colormap_dropdown = create_options_dropdown(
+            name="Colormap",
+            value="magma",
+            options={"choices": list(ALL_COLORMAPS.keys())},
+            label="Colormap",
+        )
+        self.colormap_container.setVisible(False)
+        self.colormap_dropdown.native.currentIndexChanged.connect(replot)
+        self.advanced_options_container.layout().addWidget(self.colormap_container)
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
@@ -302,17 +324,21 @@ class PlotterWidget(QMainWindow):
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
 
-        self.layout.addWidget(self.advanced_options_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(
+            self.advanced_options_container_box, alignment=Qt.AlignTop
+        )
 
         self.layout.addWidget(update_container, alignment=Qt.AlignTop)
         self.layout.addWidget(run_container, alignment=Qt.AlignTop)
         self.layout.setSpacing(0)
 
         # go through all widgets and change spacing
-        for i in range(self.layout.count()):
-            item = self.layout.itemAt(i).widget()
-            item.layout().setSpacing(0)
-            item.layout().setContentsMargins(3, 3, 3, 3)
+        for widget_list in [self.layout, self.advanced_options_container.layout()]:
+            for i in range(widget_list.count()):
+                item = widget_list.itemAt(i).widget()
+                if item.layout() is not None:
+                    item.layout().setSpacing(0)
+                    item.layout().setContentsMargins(3, 3, 3, 3)
 
         # adding spacing between fields for selecting two axes
         axes_container.layout().setSpacing(6)
@@ -347,6 +373,7 @@ class PlotterWidget(QMainWindow):
         # takes care of case where this isn't set yet directly after init
         self.plot_cluster_name = None
         self.old_frame = None
+        # Assume time is the first axis
         self.frame = self.viewer.dims.current_step[0]
 
         def frame_changed(event):
@@ -402,9 +429,44 @@ class PlotterWidget(QMainWindow):
         # select what happens when the run button is clicked
         run_button.clicked.connect(run_clicked)
 
-        self.viewer.dims.events.current_step.connect(frame_changed)
+        self.viewer.dims.events.current_step.connect(self.frame_changed)
 
         self.update_axes_and_clustering_id_lists()
+
+    def frame_changed(self, event):
+        if self.viewer.dims.ndim <= 3:
+            return
+        frame = event.value[0]
+        if (not self.old_frame) or (self.old_frame != frame):
+            if self.labels_select.value is None:
+                warnings.warn("Please select labels layer!")
+                return
+            if get_layer_tabular_data(self.labels_select.value) is None:
+                warnings.warn(
+                    "No labels image with features/properties was selected! Consider doing measurements first."
+                )
+                return
+            if (
+                self.plot_x_axis.currentText() == ""
+                or self.plot_y_axis.currentText() == ""
+            ):
+                warnings.warn(
+                    "No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
+                    "but you have performed measurements/dimensionality reduction before, try clicking "
+                    "Update Axes Selection Boxes"
+                )
+                return
+
+            self.frame = frame
+
+            self.run(
+                get_layer_tabular_data(self.labels_select.value),
+                self.plot_x_axis.currentText(),
+                self.plot_y_axis.currentText(),
+                self.plot_cluster_name,
+                redraw_cluster_image=False,
+            )
+        self.old_frame = frame
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
@@ -416,7 +478,10 @@ class PlotterWidget(QMainWindow):
     def change_state_of_nonselected_checkbox(self):
         # make the checkbox visible only if clustering is done manually
         visible = (
-            True if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText() else False
+            True
+            if "MANUAL_CLUSTER_ID" in self.plot_cluster_id.currentText()
+            or self.plot_cluster_id.currentText() == ""
+            else False
         )
         self.hide_nonselected_checkbox_container.setVisible(visible)
 
@@ -497,6 +562,9 @@ class PlotterWidget(QMainWindow):
         self.analysed_layer = self.layer_select.value
 
         self.graphics_widget.reset()
+
+        self.graphics_widget.selected_colormap = self.colormap_dropdown.value
+
         number_of_points = len(features)
 
         from napari.layers import Labels
@@ -509,6 +577,9 @@ class PlotterWidget(QMainWindow):
             and len(self.analysed_layer.data.shape) == 4
             and "frame" not in features.keys()
         )
+        tracking_data = len(self.analysed_layer.data.shape) == 4 and "frame" not in [
+            key.lower() for key in features.keys()
+        ]
         colors = get_nice_colormap()
 
         frame_id = None
@@ -554,51 +625,77 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
+
+                self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             else:
                 if self.bin_auto.isChecked():
-                    number_bins = int(
-                        np.max(
-                            [
-                                estimate_number_bins(self.data_x),
-                                estimate_number_bins(self.data_y),
-                            ]
+                    if plot_x_axis_name == plot_y_axis_name:
+                        number_bins = int(estimate_number_bins(self.data_x))
+                    else:
+                        number_bins = int(
+                            np.max(
+                                [
+                                    estimate_number_bins(self.data_x),
+                                    estimate_number_bins(self.data_y),
+                                ]
+                            )
                         )
-                    )
-                    self.bin_number_spinner.setValue(number_bins)
+                        self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
 
-                self.graphics_widget.make_2d_histogram(
-                    self.data_x,
-                    self.data_y,
-                    colors,
-                    bin_number=number_bins,
-                    log_scale=self.log_scale.isChecked(),
-                )
+                # if both axes are the same, plot 1D histogram
+                if plot_x_axis_name == plot_y_axis_name:
+                    self.graphics_widget.make_1d_histogram(
+                        self.data_x,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
+                    # update bar colors to cluster ids
+                    self.graphics_widget.axes = apply_cluster_colors_to_bars(
+                        self.graphics_widget.axes,
+                        cluster_name=plot_cluster_name,
+                        features=features,
+                        number_bins=number_bins,
+                        feature_x=self.plot_x_axis_name,
+                        colors=colors,
+                    )
+                    self.graphics_widget.figure.canvas.draw_idle()
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel("frequency")
+                else:
+                    self.graphics_widget.make_2d_histogram(
+                        self.data_x,
+                        self.data_y,
+                        colors,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
 
-                rgb_img = make_cluster_overlay_img(
-                    cluster_id=plot_cluster_name,
-                    features=features,
-                    feature_x=self.plot_x_axis_name,
-                    feature_y=self.plot_y_axis_name,
-                    colors=colors,
-                    histogram_data=self.graphics_widget.histogram,
-                    hide_first_cluster=self.plot_hide_non_selected.isChecked(),
-                )
-                xedges = self.graphics_widget.histogram[1]
-                yedges = self.graphics_widget.histogram[2]
+                    rgb_img = make_cluster_overlay_img(
+                        cluster_id=plot_cluster_name,
+                        features=features,
+                        feature_x=self.plot_x_axis_name,
+                        feature_y=self.plot_y_axis_name,
+                        colors=colors,
+                        histogram_data=self.graphics_widget.histogram,
+                        hide_first_cluster=self.plot_hide_non_selected.isChecked(),
+                    )
+                    xedges = self.graphics_widget.histogram[1]
+                    yedges = self.graphics_widget.histogram[2]
 
-                self.graphics_widget.axes.imshow(
-                    rgb_img,
-                    extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
-                    origin="lower",
-                    alpha=1,
-                    aspect="auto",
-                )
-                self.graphics_widget.figure.canvas.draw_idle()
+                    self.graphics_widget.axes.imshow(
+                        rgb_img,
+                        extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
+                        origin="lower",
+                        alpha=1,
+                        aspect="auto",
+                    )
+                    self.graphics_widget.figure.canvas.draw_idle()
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
-            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             self.graphics_widget.match_napari_layout()
 
             from vispy.color import Color
@@ -663,7 +760,7 @@ class PlotterWidget(QMainWindow):
                 elif len(self.analysed_layer.data.shape) <= 3:
                     cluster_data = generate_cluster_image(
                         self.analysed_layer.data, self.label_ids, self.cluster_ids
-                    )
+                    ).astype(int)
                 else:
                     warnings.warn("Image dimensions too high for processing!")
                     return
@@ -721,31 +818,52 @@ class PlotterWidget(QMainWindow):
                 self.graphics_widget.make_scatter_plot(
                     self.data_x, self.data_y, colors_plot, sizes, a
                 )
+
+                self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
             else:
                 if self.bin_auto.isChecked():
-                    number_bins = int(
-                        np.max(
-                            [
-                                estimate_number_bins(self.data_x),
-                                estimate_number_bins(self.data_y),
-                            ]
+                    if plot_x_axis_name == plot_y_axis_name:
+                        number_bins = int(estimate_number_bins(self.data_x))
+                    else:
+                        number_bins = int(
+                            np.max(
+                                [
+                                    estimate_number_bins(self.data_x),
+                                    estimate_number_bins(self.data_y),
+                                ]
+                            )
                         )
-                    )
                     self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
 
-                self.graphics_widget.make_2d_histogram(
-                    self.data_x,
-                    self.data_y,
-                    colors,
-                    bin_number=number_bins,
-                    log_scale=self.log_scale.isChecked(),
-                )
-            self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
-            self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
-            self.graphics_widget.match_napari_layout()
+                # if both axes are the same, plot 1D histogram
+                if plot_x_axis_name == plot_y_axis_name:
+                    self.graphics_widget.make_1d_histogram(
+                        self.data_x,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel("frequency")
+                else:
+                    self.graphics_widget.make_2d_histogram(
+                        self.data_x,
+                        self.data_y,
+                        colors,
+                        bin_number=number_bins,
+                        log_scale=self.log_scale.isChecked(),
+                    )
+                    self.graphics_widget.axes.set_xlabel(plot_x_axis_name)
+                    self.graphics_widget.axes.set_ylabel(plot_y_axis_name)
 
-            self.graphics_widget.draw()  # Only redraws when cluster is not manually selected
-            # because manual selection already does that when selector is disconnected
+            self.graphics_widget.match_napari_layout()
+            self.graphics_widget.draw()
+
+        if self.graphics_widget.last_xy_labels != (plot_x_axis_name, plot_y_axis_name):
+            # Additional redraw in case axis have changed, otherwise y-axis may not get updated. General redraw would
+            # resets the zoom, which needs to be avoided.
+            self.graphics_widget.draw()
+
         self.graphics_widget.reset_zoom()

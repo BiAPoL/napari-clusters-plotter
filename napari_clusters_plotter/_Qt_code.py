@@ -10,8 +10,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib.path import Path
-from matplotlib.widgets import LassoSelector, RectangleSelector
+from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Layer
+from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
@@ -354,6 +355,41 @@ def algorithm_choice(name: str, value, options: dict, label: str):
     return container, choice_list
 
 
+def create_options_dropdown(name: str, value, options: dict, label: str):
+    """
+    Create a widget for selecting a value from a set of options.
+
+    Parameters
+    ----------
+    name : str
+        The name to be used for the widget.
+    value :
+        The initial value of the widget.
+    options : dict
+        A dictionary of possible options, where the keys are option
+        names and the values are corresponding strings that are
+        actually displayed in the combobox.
+    label : str
+        The label to be displayed next to the widget.
+
+    Returns
+    ----------
+    A tuple containing the container widget and the choice widget. The container widget
+    is a QWidget that contains the label and the choice widget.
+    """
+    container = QWidget()
+    container.setLayout(QHBoxLayout())
+    container.layout().addWidget(QLabel(label))
+    choice_list = create_widget(
+        widget_type="ComboBox",
+        name=name,
+        value=value,
+        options=options,
+    )
+    container.layout().addWidget(choice_list.native)
+    return container, choice_list
+
+
 class SelectFrom2DHistogram:
     def __init__(self, parent, ax, full_data):
         self.parent = parent
@@ -376,6 +412,43 @@ class SelectFrom2DHistogram:
 
     def disconnect(self):
         self.lasso.disconnect_events()
+        self.canvas.draw_idle()
+
+
+class SelectFrom1DHistogram:
+    def __init__(self, parent, ax, full_data):
+        self.parent = parent
+        self.ax = ax
+        self.canvas = ax.figure.canvas
+        self.xys = full_data
+
+        self.span_selector = SpanSelector(
+            ax,
+            onselect=self.onselect,
+            direction="horizontal",
+            props=dict(facecolor="#1f77b4", alpha=0.5),
+        )
+        self.click_id = self.canvas.mpl_connect("button_press_event", self.on_click)
+
+    def onselect(self, vmin, vmax):
+        self.ind_mask = np.logical_and(self.xys >= vmin, self.xys <= vmax).values
+
+        if self.parent.manual_clustering_method is not None:
+            self.parent.manual_clustering_method(self.ind_mask)
+
+    def on_click(self, event):
+        # Clear selection if user right-clicks (without moving) outside of the histogram
+        if event.inaxes != self.ax:
+            return
+        if event.button == 3:
+            # clear selection
+            self.ind_mask = np.zeros_like(self.xys, dtype=bool)
+            if self.parent.manual_clustering_method is not None:
+                self.parent.manual_clustering_method(self.ind_mask)
+
+    def disconnect(self):
+        self.span_selector.disconnect_events()
+        self.canvas.mpl_disconnect(self.click_id)
         self.canvas.draw_idle()
 
 
@@ -455,6 +528,7 @@ class MplCanvas(FigureCanvas):
 
         self.match_napari_layout()
         self.xylim = None
+        self.last_xy_labels = None
 
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
@@ -472,6 +546,8 @@ class MplCanvas(FigureCanvas):
             spancoords="pixels",
             interactive=False,
         )
+        self.selected_colormap = "magma"
+
         self.reset()
 
     def reset_zoom(self):
@@ -480,6 +556,7 @@ class MplCanvas(FigureCanvas):
             self.axes.set_ylim(self.xylim[1])
 
     def on_draw(self, event):
+        self.last_xy_labels = (self.axes.get_xlabel(), self.axes.get_ylabel())
         self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
 
     def draw_rectangle(self, eclick, erelease):
@@ -519,7 +596,7 @@ class MplCanvas(FigureCanvas):
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
-            cmap="magma",
+            cmap=self.selected_colormap,
             aspect="auto",
             norm=norm,
         )
@@ -527,9 +604,40 @@ class MplCanvas(FigureCanvas):
         self.axes.set_ylim(yedges[0], yedges[-1])
         self.histogram = (h, xedges, yedges)
 
-        full_data = pd.concat([data_x, data_y], axis=1)
+        full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+        self.axes.figure.canvas.draw_idle()
+
+    def make_1d_histogram(
+        self,
+        data: "numpy.typing.ArrayLike",
+        bin_number: int = 400,
+        log_scale: bool = False,
+    ):
+        counts, bins = np.histogram(data, bins=bin_number)
+        self.axes.hist(
+            bins[:-1],
+            bins,
+            edgecolor="white",
+            weights=counts,
+            log=log_scale,
+            color="#9A9A9A",
+        )
+        self.histogram = (counts, bins)
+        bin_width = bins[1] - bins[0]
+        self.axes.set_xlim(min(bins) - (bin_width / 2), max(bins) + (bin_width / 2))
+        ymin = 0
+        if log_scale:
+            ymin = 1
+        self.axes.set_ylim(ymin, max(counts) * 1.1)
+
+        if log_scale:
+            self.axes.set_xscale("linear")
+            self.axes.set_yscale("log")
+
+        self.selector.disconnect()
+        self.selector = SelectFrom1DHistogram(self, self.axes, data)
         self.axes.figure.canvas.draw_idle()
 
     def make_scatter_plot(
@@ -576,6 +684,7 @@ class MplCanvas(FigureCanvas):
         # changing colors of axes labels
         self.axes.xaxis.label.set_color("white")
         self.axes.yaxis.label.set_color("white")
+        self.fig.canvas.draw_idle()
 
 
 # overriding NavigationToolbar method to change the background and axes colors of saved figure
