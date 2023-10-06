@@ -128,7 +128,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.labels_select.value.opacity = 0
+                self.layer_select.value.opacity = 0
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -444,10 +444,10 @@ class PlotterWidget(QMainWindow):
             return
         frame = event.value[0]
         if (not self.old_frame) or (self.old_frame != frame):
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
-            if get_layer_tabular_data(self.labels_select.value) is None:
+            if get_layer_tabular_data(self.layer_select.value) is None:
                 warnings.warn(
                     "No labels image with features/properties was selected! Consider doing measurements first."
                 )
@@ -466,7 +466,7 @@ class PlotterWidget(QMainWindow):
             self.frame = frame
 
             self.run(
-                get_layer_tabular_data(self.labels_select.value),
+                get_layer_tabular_data(self.layer_select.value),
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_name,
@@ -861,7 +861,7 @@ class PlotterWidget(QMainWindow):
                 cluster_data, {
                     'color': cmap_dict,
                     'name':"cluster_ids_in_space",
-                    'scale': self.labels_select.value.scale
+                    'scale': self.layer_select.value.scale
                 }
             )
 
