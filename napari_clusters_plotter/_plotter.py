@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Surface
+from napari.layers import Labels, Surface, Layer, Points
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -39,7 +39,6 @@ from ._Qt_code import (
     collapsible_box,
     layer_container_and_selection,
     create_options_dropdown,
-    labels_container_and_selection,
     title,
 )
 from ._utilities import (
@@ -47,6 +46,8 @@ from ._utilities import (
     dask_cluster_image_timelapse,
     generate_cluster_image,
     generate_cluster_surface,
+    generate_cluster_tracks,
+    generate_cluster_4d_labels,
     get_layer_tabular_data,
 )
 
@@ -66,7 +67,13 @@ class PlotterWidget(QMainWindow):
     def __init__(self, napari_viewer):
         super().__init__()
 
+        self.layer_coloring_functions = {
+            Labels: generate_cluster_image,
+            Surface: generate_cluster_surface
+        }
+
         self.cluster_ids = None
+        self.visualized_layer = None
         self.viewer = napari_viewer
 
         # create a scroll area
@@ -719,112 +726,11 @@ class PlotterWidget(QMainWindow):
 
             # Generating the cluster image
             if redraw_cluster_image:
-                # depending on the dimensionality of the data
-                # generate the cluster image
-                napari_colormap = get_surface_color_map(max(self.cluster_ids))
-                nice_colormap = get_nice_colormap()
-
-                if (
-                    isinstance(self.analysed_layer, Labels)
-                    and len(self.analysed_layer.data.shape) == 4
-                ):
-                    if not tracking_data:
-                        max_timepoint = features[POINTER].max() + 1
-                        label_id_list_per_timepoint = [
-                            features.loc[features[POINTER] == i]["label"].tolist()
-                            for i in range(int(max_timepoint))
-                        ]
-                        prediction_lists_per_timepoint = [
-                            features.loc[features[POINTER] == i][
-                                plot_cluster_name
-                            ].tolist()
-                            for i in range(int(max_timepoint))
-                        ]
-                    else:
-                        label_id_list_per_timepoint = [
-                            features[plot_cluster_name].tolist()
-                            for i in range(self.analysed_layer.data.shape[0])
-                        ]
-                        prediction_lists_per_timepoint = [
-                            features[plot_cluster_name].tolist()
-                            for i in range(self.analysed_layer.data.shape[0])
-                        ]
-
-                    cluster_data = dask_cluster_image_timelapse(
-                        self.analysed_layer.data,
-                        label_id_list_per_timepoint,
-                        prediction_lists_per_timepoint,
-                    )
-
-                elif isinstance(self.analysed_layer, Surface):
-                    cluster_data = generate_cluster_surface(
-                        self.analysed_layer.data, self.cluster_ids
-                    )
-
-                elif isinstance(self.analysed_layer, Points):
-                    face_colors = to_rgba_array(
-                        np.asarray(nice_colormap)[self.cluster_ids]
-                    )
-                    cluster_layer = Layer.create(
-                        self.analysed_layer.data,
-                        {
-                            "face_color": face_colors,
-                            "size": self.layer_select.value.size,
-                            "name": "cluster_ids_in_space",
-                            "scale": self.layer_select.value.scale,
-                        },
-                        "points",
-                    )
-                elif len(self.analysed_layer.data.shape) <= 3:
-                    cluster_data = generate_cluster_image(
-                        self.analysed_layer.data, self.label_ids, self.cluster_ids
-                    ).astype(int)
-                else:
-                    warnings.warn("Image dimensions too high for processing!")
-                    return
-
-                # if the cluster image layer doesn't yet exist make it
-                # otherwise just update it
-                if (
-                    self.visualized_layer is None
-                    or self.visualized_layer not in self.viewer.layers
-                ):
-                    if isinstance(self.analysed_layer, Surface):
-                        self.visualized_layer = self.viewer.add_surface(
-                            cluster_data,
-                            contrast_limits=[0, self.cluster_ids.max() + 1],
-                            colormap=napari_colormap,
-                            name="cluster_ids_in_space",
-                            scale=self.layer_select.value.scale,
-                        )
-                    elif isinstance(self.analysed_layer, Points):
-                        self.visualized_layer = self.viewer.add_layer(cluster_layer)
-
-                    else:
-                        # visualising cluster image
-                        self.visualized_layer = self.viewer.add_labels(
-                            cluster_data,  # self.analysed_layer.data
-                            color=cmap_dict,  # cluster_id_dict
-                            name="cluster_ids_in_space",
-                            scale=self.layer_select.value.scale,
-                        )
-                else:
-                    # updating data
-                    if isinstance(self.analysed_layer, Labels):
-                        self.visualized_layer.data = cluster_data
-                        self.visualized_layer.color = cmap_dict
-                    elif isinstance(self.analysed_layer, Points):
-                        face_colors = to_rgba_array(
-                            np.asarray(nice_colormap)[self.cluster_ids]
-                        )
-                        self.visualized_layer.face_color = face_colors
-                    else:
-                        self.visualized_layer.data = cluster_data
-                        self.visualized_layer.colormap = napari_colormap
-                        self.visualized_layer.contrast_limits = [
-                            0,
-                            self.cluster_ids.max() + 1,
-                        ]
+                self._update_cluster_image(
+                    is_tracking_data=tracking_data,
+                    plot_cluster_name=plot_cluster_name,
+                    cmap_dict=cmap_dict,
+                )
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
@@ -890,3 +796,116 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.draw()
 
         self.graphics_widget.reset_zoom()
+
+    def _update_cluster_image(self,
+                              is_tracking_data: bool,
+                              plot_cluster_name: str,
+                              cmap_dict: dict):
+        # if the cluster image layer doesn't yet exist make it
+        self.visualized_layer = self._draw_cluster_image(
+            is_tracking_data=is_tracking_data,
+            plot_cluster_name=plot_cluster_name,
+            cluster_ids=self.cluster_ids,
+            cmap_dict=cmap_dict)
+        if (
+            self.visualized_layer is None
+            or self.visualized_layer.name not in self.viewer.layers):
+            self.viewer.add_layer(self.visualized_layer)
+        else:
+            layer_in_viewer = self.viewer.layers[self.visualized_layer.name]
+            layer_in_viewer.data = self.visualized_layer.data
+            if isinstance(self.visualized_layer, Points):
+                layer_in_viewer.face_color = self.visualized_layer.face_color
+            elif isinstance(self.visualized_layer, Surface):
+                layer_in_viewer.colormap = self.visualized_layer.colormap
+            elif isinstance(self.visualized_layer, Labels):
+                layer_in_viewer.color = self.visualized_layer.color
+            else:
+                print('Update failed')           
+
+
+    def _draw_cluster_image(self,
+                            is_tracking_data: bool,
+                            plot_cluster_name: str,
+                            cluster_ids,
+                            cmap_dict = None) -> Layer:
+        from matplotlib.colors import to_rgba_array
+        from ._utilities import (
+            generate_cluster_image,
+            generate_cluster_surface,
+            generate_cluster_tracks,
+            generate_cluster_4d_labels,
+            get_nice_colormap,
+            get_surface_color_map
+        )
+        """
+        Generate the cluster image layer.
+        """
+        nice_colormap = get_nice_colormap()
+        napari_colormap = get_surface_color_map(max(cluster_ids))
+
+        if (
+            isinstance(self.analysed_layer, Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and not is_tracking_data):
+            cluster_data = generate_cluster_4d_labels(
+                self.analysed_layer.data, plot_cluster_name)
+        elif (
+            isinstance(self.analysed_layer, Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and is_tracking_data):
+            cluster_data = generate_cluster_tracks(
+                self.analysed_layer, plot_cluster_name)
+            
+            cluster_layer = Layer.create(
+                cluster_data, {
+                    'color': cmap_dict,
+                    'name':"cluster_ids_in_space",
+                    'scale': self.labels_select.value.scale
+                }
+            )
+
+        elif isinstance(self.analysed_layer, Surface):
+            cluster_data = generate_cluster_surface(
+                self.analysed_layer.data, self.cluster_ids)
+            
+            cluster_layer = Layer.create(
+                cluster_data, {
+                    'contrast_limits': [0, self.cluster_ids.max() + 1],
+                    'colormap': napari_colormap,
+                    'name': 'cluster_ids_in_space',
+                    'scale': self.layer_select.value.scale
+                }, 'surface')
+
+        elif isinstance(self.analysed_layer, Points):
+            face_colors = to_rgba_array(
+                np.asarray(nice_colormap)[cluster_ids]
+            )
+            cluster_layer = Layer.create(
+                self.analysed_layer.data,
+                {
+                    "face_color": face_colors,
+                    "size": self.layer_select.value.size,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+                "points",
+            )
+        elif len(self.analysed_layer.data.shape) <= 3:
+            cluster_data = generate_cluster_image(
+                self.analysed_layer.data, self.label_ids, self.cluster_ids
+            ).astype(int)
+            cluster_layer = Layer.create(
+                cluster_data,
+                {
+                    'color': cmap_dict,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+                "labels",
+            )
+        else:
+            warnings.warn("Image dimensions too high for processing!")
+            return
+        
+        return cluster_layer

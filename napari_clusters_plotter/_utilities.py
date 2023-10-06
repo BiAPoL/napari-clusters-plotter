@@ -209,6 +209,50 @@ def update_properties_list(widget, exclude_list):
                 if p in old_selected_props:
                     item.setSelected(True)
 
+def generate_cluster_tracks(analysed_layer, plot_cluster_name):
+
+    features = analysed_layer.features
+    label_id_list_per_timepoint = [
+        features[plot_cluster_name].tolist()
+        for i in range(analysed_layer.data.shape[0])
+    ]
+    prediction_lists_per_timepoint = [
+        features[plot_cluster_name].tolist()
+        for i in range(analysed_layer.data.shape[0])
+    ]
+
+    cluster_data = dask_cluster_image_timelapse(
+        analysed_layer.data,
+        label_id_list_per_timepoint,
+        prediction_lists_per_timepoint,
+    )
+
+    return cluster_data
+
+
+def generate_cluster_4d_labels(analysed_layer, plot_cluster_name):
+    from . import _POINTER
+    features = analysed_layer.features
+    max_timepoint = features[_POINTER].max() + 1
+    label_id_list_per_timepoint = [
+        features.loc[features[_POINTER] == i]["label"].tolist()
+        for i in range(int(max_timepoint))
+    ]
+    prediction_lists_per_timepoint = [
+        features.loc[features[_POINTER] == i][
+            plot_cluster_name
+        ].tolist()
+        for i in range(int(max_timepoint))
+    ]
+
+    cluster_data = dask_cluster_image_timelapse(
+        analysed_layer.data,
+        label_id_list_per_timepoint,
+        prediction_lists_per_timepoint,
+    )
+
+    return cluster_data
+
 
 def generate_cluster_image(label_image, label_list, predictionlist):
     """
