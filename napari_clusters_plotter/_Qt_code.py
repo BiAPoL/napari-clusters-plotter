@@ -12,7 +12,6 @@ from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Layer
-from napari.layers import Image, Labels
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (

@@ -37,8 +37,8 @@ from ._Qt_code import (
     MyNavigationToolbar,
     button,
     collapsible_box,
-    layer_container_and_selection,
     create_options_dropdown,
+    layer_container_and_selection,
     title,
 )
 from ._utilities import (
@@ -545,7 +545,6 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
-        from matplotlib.colors import to_rgba_array
         from napari.layers import Labels, Layer, Points, Surface
         from vispy.color import Color
 
@@ -828,7 +827,7 @@ class PlotterWidget(QMainWindow):
                             is_tracking_data: bool,
                             plot_cluster_name: str,
                             cluster_ids,
-                            cmap_dict = None) -> Layer:
+                            cmap_dict=None) -> Layer:
         from matplotlib.colors import to_rgba_array
         from ._utilities import (
             generate_cluster_image,
@@ -907,5 +906,5 @@ class PlotterWidget(QMainWindow):
         else:
             warnings.warn("Image dimensions too high for processing!")
             return
-        
+
         return cluster_layer
