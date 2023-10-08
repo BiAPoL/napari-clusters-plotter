@@ -73,10 +73,10 @@ def test_plotting(make_napari_viewer):
         plot_widget.analysed_layer.features,
         plot_x_axis_name="area",
         plot_y_axis_name="perimeter",
-        plot_cluster_name="MANUAL_CLUSTER_ID"
+        plot_cluster_name="MANUAL_CLUSTER_ID",
     )
 
-    print('check')
+    print("check")
 
 
 def test_plotter_utilities():
@@ -217,7 +217,6 @@ def test_plotter_on_points_data(make_napari_viewer):
     widget.plot_x_axis.setCurrentText("feature1")
     widget.plot_y_axis.setCurrentText("feature2")
     widget.analysed_layer.features["MANUAL_CLUSTER_ID"] = annotations
-    
 
     # check that the features are found
     features = get_layer_tabular_data(widget.analysed_layer)
@@ -302,6 +301,8 @@ def test_cluster_image_generation_for_histogram(make_napari_viewer):
     assert "cluster_ids_in_space" in viewer.layers
     assert int(viewer.layers["cluster_ids_in_space"].data.max()) == 3
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import napari
+
     test_plotting(napari.Viewer)

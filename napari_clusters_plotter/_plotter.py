@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Surface, Layer, Points
+from napari.layers import Labels, Layer, Points, Surface
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -43,11 +43,8 @@ from ._Qt_code import (
 )
 from ._utilities import (
     add_column_to_layer_tabular_data,
-    dask_cluster_image_timelapse,
     generate_cluster_image,
     generate_cluster_surface,
-    generate_cluster_tracks,
-    generate_cluster_4d_labels,
     get_layer_tabular_data,
 )
 
@@ -69,7 +66,7 @@ class PlotterWidget(QMainWindow):
 
         self.layer_coloring_functions = {
             Labels: generate_cluster_image,
-            Surface: generate_cluster_surface
+            Surface: generate_cluster_surface,
         }
 
         self.cluster_ids = None
@@ -545,10 +542,10 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
-        from napari.layers import Labels, Layer, Points, Surface
+        from napari.layers import Labels, Surface
         from vispy.color import Color
 
-        from ._utilities import get_nice_colormap, get_surface_color_map
+        from ._utilities import get_nice_colormap
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -796,19 +793,20 @@ class PlotterWidget(QMainWindow):
 
         self.graphics_widget.reset_zoom()
 
-    def _update_cluster_image(self,
-                              is_tracking_data: bool,
-                              plot_cluster_name: str,
-                              cmap_dict: dict):
+    def _update_cluster_image(
+        self, is_tracking_data: bool, plot_cluster_name: str, cmap_dict: dict
+    ):
         # if the cluster image layer doesn't yet exist make it
         self.visualized_layer = self._draw_cluster_image(
             is_tracking_data=is_tracking_data,
             plot_cluster_name=plot_cluster_name,
             cluster_ids=self.cluster_ids,
-            cmap_dict=cmap_dict)
+            cmap_dict=cmap_dict,
+        )
         if (
             self.visualized_layer is None
-            or self.visualized_layer.name not in self.viewer.layers):
+            or self.visualized_layer.name not in self.viewer.layers
+        ):
             self.viewer.add_layer(self.visualized_layer)
         else:
             layer_in_viewer = self.viewer.layers[self.visualized_layer.name]
@@ -820,23 +818,26 @@ class PlotterWidget(QMainWindow):
             elif isinstance(self.visualized_layer, Labels):
                 layer_in_viewer.color = self.visualized_layer.color
             else:
-                print('Update failed')           
+                print("Update failed")
 
-
-    def _draw_cluster_image(self,
-                            is_tracking_data: bool,
-                            plot_cluster_name: str,
-                            cluster_ids,
-                            cmap_dict=None) -> Layer:
+    def _draw_cluster_image(
+        self,
+        is_tracking_data: bool,
+        plot_cluster_name: str,
+        cluster_ids,
+        cmap_dict=None,
+    ) -> Layer:
         from matplotlib.colors import to_rgba_array
+
         from ._utilities import (
+            generate_cluster_4d_labels,
             generate_cluster_image,
             generate_cluster_surface,
             generate_cluster_tracks,
-            generate_cluster_4d_labels,
             get_nice_colormap,
-            get_surface_color_map
+            get_surface_color_map,
         )
+
         """
         Generate the cluster image layer.
         """
@@ -846,40 +847,47 @@ class PlotterWidget(QMainWindow):
         if (
             isinstance(self.analysed_layer, Labels)
             and len(self.analysed_layer.data.shape) == 4
-            and not is_tracking_data):
+            and not is_tracking_data
+        ):
             cluster_data = generate_cluster_4d_labels(
-                self.analysed_layer.data, plot_cluster_name)
+                self.analysed_layer.data, plot_cluster_name
+            )
         elif (
             isinstance(self.analysed_layer, Labels)
             and len(self.analysed_layer.data.shape) == 4
-            and is_tracking_data):
+            and is_tracking_data
+        ):
             cluster_data = generate_cluster_tracks(
-                self.analysed_layer, plot_cluster_name)
-            
+                self.analysed_layer, plot_cluster_name
+            )
+
             cluster_layer = Layer.create(
-                cluster_data, {
-                    'color': cmap_dict,
-                    'name':"cluster_ids_in_space",
-                    'scale': self.layer_select.value.scale
-                }
+                cluster_data,
+                {
+                    "color": cmap_dict,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
             )
 
         elif isinstance(self.analysed_layer, Surface):
             cluster_data = generate_cluster_surface(
-                self.analysed_layer.data, self.cluster_ids)
-            
+                self.analysed_layer.data, self.cluster_ids
+            )
+
             cluster_layer = Layer.create(
-                cluster_data, {
-                    'contrast_limits': [0, self.cluster_ids.max() + 1],
-                    'colormap': napari_colormap,
-                    'name': 'cluster_ids_in_space',
-                    'scale': self.layer_select.value.scale
-                }, 'surface')
+                cluster_data,
+                {
+                    "contrast_limits": [0, self.cluster_ids.max() + 1],
+                    "colormap": napari_colormap,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+                "surface",
+            )
 
         elif isinstance(self.analysed_layer, Points):
-            face_colors = to_rgba_array(
-                np.asarray(nice_colormap)[cluster_ids]
-            )
+            face_colors = to_rgba_array(np.asarray(nice_colormap)[cluster_ids])
             cluster_layer = Layer.create(
                 self.analysed_layer.data,
                 {
@@ -897,7 +905,7 @@ class PlotterWidget(QMainWindow):
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    'color': cmap_dict,
+                    "color": cmap_dict,
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },

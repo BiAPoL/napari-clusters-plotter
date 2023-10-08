@@ -10,6 +10,7 @@ from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
 from ._clustering import ID_NAME
+
 _POINTER = "frame"
 from ._Qt_code import (
     button,
