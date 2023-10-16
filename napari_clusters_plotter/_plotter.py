@@ -545,7 +545,7 @@ class PlotterWidget(QMainWindow):
         from napari.layers import Labels, Surface
         from vispy.color import Color
 
-        from ._utilities import get_nice_colormap
+        from ._utilities import get_nice_colormap, _is_pseudo_tracking
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -577,14 +577,7 @@ class PlotterWidget(QMainWindow):
         # if selected image is 4 dimensional, but does not contain frame column in its features
         # it will be considered to be tracking data, where all labels of the same track have
         # the same label, and each column represent track's features
-        tracking_data = (
-            isinstance(self.analysed_layer, Labels)
-            and len(self.analysed_layer.data.shape) == 4
-            and "frame" not in features.keys()
-        )
-        tracking_data = len(self.analysed_layer.data.shape) == 4 and "frame" not in [
-            key.lower() for key in features.keys()
-        ]
+        tracking_data = _is_pseudo_tracking(self.analysed_layer)
         colors = get_nice_colormap()
 
         frame_id = None

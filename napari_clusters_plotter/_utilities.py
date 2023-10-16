@@ -5,6 +5,33 @@ import pandas as pd
 from qtpy.QtWidgets import QListWidgetItem
 
 
+def _is_pseudo_tracking(layer):
+    """
+    If selected image is 4 dimensional, but does not contain frame column in its features
+    it will be considered to be tracking data, where all labels of the same track have
+    the same label, and each column represent track's features
+
+    Parameters
+    ----------
+    layer : napari.layers
+        A napari layer object.
+
+    Returns
+    -------
+    bool
+        True if layer is pseudo tracking data, False otherwise.
+
+    """
+    from napari.layers import Labels
+    
+    if isinstance(layer, Labels):
+        if len(layer.data.shape) == 4:
+            if "frame" not in layer.features.keys():
+                return True
+            
+    return False
+
+
 def buttons_active(*buttons, active):
     """
     Set the state (enabled or disabled) of a list of buttons.
