@@ -545,7 +545,7 @@ class PlotterWidget(QMainWindow):
         from napari.layers import Labels, Surface
         from vispy.color import Color
 
-        from ._utilities import get_nice_colormap, _is_pseudo_tracking
+        from ._utilities import _is_pseudo_tracking, get_nice_colormap
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
