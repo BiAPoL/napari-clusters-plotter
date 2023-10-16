@@ -9,10 +9,8 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
-
-_POINTER = "frame"
 from ._defaults import DEFAULTS_DIM_REDUCTION as DEFAULTS
-from ._defaults import EXCLUDE
+from ._defaults import EXCLUDE, _POINTER
 from ._Qt_code import (
     button,
     checkbox,

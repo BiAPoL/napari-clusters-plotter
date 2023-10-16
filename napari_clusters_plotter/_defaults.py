@@ -31,5 +31,7 @@ DEFAULTS_DIM_REDUCTION = {
     "custom_name": "",
 }
 
-EXCLUDE = [ID_NAME, _POINTER, "UMAP", "t-SNE", "PCA"]
 ID_NAME = "_CLUSTER_ID"
+_POINTER = "frame"
+EXCLUDE = [ID_NAME, _POINTER, "UMAP", "t-SNE", "PCA"]
+
