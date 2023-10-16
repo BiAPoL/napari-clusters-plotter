@@ -36,31 +36,11 @@ from ._utilities import (
     widgets_valid,
 )
 
+from ._defaults import DEFAULTS_DIM_REDUCTION as DEFAULTS
+from ._defaults import EXCLUDE
+
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
-
-
-DEFAULTS = {
-    "n_neighbors": 15,
-    "perplexity": 30,
-    "standardization": True,
-    "pca_components": 0,
-    "explained_variance": 95.0,
-    "n_components": 2,
-    # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the Jupyter notebook,
-    # therefore by default the following value is False.
-    # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
-    "umap_separate_thread": False,
-    "min_distance_umap": 0.1,
-    "mds_n_init": 4,
-    "mds_metric": True,
-    "mds_max_iter": 300,
-    "mds_eps": 0.001,
-    "custom_name": "",
-}
-
-EXCLUDE = [ID_NAME, _POINTER, "UMAP", "t-SNE", "PCA"]
-
 
 @register_dock_widget(
     menu="Measurement post-processing > Dimensionality reduction (ncp)"
