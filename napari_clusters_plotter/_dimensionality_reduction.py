@@ -487,7 +487,8 @@ class DimensionalityReductionWidget(QWidget):
                     np.isinf(properties_to_reduce).any()
                 ].to_list()
                 warnings.warn(
-                    f"These features contain inf values: {properties_with_inf}. They will be excluded from the analysis."
+                    f"These features contain inf values: {properties_with_inf}. " +
+                    "They will be excluded from the analysis."
                 )
                 properties_to_reduce = properties_to_reduce.drop(
                     properties_with_inf, axis=1
