@@ -9,6 +9,8 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
+from ._defaults import DEFAULTS_CLUSTERING as DEFAULTS
+from ._defaults import ID_NAME
 from ._Qt_code import (
     button,
     checkbox,
@@ -29,9 +31,6 @@ from ._utilities import (
     update_properties_list,
     widgets_active,
 )
-
-from ._defaults import DEFAULTS_CLUSTERING as DEFAULTS
-from ._defaults import ID_NAME
 
 
 @register_dock_widget(menu="Measurement post-processing > Clustering (ncp)")

@@ -9,9 +9,10 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
-from ._clustering import ID_NAME
 
 _POINTER = "frame"
+from ._defaults import DEFAULTS_DIM_REDUCTION as DEFAULTS
+from ._defaults import EXCLUDE
 from ._Qt_code import (
     button,
     checkbox,
@@ -36,11 +37,9 @@ from ._utilities import (
     widgets_valid,
 )
 
-from ._defaults import DEFAULTS_DIM_REDUCTION as DEFAULTS
-from ._defaults import EXCLUDE
-
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
+
 
 @register_dock_widget(
     menu="Measurement post-processing > Dimensionality reduction (ncp)"
