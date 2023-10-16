@@ -23,12 +23,12 @@ def _is_pseudo_tracking(layer):
 
     """
     from napari.layers import Labels
-    
+
     if isinstance(layer, Labels):
         if len(layer.data.shape) == 4:
             if "frame" not in layer.features.keys():
                 return True
-            
+
     return False
 
 
