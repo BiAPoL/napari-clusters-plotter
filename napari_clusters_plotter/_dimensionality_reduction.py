@@ -9,9 +9,8 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
-from ._clustering import ID_NAME
-
-_POINTER = "frame"
+from ._defaults import DEFAULTS_DIM_REDUCTION as DEFAULTS
+from ._defaults import EXCLUDE
 from ._Qt_code import (
     button,
     checkbox,
@@ -38,28 +37,6 @@ from ._utilities import (
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
-
-
-DEFAULTS = {
-    "n_neighbors": 15,
-    "perplexity": 30,
-    "standardization": True,
-    "pca_components": 0,
-    "explained_variance": 95.0,
-    "n_components": 2,
-    # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the Jupyter notebook,
-    # therefore by default the following value is False.
-    # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
-    "umap_separate_thread": False,
-    "min_distance_umap": 0.1,
-    "mds_n_init": 4,
-    "mds_metric": True,
-    "mds_max_iter": 300,
-    "mds_eps": 0.001,
-    "custom_name": "",
-}
-
-EXCLUDE = [ID_NAME, _POINTER, "UMAP", "t-SNE", "PCA"]
 
 
 @register_dock_widget(
@@ -510,7 +487,8 @@ class DimensionalityReductionWidget(QWidget):
                     np.isinf(properties_to_reduce).any()
                 ].to_list()
                 warnings.warn(
-                    f"These features contain inf values: {properties_with_inf}. They will be excluded from the analysis."
+                    f"These features contain inf values: {properties_with_inf}. " +
+                    "They will be excluded from the analysis."
                 )
                 properties_to_reduce = properties_to_reduce.drop(
                     properties_with_inf, axis=1

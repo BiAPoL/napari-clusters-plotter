@@ -9,6 +9,8 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
+from ._defaults import DEFAULTS_CLUSTERING as DEFAULTS
+from ._defaults import ID_NAME
 from ._Qt_code import (
     button,
     checkbox,
@@ -29,21 +31,6 @@ from ._utilities import (
     update_properties_list,
     widgets_active,
 )
-
-DEFAULTS = {
-    "kmeans_nr_clusters": 2,
-    "kmeans_nr_iterations": 300,
-    "standardization": False,
-    "hdbscan_min_clusters_size": 5,
-    "hdbscan_min_nr_samples": 5,
-    "gmm_nr_clusters": 2,
-    "ms_quantile": 0.2,
-    "ms_n_samples": 50,
-    "ac_n_clusters": 2,
-    "ac_n_neighbors": 2,
-    "custom_name": "",
-}
-ID_NAME = "_CLUSTER_ID"
 
 
 @register_dock_widget(menu="Measurement post-processing > Clustering (ncp)")
