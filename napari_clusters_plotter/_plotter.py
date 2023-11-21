@@ -42,14 +42,12 @@ from ._Qt_code import (
     title,
 )
 from ._utilities import (
+    _POINTER,
     add_column_to_layer_tabular_data,
     generate_cluster_image,
     generate_cluster_surface,
     get_layer_tabular_data,
-    _POINTER
 )
-
-
 
 POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
 
@@ -857,7 +855,7 @@ class PlotterWidget(QMainWindow):
                     "scale": self.layer_select.value.scale,
                 },
             )
-            
+
         elif (
             isinstance(self.analysed_layer, Labels)
             and len(self.analysed_layer.data.shape) == 4

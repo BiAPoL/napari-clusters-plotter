@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QListWidgetItem
 
 _POINTER = "frame"
 
+
 def _is_pseudo_tracking(layer):
     """
     If selected image is 4 dimensional, but does not contain frame column in its features
@@ -259,7 +260,6 @@ def generate_cluster_tracks(analysed_layer, plot_cluster_name):
 
 
 def generate_cluster_4d_labels(analysed_layer, plot_cluster_name):
-
     features = analysed_layer.features
     max_timepoint = features[_POINTER].max() + 1
     label_id_list_per_timepoint = [
