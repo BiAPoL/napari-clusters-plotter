@@ -592,6 +592,8 @@ class PlotterWidget(QMainWindow):
                 warnings.warn("Image dimensions too high for processing!")
         elif isinstance(self.analysed_layer, Surface):
             pass
+        elif isinstance(self.analysed_layer, Points):
+            pass
         else:
             warnings.warn(f"Layer {type(self.analysed_layer)} not supported")
 
