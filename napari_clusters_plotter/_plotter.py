@@ -594,7 +594,6 @@ class PlotterWidget(QMainWindow):
         elif isinstance(self.analysed_layer, Points):
             frame_id = features[_POINTER].tolist()
             current_frame = self.frame
-            pass
         else:
             warnings.warn(f"Layer {type(self.analysed_layer)} not supported")
 
