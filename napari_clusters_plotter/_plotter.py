@@ -592,11 +592,14 @@ class PlotterWidget(QMainWindow):
         elif isinstance(self.analysed_layer, Surface):
             pass
         elif isinstance(self.analysed_layer, Points):
-            frame_id = features[_POINTER].tolist()
-            current_frame = self.frame
             pass
         else:
             warnings.warn(f"Layer {type(self.analysed_layer)} not supported")
+
+        # check if 'frame' is in columns and enable frame highlighting if it is
+        if 'frame' in self.analysed_layer.features.columns:
+            frame_id = features[_POINTER].tolist()
+            current_frame = self.frame
 
         if (
             plot_cluster_name is not None
