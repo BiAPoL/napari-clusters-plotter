@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from qtpy.QtWidgets import QListWidgetItem
 
+_POINTER = "frame"
 
 def _is_pseudo_tracking(layer):
     """
@@ -258,7 +259,6 @@ def generate_cluster_tracks(analysed_layer, plot_cluster_name):
 
 
 def generate_cluster_4d_labels(analysed_layer, plot_cluster_name):
-    from . import _POINTER
 
     features = analysed_layer.features
     max_timepoint = features[_POINTER].max() + 1

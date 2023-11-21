@@ -46,9 +46,10 @@ from ._utilities import (
     generate_cluster_image,
     generate_cluster_surface,
     get_layer_tabular_data,
+    _POINTER
 )
 
-_POINTER = "frame"
+
 
 POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
 
@@ -845,8 +846,18 @@ class PlotterWidget(QMainWindow):
             and not is_tracking_data
         ):
             cluster_data = generate_cluster_4d_labels(
-                self.analysed_layer.data, plot_cluster_name
+                self.analysed_layer, plot_cluster_name
             )
+
+            cluster_layer = Layer.create(
+                cluster_data,
+                {
+                    "color": cmap_dict,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+            )
+            
         elif (
             isinstance(self.analysed_layer, Labels)
             and len(self.analysed_layer.data.shape) == 4
