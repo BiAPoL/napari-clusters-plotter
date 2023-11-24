@@ -814,6 +814,7 @@ class PlotterWidget(QMainWindow):
                 layer_in_viewer.face_color = self.visualized_layer.face_color
             elif isinstance(self.visualized_layer, Surface):
                 layer_in_viewer.colormap = self.visualized_layer.colormap
+                layer_in_viewer.contrast_limits = self.visualized_layer.contrast_limits
             elif isinstance(self.visualized_layer, Labels):
                 layer_in_viewer.color = self.visualized_layer.color
             else:
