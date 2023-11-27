@@ -4,6 +4,35 @@ import numpy as np
 import pandas as pd
 from qtpy.QtWidgets import QListWidgetItem
 
+_POINTER = "frame"
+
+
+def _is_pseudo_tracking(layer):
+    """
+    If selected image is 4 dimensional, but does not contain frame column in its features
+    it will be considered to be tracking data, where all labels of the same track have
+    the same label, and each column represent track's features
+
+    Parameters
+    ----------
+    layer : napari.layers
+        A napari layer object.
+
+    Returns
+    -------
+    bool
+        True if layer is pseudo tracking data, False otherwise.
+
+    """
+    from napari.layers import Labels
+
+    if isinstance(layer, Labels):
+        if len(layer.data.shape) == 4:
+            if "frame" not in layer.features.keys():
+                return True
+
+    return False
+
 
 def buttons_active(*buttons, active):
     """
@@ -184,7 +213,7 @@ def update_properties_list(widget, exclude_list):
     exclude_list : list of str
         A list of property names to exclude from the properties list.
     """
-    selected_layer = widget.labels_select.value
+    selected_layer = widget.layer_select.value
 
     if selected_layer is not None:
         features = get_layer_tabular_data(selected_layer)
@@ -210,6 +239,47 @@ def update_properties_list(widget, exclude_list):
                     item.setSelected(True)
 
 
+def generate_cluster_tracks(analysed_layer, plot_cluster_name):
+    features = analysed_layer.features
+    label_id_list_per_timepoint = [
+        features[plot_cluster_name].tolist()
+        for i in range(analysed_layer.data.shape[0])
+    ]
+    prediction_lists_per_timepoint = [
+        features[plot_cluster_name].tolist()
+        for i in range(analysed_layer.data.shape[0])
+    ]
+
+    cluster_data = dask_cluster_image_timelapse(
+        analysed_layer.data,
+        label_id_list_per_timepoint,
+        prediction_lists_per_timepoint,
+    )
+
+    return cluster_data
+
+
+def generate_cluster_4d_labels(analysed_layer, plot_cluster_name):
+    features = analysed_layer.features
+    max_timepoint = features[_POINTER].max() + 1
+    label_id_list_per_timepoint = [
+        features.loc[features[_POINTER] == i]["label"].tolist()
+        for i in range(int(max_timepoint))
+    ]
+    prediction_lists_per_timepoint = [
+        features.loc[features[_POINTER] == i][plot_cluster_name].tolist()
+        for i in range(int(max_timepoint))
+    ]
+
+    cluster_data = dask_cluster_image_timelapse(
+        analysed_layer.data,
+        label_id_list_per_timepoint,
+        prediction_lists_per_timepoint,
+    )
+
+    return cluster_data
+
+
 def generate_cluster_image(label_image, label_list, predictionlist):
     """
     Generates a clusters image from a label image and a list of cluster predictions,
@@ -220,7 +290,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     ----------
     label_image: ndarray or dask array
         Label image used for cluster predictions
-    predictionlist: array
+    predictionlist: Array-like
         An array containing cluster identities for each label
 
     Returns
@@ -238,6 +308,20 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     return map_array(np.asarray(label_image), label_list, predictionlist_new).astype(
         "uint32"
     )
+
+
+def generate_cluster_surface(surface_data, prediction_list):
+    prediction_list = np.asarray(prediction_list)
+
+    # reforming the prediction list, this is done to account
+    # for cluster labels that start at 0, conveniently hdbscan
+    # labelling starts at -1 for noise, removing these from the labels
+    prediction_list_new = np.array(prediction_list) + 1
+
+    # generate new surface data
+    clustered_surface = (surface_data[0], surface_data[1], prediction_list_new)
+
+    return clustered_surface
 
 
 def dask_cluster_image_timelapse(label_image, label_id_list, prediction_list_list):
@@ -555,3 +639,28 @@ def get_nice_colormap():
     ]
 
     return colours_w_old_colors
+
+
+def get_surface_color_map(max_cluster_ids):
+    """
+    Create a napari colormap for the surface clusters.
+
+    Parameters
+    ----------
+    max_cluster_ids : int
+        the maximum cluster id.
+    """
+    from matplotlib.colors import to_rgba_array
+    from napari.utils import Colormap
+
+    # a color for non-annotated vertices
+    non_annotated_color = "#888888"
+    # get the nice colormap with as many colors as there are cluster ids
+    nice_colormap = get_nice_colormap()[: int(max_cluster_ids + 1)]
+    # add the non-annotated colors for the clusters
+    nice_colormap.insert(0, non_annotated_color)
+    # convert the colormap to a rgba colormap
+    colormap = to_rgba_array(nice_colormap)
+    # convert the rgba colormap to a napari colormap
+    napari_colormap = Colormap(colormap)
+    return napari_colormap

@@ -9,8 +9,8 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
-from ._clustering import ID_NAME
-from ._plotter import POINTER
+from ._defaults import DEFAULTS_DIM_REDUCTION as DEFAULTS
+from ._defaults import EXCLUDE
 from ._Qt_code import (
     button,
     checkbox,
@@ -18,7 +18,7 @@ from ._Qt_code import (
     create_options_dropdown,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
-    labels_container_and_selection,
+    layer_container_and_selection,
     measurements_container_and_list,
     title,
 )
@@ -37,28 +37,6 @@ from ._utilities import (
 
 # Remove when the problem is fixed from sklearn side
 warnings.filterwarnings(action="ignore", category=FutureWarning, module="sklearn")
-
-
-DEFAULTS = {
-    "n_neighbors": 15,
-    "perplexity": 30,
-    "standardization": True,
-    "pca_components": 0,
-    "explained_variance": 95.0,
-    "n_components": 2,
-    # enabling multithreading for UMAP can result in crashing kernel if napari is opened from the Jupyter notebook,
-    # therefore by default the following value is False.
-    # See more: https://github.com/BiAPoL/napari-clusters-plotter/issues/169
-    "umap_separate_thread": False,
-    "min_distance_umap": 0.1,
-    "mds_n_init": 4,
-    "mds_metric": True,
-    "mds_max_iter": 300,
-    "mds_eps": 0.001,
-    "custom_name": "",
-}
-
-EXCLUDE = [ID_NAME, POINTER, "UMAP", "t-SNE", "PCA"]
 
 
 @register_dock_widget(
@@ -83,11 +61,11 @@ class DimensionalityReductionWidget(QWidget):
         self.setLayout(QVBoxLayout())
         label_container = title("<b>Dimensionality reduction</b>")
 
-        # widget for the selection of labels layer
+        # widget for the selection of layer
         (
-            labels_layer_selection_container,
-            self.labels_select,
-        ) = labels_container_and_selection()
+            layer_selection_container,
+            self.layer_select,
+        ) = layer_container_and_selection()
 
         # select properties of which to produce a dimensionality reduced version
         (
@@ -293,7 +271,7 @@ class DimensionalityReductionWidget(QWidget):
         defaults_container, self.defaults_button = button("Restore Defaults")
 
         def run_clicked():
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("No labels image was selected!")
                 return
 
@@ -307,7 +285,7 @@ class DimensionalityReductionWidget(QWidget):
 
             self.run(
                 self.viewer,
-                self.labels_select.value,
+                self.layer_select.value,
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.n_neighbors.value,
                 self.perplexity.value,
@@ -333,18 +311,18 @@ class DimensionalityReductionWidget(QWidget):
         self.defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(
+        self.layer_select.changed.connect(
             partial(update_properties_list, self, EXCLUDE)
         )
 
         self.last_connected = None
-        self.labels_select.changed.connect(self.activate_property_autoupdate)
-        self.labels_select.changed.connect(self._check_perplexity)
+        self.layer_select.changed.connect(self.activate_property_autoupdate)
+        self.layer_select.changed.connect(self._check_perplexity)
         self.perplexity.changed.connect(self._check_perplexity)
 
         # adding all widgets to the layout
         self.layout().addWidget(label_container)
-        self.layout().addWidget(labels_layer_selection_container)
+        self.layout().addWidget(layer_selection_container)
         self.layout().addWidget(algorithm_container)
         self.layout().addWidget(self.perplexity_container)
         self.layout().addWidget(self.n_neighbors_container)
@@ -381,7 +359,7 @@ class DimensionalityReductionWidget(QWidget):
         self.reset_choices()
 
     def reset_choices(self, event=None):
-        self.labels_select.reset_choices(event)
+        self.layer_select.reset_choices(event)
 
     def _check_perplexity(self):
         """
@@ -455,15 +433,15 @@ class DimensionalityReductionWidget(QWidget):
             self.last_connected.events.properties.disconnect(
                 partial(update_properties_list, self, EXCLUDE)
             )
-        self.labels_select.value.events.properties.connect(
+        self.layer_select.value.events.properties.connect(
             partial(update_properties_list, self, EXCLUDE)
         )
-        self.last_connected = self.labels_select.value
+        self.last_connected = self.layer_select.value
 
     def run(
         self,
         viewer,
-        labels_layer,
+        layer,
         selected_measurements_list,
         n_neighbours,
         perplexity,
@@ -483,7 +461,7 @@ class DimensionalityReductionWidget(QWidget):
         """
         The function triggered by clicking the run button.
         """
-        print("Selected labels layer: " + str(labels_layer))
+        print("Selected labels layer: " + str(layer))
         print("Selected measurements: " + str(selected_measurements_list))
 
         def activate_buttons(error=None, active=True):
@@ -499,7 +477,7 @@ class DimensionalityReductionWidget(QWidget):
 
         # try statement is added to catch any exceptions/errors and enable all the buttons again if that is the case
         try:
-            features = get_layer_tabular_data(labels_layer)
+            features = get_layer_tabular_data(layer)
 
             # only select the columns the user requested
             properties_to_reduce = features[selected_measurements_list]
@@ -509,7 +487,8 @@ class DimensionalityReductionWidget(QWidget):
                     np.isinf(properties_to_reduce).any()
                 ].to_list()
                 warnings.warn(
-                    f"These features contain inf values: {properties_with_inf}. They will be excluded from the analysis."
+                    f"These features contain inf values: {properties_with_inf}. "
+                    + "They will be excluded from the analysis."
                 )
                 properties_to_reduce = properties_to_reduce.drop(
                     properties_with_inf, axis=1
@@ -541,7 +520,7 @@ class DimensionalityReductionWidget(QWidget):
                 if result[0] == "PCA":
                     # check if principal components are already present
                     # and remove them by overwriting the features
-                    tabular_data = get_layer_tabular_data(labels_layer)
+                    tabular_data = get_layer_tabular_data(layer)
                     dropkeys = [
                         column
                         for column in tabular_data.keys()
@@ -550,7 +529,7 @@ class DimensionalityReductionWidget(QWidget):
                     df_principal_components_removed = tabular_data.drop(
                         dropkeys, axis=1
                     )
-                    set_features(labels_layer, df_principal_components_removed)
+                    set_features(layer, df_principal_components_removed)
 
                     result_column_name = (
                         "PC_" if custom_name == DEFAULTS["custom_name"] else custom_name
@@ -559,7 +538,7 @@ class DimensionalityReductionWidget(QWidget):
                     # write result back to properties/features of the layer
                     for i in range(0, len(result[1].T)):
                         add_column_to_layer_tabular_data(
-                            labels_layer,
+                            layer,
                             str(result_column_name) + str(i),
                             result[1][:, i],
                         )
@@ -574,12 +553,12 @@ class DimensionalityReductionWidget(QWidget):
                     if custom_name == DEFAULTS["custom_name"]:
                         for i in range(0, n_components):
                             add_column_to_layer_tabular_data(
-                                labels_layer, result[0] + "_" + str(i), result[1][:, i]
+                                layer, result[0] + "_" + str(i), result[1][:, i]
                             )
                     else:
                         for i in range(0, n_components):
                             add_column_to_layer_tabular_data(
-                                labels_layer,
+                                layer,
                                 custom_name + "_" + str(i),
                                 result[1][:, i],
                             )
@@ -589,7 +568,7 @@ class DimensionalityReductionWidget(QWidget):
                     return
 
                 # add a table to napari viewer
-                show_table(viewer, labels_layer)
+                show_table(viewer, layer)
                 print("Dimensionality reduction finished")
 
             # depending on the selected dim red algorithm start either a secondary thread or run in the same as napari

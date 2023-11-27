@@ -9,13 +9,15 @@ from napari.qt.threading import create_worker
 from napari_tools_menu import register_dock_widget
 from qtpy.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QVBoxLayout, QWidget
 
+from ._defaults import DEFAULTS_CLUSTERING as DEFAULTS
+from ._defaults import ID_NAME
 from ._Qt_code import (
     button,
     checkbox,
     create_options_dropdown,
     float_sbox_containter_and_selection,
     int_sbox_containter_and_selection,
-    labels_container_and_selection,
+    layer_container_and_selection,
     measurements_container_and_list,
     title,
 )
@@ -29,21 +31,6 @@ from ._utilities import (
     update_properties_list,
     widgets_active,
 )
-
-DEFAULTS = {
-    "kmeans_nr_clusters": 2,
-    "kmeans_nr_iterations": 300,
-    "standardization": False,
-    "hdbscan_min_clusters_size": 5,
-    "hdbscan_min_nr_samples": 5,
-    "gmm_nr_clusters": 2,
-    "ms_quantile": 0.2,
-    "ms_n_samples": 50,
-    "ac_n_clusters": 2,
-    "ac_n_neighbors": 2,
-    "custom_name": "",
-}
-ID_NAME = "_CLUSTER_ID"
 
 
 @register_dock_widget(menu="Measurement post-processing > Clustering (ncp)")
@@ -64,11 +51,11 @@ class ClusteringWidget(QWidget):
 
         title_container = title("<b>Clustering</b>")
 
-        # widget for the selection of labels layer
+        # widget for the selection of layer
         (
-            labels_layer_selection_container,
-            self.labels_select,
-        ) = labels_container_and_selection()
+            layer_selection_container,
+            self.layer_select,
+        ) = layer_container_and_selection()
 
         # widget for the selection of properties to perform clustering
         (
@@ -215,7 +202,7 @@ class ClusteringWidget(QWidget):
 
         # adding all widgets to the layout
         self.layout().addWidget(title_container)
-        self.layout().addWidget(labels_layer_selection_container)
+        self.layout().addWidget(layer_selection_container)
         self.layout().addWidget(choose_properties_container)
         self.layout().addWidget(update_container)
         self.layout().addWidget(self.clust_method_container)
@@ -235,7 +222,7 @@ class ClusteringWidget(QWidget):
         self.layout().setSpacing(0)
 
         def run_clicked():
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("No labels image was selected!")
                 return
 
@@ -248,7 +235,7 @@ class ClusteringWidget(QWidget):
                 return
 
             self.run(
-                self.labels_select.value,
+                self.layer_select.value,
                 [i.text() for i in self.properties_list.selectedItems()],
                 self.clust_method_choice_list.current_choice,
                 self.kmeans_nr_clusters.value,
@@ -271,14 +258,14 @@ class ClusteringWidget(QWidget):
         self.defaults_button.clicked.connect(partial(restore_defaults, self, DEFAULTS))
 
         # update measurements list when a new labels layer is selected
-        self.labels_select.changed.connect(
+        self.layer_select.changed.connect(
             partial(update_properties_list, self, [ID_NAME])
         )
 
         # update axes combo boxes automatically if features of
         # layer are changed
         self.last_connected = None
-        self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.layer_select.changed.connect(self.activate_property_autoupdate)
 
         # go through all widgets and change spacing
         for i in range(self.layout().count()):
@@ -343,17 +330,17 @@ class ClusteringWidget(QWidget):
             self.last_connected.events.properties.disconnect(
                 partial(update_properties_list, self, [ID_NAME])
             )
-        self.labels_select.value.events.properties.connect(
+        self.layer_select.value.events.properties.connect(
             partial(update_properties_list, self, [ID_NAME])
         )
-        self.last_connected = self.labels_select.value
+        self.last_connected = self.layer_select.value
 
     def showEvent(self, event) -> None:
         super().showEvent(event)
         self.reset_choices()
 
     def reset_choices(self, event=None):
-        self.labels_select.reset_choices(event)
+        self.layer_select.reset_choices(event)
 
     # this function runs after the run button is clicked
     def run(
