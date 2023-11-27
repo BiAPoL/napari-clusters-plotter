@@ -5,6 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
+from napari.layers import Labels, Layer, Points, Surface
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -37,18 +38,16 @@ from ._Qt_code import (
     button,
     collapsible_box,
     create_options_dropdown,
-    labels_container_and_selection,
+    layer_container_and_selection,
     title,
 )
 from ._utilities import (
+    _POINTER,
     add_column_to_layer_tabular_data,
-    dask_cluster_image_timelapse,
     generate_cluster_image,
+    generate_cluster_surface,
     get_layer_tabular_data,
-    get_nice_colormap,
 )
-
-POINTER = "frame"
 
 POSSIBLE_CLUSTER_IDS = ["KMEANS", "HDBSCAN", "MS", "GMM", "AC"]  # not including manual
 
@@ -64,7 +63,13 @@ class PlotterWidget(QMainWindow):
     def __init__(self, napari_viewer):
         super().__init__()
 
+        self.layer_coloring_functions = {
+            Labels: generate_cluster_image,
+            Surface: generate_cluster_surface,
+        }
+
         self.cluster_ids = None
+        self.visualized_layer = None
         self.viewer = napari_viewer
 
         # create a scroll area
@@ -84,7 +89,7 @@ class PlotterWidget(QMainWindow):
         self.figure = Figure()
 
         self.analysed_layer = None
-        self.visualized_labels_layer = None
+        self.visualized_layer = None
 
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
@@ -118,7 +123,8 @@ class PlotterWidget(QMainWindow):
                 self.plot_y_axis_name,
                 plot_cluster_name=clustering_ID,
             )
-            self.labels_select.value.opacity = 0
+            if isinstance(self.analysed_layer, Labels):
+                self.layer_select.value.opacity = 0
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -154,11 +160,11 @@ class PlotterWidget(QMainWindow):
 
         label_container = title("<b>Plotting</b>")
 
-        # widget for the selection of labels layer
+        # widget for the selection of layer
         (
-            labels_layer_selection_container,
-            self.labels_select,
-        ) = labels_container_and_selection()
+            layer_selection_container,
+            self.layer_select,
+        ) = layer_container_and_selection()
 
         # widget for the selection of axes
         axes_container = QWidget()
@@ -316,7 +322,7 @@ class PlotterWidget(QMainWindow):
 
         # adding all widgets to the layout
         self.layout.addWidget(label_container, alignment=Qt.AlignTop)
-        self.layout.addWidget(labels_layer_selection_container, alignment=Qt.AlignTop)
+        self.layout.addWidget(layer_selection_container, alignment=Qt.AlignTop)
         self.layout.addWidget(axes_container, alignment=Qt.AlignTop)
         self.layout.addWidget(cluster_container, alignment=Qt.AlignTop)
 
@@ -340,10 +346,10 @@ class PlotterWidget(QMainWindow):
         axes_container.layout().setSpacing(6)
 
         def run_clicked():
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
-            if get_layer_tabular_data(self.labels_select.value) is None:
+            if get_layer_tabular_data(self.layer_select.value) is None:
                 warnings.warn(
                     "No labels image with features/properties was selected! Consider doing measurements first."
                 )
@@ -360,7 +366,7 @@ class PlotterWidget(QMainWindow):
                 return
 
             self.run(
-                get_layer_tabular_data(self.labels_select.value),
+                get_layer_tabular_data(self.layer_select.value),
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_id.currentText(),
@@ -372,8 +378,43 @@ class PlotterWidget(QMainWindow):
         # Assume time is the first axis
         self.frame = self.viewer.dims.current_step[0]
 
+        def frame_changed(event):
+            if self.viewer.dims.ndim <= 3:
+                return
+            frame = event.value[0]
+            if (not self.old_frame) or (self.old_frame != frame):
+                if self.layer_select.value is None:
+                    warnings.warn("Please select labels layer!")
+                    return
+                if get_layer_tabular_data(self.layer_select.value) is None:
+                    warnings.warn(
+                        "No labels image with features/properties was selected! Consider doing measurements first."
+                    )
+                    return
+                if (
+                    self.plot_x_axis.currentText() == ""
+                    or self.plot_y_axis.currentText() == ""
+                ):
+                    warnings.warn(
+                        "No axis(-es) was/were selected! If you cannot see anything in axes selection boxes, "
+                        "but you have performed measurements/dimensionality reduction before, try clicking "
+                        "Update Axes Selection Boxes"
+                    )
+                    return
+
+                self.frame = frame
+
+                self.run(
+                    get_layer_tabular_data(self.layer_select.value),
+                    self.plot_x_axis.currentText(),
+                    self.plot_y_axis.currentText(),
+                    self.plot_cluster_name,
+                    redraw_cluster_image=False,
+                )
+            self.old_frame = frame
+
         # update axes combo boxes once a new label layer is selected
-        self.labels_select.changed.connect(self.update_axes_and_clustering_id_lists)
+        self.layer_select.changed.connect(self.update_axes_and_clustering_id_lists)
         # depending on the select clustering ID, enable/disable the checkbox for hiding clusters
         self.plot_cluster_id.currentIndexChanged.connect(
             self.change_state_of_nonselected_checkbox
@@ -382,7 +423,7 @@ class PlotterWidget(QMainWindow):
         # update axes combo boxes automatically if features of
         # layer are changed
         self.last_connected = None
-        self.labels_select.changed.connect(self.activate_property_autoupdate)
+        self.layer_select.changed.connect(self.activate_property_autoupdate)
 
         # update axes combo boxes once update button is clicked
         update_button.clicked.connect(self.update_axes_and_clustering_id_lists)
@@ -399,10 +440,10 @@ class PlotterWidget(QMainWindow):
             return
         frame = event.value[0]
         if (not self.old_frame) or (self.old_frame != frame):
-            if self.labels_select.value is None:
+            if self.layer_select.value is None:
                 warnings.warn("Please select labels layer!")
                 return
-            if get_layer_tabular_data(self.labels_select.value) is None:
+            if get_layer_tabular_data(self.layer_select.value) is None:
                 warnings.warn(
                     "No labels image with features/properties was selected! Consider doing measurements first."
                 )
@@ -421,7 +462,7 @@ class PlotterWidget(QMainWindow):
             self.frame = frame
 
             self.run(
-                get_layer_tabular_data(self.labels_select.value),
+                get_layer_tabular_data(self.layer_select.value),
                 self.plot_x_axis.currentText(),
                 self.plot_y_axis.currentText(),
                 self.plot_cluster_name,
@@ -434,7 +475,7 @@ class PlotterWidget(QMainWindow):
         self.reset_choices()
 
     def reset_choices(self, event=None):
-        self.labels_select.reset_choices(event)
+        self.layer_select.reset_choices(event)
 
     def change_state_of_nonselected_checkbox(self):
         # make the checkbox visible only if clustering is done manually
@@ -456,13 +497,13 @@ class PlotterWidget(QMainWindow):
             self.last_connected.events.properties.disconnect(
                 self.update_axes_and_clustering_id_lists
             )
-        self.labels_select.value.events.properties.connect(
+        self.layer_select.value.events.properties.connect(
             self.update_axes_and_clustering_id_lists
         )
-        self.last_connected = self.labels_select.value
+        self.last_connected = self.layer_select.value
 
     def update_axes_and_clustering_id_lists(self):
-        selected_layer = self.labels_select.value
+        selected_layer = self.layer_select.value
 
         former_x_axis = self.plot_x_axis.currentIndex()
         former_y_axis = self.plot_y_axis.currentIndex()
@@ -500,6 +541,10 @@ class PlotterWidget(QMainWindow):
         """
         This function that runs after the run button is clicked.
         """
+        from napari.layers import Labels, Surface
+        from vispy.color import Color
+
+        from ._utilities import _is_pseudo_tracking, get_nice_colormap
 
         if not self.isVisible() and force_redraw is False:
             # don't redraw in case the plot is invisible anyway
@@ -520,7 +565,7 @@ class PlotterWidget(QMainWindow):
         self.plot_x_axis_name = plot_x_axis_name
         self.plot_y_axis_name = plot_y_axis_name
         self.plot_cluster_name = plot_cluster_name
-        self.analysed_layer = self.labels_select.value
+        self.analysed_layer = self.layer_select.value
 
         self.graphics_widget.reset()
 
@@ -531,10 +576,31 @@ class PlotterWidget(QMainWindow):
         # if selected image is 4 dimensional, but does not contain frame column in its features
         # it will be considered to be tracking data, where all labels of the same track have
         # the same label, and each column represent track's features
-        tracking_data = len(self.analysed_layer.data.shape) == 4 and "frame" not in [
-            key.lower() for key in features.keys()
-        ]
+        tracking_data = _is_pseudo_tracking(self.analysed_layer)
         colors = get_nice_colormap()
+
+        frame_id = None
+        current_frame = None
+        if isinstance(self.analysed_layer, Labels):
+            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
+                frame_id = features[_POINTER].tolist()
+                current_frame = self.frame
+            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
+                pass
+            else:
+                warnings.warn("Image dimensions too high for processing!")
+        elif isinstance(self.analysed_layer, Surface):
+            pass
+        elif isinstance(self.analysed_layer, Points):
+            pass
+        else:
+            warnings.warn(f"Layer {type(self.analysed_layer)} not supported")
+
+        # check if 'frame' is in columns and enable frame highlighting if it is
+        if "frame" in self.analysed_layer.features.columns:
+            frame_id = features[_POINTER].tolist()
+            current_frame = self.frame
+
         if (
             plot_cluster_name is not None
             and plot_cluster_name != "label"
@@ -547,17 +613,9 @@ class PlotterWidget(QMainWindow):
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
-            self.label_ids = features["label"]
+            if "label" in features.keys():
+                self.label_ids = features["label"]
             self.cluster_ids = features[plot_cluster_name].fillna(-1)
-
-            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
-                frame_id = features[POINTER].tolist()
-                current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
-                frame_id = None
-                current_frame = None
-            else:
-                warnings.warn("Image dimensions too high for processing!")
 
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = clustered_plot_parameters(
@@ -644,8 +702,6 @@ class PlotterWidget(QMainWindow):
 
             self.graphics_widget.match_napari_layout()
 
-            from vispy.color import Color
-
             cmap = [Color(hex_name).RGBA.astype("float") / 255 for hex_name in colors]
 
             # generate dictionary mapping each prediction to its respective color
@@ -665,77 +721,17 @@ class PlotterWidget(QMainWindow):
 
             # Generating the cluster image
             if redraw_cluster_image:
-                # depending on the dimensionality of the data
-                # generate the cluster image
-                if len(self.analysed_layer.data.shape) == 4:
-                    if not tracking_data:
-                        max_timepoint = features[POINTER].max() + 1
-                        label_id_list_per_timepoint = [
-                            features.loc[features[POINTER] == i]["label"].tolist()
-                            for i in range(int(max_timepoint))
-                        ]
-                        prediction_lists_per_timepoint = [
-                            features.loc[features[POINTER] == i][
-                                plot_cluster_name
-                            ].tolist()
-                            for i in range(int(max_timepoint))
-                        ]
-                    else:
-                        label_id_list_per_timepoint = [
-                            features[plot_cluster_name].tolist()
-                            for i in range(self.analysed_layer.data.shape[0])
-                        ]
-                        prediction_lists_per_timepoint = [
-                            features[plot_cluster_name].tolist()
-                            for i in range(self.analysed_layer.data.shape[0])
-                        ]
-
-                    cluster_image = dask_cluster_image_timelapse(
-                        self.analysed_layer.data,
-                        label_id_list_per_timepoint,
-                        prediction_lists_per_timepoint,
-                    )
-
-                elif len(self.analysed_layer.data.shape) <= 3:
-                    cluster_image = generate_cluster_image(
-                        self.analysed_layer.data, self.label_ids, self.cluster_ids
-                    ).astype(int)
-                else:
-                    warnings.warn("Image dimensions too high for processing!")
-                    return
-
-                # if the cluster image layer doesn't yet exist make it
-                # otherwise just update it
-                if (
-                    self.visualized_labels_layer is None
-                    or self.visualized_labels_layer not in self.viewer.layers
-                ):
-                    # visualising cluster image
-                    self.visualized_labels_layer = self.viewer.add_labels(
-                        cluster_image,  # self.analysed_layer.data
-                        color=cmap_dict,  # cluster_id_dict
-                        name="cluster_ids_in_space",
-                        scale=self.labels_select.value.scale,
-                    )
-                else:
-                    # updating data
-                    self.visualized_labels_layer.data = cluster_image
-                    self.visualized_labels_layer.color = cmap_dict
+                self._update_cluster_image(
+                    is_tracking_data=tracking_data,
+                    plot_cluster_name=plot_cluster_name,
+                    cmap_dict=cmap_dict,
+                )
 
             self.viewer.layers.selection.clear()
             for s in keep_selection:
                 self.viewer.layers.selection.add(s)
 
         else:
-            if len(self.analysed_layer.data.shape) == 4 and not tracking_data:
-                frame_id = features[POINTER].tolist()
-                current_frame = self.frame
-            elif len(self.analysed_layer.data.shape) <= 3 or tracking_data:
-                frame_id = None
-                current_frame = None
-            else:
-                warnings.warn("Image dimensions too high for processing!")
-
             if self.plotting_type.currentText() == PlottingType.SCATTER.name:
                 a, sizes, colors_plot = unclustered_plot_parameters(
                     frame_id=frame_id,
@@ -795,3 +791,138 @@ class PlotterWidget(QMainWindow):
             self.graphics_widget.draw()
 
         self.graphics_widget.reset_zoom()
+
+    def _update_cluster_image(
+        self, is_tracking_data: bool, plot_cluster_name: str, cmap_dict: dict
+    ):
+        # if the cluster image layer doesn't yet exist make it
+        self.visualized_layer = self._draw_cluster_image(
+            is_tracking_data=is_tracking_data,
+            plot_cluster_name=plot_cluster_name,
+            cluster_ids=self.cluster_ids,
+            cmap_dict=cmap_dict,
+        )
+        if (
+            self.visualized_layer is None
+            or self.visualized_layer.name not in self.viewer.layers
+        ):
+            self.viewer.add_layer(self.visualized_layer)
+        else:
+            layer_in_viewer = self.viewer.layers[self.visualized_layer.name]
+            layer_in_viewer.data = self.visualized_layer.data
+            if isinstance(self.visualized_layer, Points):
+                layer_in_viewer.face_color = self.visualized_layer.face_color
+            elif isinstance(self.visualized_layer, Surface):
+                layer_in_viewer.colormap = self.visualized_layer.colormap
+                layer_in_viewer.contrast_limits = self.visualized_layer.contrast_limits
+            elif isinstance(self.visualized_layer, Labels):
+                layer_in_viewer.color = self.visualized_layer.color
+            else:
+                print("Update failed")
+
+    def _draw_cluster_image(
+        self,
+        is_tracking_data: bool,
+        plot_cluster_name: str,
+        cluster_ids,
+        cmap_dict=None,
+    ) -> Layer:
+        from matplotlib.colors import to_rgba_array
+
+        from ._utilities import (
+            generate_cluster_4d_labels,
+            generate_cluster_image,
+            generate_cluster_surface,
+            generate_cluster_tracks,
+            get_nice_colormap,
+            get_surface_color_map,
+        )
+
+        """
+        Generate the cluster image layer.
+        """
+        nice_colormap = get_nice_colormap()
+        napari_colormap = get_surface_color_map(max(cluster_ids))
+
+        if (
+            isinstance(self.analysed_layer, Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and not is_tracking_data
+        ):
+            cluster_data = generate_cluster_4d_labels(
+                self.analysed_layer, plot_cluster_name
+            )
+
+            cluster_layer = Layer.create(
+                cluster_data,
+                {
+                    "color": cmap_dict,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+            )
+
+        elif (
+            isinstance(self.analysed_layer, Labels)
+            and len(self.analysed_layer.data.shape) == 4
+            and is_tracking_data
+        ):
+            cluster_data = generate_cluster_tracks(
+                self.analysed_layer, plot_cluster_name
+            )
+
+            cluster_layer = Layer.create(
+                cluster_data,
+                {
+                    "color": cmap_dict,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+            )
+
+        elif isinstance(self.analysed_layer, Surface):
+            cluster_data = generate_cluster_surface(
+                self.analysed_layer.data, self.cluster_ids
+            )
+
+            cluster_layer = Layer.create(
+                cluster_data,
+                {
+                    "contrast_limits": [0, self.cluster_ids.max() + 1],
+                    "colormap": napari_colormap,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+                "surface",
+            )
+
+        elif isinstance(self.analysed_layer, Points):
+            face_colors = to_rgba_array(np.asarray(nice_colormap)[cluster_ids])
+            cluster_layer = Layer.create(
+                self.analysed_layer.data,
+                {
+                    "face_color": face_colors,
+                    "size": self.layer_select.value.size,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+                "points",
+            )
+        elif len(self.analysed_layer.data.shape) <= 3:
+            cluster_data = generate_cluster_image(
+                self.analysed_layer.data, self.label_ids, self.cluster_ids
+            ).astype(int)
+            cluster_layer = Layer.create(
+                cluster_data,
+                {
+                    "color": cmap_dict,
+                    "name": "cluster_ids_in_space",
+                    "scale": self.layer_select.value.scale,
+                },
+                "labels",
+            )
+        else:
+            warnings.warn("Image dimensions too high for processing!")
+            return
+
+        return cluster_layer
