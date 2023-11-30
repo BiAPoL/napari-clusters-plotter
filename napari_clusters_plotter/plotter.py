@@ -15,7 +15,7 @@ from qtpy.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QComboBox, QWidget
 from qtpy import uic
 
 # icon_folder_path = Path().parent.resolve().parent / 'icons' # Use this line if inside a juptyer notebook
-icon_folder_path = Path(__file__).parent.parent / "icons" # Use this line if inside a python script
+icon_folder_path = Path(__file__).parent / "icons" # Use this line if inside a python script
 
 class CustomScatter:
     def __init__(self, axes, colormap, initial_size=50):
