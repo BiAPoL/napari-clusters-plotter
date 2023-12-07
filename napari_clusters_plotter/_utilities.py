@@ -307,9 +307,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
 
 
 
-    return predictionlist_new[label_image].astype(
-        "uint32"
-    )
+    return predictionlist_new[label_image].astype("uint32")
 
 
 def generate_cluster_surface(surface_data, prediction_list):
