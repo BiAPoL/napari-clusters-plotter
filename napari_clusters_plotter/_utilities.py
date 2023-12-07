@@ -298,7 +298,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     ndarray: The clusters image as a numpy array.
     """
 
-    # label_list can be remove from method.
+    # label_list can be removed from method.
 
     predictionlist_new = np.array(predictionlist) + 1
 
