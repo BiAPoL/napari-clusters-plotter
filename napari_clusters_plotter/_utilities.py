@@ -297,15 +297,12 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     ----------
     ndarray: The clusters image as a numpy array.
     """
-    from skimage.util import map_array
 
-    # reforming the prediction list, this is done to account
-    # for cluster labels that start at 0, conveniently hdbscan
-    # labelling starts at -1 for noise, removing these from the labels
+    # label_list can be remove from method.
+
     predictionlist_new = np.array(predictionlist) + 1
-    label_list = np.array(label_list)
 
-    return map_array(np.asarray(label_image), label_list, predictionlist_new).astype(
+    return predictionlist_new[label_image].astype(
         "uint32"
     )
 
