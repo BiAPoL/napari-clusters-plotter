@@ -590,7 +590,10 @@ class MplCanvas(FigureCanvas):
         norm = None
         if log_scale:
             norm = "log"
-        h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+        if self.histogram is not None:
+            (h, xedges, yedges) = self.histogram
+        else:
+            h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
         self.axes.imshow(
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
