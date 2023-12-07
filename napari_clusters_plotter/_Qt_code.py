@@ -528,6 +528,8 @@ class MplCanvas(FigureCanvas):
         self.match_napari_layout()
         self.xylim = None
         self.last_xy_labels = None
+        self.last_datax = None
+        self.last_datay = None
 
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
@@ -590,7 +592,14 @@ class MplCanvas(FigureCanvas):
         norm = None
         if log_scale:
             norm = "log"
-        h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+        if self.histogram is not None and np.array_equal(self.last_datax, data_x) and np.array_equal(self.last_datay,
+                                                                                                     data_y):
+            (h, xedges, yedges) = self.histogram
+        else:
+            h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+            self.last_datax = data_x
+            self.last_datay = data_y
+
         self.axes.imshow(
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
