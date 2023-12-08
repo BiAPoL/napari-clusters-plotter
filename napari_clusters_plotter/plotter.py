@@ -147,7 +147,7 @@ class CustomLassoSelector:
         # TODO: Replace this by pyq signal/slot
         self.artist.color_indices = color_indices # This updates the plot
 
-class PlotterWidget(SingleAxesWidget):
+class PlotWidget(SingleAxesWidget):
     # Amount of available input layers
     n_layers_input = Interval(1, None)
     # All layers that have a .features attributes
@@ -155,8 +155,8 @@ class PlotterWidget(SingleAxesWidget):
     def __init__(self, napari_viewer, parent = None):
         super().__init__(napari_viewer, parent=parent)
 
-        self.control_widget = QWidget()
-        uic.loadUi(Path(__file__).parent / 'plotter_controls.ui', self.control_widget)
+        # self.control_widget = QWidget()
+        # uic.loadUi(Path(__file__).parent / 'plotter_controls.ui', self.control_widget)
 
 
         
@@ -183,7 +183,7 @@ class PlotterWidget(SingleAxesWidget):
         # Add selection tools layout to main layout below matplotlib toolbar and above canvas
         self.layout().insertLayout(2, self.selection_tools_layout)
 
-        self.layout().addWidget(self.control_widget)
+        #self.layout().addWidget(self.control_widget)
 
     def _build_selection_toolbar_layout(self):
         # Add selection tools layout below canvas
