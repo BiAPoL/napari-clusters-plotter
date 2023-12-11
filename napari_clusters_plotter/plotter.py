@@ -1,21 +1,18 @@
 import numpy as np
-import numpy.typing as npt
-import pandas as pd
-from skimage.measure import regionprops
-import napari
 from napari_matplotlib.base import SingleAxesWidget
 from nap_plot_tools import QtColorSpinBox, CustomToolbarWidget, make_cat10_mod_cmap
 from matplotlib.widgets import LassoSelector
 from pathlib import Path
 from matplotlib.path import Path as mplPath
-from napari.layers import Labels, Points, Shapes, Tracks, Vectors
+from napari.layers import Labels, Points, Tracks
 from napari_matplotlib.util import Interval
-from typing import Any, Union
-from qtpy.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QComboBox, QWidget
+
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 from qtpy import uic
 
 # icon_folder_path = Path().parent.resolve().parent / 'icons' # Use this line if inside a juptyer notebook
 icon_folder_path = Path(__file__).parent / "icons" # Use this line if inside a python script
+
 
 class CustomScatter:
     def __init__(self, axes, colormap, initial_size=50):
@@ -34,7 +31,7 @@ class CustomScatter:
         # Initialize colors if not already done
         if self._current_colors is None:
             # Set color indices with color index 0
-            self.color_indices = 1 # temporary value for testing!!
+            self.color_indices = 1  # temporary value for testing!!
 
     def _update_axes_limits_with_margin(self, x_data, y_data):
         x_range = max(x_data) - min(x_data)
@@ -59,7 +56,7 @@ class CustomScatter:
     @property
     def selected_color_index(self):
         return self._selected_color_index
-    
+
     @selected_color_index.setter
     def selected_color_index(self, index):
         self._selected_color_index = index
@@ -76,12 +73,12 @@ class CustomScatter:
         self._scatter_handle.set_facecolor(self._current_colors)
         if alpha is not None:
             self.alphas = alpha  # Restore alpha values
-        self._axes.figure.canvas.draw_idle() # maybe unecessary because alpha updates the canvas
+        self._axes.figure.canvas.draw_idle()  # maybe unecessary because alpha updates the canvas
 
     @property
     def color_indices(self):
         return self._color_indices
-    
+
     @color_indices.setter
     def color_indices(self, indices):
         # Do nothing if there is no data
@@ -114,6 +111,7 @@ class CustomScatter:
     def add_lasso_selector(self):
         self.lasso_selector = CustomLassoSelector(self, self._axes)
 
+
 class CustomLassoSelector:
     def __init__(self, parent, axes):
         self.artist = parent
@@ -145,31 +143,34 @@ class CustomLassoSelector:
         # Set selected indices with selected color index
         color_indices[self.ind] = self.artist.selected_color_index
         # TODO: Replace this by pyq signal/slot
-        self.artist.color_indices = color_indices # This updates the plot
+        self.artist.color_indices = color_indices  # This updates the plot
+
 
 class PlotterWidget(SingleAxesWidget):
     # Amount of available input layers
     n_layers_input = Interval(1, None)
     # All layers that have a .features attributes
     input_layer_types = (Labels, Points, Tracks)
-    def __init__(self, napari_viewer, parent = None):
+
+    def __init__(self, napari_viewer, parent=None):
         super().__init__(napari_viewer, parent=parent)
 
         self.control_widget = QWidget()
-        uic.loadUi(Path(__file__).parent / 'plotter_controls.ui', self.control_widget)
+        uic.loadUi(
+            Path(__file__).parent / 'plotter_controls.ui',
+            self.control_widget)
 
-
-        
         # Add selection tools layout below canvas
         self.selection_tools_layout = self._build_selection_toolbar_layout()
 
         # Add buttons to selection_toolbar
-        self.selection_toolbar.add_custom_button(name='Lasso Selection',
-                                                tooltip='Click to enable/disable Lasso selection',
-                                                default_icon_path=icon_folder_path / 'button1.png',
-                                                checkable=True,
-                                                checked_icon_path=icon_folder_path / 'button1_checked.png',
-                                                )
+        self.selection_toolbar.add_custom_button(
+            name='Lasso Selection',
+            tooltip='Click to enable/disable Lasso selection',
+            default_icon_path=icon_folder_path / 'button1.png',
+            checkable=True,
+            checked_icon_path=icon_folder_path / 'button1_checked.png',
+        )
         # Connect button to callback
         self.selection_toolbar.connect_button_callback(name='Lasso Selection', callback=self.on_enable_lasso_selector)
 
@@ -179,7 +180,7 @@ class PlotterWidget(SingleAxesWidget):
         self.scatter_plot = CustomScatter(self.axes, self.colormap)
         # Add lasso selector
         self.scatter_plot.add_lasso_selector()
-        
+
         # Add selection tools layout to main layout below matplotlib toolbar and above canvas
         self.layout().insertLayout(2, self.selection_tools_layout)
 
