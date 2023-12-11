@@ -26,23 +26,23 @@ class PlotterWidget(SingleAxesWidget):
         super().__init__(napari_viewer, parent=parent)
 
         self.control_widget = QWidget()
-        uic.loadUi(
-            Path(__file__).parent / 'plotter_controls.ui',
-            self.control_widget)
+        uic.loadUi(Path(__file__).parent / "plotter_controls.ui", self.control_widget)
 
         # Add selection tools layout below canvas
         self.selection_tools_layout = self._build_selection_toolbar_layout()
 
         # Add buttons to selection_toolbar
         self.selection_toolbar.add_custom_button(
-            name='Lasso Selection',
-            tooltip='Click to enable/disable Lasso selection',
-            default_icon_path=icon_folder_path / 'button1.png',
+            name="Lasso Selection",
+            tooltip="Click to enable/disable Lasso selection",
+            default_icon_path=icon_folder_path / "button1.png",
             checkable=True,
-            checked_icon_path=icon_folder_path / 'button1_checked.png',
+            checked_icon_path=icon_folder_path / "button1_checked.png",
         )
         # Connect button to callback
-        self.selection_toolbar.connect_button_callback(name='Lasso Selection', callback=self.on_enable_lasso_selector)
+        self.selection_toolbar.connect_button_callback(
+            name="Lasso Selection", callback=self.on_enable_lasso_selector
+        )
 
         # Set selection colormap
         self.colormap = make_cat10_mod_cmap(first_color_transparent=False)
@@ -63,20 +63,19 @@ class PlotterWidget(SingleAxesWidget):
         self.selection_toolbar = CustomToolbarWidget(self)
         selection_tools_layout.addWidget(self.selection_toolbar)
         # Add cluster spinbox
-        selection_tools_layout.addWidget(QLabel('Cluster:'))
+        selection_tools_layout.addWidget(QLabel("Cluster:"))
         self.cluster_spinbox = QtColorSpinBox(first_color_transparent=False)
-        selection_tools_layout.addWidget(
-            self.cluster_spinbox)
+        selection_tools_layout.addWidget(self.cluster_spinbox)
         # Add stretch to the right to push buttons to the left
         selection_tools_layout.addStretch(1)
         return selection_tools_layout
 
     def on_enable_lasso_selector(self, checked):
         if checked:
-            print('Lasso selection enabled')
+            print("Lasso selection enabled")
             self.scatter_plot.lasso_selector.enable()
         else:
-            print('Lasso selection disabled')
+            print("Lasso selection disabled")
             self.scatter_plot.lasso_selector.disable()
 
 
