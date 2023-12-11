@@ -50,10 +50,10 @@ def test_clustering_widget(make_napari_viewer):
     dataframe = pd.DataFrame(data[0], columns=["x", "y"])
     set_features(labels_2, dataframe)
 
-    cluster_widget.labels_select.value = labels_2
+    cluster_widget.layer_select.value = labels_2
     cluster_widget.clust_method_choice_list.value = "KMeans"
     cluster_widget.run(
-        cluster_widget.labels_select.value,
+        cluster_widget.layer_select.value,
         [i.text() for i in cluster_widget.properties_list.selectedItems()],
         cluster_widget.clust_method_choice_list.current_choice,
         cluster_widget.kmeans_nr_clusters.value,

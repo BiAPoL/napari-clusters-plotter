@@ -19,12 +19,12 @@ sys.path.append("../")
 
 class FakeWidget:
     def __init__(self, layer):
-        class Labels_select:
+        class Layer_select:
             def __init__(self, layer):
                 self.value = layer
 
         self.properties_list = QListWidget()
-        self.labels_select = Labels_select(layer)
+        self.layer_select = Layer_select(layer)
 
 
 def test_cluster_image_generation():

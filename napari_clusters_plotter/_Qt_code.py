@@ -11,7 +11,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
-from napari.layers import Image, Labels
+from napari.layers import Image, Layer
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
@@ -52,22 +52,22 @@ def measurements_container_and_list():
     return properties_container, properties_list
 
 
-def labels_container_and_selection():
+def layer_container_and_selection():
     """
-    Create a container and a dropdown widget to select the labels layer.
+    Create a container and a dropdown widget to select the layer.
 
     Returns
     -------
-    A tuple containing a QWidget for displaying the labels layer selection container,
-    and a QWidget containing the selection options for the labels layer.
+    A tuple containing a QWidget for displaying the layer selection container,
+    and a QWidget containing the selection options for the layer.
     """
-    labels_layer_selection_container = QWidget()
-    labels_layer_selection_container.setLayout(QHBoxLayout())
-    labels_layer_selection_container.layout().addWidget(QLabel("Labels layer"))
-    labels_select = create_widget(annotation=Labels, label="labels_layer")
-    labels_layer_selection_container.layout().addWidget(labels_select.native)
+    layer_selection_container = QWidget()
+    layer_selection_container.setLayout(QHBoxLayout())
+    layer_selection_container.layout().addWidget(QLabel("Layer"))
+    layer_select = create_widget(annotation=Layer, label="layer")
+    layer_selection_container.layout().addWidget(layer_select.native)
 
-    return labels_layer_selection_container, labels_select
+    return layer_selection_container, layer_select
 
 
 def image_container_and_selection():
@@ -528,6 +528,8 @@ class MplCanvas(FigureCanvas):
         self.match_napari_layout()
         self.xylim = None
         self.last_xy_labels = None
+        self.last_datax = None
+        self.last_datay = None
 
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
@@ -590,7 +592,17 @@ class MplCanvas(FigureCanvas):
         norm = None
         if log_scale:
             norm = "log"
-        h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+        if (
+            self.histogram is not None
+            and np.array_equal(self.last_datax, data_x)
+            and np.array_equal(self.last_datay, data_y)
+        ):
+            (h, xedges, yedges) = self.histogram
+        else:
+            h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+            self.last_datax = data_x
+            self.last_datay = data_y
+
         self.axes.imshow(
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],

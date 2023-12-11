@@ -12,7 +12,7 @@ sys.path.append("../")
 def test_clustering_widget(make_napari_viewer):
     import napari_clusters_plotter as ncp
 
-    viewer = make_napari_viewer(strict_qt=True)
+    viewer = make_napari_viewer()
     widget_list = ncp.napari_experimental_provide_dock_widget()
     n_wdgts = len(viewer.window._dock_widgets)
 
@@ -46,7 +46,7 @@ def test_bad_measurements(qtbot, make_napari_viewer):
         ]
     )
 
-    viewer = make_napari_viewer(strict_qt=True)
+    viewer = make_napari_viewer()
     labels_layer = viewer.add_labels(label)
 
     # Add NaNs to data
@@ -61,7 +61,7 @@ def test_bad_measurements(qtbot, make_napari_viewer):
     widget = DimensionalityReductionWidget(napari_viewer=viewer)
     widget.run(
         viewer=viewer,
-        labels_layer=labels_layer,
+        layer=labels_layer,
         selected_measurements_list=list(measurements.keys()),
         n_neighbours=2,
         perplexity=5,
