@@ -14,6 +14,70 @@ from qtpy import uic
 icon_folder_path = Path(__file__).parent / "icons" # Use this line if inside a python script
 
 
+class PlotterWidget(SingleAxesWidget):
+    # Amount of available input layers
+    n_layers_input = Interval(1, None)
+    # All layers that have a .features attributes
+    input_layer_types = (Labels, Points, Tracks)
+
+    def __init__(self, napari_viewer, parent=None):
+        super().__init__(napari_viewer, parent=parent)
+
+        self.control_widget = QWidget()
+        uic.loadUi(
+            Path(__file__).parent / 'plotter_controls.ui',
+            self.control_widget)
+
+        # Add selection tools layout below canvas
+        self.selection_tools_layout = self._build_selection_toolbar_layout()
+
+        # Add buttons to selection_toolbar
+        self.selection_toolbar.add_custom_button(
+            name='Lasso Selection',
+            tooltip='Click to enable/disable Lasso selection',
+            default_icon_path=icon_folder_path / 'button1.png',
+            checkable=True,
+            checked_icon_path=icon_folder_path / 'button1_checked.png',
+        )
+        # Connect button to callback
+        self.selection_toolbar.connect_button_callback(name='Lasso Selection', callback=self.on_enable_lasso_selector)
+
+        # Set selection colormap
+        self.colormap = make_cat10_mod_cmap(first_color_transparent=False)
+        # Create instance of CustomScatter
+        self.scatter_plot = CustomScatter(self.axes, self.colormap)
+        # Add lasso selector
+        self.scatter_plot.add_lasso_selector()
+
+        # Add selection tools layout to main layout below matplotlib toolbar and above canvas
+        self.layout().insertLayout(2, self.selection_tools_layout)
+
+        self.layout().addWidget(self.control_widget)
+
+    def _build_selection_toolbar_layout(self):
+        # Add selection tools layout below canvas
+        selection_tools_layout = QHBoxLayout()
+        # Add selection toolbar
+        self.selection_toolbar = CustomToolbarWidget(self)
+        selection_tools_layout.addWidget(self.selection_toolbar)
+        # Add cluster spinbox
+        selection_tools_layout.addWidget(QLabel('Cluster:'))
+        self.cluster_spinbox = QtColorSpinBox(first_color_transparent=False)
+        selection_tools_layout.addWidget(
+            self.cluster_spinbox)
+        # Add stretch to the right to push buttons to the left
+        selection_tools_layout.addStretch(1)
+        return selection_tools_layout
+
+    def on_enable_lasso_selector(self, checked):
+        if checked:
+            print('Lasso selection enabled')
+            self.scatter_plot.lasso_selector.enable()
+        else:
+            print('Lasso selection disabled')
+            self.scatter_plot.lasso_selector.disable()
+
+
 class CustomScatter:
     def __init__(self, axes, colormap, initial_size=50):
         self._axes = axes
@@ -144,67 +208,3 @@ class CustomLassoSelector:
         color_indices[self.ind] = self.artist.selected_color_index
         # TODO: Replace this by pyq signal/slot
         self.artist.color_indices = color_indices  # This updates the plot
-
-
-class PlotterWidget(SingleAxesWidget):
-    # Amount of available input layers
-    n_layers_input = Interval(1, None)
-    # All layers that have a .features attributes
-    input_layer_types = (Labels, Points, Tracks)
-
-    def __init__(self, napari_viewer, parent=None):
-        super().__init__(napari_viewer, parent=parent)
-
-        self.control_widget = QWidget()
-        uic.loadUi(
-            Path(__file__).parent / 'plotter_controls.ui',
-            self.control_widget)
-
-        # Add selection tools layout below canvas
-        self.selection_tools_layout = self._build_selection_toolbar_layout()
-
-        # Add buttons to selection_toolbar
-        self.selection_toolbar.add_custom_button(
-            name='Lasso Selection',
-            tooltip='Click to enable/disable Lasso selection',
-            default_icon_path=icon_folder_path / 'button1.png',
-            checkable=True,
-            checked_icon_path=icon_folder_path / 'button1_checked.png',
-        )
-        # Connect button to callback
-        self.selection_toolbar.connect_button_callback(name='Lasso Selection', callback=self.on_enable_lasso_selector)
-
-        # Set selection colormap
-        self.colormap = make_cat10_mod_cmap(first_color_transparent=False)
-        # Create instance of CustomScatter
-        self.scatter_plot = CustomScatter(self.axes, self.colormap)
-        # Add lasso selector
-        self.scatter_plot.add_lasso_selector()
-
-        # Add selection tools layout to main layout below matplotlib toolbar and above canvas
-        self.layout().insertLayout(2, self.selection_tools_layout)
-
-        self.layout().addWidget(self.control_widget)
-
-    def _build_selection_toolbar_layout(self):
-        # Add selection tools layout below canvas
-        selection_tools_layout = QHBoxLayout()
-        # Add selection toolbar
-        self.selection_toolbar = CustomToolbarWidget(self)
-        selection_tools_layout.addWidget(self.selection_toolbar)
-        # Add cluster spinbox
-        selection_tools_layout.addWidget(QLabel('Cluster:'))
-        self.cluster_spinbox = QtColorSpinBox(first_color_transparent=False)
-        selection_tools_layout.addWidget(
-            self.cluster_spinbox)
-        # Add stretch to the right to push buttons to the left
-        selection_tools_layout.addStretch(1)
-        return selection_tools_layout
-
-    def on_enable_lasso_selector(self, checked):
-        if checked:
-            print('Lasso selection enabled')
-            self.scatter_plot.lasso_selector.enable()
-        else:
-            print('Lasso selection disabled')
-            self.scatter_plot.lasso_selector.disable()
