@@ -1,17 +1,19 @@
-import numpy as np
-from napari_matplotlib.base import SingleAxesWidget
-from nap_plot_tools import QtColorSpinBox, CustomToolbarWidget, make_cat10_mod_cmap
-from matplotlib.widgets import LassoSelector
 from pathlib import Path
-from matplotlib.path import Path as mplPath
-from napari.layers import Labels, Points, Tracks
-from napari_matplotlib.util import Interval
 
-from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
+import numpy as np
+from matplotlib.path import Path as mplPath
+from matplotlib.widgets import LassoSelector
+from nap_plot_tools import CustomToolbarWidget, QtColorSpinBox, make_cat10_mod_cmap
+from napari.layers import Labels, Points, Tracks
+from napari_matplotlib.base import SingleAxesWidget
+from napari_matplotlib.util import Interval
 from qtpy import uic
+from qtpy.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 # icon_folder_path = Path().parent.resolve().parent / 'icons' # Use this line if inside a juptyer notebook
-icon_folder_path = Path(__file__).parent / "icons" # Use this line if inside a python script
+icon_folder_path = (
+    Path(__file__).parent / "icons"
+)  # Use this line if inside a python script
 
 
 class PlotterWidget(SingleAxesWidget):
@@ -82,7 +84,7 @@ class CustomScatter:
     def __init__(self, axes, colormap, initial_size=50):
         self._axes = axes
         self._colormap = colormap
-        self._scatter_handle = self._axes.scatter([], [], s=initial_size, c='none')
+        self._scatter_handle = self._axes.scatter([], [], s=initial_size, c="none")
         self._current_colors = None
         self._color_indices = None
         self._selected_color_index = 0
