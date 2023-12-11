@@ -1,11 +1,11 @@
 repos:
 -   repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.11.0
     hooks:
     - id: black
       pass_filenames: true
 -   repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
     - id: flake8
       pass_filenames: true
@@ -14,7 +14,7 @@ repos:
       additional_dependencies:
       - flake8-tidy-imports
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
     - id: check-yaml
     - id: check-merge-conflict
@@ -24,7 +24,7 @@ repos:
     - id: debug-statements
     - id: mixed-line-ending
 -   repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
+    rev: 5.13.0
     hooks:
     - id: isort
 -   repo: https://github.com/tlambert03/napari-plugin-checks
@@ -32,12 +32,12 @@ repos:
     hooks:
     - id: napari-plugin-checks
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.2
+    rev: v3.15.0
     hooks:
     - id: pyupgrade
       args: ["--py37-plus"]
 -   repo: https://github.com/PyCQA/autoflake
-    rev: 'v2.1.1'
+    rev: 'v2.2.1'
     hooks:
     - id: autoflake
       args: ["--remove-all-unused-imports", "-i"]
