@@ -38,8 +38,9 @@ Jump to:
 
 ### Starting point
 For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and a label image
-representing a segmentation of objects. For segmenting objects, you can for example use the
-[Voronoi-Otsu-labelling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labelling)
+representing a segmentation of objects.
+The label image should not contain objects with the label `0` as these objects cannot be separated from the background, which is `0` as well in many images and would lead into erroneous behaviour when performing the clustering.
+For segmenting objects, you can for example use the [Voronoi-Otsu-labelling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labelling)
 in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://www.napari-hub.org/plugins/napari-segment-blobs-and-things-with-membranes).
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/starting_point.png)
@@ -53,9 +54,9 @@ Select the image, the corresponding label image and the measurements to analyse 
 A table with the measurements will open and afterwards, you can save and/or close the measurement table.
 At this point it is recommended to close the table and the Measure widget to free space for following steps.
 
-You can also load your own measurements you can do this using the menu `Tools > Measurement tables > Load from CSV (nsr)`.
-If you load custom measurements, please make sure that there is a `label` column that specifies the which measurement belongs to which labeled object.
-Tables for time-lapse data need to include an additional column named `frame`.
+You can also load your own measurements. You can do this using the menu `Tools > Measurement tables > Load from CSV (nsr)`.
+If you load custom measurements, please make sure that there is a `label` column that specifies which measurement belongs to which labeled object.
+Make sure to avoid the label `0` as this is reserved for the background. Tables for time-lapse data need to include an additional column named `frame`.
 
 ### Plotting
 
