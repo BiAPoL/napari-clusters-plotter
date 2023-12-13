@@ -6,12 +6,23 @@ import napari_clusters_plotter._utilities as utilities
 input_values = np.array([0, 1, 2, 3, 4, 5])
 output_values = np.array([0, 1, 2, 1, 1, 1])
 
-label_image_2d_float = np.array([[0.0, 1.0, 2.0], [3.0, 4.0, 5.0], [0.0, 1.0, 2.0]])
+label_image_2d_float = np.array([
+    [0.0, 1.0, 2.0],
+    [3.0, 4.0, 5.0],
+    [0.0, 1.0, 2.0]]
+)
 
-label_image_2d = np.array([[0, 1, 2], [3, 4, 5], [0, 1, 2]])
+label_image_2d = np.array([
+    [0, 1, 2],
+    [3, 4, 5],
+    [0, 1, 2]]
+)
 
 label_image_3d = np.array(
-    [[[0, 1, 2], [3, 4, 5], [0, 1, 2]], [[3, 4, 5], [0, 1, 2], [3, 4, 5]]]
+    [
+        [[0, 1, 2], [3, 4, 5], [0, 1, 2]],
+        [[3, 4, 5], [0, 1, 2], [3, 4, 5]]
+    ]
 )
 
 label_image_4d = np.array(
@@ -25,94 +36,55 @@ label_image_4d = np.array(
 def test_map_array_3d():
     from skimage.util import map_array
 
-    mapped_image_2d = map_array(label_image_2d, input_values, output_values)
+    actual_mapped_image_2d = map_array(label_image_2d, input_values, output_values)
+    expected_mapped_image_2d = np.array([
+        [0, 1, 2],
+        [1, 1, 1],
+        [0, 1, 2]]
+    )
 
-    assert mapped_image_2d[0, 0] == 0
-    assert mapped_image_2d[0, 1] == 1
-    assert mapped_image_2d[0, 2] == 2
-
-    assert mapped_image_2d[1, 0] == 1
-    assert mapped_image_2d[1, 1] == 1
-    assert mapped_image_2d[1, 2] == 1
-
-    assert mapped_image_2d[2, 0] == 0
-    assert mapped_image_2d[2, 1] == 1
-    assert mapped_image_2d[2, 2] == 2
+    assert np.array_equal(actual_mapped_image_2d, expected_mapped_image_2d)
 
 
 def test_map_array_4d():
     from skimage.util import map_array
 
-    output_array = map_array(label_image_4d, input_values, output_values)
+    actual_output_array = map_array(label_image_4d, input_values, output_values)
+    expected_output_array = np.array(
+        [
+            [[[0, 1, 2], [1, 1, 1], [0, 1, 2]], [[1, 1, 1], [0, 1, 2], [1, 1, 1]]],
+            [[[0, 1, 2], [1, 1, 1], [0, 1, 2]], [[1, 1, 1], [0, 1, 2], [1, 1, 1]]]
+        ])
 
-    assert output_array[0, 0, 0, 0] == 0
-    assert output_array[0, 0, 0, 1] == 1
-    assert output_array[0, 0, 0, 2] == 2
-    assert output_array[0, 0, 1, 0] == 1
-    assert output_array[0, 0, 1, 1] == 1
-    assert output_array[0, 0, 1, 2] == 1
-    assert output_array[0, 0, 2, 0] == 0
-    assert output_array[0, 0, 2, 1] == 1
-    assert output_array[0, 0, 2, 2] == 2
-
-    assert output_array[0, 1, 0, 0] == 1
-    assert output_array[0, 1, 0, 1] == 1
-    assert output_array[0, 1, 0, 2] == 1
-    assert output_array[0, 1, 1, 0] == 0
-    assert output_array[0, 1, 1, 1] == 1
-    assert output_array[0, 1, 1, 2] == 2
-    assert output_array[0, 1, 2, 0] == 1
-    assert output_array[0, 1, 2, 1] == 1
-    assert output_array[0, 1, 2, 2] == 1
-
-    assert output_array[1, 0, 0, 0] == 0
-    assert output_array[1, 0, 0, 1] == 1
-    assert output_array[1, 0, 0, 2] == 2
-    assert output_array[1, 0, 1, 0] == 1
-    assert output_array[1, 0, 1, 1] == 1
-    assert output_array[1, 0, 1, 2] == 1
-    assert output_array[1, 0, 2, 0] == 0
-    assert output_array[1, 0, 2, 1] == 1
-    assert output_array[1, 0, 2, 2] == 2
-
-    assert output_array[1, 1, 0, 0] == 1
-    assert output_array[1, 1, 0, 1] == 1
-    assert output_array[1, 1, 0, 2] == 1
-    assert output_array[1, 1, 1, 0] == 0
-    assert output_array[1, 1, 1, 1] == 1
-    assert output_array[1, 1, 1, 2] == 2
-    assert output_array[1, 1, 2, 0] == 1
-    assert output_array[1, 1, 2, 1] == 1
-    assert output_array[1, 1, 2, 2] == 1
+    assert np.array_equal(actual_output_array, expected_output_array)
 
 
 def test_generate_cluster_image():
     input_labels = [1, 2, 3, 4, 5]
     output_labels = [1, 1, 0, 0, 0]
 
-    cluster_label_image_3d = utilities.generate_cluster_image(
+    actual_cluster_label_image_3d = utilities.generate_cluster_image(
         label_image_3d, input_labels, output_labels
     )
-    cluster_label_image_4d = utilities.generate_cluster_image(
-        label_image_4d, input_labels, output_labels
+    expected_cluster_label_image_3d = np.array(
+        [
+            [[0, 2, 2], [1, 1, 1], [0, 2, 2]],
+            [[1, 1, 1], [0, 2, 2], [1, 1, 1]]
+        ]
     )
 
-    assert cluster_label_image_3d[0, 0, 0] == 0
-    assert cluster_label_image_3d[0, 0, 1] == 2
-    assert cluster_label_image_3d[0, 0, 2] == 2
-    assert cluster_label_image_3d[0, 1, 0] == 1
-    assert cluster_label_image_3d[0, 1, 1] == 1
-    assert cluster_label_image_3d[0, 1, 2] == 1
+    actual_cluster_label_image_4d = utilities.generate_cluster_image(
+        label_image_4d, input_labels, output_labels
+    )
+    expected_cluster_label_image_4d = np.array(
+        [
+            [[[0, 2, 2], [1, 1, 1], [0, 2, 2]], [[1, 1, 1], [0, 2, 2], [1, 1, 1]]],
+            [[[0, 2, 2], [1, 1, 1], [0, 2, 2]], [[1, 1, 1], [0, 2, 2], [1, 1, 1]]],
+        ]
+    )
 
-    assert cluster_label_image_4d[0, 0, 0, 0] == 0
-    assert cluster_label_image_4d[0, 0, 0, 1] == 2
-    assert cluster_label_image_4d[0, 0, 0, 2] == 2
-    assert cluster_label_image_4d[0, 0, 1, 0] == 1
-    assert cluster_label_image_4d[0, 0, 1, 1] == 1
-    assert cluster_label_image_4d[0, 0, 1, 2] == 1
-    assert cluster_label_image_4d[0, 0, 2, 0] == 0
-    assert cluster_label_image_4d[0, 0, 2, 1] == 2
-    assert cluster_label_image_4d[0, 0, 2, 2] == 2
+    assert np.array_equal(actual_cluster_label_image_3d, expected_cluster_label_image_3d)
+    assert np.array_equal(actual_cluster_label_image_4d, expected_cluster_label_image_4d)
 
 
 def test_generate_cluster_image_ocl_array():
@@ -123,13 +95,17 @@ def test_generate_cluster_image_ocl_array():
 
     ocl = pycl.OCLArray.from_array(label_image_2d)
 
-    cluster_label_image_2d = utilities.generate_cluster_image(
+    actual_cluster_label_image_2d = utilities.generate_cluster_image(
         ocl, input_labels, output_labels
     )
+    expected_cluster_label_image_2d = np.array(
+        [
+            [0, 2, 2],
+            [1, 1, 1],
+            [0, 2, 2]
+        ])
 
-    assert cluster_label_image_2d[0, 0] == 0
-    assert cluster_label_image_2d[0, 1] == 2
-    assert cluster_label_image_2d[0, 2] == 2
+    assert np.array_equal(actual_cluster_label_image_2d, expected_cluster_label_image_2d)
 
 
 def test_generate_cluster_tracks():
@@ -146,14 +122,12 @@ def test_generate_cluster_tracks():
 
     features = pd.DataFrame(features)
     labels_layer = napari.layers.Labels(data=label_image_4d, features=features)
-    cluster_layer = utilities.generate_cluster_tracks(labels_layer, plot_cluster_name)
+    actual_cluster_layer = utilities.generate_cluster_tracks(labels_layer, plot_cluster_name)
+    expected_cluster_layer = np.array(
+        [
+            [[[0, 2, 2], [1, 1, 1], [0, 2, 2]], [[1, 1, 1], [0, 2, 2], [1, 1, 1]]],
+            [[[0, 2, 2], [1, 1, 1], [0, 2, 2]], [[1, 1, 1], [0, 2, 2], [1, 1, 1]]],
+        ]
+    )
 
-    assert cluster_layer[0, 0, 0, 0] == 0
-    assert cluster_layer[0, 0, 0, 1] == 2
-    assert cluster_layer[0, 0, 0, 2] == 2
-    assert cluster_layer[0, 0, 1, 0] == 1
-    assert cluster_layer[0, 0, 1, 1] == 1
-    assert cluster_layer[0, 0, 1, 2] == 1
-    assert cluster_layer[0, 0, 2, 0] == 0
-    assert cluster_layer[0, 0, 2, 1] == 2
-    assert cluster_layer[0, 0, 2, 2] == 2
+    assert np.array_equal(actual_cluster_layer, expected_cluster_layer)
