@@ -73,6 +73,7 @@ def test_generate_cluster_image():
         actual_cluster_label_image_4d, expected_cluster_label_image_4d
     )
 
+
 def test_generate_cluster_tracks():
     plot_cluster_name = "MANUAL_CLUSTER_ID"
 
