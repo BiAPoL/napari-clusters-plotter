@@ -242,8 +242,7 @@ def update_properties_list(widget, exclude_list):
 def generate_cluster_tracks(analysed_layer, plot_cluster_name):
     features = analysed_layer.features
     label_id_list_per_timepoint = [
-        features["label"].tolist()
-        for i in range(analysed_layer.data.shape[0])
+        features["label"].tolist() for i in range(analysed_layer.data.shape[0])
     ]
     prediction_lists_per_timepoint = [
         features[plot_cluster_name].tolist()

@@ -1,41 +1,25 @@
 import napari
 import numpy as np
+
 import napari_clusters_plotter._utilities as utilities
 
 input_values = np.array([0, 1, 2, 3, 4, 5])
 output_values = np.array([0, 1, 2, 1, 1, 1])
 
-label_image_2d_float = np.array([[0.0, 1.0, 2.0],
-                                 [3.0, 4.0, 5.0],
-                                 [0.0, 1.0, 2.0]])
+label_image_2d_float = np.array([[0.0, 1.0, 2.0], [3.0, 4.0, 5.0], [0.0, 1.0, 2.0]])
 
-label_image_2d = np.array([[0, 1, 2],
-                           [3, 4, 5],
-                           [0, 1, 2]])
+label_image_2d = np.array([[0, 1, 2], [3, 4, 5], [0, 1, 2]])
 
-label_image_3d = np.array([[[0, 1, 2],
-                            [3, 4, 5],
-                            [0, 1, 2]],
+label_image_3d = np.array(
+    [[[0, 1, 2], [3, 4, 5], [0, 1, 2]], [[3, 4, 5], [0, 1, 2], [3, 4, 5]]]
+)
 
-                           [[3, 4, 5],
-                            [0, 1, 2],
-                            [3, 4, 5]]])
-
-label_image_4d = np.array([[[[0, 1, 2],
-                             [3, 4, 5],
-                             [0, 1, 2]],
-
-                            [[3, 4, 5],
-                             [0, 1, 2],
-                             [3, 4, 5]]],
-
-                           [[[0, 1, 2],
-                             [3, 4, 5],
-                             [0, 1, 2]],
-
-                            [[3, 4, 5],
-                             [0, 1, 2],
-                             [3, 4, 5]]]])
+label_image_4d = np.array(
+    [
+        [[[0, 1, 2], [3, 4, 5], [0, 1, 2]], [[3, 4, 5], [0, 1, 2], [3, 4, 5]]],
+        [[[0, 1, 2], [3, 4, 5], [0, 1, 2]], [[3, 4, 5], [0, 1, 2], [3, 4, 5]]],
+    ]
+)
 
 
 def test_map_array_3d():
@@ -106,8 +90,12 @@ def test_generate_cluster_image():
     input_labels = [1, 2, 3, 4, 5]
     output_labels = [1, 1, 0, 0, 0]
 
-    cluster_label_image_3d = utilities.generate_cluster_image(label_image_3d, input_labels, output_labels)
-    cluster_label_image_4d = utilities.generate_cluster_image(label_image_4d, input_labels, output_labels)
+    cluster_label_image_3d = utilities.generate_cluster_image(
+        label_image_3d, input_labels, output_labels
+    )
+    cluster_label_image_4d = utilities.generate_cluster_image(
+        label_image_4d, input_labels, output_labels
+    )
 
     assert cluster_label_image_3d[0, 0, 0] == 0
     assert cluster_label_image_3d[0, 0, 1] == 2
@@ -132,9 +120,12 @@ def test_generate_cluster_image_ocl_array():
     output_labels = [1, 1, 0, 0, 0]
 
     import pyclesperanto_prototype._tier0._pycl as pycl
+
     ocl = pycl.OCLArray.from_array(label_image_2d)
 
-    cluster_label_image_2d = utilities.generate_cluster_image(ocl, input_labels, output_labels)
+    cluster_label_image_2d = utilities.generate_cluster_image(
+        ocl, input_labels, output_labels
+    )
 
     assert cluster_label_image_2d[0, 0] == 0
     assert cluster_label_image_2d[0, 1] == 2
@@ -145,10 +136,13 @@ def test_generate_cluster_tracks():
     plot_cluster_name = "MANUAL_CLUSTER_ID"
 
     import pandas as pd
+
     # Creating a DataFrame from a dictionary
-    features = {'label': [1, 2, 3, 4, 5],
-                'MANUAL_CLUSTER_ID': [1, 1, 0, 0, 0],
-                'value': [2.0, 3.0, 42.0, 50.0, 60.0]}
+    features = {
+        "label": [1, 2, 3, 4, 5],
+        "MANUAL_CLUSTER_ID": [1, 1, 0, 0, 0],
+        "value": [2.0, 3.0, 42.0, 50.0, 60.0],
+    }
 
     features = pd.DataFrame(features)
     labels_layer = napari.layers.Labels(data=label_image_4d, features=features)
