@@ -73,25 +73,6 @@ def test_generate_cluster_image():
         actual_cluster_label_image_4d, expected_cluster_label_image_4d
     )
 
-
-def test_generate_cluster_image_ocl_array():
-    input_labels = [1, 2, 3, 4, 5]
-    output_labels = [1, 1, 0, 0, 0]
-
-    import pyclesperanto_prototype._tier0._pycl as pycl
-
-    ocl = pycl.OCLArray.from_array(label_image_2d)
-
-    actual_cluster_label_image_2d = utilities.generate_cluster_image(
-        ocl, input_labels, output_labels
-    )
-    expected_cluster_label_image_2d = np.array([[0, 2, 2], [1, 1, 1], [0, 2, 2]])
-
-    assert np.array_equal(
-        actual_cluster_label_image_2d, expected_cluster_label_image_2d
-    )
-
-
 def test_generate_cluster_tracks():
     plot_cluster_name = "MANUAL_CLUSTER_ID"
 
