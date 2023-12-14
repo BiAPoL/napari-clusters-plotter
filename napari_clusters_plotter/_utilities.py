@@ -283,6 +283,34 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     Generates a clusters image from a label image and a list of cluster predictions,
     where each label value corresponds to the cluster identity.
     It is assumed that len(predictionlist) == max(label_image)
+    Parameters
+    ----------
+    label_image: ndarray or dask array
+        Label image used for cluster predictions
+    predictionlist: Array-like
+        An array containing cluster identities for each label
+    Returns
+    ----------
+    ndarray: The clusters image as a numpy array.
+    """
+
+    from skimage.util import map_array
+
+    # reforming the prediction list, this is done to account
+    # for cluster labels that start at 0, conveniently hdbscan
+    # labelling starts at -1 for noise, removing these from the labels
+    predictionlist_new = np.array(predictionlist) + 1
+    label_list = np.array(label_list)
+
+    return map_array(np.asarray(label_image), label_list, predictionlist_new).astype(
+        "uint32"
+    )
+
+def generate_cluster_image_new(label_image, label_list, predictionlist):
+    """
+    Generates a clusters image from a label image and a list of cluster predictions,
+    where each label value corresponds to the cluster identity.
+    It is assumed that len(predictionlist) == max(label_image)
 
     Parameters
     ----------
@@ -299,6 +327,7 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     # label_list can be removed from method.
     predictionlist_new = np.array(predictionlist) + 1
     plist = np.zeros(len(predictionlist) + 1, dtype=np.uint32)
+    # plist = np.zeros(int(np.max(label_image)) + 1, dtype=np.uint32)
     plist[label_list] = predictionlist_new
 
     predictionlist_new = plist
