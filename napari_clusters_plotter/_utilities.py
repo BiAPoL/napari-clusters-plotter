@@ -278,6 +278,7 @@ def generate_cluster_4d_labels(analysed_layer, plot_cluster_name):
 
     return cluster_data
 
+
 def generate_cluster_image(label_image, label_list, predictionlist):
     """
     Generates a clusters image from a label image and a list of cluster predictions,
