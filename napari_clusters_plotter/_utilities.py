@@ -309,6 +309,7 @@ def generate_cluster_image_old(label_image, label_list, predictionlist):
         "uint32"
     )
 
+
 def generate_cluster_image(label_image, label_list, predictionlist):
     """
     Generates a clusters image from a label image and a list of cluster predictions,

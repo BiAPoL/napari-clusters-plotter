@@ -1,11 +1,14 @@
 import sys
+
 import numpy as np
 import pandas as pd
-from qtpy.QtWidgets import QListWidget
 from napari.layers import Labels
+from qtpy.QtWidgets import QListWidget
+
 import napari_clusters_plotter._utilities as utilities
 
 sys.path.append("../")
+
 
 class FakeWidget:
     def __init__(self, layer):
@@ -122,6 +125,7 @@ def test_cluster_image_generation_unsorted_non_sequential_labels():
     assert np.array_equal(result_dask[0].compute()[0], true_result)
     assert np.array_equal(result_dask[1].compute()[0], true_result_tp2)
 
+
 def test_feature_setting(make_napari_viewer):
     viewer = make_napari_viewer()
     label = np.array(
@@ -164,7 +168,6 @@ def test_generate_cluster_image_3D():
         [[[0, 1, 2], [3, 4, 5], [0, 1, 2]], [[3, 4, 5], [0, 1, 2], [3, 4, 5]]]
     )
 
-
     actual_cluster_label_image_3d = utilities.generate_cluster_image(
         label_image_3d, input_labels, output_labels
     )
@@ -175,6 +178,7 @@ def test_generate_cluster_image_3D():
     assert np.array_equal(
         actual_cluster_label_image_3d, expected_cluster_label_image_3d
     )
+
 
 def test_generate_cluster_tracks():
     label_image_4d_tracking = np.array(
@@ -197,9 +201,9 @@ def test_generate_cluster_tracks():
 
     features = pd.DataFrame(features)
     labels_layer = Labels(data=label_image_4d_tracking, features=features)
-    actual_cluster_layer = np.array(utilities.generate_cluster_tracks(
-        labels_layer, plot_cluster_name
-    ))
+    actual_cluster_layer = np.array(
+        utilities.generate_cluster_tracks(labels_layer, plot_cluster_name)
+    )
     expected_cluster_layer = np.array(
         [
             [[[0, 2, 2], [1, 1, 1], [0, 2, 2]], [[1, 1, 1], [0, 2, 2], [1, 1, 1]]],
@@ -209,56 +213,42 @@ def test_generate_cluster_tracks():
 
     assert np.array_equal(actual_cluster_layer, expected_cluster_layer)
 
+
 def test_generate_cluster_4d_labels():
-    label_image_4D_non_tracking = np.array([
-       [[[0, 1, 0],
-         [1, 1, 1],
-         [0, 1, 0]],
+    label_image_4D_non_tracking = np.array(
+        [
+            [[[0, 1, 0], [1, 1, 1], [0, 1, 0]], [[0, 2, 0], [2, 2, 2], [0, 2, 0]]],
+            [[[0, 3, 0], [3, 3, 3], [0, 3, 0]], [[0, 4, 0], [4, 4, 4], [0, 4, 0]]],
+        ]
+    )
 
-        [[0, 2, 0],
-         [2, 2, 2],
-         [0, 2, 0]]],
+    expected_output = np.array(
+        [
+            [[[0, 2, 0], [2, 2, 2], [0, 2, 0]], [[0, 2, 0], [2, 2, 2], [0, 2, 0]]],
+            [[[0, 1, 0], [1, 1, 1], [0, 1, 0]], [[0, 1, 0], [1, 1, 1], [0, 1, 0]]],
+        ]
+    )
 
-       [[[0, 3, 0],
-         [3, 3, 3],
-         [0, 3, 0]],
-
-        [[0, 4, 0],
-         [4, 4, 4],
-         [0, 4, 0]]]
-    ])
-    
-    expected_output = np.array([
-        [[[0, 2, 0],
-         [2, 2, 2],
-         [0, 2, 0]],
-
-        [[0, 2, 0],
-         [2, 2, 2],
-         [0, 2, 0]]],
-
-       [[[0, 1, 0],
-         [1, 1, 1],
-         [0, 1, 0]],
-
-        [[0, 1, 0],
-         [1, 1, 1],
-         [0, 1, 0]]]
-    ])
-    
     plot_cluster_name = "MANUAL_CLUSTER_ID"
 
     import pandas as pd
 
     # Creating a DataFrame from a dictionary
     features = {
-        "label": [1, 2, 3, 4,],
+        "label": [
+            1,
+            2,
+            3,
+            4,
+        ],
         "MANUAL_CLUSTER_ID": [1, 1, 0, 0],
         "value": [2.0, 3.0, 42.0, 50.0],
-        utilities._POINTER:[0,0,1,1]
+        utilities._POINTER: [0, 0, 1, 1],
     }
     features = pd.DataFrame(features)
     labels_layer = Labels(data=label_image_4D_non_tracking, features=features)
-    actual_cluster_layer = np.array(utilities.generate_cluster_4d_labels(labels_layer,plot_cluster_name))
-    
+    actual_cluster_layer = np.array(
+        utilities.generate_cluster_4d_labels(labels_layer, plot_cluster_name)
+    )
+
     assert np.array_equal(actual_cluster_layer, expected_output)
