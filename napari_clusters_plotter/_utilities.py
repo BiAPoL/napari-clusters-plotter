@@ -279,7 +279,7 @@ def generate_cluster_4d_labels(analysed_layer, plot_cluster_name):
     return cluster_data
 
 
-def generate_cluster_image(label_image, label_list, predictionlist):
+def generate_cluster_image_old(label_image, label_list, predictionlist):
     """
     Generates a clusters image from a label image and a list of cluster predictions,
     where each label value corresponds to the cluster identity.
@@ -308,6 +308,33 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     return map_array(np.asarray(label_image), label_list, predictionlist_new).astype(
         "uint32"
     )
+
+def generate_cluster_image(label_image, label_list, predictionlist):
+    """
+    Generates a clusters image from a label image and a list of cluster predictions,
+    where each label value corresponds to the cluster identity.
+    It is assumed that len(predictionlist) == max(label_image)
+
+    Parameters
+    ----------
+    label_image: ndarray or dask array
+        Label image used for cluster predictions
+    predictionlist: Array-like
+        An array containing cluster identities for each label
+
+    Returns
+    ----------
+    ndarray: The clusters image as a numpy array.
+    """
+
+    # label_list can be removed from method.
+    predictionlist_new = np.array(predictionlist) + 1
+    plist = np.zeros(int(np.max(label_image)) + 1, dtype=np.uint32)
+    plist[label_list] = predictionlist_new
+
+    predictionlist_new = plist
+
+    return predictionlist_new[label_image]
 
 
 def generate_cluster_surface(surface_data, prediction_list):
