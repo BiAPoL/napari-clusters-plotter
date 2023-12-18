@@ -580,11 +580,7 @@ class MplCanvas(FigureCanvas):
         self.reset()
 
     def set_selector_cluster_id_overlay(self, overlay: np.array):
-        try:
             self.selector.cluster_id_histo_overlay = overlay
-        except:
-            # might not exist...
-            pass
 
     def reset_zoom(self):
         if self.xylim:
