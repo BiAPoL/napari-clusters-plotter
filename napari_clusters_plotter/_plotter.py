@@ -90,8 +90,9 @@ class PlotterWidget(QMainWindow):
 
         self.analysed_layer = None
         self.visualized_layer = None
+        self.cluster_id_histo_overlay = None
 
-        def manual_clustering_method(inside):
+        def manual_clustering_method(inside, **kwargs):
             inside = np.array(inside)  # leads to errors sometimes otherwise
 
             if self.analysed_layer is None or len(inside) == 0:
@@ -101,7 +102,12 @@ class PlotterWidget(QMainWindow):
             features = get_layer_tabular_data(self.analysed_layer)
 
             modifiers = QGuiApplication.keyboardModifiers()
-            if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
+            if 'delete_cluster' in kwargs:
+                features[clustering_ID].mask(
+                    features[clustering_ID]==kwargs['delete_cluster'], other=-1, inplace=True
+                )
+
+            elif modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
                 features[clustering_ID].mask(
                     inside, other=features[clustering_ID].max() + 1, inplace=True
                 )
@@ -677,7 +683,7 @@ class PlotterWidget(QMainWindow):
                         log_scale=self.log_scale.isChecked(),
                     )
 
-                    rgb_img = make_cluster_overlay_img(
+                    rgb_img, self.cluster_id_histo_overlay = make_cluster_overlay_img(
                         cluster_id=plot_cluster_name,
                         features=features,
                         feature_x=self.plot_x_axis_name,
@@ -686,6 +692,8 @@ class PlotterWidget(QMainWindow):
                         histogram_data=self.graphics_widget.histogram,
                         hide_first_cluster=self.plot_hide_non_selected.isChecked(),
                     )
+                    print("SET OV")
+                    self.graphics_widget.set_selector_cluster_id_overlay(self.cluster_id_histo_overlay)
                     xedges = self.graphics_widget.histogram[1]
                     yedges = self.graphics_widget.histogram[2]
 

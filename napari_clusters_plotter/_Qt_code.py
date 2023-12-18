@@ -13,6 +13,8 @@ from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Layer
 from qtpy.QtCore import QRect
+from qtpy.QtCore import Qt
+from qtpy.QtGui import QGuiApplication
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -390,24 +392,49 @@ def create_options_dropdown(name: str, value, options: dict, label: str):
 
 
 class SelectFrom2DHistogram:
-    def __init__(self, parent, ax, full_data):
+    def __init__(self, parent, ax, full_data, histogram):
         self.parent = parent
         self.ax = ax
         self.canvas = ax.figure.canvas
         self.xys = full_data
+        self.cluster_id_histo_overlay = None
+        self.histogram = histogram
 
         self.lasso = LassoSelector(ax, onselect=self.onselect)
         self.ind = []
         self.ind_mask = []
 
+    def vert_to_coord(self, vert):
+        '''
+        Converts verticis to histogram coordinates in pixels
+        '''
+        xrange = self.histogram[1][-1] - self.histogram[1][0]
+        yrange = self.histogram[2][-1] - self.histogram[2][0]
+        v = (
+            (vert[0] - self.histogram[1][0]) / (xrange) * self.histogram[0].shape[0],
+            (vert[1] - self.histogram[2][0]) / (yrange) * self.histogram[0].shape[1],
+        )
+
+        coord = tuple([int(c) for c in v])
+        return coord
+
     def onselect(self, verts):
         path = Path(verts)
 
         self.ind_mask = path.contains_points(self.xys)
-        self.ind = np.nonzero(self.ind_mask)[0]
 
+        modifiers = QGuiApplication.keyboardModifiers()
         if self.parent.manual_clustering_method is not None:
-            self.parent.manual_clustering_method(self.ind_mask)
+            if modifiers == Qt.ControlModifier:
+                # I tried to solve it with self.ax.transData.transform... but it did not work...
+                coord_click = self.vert_to_coord(verts[0])
+                cluster_id_to_delete = self.cluster_id_histo_overlay[coord_click[1],coord_click[0]][0]
+                if cluster_id_to_delete>0:
+                    self.parent.manual_clustering_method(self.ind_mask, delete_cluster=cluster_id_to_delete)
+                else:
+                    self.parent.manual_clustering_method(self.ind_mask)
+            else:
+                self.parent.manual_clustering_method(self.ind_mask)
 
     def disconnect(self):
         self.lasso.disconnect_events()
@@ -521,6 +548,7 @@ class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=7, height=4, manual_clustering_method=None):
         self.fig = Figure(figsize=(width, height), constrained_layout=True)
         self.manual_clustering_method = manual_clustering_method
+        self.parent = parent
 
         self.axes = self.fig.add_subplot(111)
         self.histogram = None
@@ -550,6 +578,13 @@ class MplCanvas(FigureCanvas):
         self.selected_colormap = "magma"
 
         self.reset()
+
+    def set_selector_cluster_id_overlay(self, overlay: np.array):
+        try:
+            self.selector.cluster_id_histo_overlay = overlay
+        except:
+            # might not exist...
+            pass
 
     def reset_zoom(self):
         if self.xylim:
@@ -617,7 +652,7 @@ class MplCanvas(FigureCanvas):
 
         full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
-        self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+        self.selector = SelectFrom2DHistogram(self, self.axes, full_data, self.histogram)
         self.axes.figure.canvas.draw_idle()
 
     def make_1d_histogram(
