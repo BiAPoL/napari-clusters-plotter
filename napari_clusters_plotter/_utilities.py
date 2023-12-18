@@ -287,6 +287,9 @@ def generate_cluster_image_(label_image, label_list, predictionlist):
     Generates a clusters image from a label image and a list of cluster predictions,
     where each label value corresponds to the cluster identity.
     It is assumed that len(predictionlist) == max(label_image)
+
+    Deprecated, use generate_cluster_image instead
+
     Parameters
     ----------
     label_image: ndarray or dask array
@@ -316,7 +319,9 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     Generates a clusters image from a label image and a list of cluster predictions,
     where each label value corresponds to the cluster identity.
     It is assumed that len(predictionlist) == max(label_image)
-    This function is recommended instead of generate_cluster_image_ as it is faster, because it does not use skimage.util.map_array
+
+    This function is recommended instead of generate_cluster_image_ as it is faster,
+    because it does not use skimage.util.map_array
 
     Parameters
     ----------
