@@ -102,7 +102,9 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                features[clustering_ID].mask(inside, other=features[clustering_ID].max() + 1, inplace=True)
+                features[clustering_ID].mask(
+                    inside, other=features[clustering_ID].max() + 1, inplace=True
+                )
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
