@@ -603,7 +603,9 @@ class MplCanvas(FigureCanvas):
             h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
             self.last_datax = data_x
             self.last_datay = data_y
-            self.full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
+            self.full_data = pd.concat(
+                [pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1
+            )
 
         self.axes.imshow(
             h.T,
