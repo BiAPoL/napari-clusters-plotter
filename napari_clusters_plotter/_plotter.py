@@ -102,9 +102,9 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features[clustering_ID].to_numpy()
-                former_clusters[inside] = np.max(former_clusters) + 1
-                features.update(pd.DataFrame(former_clusters, columns=[clustering_ID]))
+                features[clustering_ID].mask(
+                    inside, other=features[clustering_ID].max() + 1, inplace=True
+                )
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
