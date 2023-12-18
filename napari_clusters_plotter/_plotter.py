@@ -692,7 +692,6 @@ class PlotterWidget(QMainWindow):
                         histogram_data=self.graphics_widget.histogram,
                         hide_first_cluster=self.plot_hide_non_selected.isChecked(),
                     )
-                    print("SET OV")
                     self.graphics_widget.set_selector_cluster_id_overlay(self.cluster_id_histo_overlay)
                     xedges = self.graphics_widget.histogram[1]
                     yedges = self.graphics_widget.histogram[2]
