@@ -102,9 +102,11 @@ class PlotterWidget(QMainWindow):
             features = get_layer_tabular_data(self.analysed_layer)
 
             modifiers = QGuiApplication.keyboardModifiers()
-            if 'delete_cluster' in kwargs:
+            if "delete_cluster" in kwargs:
                 features[clustering_ID].mask(
-                    features[clustering_ID]==kwargs['delete_cluster'], other=-1, inplace=True
+                    features[clustering_ID] == kwargs["delete_cluster"],
+                    other=-1,
+                    inplace=True,
                 )
 
             elif modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
@@ -692,7 +694,9 @@ class PlotterWidget(QMainWindow):
                         histogram_data=self.graphics_widget.histogram,
                         hide_first_cluster=self.plot_hide_non_selected.isChecked(),
                     )
-                    self.graphics_widget.set_selector_cluster_id_overlay(self.cluster_id_histo_overlay)
+                    self.graphics_widget.set_selector_cluster_id_overlay(
+                        self.cluster_id_histo_overlay
+                    )
                     xedges = self.graphics_widget.histogram[1]
                     yedges = self.graphics_widget.histogram[2]
 

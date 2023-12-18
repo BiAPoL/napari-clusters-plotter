@@ -12,10 +12,8 @@ from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Layer
-from qtpy.QtCore import QRect
-from qtpy.QtCore import Qt
-from qtpy.QtGui import QGuiApplication
-from qtpy.QtGui import QIcon
+from qtpy.QtCore import QRect, Qt
+from qtpy.QtGui import QGuiApplication, QIcon
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
@@ -405,9 +403,9 @@ class SelectFrom2DHistogram:
         self.ind_mask = []
 
     def vert_to_coord(self, vert):
-        '''
+        """
         Converts verticis to histogram coordinates in pixels
-        '''
+        """
         xrange = self.histogram[1][-1] - self.histogram[1][0]
         yrange = self.histogram[2][-1] - self.histogram[2][0]
         v = (
@@ -428,9 +426,13 @@ class SelectFrom2DHistogram:
             if modifiers == Qt.ControlModifier:
                 # I tried to solve it with self.ax.transData.transform... but it did not work...
                 coord_click = self.vert_to_coord(verts[0])
-                cluster_id_to_delete = self.cluster_id_histo_overlay[coord_click[1],coord_click[0]][0]
-                if cluster_id_to_delete>0:
-                    self.parent.manual_clustering_method(self.ind_mask, delete_cluster=cluster_id_to_delete)
+                cluster_id_to_delete = self.cluster_id_histo_overlay[
+                    coord_click[1], coord_click[0]
+                ][0]
+                if cluster_id_to_delete > 0:
+                    self.parent.manual_clustering_method(
+                        self.ind_mask, delete_cluster=cluster_id_to_delete
+                    )
                 else:
                     self.parent.manual_clustering_method(self.ind_mask)
             else:
@@ -648,7 +650,9 @@ class MplCanvas(FigureCanvas):
 
         full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
-        self.selector = SelectFrom2DHistogram(self, self.axes, full_data, self.histogram)
+        self.selector = SelectFrom2DHistogram(
+            self, self.axes, full_data, self.histogram
+        )
         self.axes.figure.canvas.draw_idle()
 
     def make_1d_histogram(
