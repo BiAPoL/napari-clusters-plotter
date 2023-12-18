@@ -240,7 +240,6 @@ def update_properties_list(widget, exclude_list):
 
 
 def generate_cluster_tracks(analysed_layer, plot_cluster_name):
-
     features = analysed_layer.features
     label_id_lists_per_timepoint = list()
     prediction_lists_per_timepoint = list()
@@ -249,7 +248,9 @@ def generate_cluster_tracks(analysed_layer, plot_cluster_name):
         labels_of_timeframe = np.unique(analysed_layer.data[i].flatten())
         filtered_features = features[features["label"].isin(labels_of_timeframe)]
         label_id_lists_per_timepoint.append(filtered_features["label"].tolist())
-        prediction_lists_per_timepoint.append(filtered_features[plot_cluster_name].tolist())
+        prediction_lists_per_timepoint.append(
+            filtered_features[plot_cluster_name].tolist()
+        )
 
     cluster_data = dask_cluster_image_timelapse(
         analysed_layer.data,
