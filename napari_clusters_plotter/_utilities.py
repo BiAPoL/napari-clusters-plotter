@@ -336,7 +336,13 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     """
 
     predictionlist_new = np.array(predictionlist) + 1
-    plist = np.zeros(int(np.max(label_image)) + 1, dtype=np.uint32)
+    plist = np.zeros(
+        # we take the maximum of either the labels in the image
+        # or the labels in the list to take care of the case, where
+        # the label list contains labels not in the image
+        int(max([label_image.max(), np.max(label_list)])) + 1, 
+        dtype=np.uint32
+    )
     plist[label_list] = predictionlist_new
 
     predictionlist_new = plist
