@@ -418,15 +418,15 @@ class SelectFrom2DHistogram:
         coord = tuple([int(c) for c in v])
         return coord
 
-
     def onselect(self, verts):
-
         if self.parent.manual_clustering_method is None:
             return
 
         modifiers = QGuiApplication.keyboardModifiers()
 
-        if modifiers == Qt.ControlModifier and len(verts)==2: # has len of 2 when single click was done
+        if (
+            modifiers == Qt.ControlModifier and len(verts) == 2
+        ):  # has len of 2 when single click was done
             coord_click = self.vert_to_coord(verts[0])
             cluster_id_to_delete = self.cluster_id_histo_overlay[coord_click[::-1]][0]
             if cluster_id_to_delete > 0:
