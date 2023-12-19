@@ -406,6 +406,8 @@ class SelectFrom2DHistogram:
         """
         Converts verticis to histogram coordinates in pixels
         """
+
+        # I tried to solve it with self.ax.transData.transform... but it did not work...
         xrange = self.histogram[1][-1] - self.histogram[1][0]
         yrange = self.histogram[2][-1] - self.histogram[2][0]
         v = (
@@ -416,27 +418,26 @@ class SelectFrom2DHistogram:
         coord = tuple([int(c) for c in v])
         return coord
 
-    def onselect(self, verts):
-        path = Path(verts)
 
-        self.ind_mask = path.contains_points(self.xys)
+    def onselect(self, verts):
+
+        if self.parent.manual_clustering_method is None:
+            return
 
         modifiers = QGuiApplication.keyboardModifiers()
-        if self.parent.manual_clustering_method is not None:
-            if modifiers == Qt.ControlModifier:
-                # I tried to solve it with self.ax.transData.transform... but it did not work...
-                coord_click = self.vert_to_coord(verts[0])
-                cluster_id_to_delete = self.cluster_id_histo_overlay[
-                    coord_click[1], coord_click[0]
-                ][0]
-                if cluster_id_to_delete > 0:
-                    self.parent.manual_clustering_method(
-                        self.ind_mask, delete_cluster=cluster_id_to_delete
-                    )
-                else:
-                    self.parent.manual_clustering_method(self.ind_mask)
-            else:
-                self.parent.manual_clustering_method(self.ind_mask)
+
+        if modifiers == Qt.ControlModifier and len(verts)==2: # has len of 2 when single click was done
+            coord_click = self.vert_to_coord(verts[0])
+            cluster_id_to_delete = self.cluster_id_histo_overlay[coord_click[::-1]][0]
+            if cluster_id_to_delete > 0:
+                self.parent.manual_clustering_method(
+                    np.zeros(shape=self.xys.shape), delete_cluster=cluster_id_to_delete
+                )
+                return
+
+        path = Path(verts)
+        self.ind_mask = path.contains_points(self.xys)
+        self.parent.manual_clustering_method(self.ind_mask)
 
     def disconnect(self):
         self.lasso.disconnect_events()
