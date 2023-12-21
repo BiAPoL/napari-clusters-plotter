@@ -433,7 +433,7 @@ class SelectFrom2DHistogram:
                 self.parent.manual_clustering_method(
                     np.zeros(shape=self.xys.shape), delete_cluster=cluster_id_to_delete
                 )
-                return
+            return
 
         path = Path(verts)
         self.ind_mask = path.contains_points(self.xys)
