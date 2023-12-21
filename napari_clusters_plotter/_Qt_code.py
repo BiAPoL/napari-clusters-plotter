@@ -654,7 +654,7 @@ class MplCanvas(FigureCanvas):
         self.histogram = (h, xedges, yedges)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(
-            self, self.axes, full_data, self.histogram
+            self, self.axes, self.full_data, self.histogram
         )
         self.axes.figure.canvas.draw_idle()
 
