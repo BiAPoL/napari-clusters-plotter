@@ -418,15 +418,15 @@ class SelectFrom2DHistogram:
         coord = tuple([int(c) for c in v])
         return coord
 
-
     def onselect(self, verts):
-
         if self.parent.manual_clustering_method is None:
             return
 
         modifiers = QGuiApplication.keyboardModifiers()
 
-        if modifiers == Qt.ControlModifier and len(verts)==2: # has len of 2 when single click was done
+        if (
+            modifiers == Qt.ControlModifier and len(verts) == 2
+        ):  # has len of 2 when single click was done
             coord_click = self.vert_to_coord(verts[0])
             cluster_id_to_delete = self.cluster_id_histo_overlay[coord_click[::-1]][0]
             if cluster_id_to_delete > 0:
@@ -561,6 +561,7 @@ class MplCanvas(FigureCanvas):
         self.last_xy_labels = None
         self.last_datax = None
         self.last_datay = None
+        self.full_data = None
 
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
@@ -636,6 +637,9 @@ class MplCanvas(FigureCanvas):
             h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
             self.last_datax = data_x
             self.last_datay = data_y
+            self.full_data = pd.concat(
+                [pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1
+            )
 
         self.axes.imshow(
             h.T,
@@ -648,8 +652,6 @@ class MplCanvas(FigureCanvas):
         self.axes.set_xlim(xedges[0], xedges[-1])
         self.axes.set_ylim(yedges[0], yedges[-1])
         self.histogram = (h, xedges, yedges)
-
-        full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(
             self, self.axes, full_data, self.histogram

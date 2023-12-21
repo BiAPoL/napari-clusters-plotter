@@ -241,17 +241,20 @@ def update_properties_list(widget, exclude_list):
 
 def generate_cluster_tracks(analysed_layer, plot_cluster_name):
     features = analysed_layer.features
-    label_id_list_per_timepoint = [
-        features["label"].tolist() for i in range(analysed_layer.data.shape[0])
-    ]
-    prediction_lists_per_timepoint = [
-        features[plot_cluster_name].tolist()
-        for i in range(analysed_layer.data.shape[0])
-    ]
+    label_id_lists_per_timepoint = list()
+    prediction_lists_per_timepoint = list()
+
+    for i in range(analysed_layer.data.shape[0]):
+        labels_of_timeframe = np.unique(analysed_layer.data[i])
+        filtered_features = features[features["label"].isin(labels_of_timeframe)]
+        label_id_lists_per_timepoint.append(filtered_features["label"].tolist())
+        prediction_lists_per_timepoint.append(
+            filtered_features[plot_cluster_name].tolist()
+        )
 
     cluster_data = dask_cluster_image_timelapse(
         analysed_layer.data,
-        label_id_list_per_timepoint,
+        label_id_lists_per_timepoint,
         prediction_lists_per_timepoint,
     )
 
@@ -284,6 +287,9 @@ def generate_cluster_image_(label_image, label_list, predictionlist):
     Generates a clusters image from a label image and a list of cluster predictions,
     where each label value corresponds to the cluster identity.
     It is assumed that len(predictionlist) == max(label_image)
+
+    Deprecated, use generate_cluster_image instead
+
     Parameters
     ----------
     label_image: ndarray or dask array
@@ -314,6 +320,9 @@ def generate_cluster_image(label_image, label_list, predictionlist):
     where each label value corresponds to the cluster identity.
     It is assumed that len(predictionlist) == max(label_image)
 
+    This function is recommended instead of generate_cluster_image_ as it is faster,
+    because it does not use skimage.util.map_array
+
     Parameters
     ----------
     label_image: ndarray or dask array
@@ -328,7 +337,11 @@ def generate_cluster_image(label_image, label_list, predictionlist):
 
     predictionlist_new = np.array(predictionlist) + 1
     plist = np.zeros(
-        int(max([label_image.max(), np.max(label_list)])) + 1, dtype=np.uint32
+        # we take the maximum of either the labels in the image
+        # or the labels in the list to take care of the case, where
+        # the label list contains labels not in the image
+        int(max([label_image.max(), np.max(label_list)])) + 1,
+        dtype=np.uint32,
     )
     plist[label_list] = predictionlist_new
 
