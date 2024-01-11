@@ -617,6 +617,7 @@ class MplCanvas(FigureCanvas):
         )
         self.axes.set_xlim(xedges[0], xedges[-1])
         self.axes.set_ylim(yedges[0], yedges[-1])
+        self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
         self.histogram = (h, xedges, yedges)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, self.full_data)
