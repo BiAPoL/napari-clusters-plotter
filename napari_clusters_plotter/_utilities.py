@@ -114,6 +114,7 @@ def restore_defaults(widget, defaults: dict):
         if item == "custom_name":
             widget.custom_name.clear()
 
+
 def set_features(layer, tabular_data):
     """
     Sets the features or properties (older napari versions) of a given layer to a provided tabular data.
