@@ -68,9 +68,9 @@ def layer_container_and_selection(viewer = None):
     layer_select = create_widget(annotation=Layer, label="layer")
     layer_selection_container.layout().addWidget(layer_select.native)
 
-    if viewer is not None:
-        has_features = [check_for_properties_and_features(layer) for layer in viewer.layers]
-        layer_select.value = viewer.layers[np.min(np.argwhere(has_features))]
+    if viewer is not None and viewer.layers.selection.active is not None:
+        layer_select.value = viewer.layers.selection.active
+        
     return layer_selection_container, layer_select
 
 
