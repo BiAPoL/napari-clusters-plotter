@@ -114,6 +114,7 @@ def restore_defaults(widget, defaults: dict):
         if item == "custom_name":
             widget.custom_name.clear()
 
+
 def check_for_properties_and_features(layer):
     """
     Checks if the layer has properties or features attached to it
@@ -121,12 +122,13 @@ def check_for_properties_and_features(layer):
     Parameters
     ----------
     layer : object
-        A napari layer object 
+        A napari layer object
     """
     try:
         return layer.properties is not None or layer.features is not None
     except AttributeError:
         return False
+
 
 def set_features(layer, tabular_data):
     """
