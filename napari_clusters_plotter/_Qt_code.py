@@ -25,7 +25,6 @@ from qtpy.QtWidgets import (
 )
 from superqt import QCollapsible
 
-from ._utilities import check_for_properties_and_features
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 MAX_WIDTH = 100
