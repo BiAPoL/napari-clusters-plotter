@@ -25,7 +25,6 @@ from qtpy.QtWidgets import (
 )
 from superqt import QCollapsible
 
-from ._utilities import check_for_properties_and_features
 
 ICON_ROOT = PathL(__file__).parent / "icons"
 MAX_WIDTH = 100
@@ -71,7 +70,7 @@ def layer_container_and_selection(viewer=None):
 
     if viewer is not None and viewer.layers.selection.active is not None:
         layer_select.value = viewer.layers.selection.active
-        
+
     return layer_selection_container, layer_select
 
 
