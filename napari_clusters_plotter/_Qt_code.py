@@ -675,6 +675,7 @@ class MplCanvas(FigureCanvas):
             self.axes,
             self.pts,
         )
+        self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
 
     def match_napari_layout(self):
         """Change background and axes colors to match napari layout"""
