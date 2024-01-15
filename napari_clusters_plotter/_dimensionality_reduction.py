@@ -65,7 +65,7 @@ class DimensionalityReductionWidget(QWidget):
         (
             layer_selection_container,
             self.layer_select,
-        ) = layer_container_and_selection()
+        ) = layer_container_and_selection(viewer=self.viewer)
 
         # select properties of which to produce a dimensionality reduced version
         (

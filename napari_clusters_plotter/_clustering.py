@@ -55,7 +55,7 @@ class ClusteringWidget(QWidget):
         (
             layer_selection_container,
             self.layer_select,
-        ) = layer_container_and_selection()
+        ) = layer_container_and_selection(viewer=self.viewer)
 
         # widget for the selection of properties to perform clustering
         (
