@@ -24,6 +24,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 from superqt import QCollapsible
+
 from ._utilities import check_for_properties_and_features
 
 ICON_ROOT = PathL(__file__).parent / "icons"
@@ -53,7 +54,7 @@ def measurements_container_and_list():
     return properties_container, properties_list
 
 
-def layer_container_and_selection(viewer = None):
+def layer_container_and_selection(viewer=None):
     """
     Create a container and a dropdown widget to select the layer.
 
