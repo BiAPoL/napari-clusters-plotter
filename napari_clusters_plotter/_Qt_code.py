@@ -52,7 +52,7 @@ def measurements_container_and_list():
     return properties_container, properties_list
 
 
-def layer_container_and_selection():
+def layer_container_and_selection(viewer=None):
     """
     Create a container and a dropdown widget to select the layer.
 
@@ -66,6 +66,9 @@ def layer_container_and_selection():
     layer_selection_container.layout().addWidget(QLabel("Layer"))
     layer_select = create_widget(annotation=Layer, label="layer")
     layer_selection_container.layout().addWidget(layer_select.native)
+
+    if viewer is not None and viewer.layers.selection.active is not None:
+        layer_select.value = viewer.layers.selection.active
 
     return layer_selection_container, layer_select
 
