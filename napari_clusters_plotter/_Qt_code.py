@@ -593,9 +593,13 @@ class MplCanvas(FigureCanvas):
         norm = None
         if log_scale:
             norm = "log"
-        data_unchanged= self.histogram is not None and np.array_equal(self.last_datax, data_x) and np.array_equal(self.last_datay, data_y)
+        data_unchanged = (
+            self.histogram is not None
+            and np.array_equal(self.last_datax, data_x)
+            and np.array_equal(self.last_datay, data_y)
+        )
 
-        if (data_unchanged):
+        if data_unchanged:
             (h, xedges, yedges) = self.histogram
         else:
             h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
