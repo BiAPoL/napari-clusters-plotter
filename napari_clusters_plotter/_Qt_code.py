@@ -596,11 +596,13 @@ class MplCanvas(FigureCanvas):
         norm = None
         if log_scale:
             norm = "log"
-        if (
+        data_unchanged = (
             self.histogram is not None
             and np.array_equal(self.last_datax, data_x)
             and np.array_equal(self.last_datay, data_y)
-        ):
+        )
+
+        if data_unchanged:
             (h, xedges, yedges) = self.histogram
         else:
             h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
@@ -618,9 +620,10 @@ class MplCanvas(FigureCanvas):
             aspect="auto",
             norm=norm,
         )
-        self.axes.set_xlim(xedges[0], xedges[-1])
-        self.axes.set_ylim(yedges[0], yedges[-1])
-        self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
+        if not data_unchanged:
+            self.axes.set_xlim(xedges[0], xedges[-1])
+            self.axes.set_ylim(yedges[0], yedges[-1])
+            self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
         self.histogram = (h, xedges, yedges)
         self.selector.disconnect()
         self.selector = SelectFrom2DHistogram(self, self.axes, self.full_data)
