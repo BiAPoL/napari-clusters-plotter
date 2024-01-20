@@ -549,6 +549,7 @@ def make_cluster_overlay_img(
         ]
 
     cluster_overlay_rgba = np.zeros((*h.shape, 4), dtype=float)
+    cluster_overlay_cluster_id = np.zeros((*h.shape, 1), dtype=int)
     output_max = np.zeros(h.shape, dtype=float)
 
     for cluster, entries in relevant_entries.groupby(cluster_id):
@@ -565,5 +566,8 @@ def make_cluster_overlay_img(
         ]
         rgba.append(0.9)
         cluster_overlay_rgba[mask] = rgba
+        cluster_overlay_cluster_id[mask] = cluster
 
-    return cluster_overlay_rgba.swapaxes(0, 1)
+    return cluster_overlay_rgba.swapaxes(0, 1), cluster_overlay_cluster_id.swapaxes(
+        0, 1
+    )
