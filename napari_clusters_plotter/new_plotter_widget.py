@@ -27,7 +27,7 @@ class PlotterWidget(QMainWindow):
 
         self.control_widget = QWidget()
         uic.loadUi(
-            r"C:\Users\savill\OneDrive\Documents\Bia POL stuff\Napari Plugin Development\plotter_inputs.ui",
+            "./plotter_inputs.ui",
             self.control_widget,
         )
 
@@ -210,4 +210,4 @@ viewer = napari.Viewer()
 widget = PlotterWidget(viewer)
 viewer.window.add_dock_widget(widget)
 
-print("hi")
+# print("hi")
