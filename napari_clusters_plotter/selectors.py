@@ -1,7 +1,6 @@
-from matplotlib.widgets import LassoSelector
-from matplotlib.path import Path as mplPath
-
 import numpy as np
+from matplotlib.path import Path as mplPath
+from matplotlib.widgets import LassoSelector
 
 
 class Selector:
@@ -15,6 +14,7 @@ class Selector:
     axes : matplotlib.axes.Axes
         The axes to draw on.
     """
+
     def __init__(self, parent, axes):
         self.parent = parent
         self.axes = axes
@@ -66,6 +66,7 @@ class CustomLassoSelector(Selector):
     axes : matplotlib.axes.Axes
         The axes to draw on.
     """
+
     def __init__(self, parent, axes):
         super().__init__(parent, axes)
 
@@ -84,4 +85,3 @@ class CustomLassoSelector(Selector):
         color_indices[self.indeces] = self.artist.selected_color_index
         # TODO: Replace this by pyq signal/slot
         self.artist.color_indices = color_indices  # This updates the plot
-
