@@ -166,7 +166,7 @@ class PlotterWidget(QMainWindow):
 
     @property
     def hide_non_selected(self):
-        self.control_widget.non_selected_checkbutton.isChecked()
+        return self.control_widget.non_selected_checkbutton.isChecked()
 
     @hide_non_selected.setter
     def hide_non_selected(self, val: bool):
