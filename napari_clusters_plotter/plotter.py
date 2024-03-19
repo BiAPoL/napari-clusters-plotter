@@ -1,13 +1,13 @@
 from pathlib import Path
 
 import numpy as np
-from matplotlib.path import Path as mplPath
-from matplotlib.widgets import LassoSelector
 from nap_plot_tools import CustomToolbarWidget, QtColorSpinBox, make_cat10_mod_cmap
 from napari.layers import Labels, Points, Tracks
 from napari_matplotlib.base import SingleAxesWidget
 from napari_matplotlib.util import Interval
 from qtpy.QtWidgets import QHBoxLayout, QLabel
+
+from .selectors import CustomLassoSelector
 
 # icon_folder_path = Path().parent.resolve().parent / 'icons' # Use this line if inside a juptyer notebook
 icon_folder_path = (
@@ -109,42 +109,8 @@ class CustomScatter:
             self._scatter_handle.set_facecolor(self._current_colors)
             self._axes.figure.canvas.draw_idle()
 
-    def add_lasso_selector(self):
-        self.lasso_selector = CustomLassoSelector(self, self._axes)
-
-
-class CustomLassoSelector:
-    def __init__(self, parent, axes):
-        self.artist = parent
-        self.axes = axes
-        self.canvas = axes.figure.canvas
-
-        self.lasso = LassoSelector(axes, onselect=self.onselect)
-        self.ind = []
-        self.ind_mask = []
-        # start disabled
-        self.disable()
-
-    def enable(self):
-        """Enable the Lasso selector."""
-        self.lasso = LassoSelector(self.axes, onselect=self.onselect)
-
-    def disable(self):
-        """Disable the Lasso selector."""
-        self.lasso.disconnect_events()
-
-    def onselect(self, verts):
-        # Get plotted data and color indices
-        plotted_data = self.artist.data
-        color_indices = self.artist.color_indices
-        # Get indices of selected data points
-        path = mplPath(verts)
-        self.ind_mask = path.contains_points(plotted_data)
-        self.ind = np.nonzero(self.ind_mask)[0]
-        # Set selected indices with selected color index
-        color_indices[self.ind] = self.artist.selected_color_index
-        # TODO: Replace this by pyq signal/slot
-        self.artist.color_indices = color_indices  # This updates the plot
+    def add_selector(self):
+        self.selector = CustomLassoSelector(self, self._axes)
 
 
 class PlotWidget(SingleAxesWidget):
@@ -172,7 +138,7 @@ class PlotWidget(SingleAxesWidget):
         )
         # Connect button to callback
         self.selection_toolbar.connect_button_callback(
-            name="Lasso Selection", callback=self.on_enable_lasso_selector
+            name="Lasso Selection", callback=self.on_enable_selector
         )
 
         # Set selection colormap
@@ -180,7 +146,7 @@ class PlotWidget(SingleAxesWidget):
         # Create instance of CustomScatter
         self.scatter_plot = CustomScatter(self.axes, self.colormap)
         # Add lasso selector
-        self.scatter_plot.add_lasso_selector()
+        self.scatter_plot.add_selector()
 
         # Add selection tools layout to main layout below matplotlib toolbar and above canvas
         self.layout().insertLayout(2, self.selection_tools_layout)
@@ -201,10 +167,10 @@ class PlotWidget(SingleAxesWidget):
         selection_tools_layout.addStretch(1)
         return selection_tools_layout
 
-    def on_enable_lasso_selector(self, checked):
+    def on_enable_selector(self, checked):
         if checked:
             print("Lasso selection enabled")
-            self.scatter_plot.lasso_selector.enable()
+            self.scatter_plot.selector.enable()
         else:
             print("Lasso selection disabled")
-            self.scatter_plot.lasso_selector.disable()
+            self.scatter_plot.selector.disable()
