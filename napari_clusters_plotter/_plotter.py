@@ -607,9 +607,9 @@ class PlotterWidget(QMainWindow):
             and plot_cluster_name in list(features.keys())
         ):
             if self.plot_hide_non_selected.isChecked():
-                features.loc[
-                    features[plot_cluster_name] == 0, plot_cluster_name
-                ] = -1  # make unselected points to noise points
+                features.loc[features[plot_cluster_name] == 0, plot_cluster_name] = (
+                    -1
+                )  # make unselected points to noise points
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
