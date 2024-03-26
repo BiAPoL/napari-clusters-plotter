@@ -102,8 +102,8 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                features[clustering_ID].mask(
-                    inside, other=features[clustering_ID].max() + 1, inplace=True
+                features[clustering_ID] = features[clustering_ID].mask(
+                    inside, other=features[clustering_ID].max() + 1
                 )
             else:
                 features[clustering_ID] = inside.astype(int)
