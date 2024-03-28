@@ -5,7 +5,8 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Layer, Points, Surface
+from napari.layers import Image, Labels, Layer, Points, Surface
+from napari.utils import DirectLabelColormap
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -124,7 +125,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.layer_select.opacity = 0.2
+                self.layer_select.value.opacity = 0.2
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -497,9 +498,10 @@ class PlotterWidget(QMainWindow):
             self.last_connected.events.properties.disconnect(
                 self.update_axes_and_clustering_id_lists
             )
-        self.layer_select.value.events.properties.connect(
-            self.update_axes_and_clustering_id_lists
-        )
+        if not isinstance(self.layer_select.value, Image):
+            self.layer_select.value.events.properties.connect(
+                self.update_axes_and_clustering_id_lists
+            )
         self.last_connected = self.layer_select.value
 
     def update_axes_and_clustering_id_lists(self):
@@ -715,7 +717,7 @@ class PlotterWidget(QMainWindow):
                 for prediction in np.unique(self.cluster_ids)
             }
             # take care of background label
-            cmap_dict[0] = [0, 0, 0, 0]
+            cmap_dict[None] = [0, 0, 0, 0]
 
             keep_selection = list(self.viewer.layers.selection)
 
@@ -816,7 +818,7 @@ class PlotterWidget(QMainWindow):
                 layer_in_viewer.colormap = self.visualized_layer.colormap
                 layer_in_viewer.contrast_limits = self.visualized_layer.contrast_limits
             elif isinstance(self.visualized_layer, Labels):
-                layer_in_viewer.color = self.visualized_layer.color
+                layer_in_viewer.colormap = self.visualized_layer.colormap
             else:
                 print("Update failed")
 
@@ -856,7 +858,7 @@ class PlotterWidget(QMainWindow):
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    "color": cmap_dict,
+                    "colormap": DirectLabelColormap(color_dict=cmap_dict),
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },
@@ -874,7 +876,7 @@ class PlotterWidget(QMainWindow):
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    "color": cmap_dict,
+                    "colormap": DirectLabelColormap(color_dict=cmap_dict),
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },
@@ -915,7 +917,7 @@ class PlotterWidget(QMainWindow):
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    "color": cmap_dict,
+                    "colormap": DirectLabelColormap(color_dict=cmap_dict),
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },
