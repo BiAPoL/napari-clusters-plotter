@@ -498,10 +498,9 @@ class PlotterWidget(QMainWindow):
             self.last_connected.events.properties.disconnect(
                 self.update_axes_and_clustering_id_lists
             )
-        if not isinstance(self.layer_select.value, Image):
-            self.layer_select.value.events.properties.connect(
-                self.update_axes_and_clustering_id_lists
-            )
+        self.layer_select.value.events.properties.connect(
+            self.update_axes_and_clustering_id_lists
+        )
         self.last_connected = self.layer_select.value
 
     def update_axes_and_clustering_id_lists(self):
