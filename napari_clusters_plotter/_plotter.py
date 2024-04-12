@@ -102,9 +102,14 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                features[clustering_ID] = features[clustering_ID].mask(
-                    inside, other=features[clustering_ID].max() + 1,
-                ).to_numpy()
+                features[clustering_ID] = (
+                    features[clustering_ID]
+                    .mask(
+                        inside,
+                        other=features[clustering_ID].max() + 1,
+                    )
+                    .to_numpy()
+                )
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
@@ -124,7 +129,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                 self.layer_select.value.opacity = 0.2
+                self.layer_select.value.opacity = 0.2
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
