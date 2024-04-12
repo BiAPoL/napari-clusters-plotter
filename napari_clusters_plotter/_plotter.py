@@ -125,7 +125,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.layer_select.value.opacity = 0.2
+                self.layer_select.opacity = 0.2
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
