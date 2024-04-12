@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Image, Labels, Layer, Points, Surface
+from napari.layers import Labels, Layer, Points, Surface
 from napari.utils import DirectLabelColormap
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
