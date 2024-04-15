@@ -161,7 +161,7 @@ Check [this notebook](./example_data/surface_data/loading_surface_data_example.i
 
 ### 4. Labels Layer with Tracking Results
 
-The **`Labels`** layer can be also used to display tracking results. 
+The **`Labels`** layer can be also used to display tracking results.
 
 [These notebooks](https://github.com/BiAPoL/napari-clusters-plotter-example-notebooks/tree/main/notebooks/mastodon) show you examples of how to load and format tracking features from [Mastodon](https://imagej.net/plugins/mastodon) in a way compatible with napari-clusters-plotter.
 
