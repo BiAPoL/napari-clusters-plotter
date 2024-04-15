@@ -129,7 +129,7 @@ You can load object features to these points by assigning them to the `.feature`
 
 `points_layer.features = features_table`
 
-The number of rows in the table should macth the number of points.
+The number of rows in the table should match the number of points.
 
 You can cluster these features using the same algorithms explained furhter down, or manually, and get points colored accordingly, like shown below:
 
@@ -161,7 +161,11 @@ Check [this notebook](./example_data/surface_data/loading_surface_data_example.i
 
 ### 4. Labels Layer with Tracking Results
 
-The **`Labels`** layer can be also used to display tracking results. If you have a time-lapse labeled image where each label number represents a unique track ID, you can load tracking features to this layer and use the plotter to cluster them. In the gif below, the `Tracks` layer is NOT used for clustering, it is just shown along as a convenience. There is currently no support for the `Tracks` layer.
+The **`Labels`** layer can be also used to display tracking results. 
+
+[These notebooks](https://github.com/BiAPoL/napari-clusters-plotter-example-notebooks/tree/main/notebooks/mastodon) show you examples of how to load and format tracking features from [Mastodon](https://imagej.net/plugins/mastodon) in a way compatible with napari-clusters-plotter.
+
+For example, if you have a time-lapse labeled image where each label number represents a unique track ID, you can load tracking features to this `Labels` layer and use the plotter to cluster them. In the 'gif' below, the `Tracks` layer is NOT used for clustering, it is just shown along as a convenience. There is currently no support for the `Tracks` layer.
 
 ![](./images/tracking_labels.gif)
 
