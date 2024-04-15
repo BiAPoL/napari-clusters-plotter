@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Layer, Points, Surface
+from napari.layers import Image, Labels, Layer, Points, Surface
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -102,9 +102,14 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                features[clustering_ID] = features[clustering_ID].mask(
-                    inside, other=features[clustering_ID].max() + 1,
-                ).to_numpy()
+                features[clustering_ID] = (
+                    features[clustering_ID]
+                    .mask(
+                        inside,
+                        other=features[clustering_ID].max() + 1,
+                    )
+                    .to_numpy()
+                )
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
@@ -124,7 +129,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.layer_select.opacity = 0.2
+                self.layer_select.value.opacity = 0.2
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -497,9 +502,10 @@ class PlotterWidget(QMainWindow):
             self.last_connected.events.properties.disconnect(
                 self.update_axes_and_clustering_id_lists
             )
-        self.layer_select.value.events.properties.connect(
-            self.update_axes_and_clustering_id_lists
-        )
+        if not isinstance(self.layer_select.value, Image):
+            self.layer_select.value.events.properties.connect(
+                self.update_axes_and_clustering_id_lists
+            )
         self.last_connected = self.layer_select.value
 
     def update_axes_and_clustering_id_lists(self):
