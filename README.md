@@ -16,6 +16,7 @@ A napari-plugin for clustering objects according to their properties.
 <img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif" width="700"/>
 
 ----------------------------------
+**Note: support for other layers besides the `Labels` layer as described below is currently only available in the development version. This note will be removed as soon as there is a new release.**
 
 Jump to:
 - [Usage](#usage)
