@@ -314,6 +314,7 @@ def test_plotter_on_surface_data(make_napari_viewer):
 def test_plotter_on_surface_data4d(make_napari_viewer):
 
     from napari_clusters_plotter._plotter import PlotterWidget
+    from napari_clusters_plotter._utilities import get_layer_tabular_data
 
     viewer = make_napari_viewer()
     n_points = 100
