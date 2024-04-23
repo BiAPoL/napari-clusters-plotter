@@ -232,6 +232,45 @@ def test_plotter_on_points_data(make_napari_viewer):
     )
 
 
+def test_plotter_on_points_data4d(make_napari_viewer):
+    from napari_clusters_plotter._plotter import PlotterWidget
+    from napari_clusters_plotter._utilities import get_layer_tabular_data
+
+    viewer = make_napari_viewer()
+    n_points = 100
+    n_timepoints = 2
+    points = np.random.rand(n_points, 4)
+    points[:, 0] = np.arange(0, n_timepoints).repeat(n_points // n_timepoints)
+
+    feature1 = np.random.normal(size=n_points)
+    feature2 = np.random.normal(size=n_points, loc=1)
+    annotations = 1 * (np.random.uniform(size=100) > 0.5)
+
+    viewer.add_points(points, properties={"feature1": feature1, "feature2": feature2, 'frame': points[:, 0]}, size=0.1)
+
+    widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(widget)
+
+    # Put the points layer into the layer selection widget
+    widget.analysed_layer = viewer.layers[0]
+    widget.plot_x_axis.setCurrentText("feature1")
+    widget.plot_y_axis.setCurrentText("feature2")
+    widget.analysed_layer.features["MANUAL_CLUSTER_ID"] = annotations
+
+    # check that the features are found
+    features = get_layer_tabular_data(widget.analysed_layer)
+    assert "feature1" in features.columns
+    assert "feature2" in features.columns
+
+    widget.run(
+        widget.analysed_layer.features,
+        plot_x_axis_name="feature1",
+        plot_y_axis_name="feature2",
+        plot_cluster_name="MANUAL_CLUSTER_ID",
+        force_redraw=True,
+    )
+
+
 def test_plotter_on_surface_data(make_napari_viewer):
     from napari_clusters_plotter._plotter import PlotterWidget
     from napari_clusters_plotter._utilities import get_layer_tabular_data
