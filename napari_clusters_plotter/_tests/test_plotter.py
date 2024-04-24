@@ -141,6 +141,7 @@ def test_plotter_on_labels2d_timelapse(make_napari_viewer):
     data_2d_timelapse = np.expand_dims(
         data_2d_timelapse, axis=1
     )  # add unidimensional z axis
+    assert len(data_2d_timelapse) == 4
     # Create some random features
     label_column = np.tile(np.arange(1, n_labels + 1), n_timepoints)
     feature1 = np.random.normal(size=n_labels * n_timepoints)
