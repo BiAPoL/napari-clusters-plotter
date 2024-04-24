@@ -199,6 +199,7 @@ def test_plotter_on_labels3d_timelapse(make_napari_viewer):
             for t in range(n_timepoints)
         ]
     )
+    assert len(data_3d_timelapse) == 4
     # Create some random features
     label_column = np.tile(np.arange(1, n_labels + 1), n_timepoints)
     feature1 = np.random.normal(size=n_labels * n_timepoints)
