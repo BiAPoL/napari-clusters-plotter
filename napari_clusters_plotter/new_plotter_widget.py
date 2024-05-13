@@ -15,6 +15,9 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 
+from pathlib import Path
+import traceback
+
 
 class PlottingType(Enum):
     HISTOGRAM = auto()
@@ -27,9 +30,13 @@ class PlotterWidget(QMainWindow):
 
         self.control_widget = QWidget()
         uic.loadUi(
-            "./plotter_inputs.ui",
+            Path(__file__).parent / "plotter_inputs.ui",
             self.control_widget,
         )
+        # uic.loadUi(
+        #     "./plotter_inputs.ui",
+        #     self.control_widget,
+        # )
 
         self.viewer = napari_viewer
 
