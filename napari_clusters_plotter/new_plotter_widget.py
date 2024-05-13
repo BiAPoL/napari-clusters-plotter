@@ -243,10 +243,4 @@ class PlotterWidget(QMainWindow):
         self.control_widget.y_axis_box.setCurrentText(
             column
         )  # TODO insert checks and change values
-
-
-viewer = napari.Viewer()
-widget = PlotterWidget(viewer)
-viewer.window.add_dock_widget(widget)
-
-# print("hi")
+        self.replot()
