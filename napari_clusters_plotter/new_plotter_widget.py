@@ -3,7 +3,7 @@ from enum import Enum, auto
 import napari
 import numpy as np
 from napari.utils.colormaps import ALL_COLORMAPS
-from plotter import PlotWidget  # TODO make local import with "."
+from biaplotter import CanvasWidget
 from qtpy import uic
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
