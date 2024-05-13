@@ -77,6 +77,9 @@ class PlotterWidget(QMainWindow):
         self.control_widget.log_scale_container.setVisible(False)
 
         # Adding Connections
+        self.control_widget.feature_import_button.clicked.connect(
+            self._on_update_axis_boxes
+        )
         self.control_widget.plot_type_box.currentIndexChanged.connect(
             self._on_plotting_type_changed
         )
