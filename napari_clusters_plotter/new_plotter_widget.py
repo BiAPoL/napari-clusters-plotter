@@ -62,10 +62,6 @@ class PlotterWidget(QMainWindow):
         # Setting of Widget options
         self.hue: QComboBox = self.control_widget.hue_box
 
-        self.import_feats: QPushButton = self.control_widget.feature_import_button
-        self.update_button: QPushButton = self.control_widget.update_axes_button
-        self.plot_button: QPushButton = self.control_widget.feature_import_button
-
         self.control_widget.plot_type_box.addItems(
             [PlottingType.SCATTER.name, PlottingType.HISTOGRAM.name]
         )
