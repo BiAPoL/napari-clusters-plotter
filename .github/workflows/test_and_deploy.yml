@@ -9,7 +9,7 @@ on:
       - master
       - main
     tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "*" # Push events with any tag
   pull_request:
     branches:
       - master
@@ -90,7 +90,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   deploy:
-    # this will run when you have tagged a commit, starting with "v*"
+    # this will run when you have tagged a commit,
     # and requires that you have put your twine API key in your
     # github secrets (see readme for details)
     needs: [test]
