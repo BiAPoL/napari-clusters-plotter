@@ -8,10 +8,10 @@ import pandas as pd
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
-from matplotlib.colors import LinearSegmentedColormap
 from napari.layers import Image, Layer
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy.QtCore import QRect
@@ -618,7 +618,9 @@ class MplCanvas(FigureCanvas):
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
-            cmap=LinearSegmentedColormap.from_list(self.selected_colormap, ALL_COLORMAPS[self.selected_colormap].colors),
+            cmap=LinearSegmentedColormap.from_list(
+                self.selected_colormap, ALL_COLORMAPS[self.selected_colormap].colors
+            ),
             aspect="auto",
             norm=norm,
         )
