@@ -93,7 +93,6 @@ class PlotterWidget(QMainWindow):
 
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
-
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
@@ -239,7 +238,7 @@ class PlotterWidget(QMainWindow):
                 self.colormap_container.setVisible(False)
             replot()
 
-        def bin_number_set():
+        def bin_number_set_clicked():
             replot()
 
         def bin_auto():
@@ -271,7 +270,7 @@ class PlotterWidget(QMainWindow):
 
         self.bin_number_manual_container.layout().addWidget(self.bin_number_spinner)
         self.bin_number_set = QPushButton("Set")
-        self.bin_number_set.clicked.connect(bin_number_set)
+        self.bin_number_set.clicked.connect(bin_number_set_clicked)
         self.bin_number_manual_container.layout().addWidget(self.bin_number_set)
 
         self.bin_number_container.layout().addWidget(self.bin_number_manual_container)
@@ -654,7 +653,6 @@ class PlotterWidget(QMainWindow):
                         self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
-
                 # if both axes are the same, plot 1D histogram
                 if plot_x_axis_name == plot_y_axis_name:
                     self.graphics_widget.make_1d_histogram(
