@@ -594,7 +594,7 @@ class MplCanvas(FigureCanvas):
         colors: "typing.List[str]",
         bin_number: int = 400,
         log_scale: bool = False,
-    ):     
+    ):
         self.colors = colors
         norm = None
         if log_scale:
