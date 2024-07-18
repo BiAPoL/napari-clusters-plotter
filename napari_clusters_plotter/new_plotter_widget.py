@@ -230,3 +230,83 @@ viewer.window.add_dock_widget(widget)
         """
         return len(self.layers)
     
+    def _get_data(self) -> np.ndarray:
+        """
+        Get the data from the selected layers features.
+        """
+        x_data = self.layers[0].features[self.x_axis].values
+        y_data = self.layers[0].features[self.y_axis].values
+
+        # if no hue is selected, set it to 0
+        if self.hue_axis == 'None':
+            hue = np.zeros(len(x_data))
+        else:    
+            hue = self.layers[0].features[self.hue_axis].values
+
+        return np.stack([x_data, y_data], axis=1)
+
+    def _update_layers(self, event: napari.utils.events.Event) -> None:
+        """
+        Update the layers list when the selection changes.
+        """
+        self.layers = list(self.viewer.layers.selection)
+        self.layers = sorted(self.layers, key=lambda layer: layer.name)
+        self._update_features(None)
+        self.layers[0].events.features.connect(self._update_features)
+
+    def _update_features(self, event: napari.utils.events.Event) -> None:
+        """
+        Update the features in the dropdowns.
+        """
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].clear()
+            
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].addItems(self.layers[0].features.columns)
+
+        # it should always be possible to select no color
+        self._selectors["hue"].addItem('None')  
+
+        if self.n_selected_layers > 0 and not self.layers[0].features.empty:
+            self.x_axis = self.layers[0].features.columns[0]
+            self.y_axis = self.layers[0].features.columns[0]
+
+    def _add_manual_cluster_id(self):
+        """
+        Color the selected layer according to the color indices.
+        """
+        import pandas as pd
+
+        selected_layer = self.layers[0]
+        if not hasattr(selected_layer, 'features'):
+            selected_layer.features = pd.DataFrame()
+
+        # turn the color indices into an array of RGBA colors
+        color = self.plotting_widget.active_artist.categorical_colormap(
+            self.plotting_widget.active_artist.color_indices
+        )
+        _color_layer(selected_layer, color)
+        selected_layer.refresh()
+
+
+def _color_layer(layer, color):
+    """
+    Color the layer according to the color array. This needs to be done in a different
+    way for each layer type.
+
+    Parameters
+    ----------
+    layer : napari.layers.Layer
+        The layer to color.
+
+    color : np.ndarray
+        The color array (Nx4).
+    """
+    if isinstance(layer, napari.layers.Points):
+        layer.face_color = color
+    elif isinstance(layer, napari.layers.Vectors):
+        layer.edge_color = color
+    elif isinstance(layer, napari.layers.Surface):
+        layer.face_color = color
+    elif isinstance(layer, napari.layers.Labels):
+        layer.color = color
