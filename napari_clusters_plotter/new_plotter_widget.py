@@ -3,7 +3,7 @@ from enum import Enum, auto
 import napari
 import numpy as np
 from napari.utils.colormaps import ALL_COLORMAPS
-from biaplotter import CanvasWidget  # TODO make local import with "."
+from biaplotter.plotter import CanvasWidget, ArtistType
 from qtpy import uic
 from qtpy.QtCore import Qt
 from pathlib import Path
@@ -48,6 +48,7 @@ class PlotterWidget(QMainWindow):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
+        self.plotting_widget.active_artist = self.plotting_widget.artists[ArtistType.SCATTER]
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -76,7 +77,7 @@ class PlotterWidget(QMainWindow):
 
         # Adding Connections
         self.control_widget.plot_type_box.currentIndexChanged.connect(
-            plotting_type_changed
+            self._plotting_type_changed
         )
         self.control_widget.set_bins_button.clicked.connect(self._bin_number_set)
         self.control_widget.auto_bins_checkbox.stateChanged.connect(self._bin_auto)
