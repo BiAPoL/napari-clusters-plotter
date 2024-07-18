@@ -2,8 +2,8 @@ from enum import Enum, auto
 
 import napari
 import numpy as np
-from napari.utils.colormaps import ALL_COLORMAPS
 from biaplotter import CanvasWidget  # TODO make local import with "."
+from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
