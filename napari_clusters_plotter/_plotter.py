@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Layer, Points, Surface
+from napari.layers import Image, Labels, Layer, Points, Surface
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -102,9 +102,14 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                former_clusters = features[clustering_ID].to_numpy()
-                former_clusters[inside] = np.max(former_clusters) + 1
-                features.update(pd.DataFrame(former_clusters, columns=[clustering_ID]))
+                features[clustering_ID] = (
+                    features[clustering_ID]
+                    .mask(
+                        inside,
+                        other=features[clustering_ID].max() + 1,
+                    )
+                    .to_numpy()
+                )
             else:
                 features[clustering_ID] = inside.astype(int)
             add_column_to_layer_tabular_data(
@@ -124,7 +129,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.layer_select.value.opacity = 0
+                self.layer_select.value.opacity = 0.2
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -164,7 +169,7 @@ class PlotterWidget(QMainWindow):
         (
             layer_selection_container,
             self.layer_select,
-        ) = layer_container_and_selection()
+        ) = layer_container_and_selection(viewer=self.viewer)
 
         # widget for the selection of axes
         axes_container = QWidget()
@@ -497,9 +502,10 @@ class PlotterWidget(QMainWindow):
             self.last_connected.events.properties.disconnect(
                 self.update_axes_and_clustering_id_lists
             )
-        self.layer_select.value.events.properties.connect(
-            self.update_axes_and_clustering_id_lists
-        )
+        if not isinstance(self.layer_select.value, Image):
+            self.layer_select.value.events.properties.connect(
+                self.update_axes_and_clustering_id_lists
+            )
         self.last_connected = self.layer_select.value
 
     def update_axes_and_clustering_id_lists(self):
@@ -607,9 +613,9 @@ class PlotterWidget(QMainWindow):
             and plot_cluster_name in list(features.keys())
         ):
             if self.plot_hide_non_selected.isChecked():
-                features.loc[
-                    features[plot_cluster_name] == 0, plot_cluster_name
-                ] = -1  # make unselected points to noise points
+                features.loc[features[plot_cluster_name] == 0, plot_cluster_name] = (
+                    -1
+                )  # make unselected points to noise points
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points

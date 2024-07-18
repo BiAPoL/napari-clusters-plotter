@@ -162,9 +162,11 @@ def alphas_unclustered(frame_id, current_frame, n_datapoints):
         return alpha_f * initial_alpha
     else:
         alphas_unclustered = [
-            alpha_f * initial_alpha
-            if tp == current_frame
-            else alpha_f * initial_alpha * 0.3
+            (
+                alpha_f * initial_alpha
+                if tp == current_frame
+                else alpha_f * initial_alpha * 0.3
+            )
             for tp in frame_id
         ]
         return alphas_unclustered
@@ -292,9 +294,11 @@ def colors_clustered(cluster_id, frame_id, current_frame, color_hex_list):
         return colors
 
     colors = [
-        gen_highlight(color_hex_list[int(x) % len(color_hex_list)])
-        if tp == current_frame
-        else color_hex_list[int(x) % len(color_hex_list)]
+        (
+            gen_highlight(color_hex_list[int(x) % len(color_hex_list)])
+            if tp == current_frame
+            else color_hex_list[int(x) % len(color_hex_list)]
+        )
         for x, tp in zip(cluster_id, frame_id)
     ]
     return colors

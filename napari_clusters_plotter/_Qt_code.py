@@ -8,10 +8,12 @@ import pandas as pd
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Layer
+from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
@@ -52,7 +54,7 @@ def measurements_container_and_list():
     return properties_container, properties_list
 
 
-def layer_container_and_selection():
+def layer_container_and_selection(viewer=None):
     """
     Create a container and a dropdown widget to select the layer.
 
@@ -66,6 +68,9 @@ def layer_container_and_selection():
     layer_selection_container.layout().addWidget(QLabel("Layer"))
     layer_select = create_widget(annotation=Layer, label="layer")
     layer_selection_container.layout().addWidget(layer_select.native)
+
+    if viewer is not None and viewer.layers.selection.active is not None:
+        layer_select.value = viewer.layers.selection.active
 
     return layer_selection_container, layer_select
 
@@ -528,6 +533,9 @@ class MplCanvas(FigureCanvas):
         self.match_napari_layout()
         self.xylim = None
         self.last_xy_labels = None
+        self.last_datax = None
+        self.last_datay = None
+        self.full_data = None
 
         super().__init__(self.fig)
         self.mpl_connect("draw_event", self.on_draw)
@@ -590,22 +598,39 @@ class MplCanvas(FigureCanvas):
         norm = None
         if log_scale:
             norm = "log"
-        h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+        data_unchanged = (
+            self.histogram is not None
+            and np.array_equal(self.last_datax, data_x)
+            and np.array_equal(self.last_datay, data_y)
+        )
+
+        if data_unchanged:
+            (h, xedges, yedges) = self.histogram
+        else:
+            h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
+            self.last_datax = data_x
+            self.last_datay = data_y
+            self.full_data = pd.concat(
+                [pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1
+            )
+
         self.axes.imshow(
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
-            cmap=self.selected_colormap,
+            cmap=LinearSegmentedColormap.from_list(
+                self.selected_colormap, ALL_COLORMAPS[self.selected_colormap].colors
+            ),
             aspect="auto",
             norm=norm,
         )
-        self.axes.set_xlim(xedges[0], xedges[-1])
-        self.axes.set_ylim(yedges[0], yedges[-1])
+        if not data_unchanged:
+            self.axes.set_xlim(xedges[0], xedges[-1])
+            self.axes.set_ylim(yedges[0], yedges[-1])
+            self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
         self.histogram = (h, xedges, yedges)
-
-        full_data = pd.concat([pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1)
         self.selector.disconnect()
-        self.selector = SelectFrom2DHistogram(self, self.axes, full_data)
+        self.selector = SelectFrom2DHistogram(self, self.axes, self.full_data)
         self.axes.figure.canvas.draw_idle()
 
     def make_1d_histogram(
@@ -660,6 +685,7 @@ class MplCanvas(FigureCanvas):
             self.axes,
             self.pts,
         )
+        self.xylim = (self.axes.get_xlim(), self.axes.get_ylim())
 
     def match_napari_layout(self):
         """Change background and axes colors to match napari layout"""
