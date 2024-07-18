@@ -299,14 +299,15 @@ class PlotterWidget(QMainWindow):
             selected_layer.features = pd.DataFrame()
 
         # turn the color indices into an array of RGBA colors
+        color_indeces = self.plotting_widget.active_artist.color_indices
         color = self.plotting_widget.active_artist.categorical_colormap(
-            self.plotting_widget.active_artist.color_indices
+            color_indeces
         )
-        _color_layer(selected_layer, color)
+        _color_layer(selected_layer, color, color_indeces)
         selected_layer.refresh()
 
 
-def _color_layer(layer, color):
+def _color_layer(layer, color, value=None):
     """
     Color the layer according to the color array. This needs to be done in a different
     way for each layer type.
@@ -319,6 +320,8 @@ def _color_layer(layer, color):
     color : np.ndarray
         The color array (Nx4).
     """
+    from napari.utils import DirectLabelColormap
+
     if isinstance(layer, napari.layers.Points):
         layer.face_color = color
     elif isinstance(layer, napari.layers.Vectors):
@@ -326,5 +329,10 @@ def _color_layer(layer, color):
     elif isinstance(layer, napari.layers.Surface):
         layer.vertex_colors = color
     elif isinstance(layer, napari.layers.Labels):
-        layer.color = color
+        color_dict = {}
+        for label in np.unique(layer.data):
+            color_dict[label] = color[label]
+        color_dict[0] = [0,0,0,0]  # make sure background is transparent
+        colormap = DirectLabelColormap(color_dict=color_dict)
+        layer.colormap = colormap
     layer.refresh()
