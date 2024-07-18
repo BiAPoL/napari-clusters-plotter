@@ -3,7 +3,7 @@ from enum import Enum, auto
 import napari
 import numpy as np
 from napari.utils.colormaps import ALL_COLORMAPS
-from plotter import PlotWidget  # TODO make local import with "."
+from biaplotter import CanvasWidget  # TODO make local import with "."
 from qtpy import uic
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -46,7 +46,7 @@ class PlotterWidget(QMainWindow):
         self.layout = QVBoxLayout(self.contents)
         self.layout.setAlignment(Qt.AlignTop)
 
-        self.plotting_widget = PlotWidget(napari_viewer, self)
+        self.plotting_widget = CanvasWidget(napari_viewer, self)
 
         def replot():
             # redraw the whole plot
