@@ -7,13 +7,7 @@ from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import (
-    QComboBox,
-    QMainWindow,
-    QScrollArea,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import QComboBox, QMainWindow, QScrollArea, QVBoxLayout, QWidget
 
 
 class PlottingType(Enum):
@@ -246,7 +240,7 @@ class PlotterWidget(QMainWindow):
         # if no hue is selected, set it to 0
         if self.hue_axis == "None":
             hue = np.zeros(len(x_data))
-        elif self.hue_axis != '':    
+        elif self.hue_axis != "":
             hue = self.layers[0].features[self.hue_axis].values
 
         return np.stack([x_data, y_data], axis=1)
@@ -254,7 +248,7 @@ class PlotterWidget(QMainWindow):
     def _update_layers(self, event: napari.utils.events.Event) -> None:
         """
         Update the layers list when the selection changes.
-        """        
+        """
         self.layers = list(self.viewer.layers.selection)
         self.layers = sorted(self.layers, key=lambda layer: layer.name)
 
@@ -276,7 +270,7 @@ class PlotterWidget(QMainWindow):
             self._selectors[dim].addItems(self.layers[0].features.columns)
 
         # it should always be possible to select no color
-        self._selectors["hue"].addItem('None')
+        self._selectors["hue"].addItem("None")
 
         if self.n_selected_layers > 0 and not self.layers[0].features.empty:
             self.x_axis = self.layers[0].features.columns[0]
@@ -294,9 +288,7 @@ class PlotterWidget(QMainWindow):
 
         # turn the color indices into an array of RGBA colors
         color_indeces = self.plotting_widget.active_artist.color_indices
-        color = self.plotting_widget.active_artist.categorical_colormap(
-            color_indeces
-        )
+        color = self.plotting_widget.active_artist.categorical_colormap(color_indeces)
         _color_layer(selected_layer, color, color_indeces)
         selected_layer.refresh()
 
@@ -326,7 +318,7 @@ def _color_layer(layer, color, value=None):
         color_dict = {}
         for label in np.unique(layer.data):
             color_dict[label] = color[label]
-        color_dict[0] = [0,0,0,0]  # make sure background is transparent
+        color_dict[0] = [0, 0, 0, 0]  # make sure background is transparent
         colormap = DirectLabelColormap(color_dict=color_dict)
         layer.colormap = colormap
     layer.refresh()
