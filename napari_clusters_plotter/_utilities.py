@@ -126,10 +126,11 @@ def set_features(layer, tabular_data):
     tabular_data : pandas.DataFrame
         The tabular data to set as features or properties of the layer.
     """
-    if hasattr(layer, "properties"):
-        layer.properties = tabular_data
     if hasattr(layer, "features"):
         layer.features = tabular_data
+    if hasattr(layer, "properties"):
+        layer.properties = tabular_data
+
 
 
 def get_layer_tabular_data(layer):
