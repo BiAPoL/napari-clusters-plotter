@@ -78,6 +78,7 @@ class PlotterWidget(QMainWindow):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
 
+        self._update_layers(None)
         self._setup_callbacks()
 
     def _setup_callbacks(self):
