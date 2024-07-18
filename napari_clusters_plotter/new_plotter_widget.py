@@ -49,45 +49,6 @@ class PlotterWidget(QMainWindow):
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
 
-        def replot():
-            # redraw the whole plot
-            try:
-                # plotting function needs to be here
-                pass
-
-            except AttributeError:
-                # In this case, replotting is not yet possible
-                pass
-
-        def checkbox_status_changed():
-            replot()
-
-        def plotting_type_changed():  # TODO NEED TO ADD WHICH VARIABLE STORES THE TYPE
-            if (
-                self.control_widget.plot_type_box.currentText()
-                == PlottingType.HISTOGRAM.name
-            ):
-                self.control_widget.bins_settings_container.setVisible(True)
-                self.control_widget.log_scale_container.setVisible(True)
-            elif (
-                self.control_widget.plot_type_box.currentText()
-                == PlottingType.SCATTER.name
-            ):
-                self.control_widget.bins_settings_container.setVisible(False)
-                self.control_widget.log_scale_container.setVisible(False)
-
-            replot()
-
-        def bin_number_set():
-            replot()
-
-        def bin_auto():
-            self.control_widget.manual_bins_container.setVisible(
-                not self.control_widget.auto_bins_checkbox.isChecked()
-            )
-            if self.control_widget.auto_bins_checkbox.isChecked():
-                replot()
-
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
         self.layout.addWidget(self.control_widget)
@@ -133,11 +94,51 @@ class PlotterWidget(QMainWindow):
         # self.bin_number = self.control_widget.n_bins_box.value()
         self.hide_non_selected = (
             self.control_widget.non_selected_checkbutton.isChecked()
+    def _replot(self):
+        
+        # if no x or y axis is selected, return
+        if self.x_axis == '' or self.y_axis == '':
+            return
+        
+        data_to_plot = self._get_data()
+        self.plotting_widget.active_artist.data = data_to_plot
+        # redraw the whole plot
+        try:
+            # plotting function needs to be here
+            pass
+
+        except AttributeError:
+            # In this case, replotting is not yet possible
+            pass
+
+    def _checkbox_status_changed(self):
+        self._replot()
+
+    def _plotting_type_changed(self):  # TODO NEED TO ADD WHICH VARIABLE STORES THE TYPE
+        if (
+            self.control_widget.plot_type_box.currentText()
+            == PlottingType.HISTOGRAM.name
+        ):
+            self.control_widget.bins_settings_container.setVisible(True)
+            self.control_widget.log_scale_container.setVisible(True)
+        elif (
+            self.control_widget.plot_type_box.currentText()
+            == PlottingType.SCATTER.name
+        ):
+            self.control_widget.bins_settings_container.setVisible(False)
+            self.control_widget.log_scale_container.setVisible(False)
+
+        self._replot()
+
+    def _bin_number_set(self):
+        self._replot()
+
+    def _bin_auto(self):
+        self.control_widget.manual_bins_container.setVisible(
+            not self.control_widget.auto_bins_checkbox.isChecked()
         )
-        # self.colormap_plot = self.control_widget.cmap_box.currentText()
-        self.plotting_type = self.control_widget.plot_type_box.currentText()
-        # self.x_axis = self.control_widget.x_axis_box.currentText()
-        # self.y_axis = self.control_widget.y_axis_box.currentText()
+        if self.control_widget.auto_bins_checkbox.isChecked():
+            self._replot()
 
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
@@ -190,7 +191,8 @@ class PlotterWidget(QMainWindow):
     def x_axis(self, column: str):
         self.control_widget.x_axis_box.setCurrentText(
             column
-        )  # TODO insert checks and change values
+        )
+        self._replot()
 
     @property
     def y_axis(self):
@@ -200,8 +202,8 @@ class PlotterWidget(QMainWindow):
     def y_axis(self, column: str):
         self.control_widget.y_axis_box.setCurrentText(
             column
-        )  # TODO insert checks and change values
-
+        )
+        self._replot()
 
 viewer = napari.Viewer()
 widget = PlotterWidget(viewer)
