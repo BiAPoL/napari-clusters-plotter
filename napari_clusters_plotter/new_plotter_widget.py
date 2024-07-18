@@ -1,16 +1,15 @@
 from enum import Enum, auto
+from pathlib import Path
 
 import napari
 import numpy as np
+from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
-from biaplotter.plotter import CanvasWidget, ArtistType
 from qtpy import uic
 from qtpy.QtCore import Qt
-from pathlib import Path
 from qtpy.QtWidgets import (
     QComboBox,
     QMainWindow,
-    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
@@ -27,7 +26,7 @@ class PlotterWidget(QMainWindow):
         napari.layers.Labels,
         napari.layers.Points,
         napari.layers.Surface,
-        napari.layers.Vectors
+        napari.layers.Vectors,
     ]
 
     def __init__(self, napari_viewer):
@@ -62,7 +61,9 @@ class PlotterWidget(QMainWindow):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
-        self.plotting_widget.active_artist = self.plotting_widget.artists[ArtistType.SCATTER]
+        self.plotting_widget.active_artist = self.plotting_widget.artists[
+            ArtistType.SCATTER
+        ]
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -102,9 +103,7 @@ class PlotterWidget(QMainWindow):
         )
         self.control_widget.cmap_box.currentIndexChanged.connect(self._replot)
 
-        self.viewer.layers.selection.events.changed.connect(
-            self._update_layers
-        )
+        self.viewer.layers.selection.events.changed.connect(self._update_layers)
 
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].currentTextChanged.connect(self._replot)
@@ -115,11 +114,11 @@ class PlotterWidget(QMainWindow):
         )
 
     def _replot(self):
-        
+
         # if no x or y axis is selected, return
-        if self.x_axis == '' or self.y_axis == '':
+        if self.x_axis == "" or self.y_axis == "":
             return
-        
+
         data_to_plot = self._get_data()
         self.plotting_widget.active_artist.data = data_to_plot
         # redraw the whole plot
@@ -142,8 +141,7 @@ class PlotterWidget(QMainWindow):
             self.control_widget.bins_settings_container.setVisible(True)
             self.control_widget.log_scale_container.setVisible(True)
         elif (
-            self.control_widget.plot_type_box.currentText()
-            == PlottingType.SCATTER.name
+            self.control_widget.plot_type_box.currentText() == PlottingType.SCATTER.name
         ):
             self.control_widget.bins_settings_container.setVisible(False)
             self.control_widget.log_scale_container.setVisible(False)
@@ -209,9 +207,7 @@ class PlotterWidget(QMainWindow):
 
     @x_axis.setter
     def x_axis(self, column: str):
-        self.control_widget.x_axis_box.setCurrentText(
-            column
-        )
+        self.control_widget.x_axis_box.setCurrentText(column)
         self._replot()
 
     @property
@@ -220,15 +216,13 @@ class PlotterWidget(QMainWindow):
 
     @y_axis.setter
     def y_axis(self, column: str):
-        self.control_widget.y_axis_box.setCurrentText(
-            column
-        )
+        self.control_widget.y_axis_box.setCurrentText(column)
         self._replot()
 
     @property
     def hue_axis(self):
         return self.control_widget.hue_box.currentText()
-    
+
     @hue_axis.setter
     def hue_axis(self, column: str):
         self.control_widget.hue_box.setCurrentText(
@@ -241,7 +235,7 @@ class PlotterWidget(QMainWindow):
         Number of currently selected layers.
         """
         return len(self.layers)
-    
+
     def _get_data(self) -> np.ndarray:
         """
         Get the data from the selected layers features.
@@ -250,7 +244,7 @@ class PlotterWidget(QMainWindow):
         y_data = self.layers[0].features[self.y_axis].values
 
         # if no hue is selected, set it to 0
-        if self.hue_axis == 'None':
+        if self.hue_axis == "None":
             hue = np.zeros(len(x_data))
         elif self.hue_axis != '':    
             hue = self.layers[0].features[self.hue_axis].values
@@ -277,7 +271,7 @@ class PlotterWidget(QMainWindow):
         """
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].clear()
-            
+
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].addItems(self.layers[0].features.columns)
 
@@ -295,7 +289,7 @@ class PlotterWidget(QMainWindow):
         import pandas as pd
 
         selected_layer = self.layers[0]
-        if not hasattr(selected_layer, 'features'):
+        if not hasattr(selected_layer, "features"):
             selected_layer.features = pd.DataFrame()
 
         # turn the color indices into an array of RGBA colors
