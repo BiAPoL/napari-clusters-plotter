@@ -22,6 +22,14 @@ class PlottingType(Enum):
 
 
 class PlotterWidget(QMainWindow):
+    """
+    Widget for plotting data from selected layers in napari.
+
+    Parameters
+    ----------
+    napari_viewer : napari.Viewer
+        The napari viewer to connect to.
+    """
     input_layer_types = [
         napari.layers.Labels,
         napari.layers.Points,
