@@ -6,6 +6,7 @@ from napari.utils.colormaps import ALL_COLORMAPS
 from biaplotter import CanvasWidget  # TODO make local import with "."
 from qtpy import uic
 from qtpy.QtCore import Qt
+from pathlib import Path
 from qtpy.QtWidgets import (
     QComboBox,
     QMainWindow,
@@ -27,7 +28,7 @@ class PlotterWidget(QMainWindow):
 
         self.control_widget = QWidget()
         uic.loadUi(
-            "./plotter_inputs.ui",
+            Path(__file__).parent / "plotter_inputs.ui",
             self.control_widget,
         )
 
