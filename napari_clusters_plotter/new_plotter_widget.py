@@ -325,3 +325,4 @@ def _color_layer(layer, color):
         layer.face_color = color
     elif isinstance(layer, napari.layers.Labels):
         layer.color = color
+    layer.refresh()
