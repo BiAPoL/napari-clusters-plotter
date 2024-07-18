@@ -225,9 +225,6 @@ class PlotterWidget(QMainWindow):
         )
         self._replot()
 
-viewer = napari.Viewer()
-widget = PlotterWidget(viewer)
-viewer.window.add_dock_widget(widget)
     @property
     def hue_axis(self):
         return self.control_widget.hue_box.currentText()
