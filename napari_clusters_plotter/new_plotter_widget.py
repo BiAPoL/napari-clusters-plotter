@@ -223,4 +223,10 @@ viewer.window.add_dock_widget(widget)
             column
         )  # TODO insert checks and change values
 
-# print("hi")
+    @property
+    def n_selected_layers(self) -> int:
+        """
+        Number of currently selected layers.
+        """
+        return len(self.layers)
+    
