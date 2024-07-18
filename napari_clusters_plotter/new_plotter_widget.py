@@ -252,7 +252,7 @@ class PlotterWidget(QMainWindow):
         # if no hue is selected, set it to 0
         if self.hue_axis == 'None':
             hue = np.zeros(len(x_data))
-        else:    
+        elif self.hue_axis != '':    
             hue = self.layers[0].features[self.hue_axis].values
 
         return np.stack([x_data, y_data], axis=1)
@@ -260,9 +260,14 @@ class PlotterWidget(QMainWindow):
     def _update_layers(self, event: napari.utils.events.Event) -> None:
         """
         Update the layers list when the selection changes.
-        """
+        """        
         self.layers = list(self.viewer.layers.selection)
         self.layers = sorted(self.layers, key=lambda layer: layer.name)
+
+        # don't do anything if no layer is selected
+        if self.n_selected_layers == 0:
+            return
+
         self._update_features(None)
         self.layers[0].events.features.connect(self._update_features)
 
@@ -277,7 +282,7 @@ class PlotterWidget(QMainWindow):
             self._selectors[dim].addItems(self.layers[0].features.columns)
 
         # it should always be possible to select no color
-        self._selectors["hue"].addItem('None')  
+        self._selectors["hue"].addItem('None')
 
         if self.n_selected_layers > 0 and not self.layers[0].features.empty:
             self.x_axis = self.layers[0].features.columns[0]
