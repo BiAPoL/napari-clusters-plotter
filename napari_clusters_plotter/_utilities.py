@@ -132,7 +132,6 @@ def set_features(layer, tabular_data):
         layer.properties = tabular_data
 
 
-
 def get_layer_tabular_data(layer):
     """
     Return tabular data associated with a layer object.
@@ -173,7 +172,6 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
         layer.features = df
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
-    
 
 
 def catch_NaNs(func):
