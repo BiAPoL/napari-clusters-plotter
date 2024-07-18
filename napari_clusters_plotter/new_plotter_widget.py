@@ -74,26 +74,26 @@ class PlotterWidget(QMainWindow):
         self.control_widget.plot_type_box.currentIndexChanged.connect(
             plotting_type_changed
         )
-        self.control_widget.set_bins_button.clicked.connect(bin_number_set)
-        self.control_widget.auto_bins_checkbox.stateChanged.connect(bin_auto)
-        self.control_widget.log_scale_checkbutton.stateChanged.connect(replot)
+        self.control_widget.set_bins_button.clicked.connect(self._bin_number_set)
+        self.control_widget.auto_bins_checkbox.stateChanged.connect(self._bin_auto)
+        self.control_widget.log_scale_checkbutton.stateChanged.connect(self._replot)
         self.control_widget.non_selected_checkbutton.stateChanged.connect(
-            checkbox_status_changed
+            self._checkbox_status_changed
         )
-        self.control_widget.cmap_box.currentIndexChanged.connect(replot)
-        self.control_widget.x_axis_box.currentIndexChanged.connect(
-            replot
-        )  # TODO Decide if this is a good idea
-        self.control_widget.y_axis_box.currentIndexChanged.connect(
-            replot
-        )  # TODO Decide if this is a good idea
+        self.control_widget.cmap_box.currentIndexChanged.connect(self._replot)
 
-        # initialising all variables
-        self.log_scale = self.control_widget.log_scale_checkbutton.isChecked()
-        self.automatic_bins = self.control_widget.auto_bins_checkbox.isChecked()
-        # self.bin_number = self.control_widget.n_bins_box.value()
-        self.hide_non_selected = (
-            self.control_widget.non_selected_checkbutton.isChecked()
+        self.viewer.layers.selection.events.changed.connect(
+            self._update_layers
+        )
+
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].currentTextChanged.connect(self._replot)
+
+        # connect data selection in plot to layer coloring update
+        self.plotting_widget.active_artist.color_indices_changed_signal.connect(
+            self._add_manual_cluster_id
+        )
+
     def _replot(self):
         
         # if no x or y axis is selected, return
