@@ -324,7 +324,7 @@ def _color_layer(layer, color):
     elif isinstance(layer, napari.layers.Vectors):
         layer.edge_color = color
     elif isinstance(layer, napari.layers.Surface):
-        layer.face_color = color
+        layer.vertex_colors = color
     elif isinstance(layer, napari.layers.Labels):
         layer.color = color
     layer.refresh()
