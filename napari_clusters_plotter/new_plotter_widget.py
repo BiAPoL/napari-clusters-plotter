@@ -213,5 +213,14 @@ class PlotterWidget(QMainWindow):
 viewer = napari.Viewer()
 widget = PlotterWidget(viewer)
 viewer.window.add_dock_widget(widget)
+    @property
+    def hue_axis(self):
+        return self.control_widget.hue_box.currentText()
+    
+    @hue_axis.setter
+    def hue_axis(self, column: str):
+        self.control_widget.hue_box.setCurrentText(
+            column
+        )  # TODO insert checks and change values
 
 # print("hi")
