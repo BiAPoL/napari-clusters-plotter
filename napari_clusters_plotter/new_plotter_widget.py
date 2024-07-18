@@ -23,6 +23,13 @@ class PlottingType(Enum):
 
 
 class PlotterWidget(QMainWindow):
+    input_layer_types = [
+        napari.layers.Labels,
+        napari.layers.Points,
+        napari.layers.Surface,
+        napari.layers.Vectors
+    ]
+
     def __init__(self, napari_viewer):
         super().__init__()
 
