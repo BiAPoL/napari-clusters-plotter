@@ -70,6 +70,10 @@ class PlotterWidget(QMainWindow):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
 
+        self._setup_callbacks()
+
+    def _setup_callbacks(self):
+
         # Adding Connections
         self.control_widget.plot_type_box.currentIndexChanged.connect(
             plotting_type_changed
