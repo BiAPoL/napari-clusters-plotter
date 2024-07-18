@@ -3,26 +3,26 @@ display_name: napari clusters plotter
 contributions:
   commands:
   - id: napari-clusters-plotter.plotter
-    python_name: napari_clusters_plotter.PlotterWidget
+    python_name: napari_clusters_plotter:PlotterWidget
     title: Clusters Plotter
   
-  - id: napari-clusters-plotter.Dimensionality Reduction
-    python_name: napari_clusters_plotter.DimensionalityReductionWidget
+  - id: napari-clusters-plotter.Dimensionality_Reduction
+    python_name: napari_clusters_plotter:DimensionalityReductionWidget
     title: Dimensionality Reduction
 
   - id: napari-clusters-plotter.Clustering
-    python_name: napari_clusters_plotter.ClusteringWidget
+    python_name: napari_clusters_plotter:ClusteringWidget
     title: Clustering
 
   menus:
-    napari/visualize:
+    napari/layers/visualize/features:
       - command: napari-clusters-plotter.plotter
 
   widgets:
     - command: napari-clusters-plotter.plotter
       autogenerate: false
       display_name: Clusters Plotter
-    - command: napari-clusters-plotter.Dimensionality Reduction
+    - command: napari-clusters-plotter.Dimensionality_Reduction
       autogenerate: false
       display_name: Dimensionality Reduction
     - command: napari-clusters-plotter.Clustering
