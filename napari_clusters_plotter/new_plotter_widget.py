@@ -33,6 +33,13 @@ class PlotterWidget(QMainWindow):
         )
 
         self.viewer = napari_viewer
+        self.layers: list[napari.layers.Layer] = []  # selected layers
+
+        self._selectors = {
+            "x": self.control_widget.x_axis_box,
+            "y": self.control_widget.y_axis_box,
+            "hue": self.control_widget.hue_box,
+        }
 
         # create a scroll area
         self.scrollArea = QScrollArea()
