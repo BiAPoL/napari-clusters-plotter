@@ -159,4 +159,48 @@ def test_algorithm_change(make_napari_viewer, widget_config):
         widget.algorithm_selection.setCurrentIndex(idx)
         assert widget.selected_algorithm == widget.algorithm_selection.itemText(idx)
 
+def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
+    from napari_clusters_plotter import DimensionalityReductionWidget
+    from qtpy.QtCore import QEventLoop
+    viewer = make_napari_viewer()
 
+    layer = create_points()
+    viewer.add_layer(layer)
+
+    WidgetClass = widget_config["widget_class"]
+    widget = WidgetClass(viewer)
+    qtbot.addWidget(widget)
+
+    # Select features in the QListWidget and the algorithm in the QComboBox
+    widget.feature_selection_widget.selectAll()
+
+    for algorithm in widget.algorithms:
+        widget.algorithm_selection.setCurrentText(algorithm)
+
+        # Create an event loop to wait for the process to finish
+        loop = QEventLoop()
+
+        # Connect the worker's finished signal to the loop quit slot
+        def on_worker_finished():
+            loop.quit()
+
+        # Wait until the worker is created and then connect the finished signal
+        def on_button_clicked():
+            if widget.worker:
+                widget.worker.finished.connect(on_worker_finished)
+
+        # Connect the button clicked signal to the function that will connect the worker's finished signal
+        widget.selected_algorithm_widget.call_button.clicked.connect(on_button_clicked)
+        widget.selected_algorithm_widget.call_button.clicked.emit()
+
+        # Start the loop and wait for the worker to finish and the loop to quit
+        loop.exec_()
+        qtbot.wait(100)
+
+        # Check if the results are added to the layer
+        column_prefix = widget.algorithms[algorithm]['column_string']
+        for col in layer.features.columns:
+            if col.startswith(column_prefix):
+                break
+        else:
+            assert False, f"Results not found in layer features for algorithm {algorithm}"
