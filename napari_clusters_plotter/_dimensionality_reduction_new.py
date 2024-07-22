@@ -44,9 +44,6 @@ class DimensionalityReductionWidget(QWidget):
         self._reducer_selection = QComboBox()
         self._reducer_selection.addItems(["PCA", "t-SNE", "UMAP"])
 
-        # Add run button
-        #self._run_button = QPushButton("Reduce")
-
         # add layout and combobox
         self.layout = QVBoxLayout()
 
@@ -55,7 +52,6 @@ class DimensionalityReductionWidget(QWidget):
 
         self.layout.addWidget(self._label_reducer)
         self.layout.addWidget(self._reducer_selection)
-        #self.layout.addWidget(self._run_button)
         self.setLayout(self.layout)
 
         self._on_algorithm_changed(0)
@@ -118,7 +114,6 @@ class DimensionalityReductionWidget(QWidget):
             self._selected_reducer_widget.native.deleteLater()
             
         # update the features list
-        # TODO: Should be magicfactory to correctly encapsulate the set parameters
         self._selected_reducer_widget = magicgui(
             self.algorithms[self._reducer_selection.currentText()]['callback'],
             call_button="Reduce"
