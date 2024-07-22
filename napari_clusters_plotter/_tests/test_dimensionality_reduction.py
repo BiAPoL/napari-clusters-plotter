@@ -2,8 +2,23 @@ import pytest
 import numpy as np
 import pandas as pd
 
+from napari_clusters_plotter import DimensionalityReductionWidget, ClusteringWidget
 
-def create_points(n_samples=20, loc=5):
+@pytest.fixture(params=[
+    {
+        "widget_class": DimensionalityReductionWidget,
+        "algorithms": ["PCA", "t-SNE", "UMAP"]
+    },
+    {
+        "widget_class": ClusteringWidget,
+        "algorithms": ["KMeans", "HDBSCAN"]
+    }
+])
+def widget_config(request):
+    return request.param
+
+
+def create_points(n_samples=100, loc=5):
     from napari.layers import Points
 
     points = np.random.random((n_samples, 3))
@@ -17,38 +32,38 @@ def create_points(n_samples=20, loc=5):
 
     return layer
 
-def test_initialization(make_napari_viewer):
-    from napari_clusters_plotter import DimensionalityReductionWidget
-    
+def test_initialization(make_napari_viewer, widget_config):    
     viewer = make_napari_viewer()
     layer = create_points()
     viewer.add_layer(layer)
 
     count_widgets = len(viewer.window._dock_widgets)
-    reducer_widget = DimensionalityReductionWidget(viewer)
-    viewer.window.add_dock_widget(reducer_widget, area="right")
+    
+    WidgetClass = widget_config["widget_class"]
+    algorithms = widget_config["algorithms"]
+    widget = WidgetClass(viewer)
 
-    assert reducer_widget.viewer == viewer
+    viewer.window.add_dock_widget(widget, area="right")
+
+    assert widget.viewer == viewer
     assert len(viewer.window._dock_widgets) == count_widgets + 1
-    for algorithm in ["PCA", "t-SNE", "UMAP"]:
-        assert algorithm in reducer_widget.algorithms
+    for algorithm in algorithms:
+        assert algorithm in widget.algorithms
 
     # check if the widget is properly initialized
     feature_selection_items = [
-        reducer_widget.feature_selection_widget.item(i).text()
-        for i in range(reducer_widget.feature_selection_widget.count())
+        widget.feature_selection_widget.item(i).text()
+        for i in range(widget.feature_selection_widget.count())
         ]
     
     for feature in layer.features.columns:
-        assert feature in reducer_widget.common_columns
+        assert feature in widget.common_columns
         assert feature in feature_selection_items
         
     # check that all features are in reduce_wdiget.feature_selection_widget
     assert len(feature_selection_items) == len(layer.features.columns)
 
-def test_layer_update(make_napari_viewer):
-    from napari_clusters_plotter import DimensionalityReductionWidget
-    
+def test_layer_update(make_napari_viewer, widget_config):   
     viewer = make_napari_viewer()
     # Create two random layers using the create_points fixture
     points_layer1 = create_points()
@@ -64,8 +79,9 @@ def test_layer_update(make_napari_viewer):
     viewer.add_layer(points_layer1)
     viewer.add_layer(points_layer2)
 
-    reducer_widget = DimensionalityReductionWidget(viewer)
-    viewer.window.add_dock_widget(reducer_widget, area="right")
+    WidgetClass = widget_config["widget_class"]
+    widget = WidgetClass(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
 
     selection_permutations = [
         [points_layer1],
@@ -77,32 +93,32 @@ def test_layer_update(make_napari_viewer):
         viewer.layers.selection = possible_selection
 
         feature_selection_items = [
-            reducer_widget.feature_selection_widget.item(i).text()
-            for i in range(reducer_widget.feature_selection_widget.count())
+            widget.feature_selection_widget.item(i).text()
+            for i in range(widget.feature_selection_widget.count())
             ]
         
-        for feature in reducer_widget.common_columns:
+        for feature in widget.common_columns:
             # make sure common columns are in every layer
             assert feature in feature_selection_items
             for layer in possible_selection:
                 assert feature in layer.features.columns
 
         # make sure that the name of the layer is in the collected features
-        collected_features = reducer_widget._get_features()
+        collected_features = widget._get_features()
         for layer in possible_selection:
-            for feature in reducer_widget.common_columns:
+            for feature in widget.common_columns:
                 assert feature in collected_features.columns
                 assert layer.name in collected_features["layer"].values
 
-def test_feature_update(make_napari_viewer):
-    from napari_clusters_plotter import DimensionalityReductionWidget
+def test_feature_update(make_napari_viewer, widget_config):
     viewer = make_napari_viewer()
 
     points_layer = create_points()
     viewer.add_layer(points_layer)
 
-    reducer_widget = DimensionalityReductionWidget(viewer)
-    viewer.window.add_dock_widget(reducer_widget, area="right")
+    WidgetClass = widget_config["widget_class"]
+    widget = WidgetClass(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
 
     # select all possible permutations of features
     combinations = [
@@ -114,31 +130,33 @@ def test_feature_update(make_napari_viewer):
     for combination in combinations:
         for idx in combination:
             # select the feature
-            item = reducer_widget.feature_selection_widget.item(idx)
+            item = widget.feature_selection_widget.item(idx)
             item.setSelected(True)
 
-            features = reducer_widget._update_features()
-            selected_features = [item.text() for item in reducer_widget.feature_selection_widget.selectedItems()]
+            features = widget._update_features()
+            selected_features = [item.text() for item in widget.feature_selection_widget.selectedItems()]
             assert all([feature in selected_features for feature in features.columns])
 
             for selected_feature in selected_features:
                 assert selected_feature in features.columns
                 assert selected_feature in points_layer.features.columns
-                assert selected_feature in reducer_widget.selected_algorithm_widget.data.value.columns
+                assert selected_feature in widget.selected_algorithm_widget.data.value.columns
 
 
-def test_algorithm_change(make_napari_viewer):
+def test_algorithm_change(make_napari_viewer, widget_config):
     from napari_clusters_plotter import DimensionalityReductionWidget
     viewer = make_napari_viewer()
 
     points_layer = create_points()
     viewer.add_layer(points_layer)
 
-    reducer_widget = DimensionalityReductionWidget(viewer)
-    viewer.window.add_dock_widget(reducer_widget, area="right")
+    WidgetClass = widget_config["widget_class"]
+    widget = WidgetClass(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
 
     # select all possible permutations of features
-    for idx in range(reducer_widget.algorithm_selection.count()):
-        reducer_widget.algorithm_selection.setCurrentIndex(idx)
-        assert reducer_widget.selected_algorithm == reducer_widget.algorithm_selection.itemText(idx)
+    for idx in range(widget.algorithm_selection.count()):
+        widget.algorithm_selection.setCurrentIndex(idx)
+        assert widget.selected_algorithm == widget.algorithm_selection.itemText(idx)
+
 
