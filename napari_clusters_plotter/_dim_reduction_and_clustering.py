@@ -36,17 +36,16 @@ class ClusteringWidget(AlgorithmWidgetBase):
         Process the result of the clustering algorithm and update the layer
         """
         
-        column_names = self.algorithms[self.selected_algorithm]['column_string']
-        features_clustered = pd.DataFrame(result, columns=[column_names])
+        column_name = self.algorithms[self.selected_algorithm]['column_string']
+        features_clustered = pd.DataFrame(result, columns=[column_name])
         features_clustered["layer"] = self._get_features()["layer"]
 
         for layer in self.layers:
             current_features = layer.features
-            for column in column_names:
-                layer_feature_subset = features_clustered[features_clustered["layer"] == layer.name]
-                
-                # add the columns to the features
-                current_features[column] = layer_feature_subset[column].values
+
+            # add the columns to the features
+            layer_feature_subset = features_clustered[features_clustered["layer"] == layer.name]
+            current_features[column_name] = layer_feature_subset[column_name].values
 
             # overwrite the features to trigger the features changed signal
             layer.features = current_features
