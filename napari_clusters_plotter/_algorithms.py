@@ -1,4 +1,5 @@
 from napari.qt.threading import thread_worker, FunctionWorker
+import pandas as pd
 
 def reduce_pca(
         data: pd.DataFrame,
@@ -11,7 +12,7 @@ def reduce_pca(
     @thread_worker(progress=True)
     def _reduce_pca(data: pd.DataFrame, n_components: int, scale: bool) -> FunctionWorker[pd.DataFrame]:
         from sklearn.decomposition import PCA
-        print('working on pca')
+        from sklearn.preprocessing import StandardScaler
         if scale:
             data = StandardScaler().fit_transform(data.values)
         else:
@@ -35,6 +36,7 @@ def reduce_tsne(
     @thread_worker(progress=True)
     def _reduce_tsne(data: pd.DataFrame, n_components: int, perplexity: float, scale: bool) -> pd.DataFrame:
         from sklearn.manifold import TSNE
+        from sklearn.preprocessing import StandardScaler
 
         print('working on tsne')
         if scale:
@@ -60,9 +62,8 @@ def reduce_umap(
         n_neighbors: int,
         scale: bool) -> pd.DataFrame:
         import umap
+        from sklearn.preprocessing import StandardScaler
 
-
-        print('working on umap')
         if scale:
             data = StandardScaler().fit_transform(data)
 
