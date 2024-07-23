@@ -126,10 +126,10 @@ def set_features(layer, tabular_data):
     tabular_data : pandas.DataFrame
         The tabular data to set as features or properties of the layer.
     """
-    if hasattr(layer, "properties"):
-        layer.properties = tabular_data
     if hasattr(layer, "features"):
         layer.features = tabular_data
+    if hasattr(layer, "properties"):
+        layer.properties = tabular_data
 
 
 def get_layer_tabular_data(layer):
@@ -166,10 +166,12 @@ def add_column_to_layer_tabular_data(layer, column_name, data):
     data : iterable
         The data to add to the new column.
     """
+    if hasattr(layer, "features"):
+        df = layer.features
+        df[column_name] = data
+        layer.features = df
     if hasattr(layer, "properties"):
         layer.properties[column_name] = data
-    if hasattr(layer, "features"):
-        layer.features.loc[:, column_name] = data
 
 
 def catch_NaNs(func):

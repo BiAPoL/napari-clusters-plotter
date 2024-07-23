@@ -2,7 +2,7 @@ from napari_plugin_engine import napari_hook_implementation
 
 from ._clustering import ClusteringWidget
 from ._dimensionality_reduction import DimensionalityReductionWidget
-from ._plotter import PlotterWidget
+from ._new_plotter_widget import PlotterWidget
 
 
 @napari_hook_implementation
