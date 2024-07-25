@@ -307,7 +307,10 @@ class PlotterWidget(QMainWindow):
         """
         Update the features in the dropdowns.
         """
-        
+        # block selector changed signals until all items added
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(True)
+
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].clear()
 
@@ -316,6 +319,9 @@ class PlotterWidget(QMainWindow):
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
+
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(False)
 
         features = self._get_features()
         if self.n_selected_layers > 0 and not features.empty:
