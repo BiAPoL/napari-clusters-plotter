@@ -43,7 +43,6 @@ class PlotterWidget(QMainWindow):
         )
 
         self.viewer = napari_viewer
-        self.layers: list[napari.layers.Layer] = []  # selected layers
 
         self._selectors = {
             "x": self.control_widget.x_axis_box,
@@ -238,7 +237,7 @@ class PlotterWidget(QMainWindow):
         """
         Number of currently selected layers.
         """
-        return len(self.layers)
+        return len(list(self.viewer.layers.selection))
     
     @property
     def common_columns(self) -> list[str]:
@@ -246,7 +245,7 @@ class PlotterWidget(QMainWindow):
         Columns that are in all selected layers.
         """
         # find columns that are in all selected layers
-        common_columns = [list(layer.features.columns) for layer in self.layers]
+        common_columns = [list(layer.features.columns) for layer in list(self.viewer.layers.selection)]
         common_columns = list(set.intersection(*map(set, common_columns)))
 
         return common_columns
@@ -280,7 +279,7 @@ class PlotterWidget(QMainWindow):
         # concatenate the features of all selected layers
         # first put all features in a list of tables and add the layer's name as a column
         features = pd.DataFrame()
-        for layer in self.layers:
+        for layer in list(self.viewer.layers.selection):
             _features = layer.features[self.common_columns].copy()
             _features["layer"] = layer.name
             features = pd.concat([features, _features], axis=0)
@@ -291,23 +290,23 @@ class PlotterWidget(QMainWindow):
         """
         Update the layers list when the selection changes.
         """
-        self.layers = list(self.viewer.layers.selection)
-        self.layers = sorted(self.layers, key=lambda layer: layer.name)
-
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
             return
 
         self._update_feature_selection(None)
 
-        for layer in self.layers:
+        for layer in list(self.viewer.layers.selection):
             layer.events.features.connect(self._update_feature_selection)
 
     def _update_feature_selection(self, event: napari.utils.events.Event) -> None:
         """
         Update the features in the dropdowns.
         """
-        
+        # block selector changed signals until all items added
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(True)
+
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].clear()
 
@@ -316,6 +315,9 @@ class PlotterWidget(QMainWindow):
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
+
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(False)
 
         features = self._get_features()
         if self.n_selected_layers > 0 and not features.empty:
@@ -328,7 +330,7 @@ class PlotterWidget(QMainWindow):
         """
         
         features = self._get_features()
-        for selected_layer in self.layers:
+        for selected_layer in list(self.viewer.layers.selection):
 
             # turn the color indices into an array of RGBA colors
             color_indeces = self.plotting_widget.active_artist.color_indices
