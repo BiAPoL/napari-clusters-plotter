@@ -186,7 +186,6 @@ def test_algorithm_change(make_napari_viewer, widget_config):
 def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
     from qtpy.QtCore import QEventLoop
 
-
     viewer = make_napari_viewer()
 
     layer = create_points()
