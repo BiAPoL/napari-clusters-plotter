@@ -6,8 +6,10 @@ import numpy as np
 import numpy.typing
 import pandas as pd
 from magicgui.widgets import create_widget
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import \
+    FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import \
+    NavigationToolbar2QT as NavigationToolbar
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.path import Path
@@ -16,15 +18,8 @@ from napari.layers import Image, Layer
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
-from qtpy.QtWidgets import (
-    QAbstractItemView,
-    QHBoxLayout,
-    QLabel,
-    QListWidget,
-    QPushButton,
-    QVBoxLayout,
-    QWidget,
-)
+from qtpy.QtWidgets import (QAbstractItemView, QHBoxLayout, QLabel,
+                            QListWidget, QPushButton, QVBoxLayout, QWidget)
 from superqt import QCollapsible
 
 ICON_ROOT = PathL(__file__).parent / "icons"
@@ -432,10 +427,14 @@ class SelectFrom1DHistogram:
             direction="horizontal",
             props=dict(facecolor="#1f77b4", alpha=0.5),
         )
-        self.click_id = self.canvas.mpl_connect("button_press_event", self.on_click)
+        self.click_id = self.canvas.mpl_connect(
+            "button_press_event", self.on_click
+        )
 
     def onselect(self, vmin, vmax):
-        self.ind_mask = np.logical_and(self.xys >= vmin, self.xys <= vmax).values
+        self.ind_mask = np.logical_and(
+            self.xys >= vmin, self.xys <= vmax
+        ).values
 
         if self.parent.manual_clustering_method is not None:
             self.parent.manual_clustering_method(self.ind_mask)
@@ -523,7 +522,9 @@ class SelectFromCollection:
 
 
 class MplCanvas(FigureCanvas):
-    def __init__(self, parent=None, width=7, height=4, manual_clustering_method=None):
+    def __init__(
+        self, parent=None, width=7, height=4, manual_clustering_method=None
+    ):
         self.fig = Figure(figsize=(width, height), constrained_layout=True)
         self.manual_clustering_method = manual_clustering_method
 
@@ -619,7 +620,8 @@ class MplCanvas(FigureCanvas):
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
             cmap=LinearSegmentedColormap.from_list(
-                self.selected_colormap, ALL_COLORMAPS[self.selected_colormap].colors
+                self.selected_colormap,
+                ALL_COLORMAPS[self.selected_colormap].colors,
             ),
             aspect="auto",
             norm=norm,
@@ -650,7 +652,9 @@ class MplCanvas(FigureCanvas):
         )
         self.histogram = (counts, bins)
         bin_width = bins[1] - bins[0]
-        self.axes.set_xlim(min(bins) - (bin_width / 2), max(bins) + (bin_width / 2))
+        self.axes.set_xlim(
+            min(bins) - (bin_width / 2), max(bins) + (bin_width / 2)
+        )
         ymin = 0
         if log_scale:
             ymin = 1
@@ -727,7 +731,9 @@ class MyNavigationToolbar(NavigationToolbar):
                     QIcon(os.path.join(ICON_ROOT, "Pan_checked.png"))
                 )
             else:
-                self._actions["pan"].setIcon(QIcon(os.path.join(ICON_ROOT, "Pan.png")))
+                self._actions["pan"].setIcon(
+                    QIcon(os.path.join(ICON_ROOT, "Pan.png"))
+                )
         if "zoom" in self._actions:
             if self._actions["zoom"].isChecked():
                 self._actions["zoom"].setIcon(

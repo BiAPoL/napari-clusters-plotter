@@ -1,0 +1,37 @@
+name: napari-clusters-plotter
+display_name: napari clusters plotter
+contributions:
+  commands:
+  - id: napari-clusters-plotter.plotter
+    python_name: napari_clusters_plotter:PlotterWidget
+    title: Clusters Plotter
+
+  - id: napari-clusters-plotter.Dimensionality_Reduction
+    python_name: napari_clusters_plotter:DimensionalityReductionWidget
+    title: Dimensionality Reduction
+
+  - id: napari-clusters-plotter.Clustering
+    python_name: napari_clusters_plotter:ClusteringWidget
+    title: Clustering
+
+  menus:
+    napari/layers/visualize:
+      - submenu: features_submenu
+
+    features_submenu:
+      - command: napari-clusters-plotter.plotter
+
+  widgets:
+    - command: napari-clusters-plotter.plotter
+      autogenerate: false
+      display_name: Clusters Plotter
+    - command: napari-clusters-plotter.Dimensionality_Reduction
+      autogenerate: false
+      display_name: Dimensionality Reduction
+    - command: napari-clusters-plotter.Clustering
+      autogenerate: false
+      display_name: Clustering
+
+  submenus:
+    - id : features_submenu
+      label: Features
