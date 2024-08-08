@@ -1,13 +1,8 @@
 import pandas as pd
 from magicgui import magicgui
-from qtpy.QtWidgets import (
-    QWidget,
-    QComboBox,
-    QVBoxLayout,
-    QListWidget,
-    QLabel,
-    QAbstractItemView
-)
+from qtpy.QtWidgets import (QAbstractItemView, QComboBox, QLabel, QListWidget,
+                            QVBoxLayout, QWidget)
+
 
 class AlgorithmWidgetBase(QWidget):
     def __init__(self, napari_viewer, algorithms, label_text, combo_box_items):
@@ -21,10 +16,14 @@ class AlgorithmWidgetBase(QWidget):
         # Add label and list to put in the features to be reduced
         self.label_features = QLabel(label_text)
         self.feature_selection_widget = QListWidget()
-        self.feature_selection_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.feature_selection_widget.setSelectionMode(
+            QAbstractItemView.ExtendedSelection
+        )
 
         # Add combobox with algorithm options
-        self.label_algorithm = QLabel(f"Select {label_text.split(' ')[-2]} algorithm:")
+        self.label_algorithm = QLabel(
+            f"Select {label_text.split(' ')[-2]} algorithm:"
+        )
         self.algorithm_selection = QComboBox()
         self.algorithm_selection.addItems(combo_box_items)
 
@@ -43,12 +42,21 @@ class AlgorithmWidgetBase(QWidget):
         self._setup_callbacks()
 
     def _setup_callbacks(self):
-        self.viewer.layers.selection.events.changed.connect(self._on_update_layer_selection)
-        self.algorithm_selection.currentIndexChanged.connect(self._on_algorithm_changed)
-        self.feature_selection_widget.itemSelectionChanged.connect(self._update_features)
+        self.viewer.layers.selection.events.changed.connect(
+            self._on_update_layer_selection
+        )
+        self.algorithm_selection.currentIndexChanged.connect(
+            self._on_algorithm_changed
+        )
+        self.feature_selection_widget.itemSelectionChanged.connect(
+            self._update_features
+        )
 
     def _update_features(self):
-        selected_columns = [item.text() for item in self.feature_selection_widget.selectedItems()]
+        selected_columns = [
+            item.text()
+            for item in self.feature_selection_widget.selectedItems()
+        ]
         features = self._get_features()[selected_columns]
 
         if self.selected_algorithm_widget is not None:
@@ -71,8 +79,7 @@ class AlgorithmWidgetBase(QWidget):
 
         algorithm = self.algorithm_selection.currentText()
         self.selected_algorithm_widget = magicgui(
-            self.algorithms[algorithm]['callback'],
-            call_button="Run"
+            self.algorithms[algorithm]["callback"], call_button="Run"
         )
         self.selected_algorithm_widget.native_parent_changed.emit(self)
         self.selected_algorithm_widget.called.connect(self._wait_for_finish)
@@ -83,9 +90,15 @@ class AlgorithmWidgetBase(QWidget):
     def _on_update_layer_selection(self, layer):
         self.layers = list(self.viewer.layers.selection)
         features_to_add = self._get_features()[self.common_columns]
-        column_strings = [algo['column_string'] for algo in self.algorithms.values()]
+        column_strings = [
+            algo["column_string"] for algo in self.algorithms.values()
+        ]
         features_to_add = features_to_add.drop(
-            columns=[col for col in features_to_add.columns if any(col.startswith(s) for s in column_strings)]
+            columns=[
+                col
+                for col in features_to_add.columns
+                if any(col.startswith(s) for s in column_strings)
+            ]
         )
         self.feature_selection_widget.clear()
         self.feature_selection_widget.addItems(features_to_add.columns)
@@ -107,6 +120,8 @@ class AlgorithmWidgetBase(QWidget):
     def common_columns(self):
         if len(self.layers) == 0:
             return []
-        common_columns = [list(layer.features.columns) for layer in self.layers]
+        common_columns = [
+            list(layer.features.columns) for layer in self.layers
+        ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns

@@ -8,7 +8,8 @@ from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt
-from qtpy.QtWidgets import QComboBox, QMainWindow, QScrollArea, QVBoxLayout, QWidget
+from qtpy.QtWidgets import (QComboBox, QMainWindow, QScrollArea, QVBoxLayout,
+                            QWidget)
 
 
 class PlottingType(Enum):
@@ -98,15 +99,23 @@ class PlotterWidget(QMainWindow):
         self.control_widget.plot_type_box.currentIndexChanged.connect(
             self._plotting_type_changed
         )
-        self.control_widget.set_bins_button.clicked.connect(self._bin_number_set)
-        self.control_widget.auto_bins_checkbox.stateChanged.connect(self._bin_auto)
-        self.control_widget.log_scale_checkbutton.stateChanged.connect(self._replot)
+        self.control_widget.set_bins_button.clicked.connect(
+            self._bin_number_set
+        )
+        self.control_widget.auto_bins_checkbox.stateChanged.connect(
+            self._bin_auto
+        )
+        self.control_widget.log_scale_checkbutton.stateChanged.connect(
+            self._replot
+        )
         self.control_widget.non_selected_checkbutton.stateChanged.connect(
             self._checkbox_status_changed
         )
         self.control_widget.cmap_box.currentIndexChanged.connect(self._replot)
 
-        self.viewer.layers.selection.events.changed.connect(self._update_layers)
+        self.viewer.layers.selection.events.changed.connect(
+            self._update_layers
+        )
 
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].currentTextChanged.connect(self._replot)
@@ -136,7 +145,9 @@ class PlotterWidget(QMainWindow):
     def _checkbox_status_changed(self):
         self._replot()
 
-    def _plotting_type_changed(self):  # TODO NEED TO ADD WHICH VARIABLE STORES THE TYPE
+    def _plotting_type_changed(
+        self,
+    ):  # TODO NEED TO ADD WHICH VARIABLE STORES THE TYPE
         if (
             self.control_widget.plot_type_box.currentText()
             == PlottingType.HISTOGRAM.name
@@ -144,7 +155,8 @@ class PlotterWidget(QMainWindow):
             self.control_widget.bins_settings_container.setVisible(True)
             self.control_widget.log_scale_container.setVisible(True)
         elif (
-            self.control_widget.plot_type_box.currentText() == PlottingType.SCATTER.name
+            self.control_widget.plot_type_box.currentText()
+            == PlottingType.SCATTER.name
         ):
             self.control_widget.bins_settings_container.setVisible(False)
             self.control_widget.log_scale_container.setVisible(False)
@@ -238,14 +250,17 @@ class PlotterWidget(QMainWindow):
         Number of currently selected layers.
         """
         return len(list(self.viewer.layers.selection))
-    
+
     @property
     def common_columns(self) -> list[str]:
         """
         Columns that are in all selected layers.
         """
         # find columns that are in all selected layers
-        common_columns = [list(layer.features.columns) for layer in list(self.viewer.layers.selection)]
+        common_columns = [
+            list(layer.features.columns)
+            for layer in list(self.viewer.layers.selection)
+        ]
         common_columns = list(set.intersection(*map(set, common_columns)))
 
         return common_columns
@@ -265,7 +280,7 @@ class PlotterWidget(QMainWindow):
             hue = features[self.hue_axis].values
 
         return np.stack([x_data, y_data], axis=1)
-    
+
     def _get_features(self) -> pd.DataFrame:
         """
         Get the features from the selected layers.
@@ -299,7 +314,9 @@ class PlotterWidget(QMainWindow):
         for layer in list(self.viewer.layers.selection):
             layer.events.features.connect(self._update_feature_selection)
 
-    def _update_feature_selection(self, event: napari.utils.events.Event) -> None:
+    def _update_feature_selection(
+        self, event: napari.utils.events.Event
+    ) -> None:
         """
         Update the features in the dropdowns.
         """
@@ -328,13 +345,15 @@ class PlotterWidget(QMainWindow):
         """
         Color the selected layer according to the color indices.
         """
-        
+
         features = self._get_features()
         for selected_layer in list(self.viewer.layers.selection):
 
             # turn the color indices into an array of RGBA colors
             color_indeces = self.plotting_widget.active_artist.color_indices
-            color = self.plotting_widget.active_artist.categorical_colormap(color_indeces)
+            color = self.plotting_widget.active_artist.categorical_colormap(
+                color_indeces
+            )
 
             # pull the correct rows from the features dataframe that correspond to the
             # selected layer and use to identify the correct colors
