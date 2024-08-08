@@ -15,7 +15,10 @@ contributions:
     title: Clustering
 
   menus:
-    napari/layers/visualize/features:
+    napari/layers/visualize:
+      - submenu: features_submenu
+
+    features_submenu:
       - command: napari-clusters-plotter.plotter
 
   widgets:
@@ -29,3 +32,6 @@ contributions:
       autogenerate: false
       display_name: Clustering
 
+  submenus:
+    - id : features_submenu
+      label: Features
