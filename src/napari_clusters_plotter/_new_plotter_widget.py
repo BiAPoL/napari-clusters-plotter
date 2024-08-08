@@ -117,6 +117,9 @@ class PlotterWidget(QMainWindow):
             self._update_layers
         )
 
+        # reset the coloring of the selected layer
+        self.control_widget.reset_button.clicked.connect(self._reset)
+
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].currentTextChanged.connect(self._replot)
 
@@ -360,6 +363,15 @@ class PlotterWidget(QMainWindow):
             indeces = features[features["layer"] == selected_layer.name].index
             _color_layer(selected_layer, color[indeces])
             selected_layer.refresh()
+
+    def _reset(self):
+        """
+        Reset the selection in the current plotting widget.
+        """
+        self.plotting_widget.active_artist.color_indices = np.zeros(
+            len(self._get_features())
+        )
+        self._add_manual_cluster_id()
 
 
 def _color_layer(layer, color):
