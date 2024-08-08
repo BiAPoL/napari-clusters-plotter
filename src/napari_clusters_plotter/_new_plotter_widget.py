@@ -3,6 +3,7 @@ from pathlib import Path
 
 import napari
 import numpy as np
+import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
@@ -42,7 +43,6 @@ class PlotterWidget(QMainWindow):
         )
 
         self.viewer = napari_viewer
-        self.layers: list[napari.layers.Layer] = []  # selected layers
 
         self._selectors = {
             "x": self.control_widget.x_axis_box,
@@ -237,72 +237,113 @@ class PlotterWidget(QMainWindow):
         """
         Number of currently selected layers.
         """
-        return len(self.layers)
+        return len(list(self.viewer.layers.selection))
+    
+    @property
+    def common_columns(self) -> list[str]:
+        """
+        Columns that are in all selected layers.
+        """
+        # find columns that are in all selected layers
+        common_columns = [list(layer.features.columns) for layer in list(self.viewer.layers.selection)]
+        common_columns = list(set.intersection(*map(set, common_columns)))
+
+        return common_columns
 
     def _get_data(self) -> np.ndarray:
         """
         Get the data from the selected layers features.
         """
-        x_data = self.layers[0].features[self.x_axis].values
-        y_data = self.layers[0].features[self.y_axis].values
+        features = self._get_features()
+        x_data = features[self.x_axis].values
+        y_data = features[self.y_axis].values
 
         # if no hue is selected, set it to 0
         if self.hue_axis == "None":
-            hue = np.zeros(len(x_data))
+            hue = np.zeros(len(features))
         elif self.hue_axis != "":
-            hue = self.layers[0].features[self.hue_axis].values
+            hue = features[self.hue_axis].values
 
         return np.stack([x_data, y_data], axis=1)
+    
+    def _get_features(self) -> pd.DataFrame:
+        """
+        Get the features from the selected layers.
+
+        Returns
+        -------
+        pd.DataFrame
+            The features of all selected layers.
+        """
+
+        # concatenate the features of all selected layers
+        # first put all features in a list of tables and add the layer's name as a column
+        features = pd.DataFrame()
+        for layer in list(self.viewer.layers.selection):
+            _features = layer.features[self.common_columns].copy()
+            _features["layer"] = layer.name
+            features = pd.concat([features, _features], axis=0)
+
+        return features.reset_index(drop=True)
 
     def _update_layers(self, event: napari.utils.events.Event) -> None:
         """
         Update the layers list when the selection changes.
         """
-        self.layers = list(self.viewer.layers.selection)
-        self.layers = sorted(self.layers, key=lambda layer: layer.name)
-
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
             return
 
-        self._update_features(None)
-        self.layers[0].events.features.connect(self._update_features)
+        self._update_feature_selection(None)
 
-    def _update_features(self, event: napari.utils.events.Event) -> None:
+        for layer in list(self.viewer.layers.selection):
+            layer.events.features.connect(self._update_feature_selection)
+
+    def _update_feature_selection(self, event: napari.utils.events.Event) -> None:
         """
         Update the features in the dropdowns.
         """
+        # block selector changed signals until all items added
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(True)
+
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].clear()
 
         for dim in ["x", "y", "hue"]:
-            self._selectors[dim].addItems(self.layers[0].features.columns)
+            self._selectors[dim].addItems(self.common_columns)
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
 
-        if self.n_selected_layers > 0 and not self.layers[0].features.empty:
-            self.x_axis = self.layers[0].features.columns[0]
-            self.y_axis = self.layers[0].features.columns[0]
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(False)
+
+        features = self._get_features()
+        if self.n_selected_layers > 0 and not features.empty:
+            self.x_axis = self.common_columns[0]
+            self.y_axis = self.common_columns[0]
 
     def _add_manual_cluster_id(self):
         """
         Color the selected layer according to the color indices.
         """
-        import pandas as pd
+        
+        features = self._get_features()
+        for selected_layer in list(self.viewer.layers.selection):
 
-        selected_layer = self.layers[0]
-        if not hasattr(selected_layer, "features"):
-            selected_layer.features = pd.DataFrame()
+            # turn the color indices into an array of RGBA colors
+            color_indeces = self.plotting_widget.active_artist.color_indices
+            color = self.plotting_widget.active_artist.categorical_colormap(color_indeces)
 
-        # turn the color indices into an array of RGBA colors
-        color_indeces = self.plotting_widget.active_artist.color_indices
-        color = self.plotting_widget.active_artist.categorical_colormap(color_indeces)
-        _color_layer(selected_layer, color, color_indeces)
-        selected_layer.refresh()
+            # pull the correct rows from the features dataframe that correspond to the
+            # selected layer and use to identify the correct colors
+            indeces = features[features["layer"] == selected_layer.name].index
+            _color_layer(selected_layer, color[indeces])
+            selected_layer.refresh()
 
 
-def _color_layer(layer, color, value=None):
+def _color_layer(layer, color):
     """
     Color the layer according to the color array. This needs to be done in a different
     way for each layer type.
