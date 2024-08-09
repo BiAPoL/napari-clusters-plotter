@@ -266,6 +266,7 @@ class PlotterWidget(BaseWidget):
         if self.n_selected_layers == 0:
             return
 
+        self.layers = list(self.viewer.layers.selection)
         self._update_feature_selection(None)
 
         for layer in self.layers:
