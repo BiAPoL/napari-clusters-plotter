@@ -11,13 +11,15 @@ from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (QComboBox, QMainWindow, QScrollArea, QVBoxLayout,
                             QWidget)
 
+from ._algorithm_widget import BaseWidget
+
 
 class PlottingType(Enum):
     HISTOGRAM = auto()
     SCATTER = auto()
 
 
-class PlotterWidget(QMainWindow):
+class PlotterWidget(BaseWidget):
     """
     Widget for plotting data from selected layers in napari.
 
@@ -35,15 +37,13 @@ class PlotterWidget(QMainWindow):
     ]
 
     def __init__(self, napari_viewer):
-        super().__init__()
+        super().__init__(napari_viewer)
 
         self.control_widget = QWidget()
         uic.loadUi(
             Path(__file__).parent / "plotter_inputs.ui",
             self.control_widget,
         )
-
-        self.viewer = napari_viewer
 
         self._selectors = {
             "x": self.control_widget.x_axis_box,
@@ -254,20 +254,6 @@ class PlotterWidget(QMainWindow):
         """
         return len(list(self.viewer.layers.selection))
 
-    @property
-    def common_columns(self) -> list[str]:
-        """
-        Columns that are in all selected layers.
-        """
-        # find columns that are in all selected layers
-        common_columns = [
-            list(layer.features.columns)
-            for layer in list(self.viewer.layers.selection)
-        ]
-        common_columns = list(set.intersection(*map(set, common_columns)))
-
-        return common_columns
-
     def _get_data(self) -> np.ndarray:
         """
         Get the data from the selected layers features.
@@ -284,25 +270,6 @@ class PlotterWidget(QMainWindow):
 
         return np.stack([x_data, y_data], axis=1)
 
-    def _get_features(self) -> pd.DataFrame:
-        """
-        Get the features from the selected layers.
-
-        Returns
-        -------
-        pd.DataFrame
-            The features of all selected layers.
-        """
-
-        # concatenate the features of all selected layers
-        # first put all features in a list of tables and add the layer's name as a column
-        features = pd.DataFrame()
-        for layer in list(self.viewer.layers.selection):
-            _features = layer.features[self.common_columns].copy()
-            _features["layer"] = layer.name
-            features = pd.concat([features, _features], axis=0)
-
-        return features.reset_index(drop=True)
 
     def _update_layers(self, event: napari.utils.events.Event) -> None:
         """
