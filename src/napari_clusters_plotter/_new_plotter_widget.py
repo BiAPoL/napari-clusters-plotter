@@ -108,6 +108,9 @@ class PlotterWidget(BaseWidget):
         for signal, callback in connections_to_replot:
             signal.connect(callback)
 
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].currentTextChanged.connect(self.plot_needs_update.emit)
+
         self.viewer.layers.selection.events.changed.connect(
             self._on_update_layer_selection
         )
@@ -115,8 +118,7 @@ class PlotterWidget(BaseWidget):
         # reset the coloring of the selected layer
         self.control_widget.reset_button.clicked.connect(self._reset)
 
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].currentTextChanged.connect(self._replot)
+
 
         # connect data selection in plot to layer coloring update
         self.plotting_widget.active_artist.color_indices_changed_signal.connect(
