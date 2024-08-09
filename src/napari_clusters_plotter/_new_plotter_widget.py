@@ -125,7 +125,7 @@ class PlotterWidget(BaseWidget):
 
         # connect data selection in plot to layer coloring update
         self.plotting_widget.active_artist.color_indices_changed_signal.connect(
-            self._add_manual_cluster_id
+            self._color_layer_by_cluster_id
         )
 
     def _replot(self):
@@ -311,7 +311,7 @@ class PlotterWidget(BaseWidget):
             self.x_axis = self.common_columns[0]
             self.y_axis = self.common_columns[0]
 
-    def _add_manual_cluster_id(self):
+    def _color_layer_by_cluster_id(self):
         """
         Color the selected layer according to the color indices.
         """
@@ -338,7 +338,7 @@ class PlotterWidget(BaseWidget):
         self.plotting_widget.active_artist.color_indices = np.zeros(
             len(self._get_features())
         )
-        self._add_manual_cluster_id()
+        self._color_layer_by_cluster_id()
 
 
 def _color_layer(layer, color):
