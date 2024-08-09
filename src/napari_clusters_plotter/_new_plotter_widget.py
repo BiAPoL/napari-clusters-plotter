@@ -7,7 +7,7 @@ import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
-from qtpy.QtCore import Qt
+from qtpy.QtCore import Qt, Signal
 from qtpy.QtWidgets import (QComboBox, QMainWindow, QScrollArea, QVBoxLayout,
                             QWidget)
 
@@ -36,11 +36,15 @@ class PlotterWidget(BaseWidget):
         napari.layers.Vectors,
     ]
 
+    plot_needs_update = Signal()
+
     def __init__(self, napari_viewer):
         super().__init__(napari_viewer)
         self._setup_ui(napari_viewer)
         self._on_update_layer_selection(None)
         self._setup_callbacks()
+
+        self.plot_needs_update.connect(self._replot)
 
     def _setup_ui(self, napari_viewer):
         """
@@ -91,23 +95,18 @@ class PlotterWidget(BaseWidget):
         Set up the callbacks for the widget.
         """
 
-        # Adding Connections
-        self.control_widget.plot_type_box.currentIndexChanged.connect(
-            self._plotting_type_changed
-        )
-        self.control_widget.set_bins_button.clicked.connect(
-            self._bin_number_set
-        )
-        self.control_widget.auto_bins_checkbox.stateChanged.connect(
-            self._bin_auto
-        )
-        self.control_widget.log_scale_checkbutton.stateChanged.connect(
-            self._replot
-        )
-        self.control_widget.non_selected_checkbutton.stateChanged.connect(
-            self._checkbox_status_changed
-        )
-        self.control_widget.cmap_box.currentIndexChanged.connect(self._replot)
+        # Connect all necessary functions to the replot
+        connections_to_replot = [
+            (self.control_widget.plot_type_box.currentIndexChanged, self.plot_needs_update.emit),
+            (self.control_widget.set_bins_button.clicked, self.plot_needs_update.emit),
+            (self.control_widget.auto_bins_checkbox.stateChanged, self.plot_needs_update.emit),
+            (self.control_widget.log_scale_checkbutton.stateChanged, self.plot_needs_update.emit),
+            (self.control_widget.non_selected_checkbutton.stateChanged, self.plot_needs_update.emit),
+            (self.control_widget.cmap_box.currentIndexChanged, self.plot_needs_update.emit),
+        ]
+
+        for signal, callback in connections_to_replot:
+            signal.connect(callback)
 
         self.viewer.layers.selection.events.changed.connect(
             self._on_update_layer_selection
@@ -294,13 +293,16 @@ class PlotterWidget(BaseWidget):
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
 
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].blockSignals(False)
-
         features = self._get_features()
         if self.n_selected_layers > 0 and not features.empty:
             self.x_axis = self.common_columns[0]
             self.y_axis = self.common_columns[0]
+
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(False)
+
+        # Emit signal once to replot after all updates
+        self.plot_needs_update.emit()  
 
     def _color_layer_by_cluster_id(self):
         """
