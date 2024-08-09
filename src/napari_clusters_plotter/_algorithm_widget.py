@@ -4,12 +4,36 @@ from qtpy.QtWidgets import (QAbstractItemView, QComboBox, QLabel, QListWidget,
                             QVBoxLayout, QWidget)
 
 
-class AlgorithmWidgetBase(QWidget):
-    def __init__(self, napari_viewer, algorithms, label_text, combo_box_items):
+class BaseWidget(QWidget):
+    def __init__(self, napari_viewer):
         super().__init__()
 
         self.viewer = napari_viewer
         self.layers = []
+
+    def _get_features(self):
+        features = pd.DataFrame()
+        for layer in self.layers:
+            _features = layer.features[self.common_columns].copy()
+            _features["layer"] = layer.name
+            features = pd.concat([features, _features], axis=0)
+        return features.reset_index(drop=True)
+    
+    @property
+    def common_columns(self):
+        if len(self.layers) == 0:
+            return []
+        common_columns = [
+            list(layer.features.columns) for layer in self.layers
+        ]
+        common_columns = list(set.intersection(*map(set, common_columns)))
+        return common_columns
+
+
+class AlgorithmWidgetBase(BaseWidget):
+    def __init__(self, napari_viewer, algorithms, label_text, combo_box_items):
+        super().__init__()
+
         self.selected_algorithm_widget = None
         self.worker = None
 
@@ -53,6 +77,10 @@ class AlgorithmWidgetBase(QWidget):
         )
 
     def _update_features(self):
+        """
+        Update the features to be used in the selected algorithm. Called when
+        the user selects a different set of features.
+        """
         selected_columns = [
             item.text()
             for item in self.feature_selection_widget.selectedItems()
@@ -104,24 +132,6 @@ class AlgorithmWidgetBase(QWidget):
         self.feature_selection_widget.addItems(features_to_add.columns)
         self._update_features()
 
-    def _get_features(self):
-        features = pd.DataFrame()
-        for layer in self.layers:
-            _features = layer.features[self.common_columns].copy()
-            _features["layer"] = layer.name
-            features = pd.concat([features, _features], axis=0)
-        return features.reset_index(drop=True)
-
     @property
     def selected_algorithm(self):
         return self.algorithm_selection.currentText()
-
-    @property
-    def common_columns(self):
-        if len(self.layers) == 0:
-            return []
-        common_columns = [
-            list(layer.features.columns) for layer in self.layers
-        ]
-        common_columns = list(set.intersection(*map(set, common_columns)))
-        return common_columns
