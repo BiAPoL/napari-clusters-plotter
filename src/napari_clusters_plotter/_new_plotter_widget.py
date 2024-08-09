@@ -90,7 +90,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
 
-        self._update_layers(None)
         self._setup_callbacks()
 
     def _setup_callbacks(self):
@@ -270,8 +269,7 @@ class PlotterWidget(BaseWidget):
 
         return np.stack([x_data, y_data], axis=1)
 
-
-    def _update_layers(self, event: napari.utils.events.Event) -> None:
+    def _on_update_layer_selection(self, event: napari.utils.events.Event) -> None:
         """
         Update the layers list when the selection changes.
         """
