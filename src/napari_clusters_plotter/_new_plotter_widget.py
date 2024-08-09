@@ -3,13 +3,13 @@ from pathlib import Path
 
 import napari
 import numpy as np
-import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
-from qtpy.QtCore import Qt
-from qtpy.QtWidgets import (QComboBox, QMainWindow, QScrollArea, QVBoxLayout,
-                            QWidget)
+from qtpy.QtCore import Qt, Signal
+from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
+
+from ._algorithm_widget import BaseWidget
 
 
 class PlottingType(Enum):
@@ -17,7 +17,7 @@ class PlottingType(Enum):
     SCATTER = auto()
 
 
-class PlotterWidget(QMainWindow):
+class PlotterWidget(BaseWidget):
     """
     Widget for plotting data from selected layers in napari.
 
@@ -34,34 +34,32 @@ class PlotterWidget(QMainWindow):
         napari.layers.Vectors,
     ]
 
-    def __init__(self, napari_viewer):
-        super().__init__()
+    plot_needs_update = Signal()
 
+    def __init__(self, napari_viewer):
+        super().__init__(napari_viewer)
+        self._setup_ui(napari_viewer)
+        self._on_update_layer_selection(None)
+        self._setup_callbacks()
+
+        self.plot_needs_update.connect(self._replot)
+
+    def _setup_ui(self, napari_viewer):
+        """
+        Helper function to set up the UI of the widget.
+        """
         self.control_widget = QWidget()
         uic.loadUi(
             Path(__file__).parent / "plotter_inputs.ui",
             self.control_widget,
         )
 
-        self.viewer = napari_viewer
-
         self._selectors = {
             "x": self.control_widget.x_axis_box,
             "y": self.control_widget.y_axis_box,
             "hue": self.control_widget.hue_box,
         }
-
-        # create a scroll area
-        self.scrollArea = QScrollArea()
-        self.setCentralWidget(self.scrollArea)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setMinimumWidth(450)
-        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        self.contents = QWidget()
-        self.scrollArea.setWidget(self.contents)
-
-        self.layout = QVBoxLayout(self.contents)
+        self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
@@ -90,42 +88,63 @@ class PlotterWidget(QMainWindow):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
 
-        self._update_layers(None)
-        self._setup_callbacks()
-
     def _setup_callbacks(self):
+        """
+        Set up the callbacks for the widget.
+        """
 
-        # Adding Connections
-        self.control_widget.plot_type_box.currentIndexChanged.connect(
-            self._plotting_type_changed
-        )
-        self.control_widget.set_bins_button.clicked.connect(
-            self._bin_number_set
-        )
-        self.control_widget.auto_bins_checkbox.stateChanged.connect(
-            self._bin_auto
-        )
-        self.control_widget.log_scale_checkbutton.stateChanged.connect(
-            self._replot
-        )
-        self.control_widget.non_selected_checkbutton.stateChanged.connect(
-            self._checkbox_status_changed
-        )
-        self.control_widget.cmap_box.currentIndexChanged.connect(self._replot)
+        # Connect all necessary functions to the replot
+        connections_to_replot = [
+            (
+                self.control_widget.plot_type_box.currentIndexChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.set_bins_button.clicked,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.auto_bins_checkbox.stateChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.log_scale_checkbutton.stateChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.non_selected_checkbutton.stateChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.cmap_box.currentIndexChanged,
+                self.plot_needs_update.emit,
+            ),
+        ]
 
-        self.viewer.layers.selection.events.changed.connect(
-            self._update_layers
-        )
+        for signal, callback in connections_to_replot:
+            signal.connect(callback)
 
         for dim in ["x", "y", "hue"]:
-            self._selectors[dim].currentTextChanged.connect(self._replot)
+            self._selectors[dim].currentTextChanged.connect(
+                self.plot_needs_update.emit
+            )
+
+        self.viewer.layers.selection.events.changed.connect(
+            self._on_update_layer_selection
+        )
+
+        # reset the coloring of the selected layer
+        self.control_widget.reset_button.clicked.connect(self._reset)
 
         # connect data selection in plot to layer coloring update
         self.plotting_widget.active_artist.color_indices_changed_signal.connect(
-            self._add_manual_cluster_id
+            self._color_layer_by_cluster_id
         )
 
     def _replot(self):
+        """
+        Replot the data with the current settings.
+        """
 
         # if no x or y axis is selected, return
         if self.x_axis == "" or self.y_axis == "":
@@ -133,14 +152,6 @@ class PlotterWidget(QMainWindow):
 
         data_to_plot = self._get_data()
         self.plotting_widget.active_artist.data = data_to_plot
-        # redraw the whole plot
-        try:
-            # plotting function needs to be here
-            pass
-
-        except AttributeError:
-            # In this case, replotting is not yet possible
-            pass
 
     def _checkbox_status_changed(self):
         self._replot()
@@ -251,20 +262,6 @@ class PlotterWidget(QMainWindow):
         """
         return len(list(self.viewer.layers.selection))
 
-    @property
-    def common_columns(self) -> list[str]:
-        """
-        Columns that are in all selected layers.
-        """
-        # find columns that are in all selected layers
-        common_columns = [
-            list(layer.features.columns)
-            for layer in list(self.viewer.layers.selection)
-        ]
-        common_columns = list(set.intersection(*map(set, common_columns)))
-
-        return common_columns
-
     def _get_data(self) -> np.ndarray:
         """
         Get the data from the selected layers features.
@@ -281,37 +278,20 @@ class PlotterWidget(QMainWindow):
 
         return np.stack([x_data, y_data], axis=1)
 
-    def _get_features(self) -> pd.DataFrame:
+    def _on_update_layer_selection(
+        self, event: napari.utils.events.Event
+    ) -> None:
         """
-        Get the features from the selected layers.
-
-        Returns
-        -------
-        pd.DataFrame
-            The features of all selected layers.
-        """
-
-        # concatenate the features of all selected layers
-        # first put all features in a list of tables and add the layer's name as a column
-        features = pd.DataFrame()
-        for layer in list(self.viewer.layers.selection):
-            _features = layer.features[self.common_columns].copy()
-            _features["layer"] = layer.name
-            features = pd.concat([features, _features], axis=0)
-
-        return features.reset_index(drop=True)
-
-    def _update_layers(self, event: napari.utils.events.Event) -> None:
-        """
-        Update the layers list when the selection changes.
+        Called when the layer selection changes. Updates the layers attribute.
         """
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
             return
 
+        self.layers = list(self.viewer.layers.selection)
         self._update_feature_selection(None)
 
-        for layer in list(self.viewer.layers.selection):
+        for layer in self.layers:
             layer.events.features.connect(self._update_feature_selection)
 
     def _update_feature_selection(
@@ -333,61 +313,70 @@ class PlotterWidget(QMainWindow):
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
 
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].blockSignals(False)
-
         features = self._get_features()
         if self.n_selected_layers > 0 and not features.empty:
             self.x_axis = self.common_columns[0]
             self.y_axis = self.common_columns[0]
 
-    def _add_manual_cluster_id(self):
+        for dim in ["x", "y", "hue"]:
+            self._selectors[dim].blockSignals(False)
+
+        # Emit signal once to replot after all updates
+        self.plot_needs_update.emit()
+
+    def _color_layer_by_cluster_id(self):
         """
         Color the selected layer according to the color indices.
         """
-
         features = self._get_features()
-        for selected_layer in list(self.viewer.layers.selection):
+        color_indices = self.plotting_widget.active_artist.color_indices
+        colors = self.plotting_widget.active_artist.categorical_colormap(
+            color_indices
+        )
 
-            # turn the color indices into an array of RGBA colors
-            color_indeces = self.plotting_widget.active_artist.color_indices
-            color = self.plotting_widget.active_artist.categorical_colormap(
-                color_indeces
-            )
+        for selected_layer in self.viewer.layers.selection:
+            layer_indices = features[
+                features["layer"] == selected_layer.name
+            ].index
+            _apply_layer_color(selected_layer, colors[layer_indices])
 
-            # pull the correct rows from the features dataframe that correspond to the
-            # selected layer and use to identify the correct colors
-            indeces = features[features["layer"] == selected_layer.name].index
-            _color_layer(selected_layer, color[indeces])
-            selected_layer.refresh()
+    def _reset(self):
+        """
+        Reset the selection in the current plotting widget.
+        """
+        self.plotting_widget.active_artist.color_indices = np.zeros(
+            len(self._get_features())
+        )
+        self._color_layer_by_cluster_id()
 
 
-def _color_layer(layer, color):
+def _apply_layer_color(layer, colors):
     """
-    Color the layer according to the color array. This needs to be done in a different
-    way for each layer type.
+    Apply colors to the layer based on the layer type.
 
     Parameters
     ----------
     layer : napari.layers.Layer
         The layer to color.
 
-    color : np.ndarray
+    colors : np.ndarray
         The color array (Nx4).
     """
     from napari.utils import DirectLabelColormap
 
-    if isinstance(layer, napari.layers.Points):
-        layer.face_color = color
-    elif isinstance(layer, napari.layers.Vectors):
-        layer.edge_color = color
-    elif isinstance(layer, napari.layers.Surface):
-        layer.vertex_colors = color
-    elif isinstance(layer, napari.layers.Labels):
-        color_dict = {}
-        for label in np.unique(layer.data):
-            color_dict[label] = color[label]
-        color_dict[0] = [0, 0, 0, 0]  # make sure background is transparent
-        colormap = DirectLabelColormap(color_dict=color_dict)
-        layer.colormap = colormap
-    layer.refresh()
+    color_mapping = {
+        napari.layers.Points: lambda l, c: setattr(l, "face_color", c),
+        napari.layers.Vectors: lambda l, c: setattr(l, "edge_color", c),
+        napari.layers.Surface: lambda l, c: setattr(l, "vertex_colors", c),
+        napari.layers.Labels: lambda l, c: setattr(
+            l,
+            "colormap",
+            DirectLabelColormap(
+                {label: c[label] for label in np.unique(l.data)}
+            ),
+        ),
+    }
+
+    if type(layer) in color_mapping:
+        color_mapping[type(layer)](layer, colors)
+        layer.refresh()

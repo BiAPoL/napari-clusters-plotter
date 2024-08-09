@@ -163,7 +163,6 @@ def test_feature_update(make_napari_viewer, widget_config):
 
 
 def test_algorithm_change(make_napari_viewer, widget_config):
-    pass
 
     viewer = make_napari_viewer()
 
