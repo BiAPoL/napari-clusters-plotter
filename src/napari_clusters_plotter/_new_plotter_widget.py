@@ -135,14 +135,6 @@ class PlotterWidget(BaseWidget):
 
         data_to_plot = self._get_data()
         self.plotting_widget.active_artist.data = data_to_plot
-        # redraw the whole plot
-        try:
-            # plotting function needs to be here
-            pass
-
-        except AttributeError:
-            # In this case, replotting is not yet possible
-            pass
 
     def _checkbox_status_changed(self):
         self._replot()
