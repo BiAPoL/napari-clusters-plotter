@@ -3,13 +3,11 @@ from pathlib import Path
 
 import napari
 import numpy as np
-import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import (QComboBox, QMainWindow, QScrollArea, QVBoxLayout,
-                            QWidget)
+from qtpy.QtWidgets import (QComboBox, QVBoxLayout, QWidget)
 
 from ._algorithm_widget import BaseWidget
 
@@ -97,19 +95,39 @@ class PlotterWidget(BaseWidget):
 
         # Connect all necessary functions to the replot
         connections_to_replot = [
-            (self.control_widget.plot_type_box.currentIndexChanged, self.plot_needs_update.emit),
-            (self.control_widget.set_bins_button.clicked, self.plot_needs_update.emit),
-            (self.control_widget.auto_bins_checkbox.stateChanged, self.plot_needs_update.emit),
-            (self.control_widget.log_scale_checkbutton.stateChanged, self.plot_needs_update.emit),
-            (self.control_widget.non_selected_checkbutton.stateChanged, self.plot_needs_update.emit),
-            (self.control_widget.cmap_box.currentIndexChanged, self.plot_needs_update.emit),
+            (
+                self.control_widget.plot_type_box.currentIndexChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.set_bins_button.clicked,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.auto_bins_checkbox.stateChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.log_scale_checkbutton.stateChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.non_selected_checkbutton.stateChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
+                self.control_widget.cmap_box.currentIndexChanged,
+                self.plot_needs_update.emit,
+            ),
         ]
 
         for signal, callback in connections_to_replot:
             signal.connect(callback)
 
         for dim in ["x", "y", "hue"]:
-            self._selectors[dim].currentTextChanged.connect(self.plot_needs_update.emit)
+            self._selectors[dim].currentTextChanged.connect(
+                self.plot_needs_update.emit
+            )
 
         self.viewer.layers.selection.events.changed.connect(
             self._on_update_layer_selection
@@ -117,8 +135,6 @@ class PlotterWidget(BaseWidget):
 
         # reset the coloring of the selected layer
         self.control_widget.reset_button.clicked.connect(self._reset)
-
-
 
         # connect data selection in plot to layer coloring update
         self.plotting_widget.active_artist.color_indices_changed_signal.connect(
@@ -262,7 +278,9 @@ class PlotterWidget(BaseWidget):
 
         return np.stack([x_data, y_data], axis=1)
 
-    def _on_update_layer_selection(self, event: napari.utils.events.Event) -> None:
+    def _on_update_layer_selection(
+        self, event: napari.utils.events.Event
+    ) -> None:
         """
         Called when the layer selection changes. Updates the layers attribute.
         """
@@ -304,7 +322,7 @@ class PlotterWidget(BaseWidget):
             self._selectors[dim].blockSignals(False)
 
         # Emit signal once to replot after all updates
-        self.plot_needs_update.emit()  
+        self.plot_needs_update.emit()
 
     def _color_layer_by_cluster_id(self):
         """
@@ -312,10 +330,14 @@ class PlotterWidget(BaseWidget):
         """
         features = self._get_features()
         color_indices = self.plotting_widget.active_artist.color_indices
-        colors = self.plotting_widget.active_artist.categorical_colormap(color_indices)
+        colors = self.plotting_widget.active_artist.categorical_colormap(
+            color_indices
+        )
 
         for selected_layer in self.viewer.layers.selection:
-            layer_indices = features[features["layer"] == selected_layer.name].index
+            layer_indices = features[
+                features["layer"] == selected_layer.name
+            ].index
             _apply_layer_color(selected_layer, colors[layer_indices])
 
     def _reset(self):
@@ -343,12 +365,16 @@ def _apply_layer_color(layer, colors):
     from napari.utils import DirectLabelColormap
 
     color_mapping = {
-        napari.layers.Points: lambda l, c: setattr(l, 'face_color', c),
-        napari.layers.Vectors: lambda l, c: setattr(l, 'edge_color', c),
-        napari.layers.Surface: lambda l, c: setattr(l, 'vertex_colors', c),
-        napari.layers.Labels: lambda l, c: setattr(l, 'colormap', DirectLabelColormap({
-            label: c[label] for label in np.unique(l.data)
-        })),
+        napari.layers.Points: lambda l, c: setattr(l, "face_color", c),
+        napari.layers.Vectors: lambda l, c: setattr(l, "edge_color", c),
+        napari.layers.Surface: lambda l, c: setattr(l, "vertex_colors", c),
+        napari.layers.Labels: lambda l, c: setattr(
+            l,
+            "colormap",
+            DirectLabelColormap(
+                {label: c[label] for label in np.unique(l.data)}
+            ),
+        ),
     }
 
     if type(layer) in color_mapping:
