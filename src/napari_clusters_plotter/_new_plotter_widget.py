@@ -87,6 +87,9 @@ class PlotterWidget(BaseWidget):
         self.control_widget.log_scale_container.setVisible(False)
 
     def _setup_callbacks(self):
+        """
+        Set up the callbacks for the widget.
+        """
 
         # Adding Connections
         self.control_widget.plot_type_box.currentIndexChanged.connect(
@@ -122,6 +125,9 @@ class PlotterWidget(BaseWidget):
         )
 
     def _replot(self):
+        """
+        Replot the data with the current settings.
+        """
 
         # if no x or y axis is selected, return
         if self.x_axis == "" or self.y_axis == "":
@@ -265,7 +271,7 @@ class PlotterWidget(BaseWidget):
 
     def _on_update_layer_selection(self, event: napari.utils.events.Event) -> None:
         """
-        Update the layers list when the selection changes.
+        Called when the layer selection changes. Updates the layers attribute.
         """
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
