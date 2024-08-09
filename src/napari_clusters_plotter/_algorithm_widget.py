@@ -32,7 +32,7 @@ class BaseWidget(QWidget):
 
 class AlgorithmWidgetBase(BaseWidget):
     def __init__(self, napari_viewer, algorithms, label_text, combo_box_items):
-        super().__init__()
+        super().__init__(napari_viewer)
 
         self.selected_algorithm_widget = None
         self.worker = None
