@@ -79,6 +79,7 @@ class PlotterWidget(BaseWidget):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
 
+        self._on_update_layer_selection(None)
         self._setup_callbacks()
 
     def _setup_callbacks(self):
@@ -102,7 +103,7 @@ class PlotterWidget(BaseWidget):
         self.control_widget.cmap_box.currentIndexChanged.connect(self._replot)
 
         self.viewer.layers.selection.events.changed.connect(
-            self._update_layers
+            self._on_update_layer_selection
         )
 
         # reset the coloring of the selected layer
