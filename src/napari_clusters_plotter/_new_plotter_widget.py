@@ -306,21 +306,13 @@ class PlotterWidget(BaseWidget):
         """
         Color the selected layer according to the color indices.
         """
-
         features = self._get_features()
-        for selected_layer in list(self.viewer.layers.selection):
+        color_indices = self.plotting_widget.active_artist.color_indices
+        colors = self.plotting_widget.active_artist.categorical_colormap(color_indices)
 
-            # turn the color indices into an array of RGBA colors
-            color_indeces = self.plotting_widget.active_artist.color_indices
-            color = self.plotting_widget.active_artist.categorical_colormap(
-                color_indeces
-            )
-
-            # pull the correct rows from the features dataframe that correspond to the
-            # selected layer and use to identify the correct colors
-            indeces = features[features["layer"] == selected_layer.name].index
-            _color_layer(selected_layer, color[indeces])
-            selected_layer.refresh()
+        for selected_layer in self.viewer.layers.selection:
+            layer_indices = features[features["layer"] == selected_layer.name].index
+            _apply_layer_color(selected_layer, colors[layer_indices])
 
     def _reset(self):
         """
@@ -332,32 +324,29 @@ class PlotterWidget(BaseWidget):
         self._color_layer_by_cluster_id()
 
 
-def _color_layer(layer, color):
+def _apply_layer_color(layer, colors):
     """
-    Color the layer according to the color array. This needs to be done in a different
-    way for each layer type.
+    Apply colors to the layer based on the layer type.
 
     Parameters
     ----------
     layer : napari.layers.Layer
         The layer to color.
 
-    color : np.ndarray
+    colors : np.ndarray
         The color array (Nx4).
     """
     from napari.utils import DirectLabelColormap
 
-    if isinstance(layer, napari.layers.Points):
-        layer.face_color = color
-    elif isinstance(layer, napari.layers.Vectors):
-        layer.edge_color = color
-    elif isinstance(layer, napari.layers.Surface):
-        layer.vertex_colors = color
-    elif isinstance(layer, napari.layers.Labels):
-        color_dict = {}
-        for label in np.unique(layer.data):
-            color_dict[label] = color[label]
-        color_dict[0] = [0, 0, 0, 0]  # make sure background is transparent
-        colormap = DirectLabelColormap(color_dict=color_dict)
-        layer.colormap = colormap
-    layer.refresh()
+    color_mapping = {
+        napari.layers.Points: lambda l, c: setattr(l, 'face_color', c),
+        napari.layers.Vectors: lambda l, c: setattr(l, 'edge_color', c),
+        napari.layers.Surface: lambda l, c: setattr(l, 'vertex_colors', c),
+        napari.layers.Labels: lambda l, c: setattr(l, 'colormap', DirectLabelColormap({
+            label: c[label] for label in np.unique(l.data)
+        })),
+    }
+
+    if type(layer) in color_mapping:
+        color_mapping[type(layer)](layer, colors)
+        layer.refresh()
