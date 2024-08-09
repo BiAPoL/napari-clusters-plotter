@@ -18,7 +18,7 @@ class BaseWidget(QWidget):
             _features["layer"] = layer.name
             features = pd.concat([features, _features], axis=0)
         return features.reset_index(drop=True)
-    
+
     @property
     def common_columns(self):
         if len(self.layers) == 0:
