@@ -38,7 +38,14 @@ class PlotterWidget(BaseWidget):
 
     def __init__(self, napari_viewer):
         super().__init__(napari_viewer)
+        self._setup_ui(napari_viewer)
+        self._on_update_layer_selection(None)
+        self._setup_callbacks()
 
+    def _setup_ui(self, napari_viewer):
+        """
+        Helper function to set up the UI of the widget.
+        """
         self.control_widget = QWidget()
         uic.loadUi(
             Path(__file__).parent / "plotter_inputs.ui",
@@ -78,9 +85,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.manual_bins_container.setVisible(False)
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
-
-        self._on_update_layer_selection(None)
-        self._setup_callbacks()
 
     def _setup_callbacks(self):
 
