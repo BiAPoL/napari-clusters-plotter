@@ -268,7 +268,7 @@ class PlotterWidget(BaseWidget):
 
         self._update_feature_selection(None)
 
-        for layer in list(self.viewer.layers.selection):
+        for layer in self.layers:
             layer.events.features.connect(self._update_feature_selection)
 
     def _update_feature_selection(
