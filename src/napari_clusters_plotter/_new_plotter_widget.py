@@ -50,18 +50,7 @@ class PlotterWidget(BaseWidget):
             "y": self.control_widget.y_axis_box,
             "hue": self.control_widget.hue_box,
         }
-
-        # create a scroll area
-        self.scrollArea = QScrollArea()
-        self.setCentralWidget(self.scrollArea)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setMinimumWidth(450)
-        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        self.contents = QWidget()
-        self.scrollArea.setWidget(self.contents)
-
-        self.layout = QVBoxLayout(self.contents)
+        self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
