@@ -857,7 +857,6 @@ class PlotterWidget(QMainWindow):
             cluster_data = generate_cluster_4d_labels(
                 self.analysed_layer, plot_cluster_name
             )
-            colormap = DirectLabelColormap(color_dict=cmap_dict)
             cluster_layer = Layer.create(
                 cluster_data,
                 {
