@@ -8,10 +8,12 @@ import pandas as pd
 from magicgui.widgets import create_widget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.path import Path
 from matplotlib.widgets import LassoSelector, RectangleSelector, SpanSelector
 from napari.layers import Image, Layer
+from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy.QtCore import QRect
 from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import (
@@ -533,6 +535,7 @@ class MplCanvas(FigureCanvas):
         self.last_xy_labels = None
         self.last_datax = None
         self.last_datay = None
+        self.last_bin_number = None
         self.full_data = None
 
         super().__init__(self.fig)
@@ -600,6 +603,7 @@ class MplCanvas(FigureCanvas):
             self.histogram is not None
             and np.array_equal(self.last_datax, data_x)
             and np.array_equal(self.last_datay, data_y)
+            and self.last_bin_number == bin_number
         )
 
         if data_unchanged:
@@ -608,15 +612,17 @@ class MplCanvas(FigureCanvas):
             h, xedges, yedges = np.histogram2d(data_x, data_y, bins=bin_number)
             self.last_datax = data_x
             self.last_datay = data_y
+            self.last_bin_number = bin_number
             self.full_data = pd.concat(
                 [pd.DataFrame(data_x), pd.DataFrame(data_y)], axis=1
             )
-
         self.axes.imshow(
             h.T,
             extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]],
             origin="lower",
-            cmap=self.selected_colormap,
+            cmap=LinearSegmentedColormap.from_list(
+                self.selected_colormap, ALL_COLORMAPS[self.selected_colormap].colors
+            ),
             aspect="auto",
             norm=norm,
         )

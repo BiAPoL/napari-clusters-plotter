@@ -146,10 +146,10 @@ def get_layer_tabular_data(layer):
     pandas.DataFrame or None
         A DataFrame containing the tabular data, or None if no data was found.
     """
-    if hasattr(layer, "properties") and layer.properties is not None:
-        return pd.DataFrame(layer.properties)
     if hasattr(layer, "features") and layer.features is not None:
         return layer.features
+    if hasattr(layer, "properties") and layer.properties is not None:
+        return pd.DataFrame(layer.properties)
     return None
 
 

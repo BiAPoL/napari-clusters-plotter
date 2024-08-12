@@ -16,6 +16,7 @@ A napari-plugin for clustering objects according to their properties.
 <img src="https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/screencast2_timelapse.gif" width="700"/>
 
 ----------------------------------
+**Note: support for other layers besides the `Labels` layer as described below is currently only available in the development version. This note will be removed as soon as there is a new release.**
 
 Jump to:
 - [Usage](#usage)
@@ -37,8 +38,16 @@ Jump to:
 ## Usage
 
 ### Starting point
-For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and a label image
-representing a segmentation of objects.
+For clustering objects according to their properties, the starting point is a [grey-value image](example_data/blobs.tif) and another layer containing derived measurements in the `.features` property. Here are the supported layer types along with *examples of what they may represent*:
+1. `Labels` layer containing a label image representing a **segmentation** of objects.
+2. `Points` layer containing points representing centroid **coordinates** of objects.
+3. `Surface` layer containing a surface representing a **segmentation** of an object.
+4. `Labels` layer containing a time-lapse label image representing **tracking** results, where each label number/color correspond to a unique track ID.
+
+Check the [examples data folder](./example_data/) to learn how to load these data with code.
+
+### 1. Labels layer with Segmentation Results
+
 The label image should not contain objects with the label `0` as these objects cannot be separated from the background, which is `0` as well in many images and would lead into erroneous behaviour when performing the clustering.
 For segmenting objects, you can for example use the [Voronoi-Otsu-labelling approach](https://github.com/haesleinhuepf/napari-segment-blobs-and-things-with-membranes#voronoi-otsu-labelling)
 in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://www.napari-hub.org/plugins/napari-segment-blobs-and-things-with-membranes).
@@ -54,7 +63,7 @@ Select the image, the corresponding label image and the measurements to analyse 
 A table with the measurements will open and afterwards, you can save and/or close the measurement table.
 At this point it is recommended to close the table and the Measure widget to free space for following steps.
 
-You can also load your own measurements. You can do this using the menu `Tools > Measurement tables > Load from CSV (nsr)`.
+You can also load your own measurements. You can do this using the menu `Tools > Measurement > Load from CSV (nsr)`.
 If you load custom measurements, please make sure that there is a `label` column that specifies which measurement belongs to which labeled object.
 Make sure to avoid the label `0` as this is reserved for the background. Tables for time-lapse data need to include an additional column named `frame`.
 
@@ -107,7 +116,61 @@ Furthermore, you could also select a group in time and see where the datapoints 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/timelapse_manual_clustering_tips.gif)
 
-If you have custom measurements from tracking data where each column specifies measurements for a track instead of a label at a specific time point, the `frame` column must not be added.
+If you have custom measurements from **tracking data** where each column specifies measurements for a track instead of a label at a specific time point, the `frame` column must not be added. Check [below]() how tracking data and features should look like.
+
+### 2. Points Layer with Coordinates
+
+The `Points` layer typically contains coordinates of objects of interest (for example, object centroids).
+
+To get these coordinates, you can apply spot detection algorithms (check references [here with scikit-image](https://scikit-image.org/docs/stable/auto_examples/segmentation/plot_peak_local_max.html), [here with pyclesperanto](https://haesleinhuepf.github.io/BioImageAnalysisNotebooks/23_blob_detection/local_maxima_detection.html) and [here for the spotflow plugin](https://github.com/weigertlab/napari-spotiflow?tab=readme-ov-file#napari-spotiflow)) or, if you have segmentation results, use objects centroids as coordinates. This last approach can be done via `Tools > Points > Create points from labels centroids (nppas)` from the [napari-process-points-and-surfaces plugin](https://github.com/haesleinhuepf/napari-process-points-and-surfaces?tab=readme-ov-file#napari-process-points-and-surfaces-nppas):
+
+![](./images/points.png)
+
+You can load object features to these points by assigning them to the `.feature` attribute of the `Points` layer, like this in Python:
+
+`points_layer.features = features_table`
+
+The number of rows in the table should match the number of points.
+
+You can cluster these features using the same algorithms explained furhter down, or manually, and get points colored accordingly, like shown below:
+
+![](./images/points_manual.png)
+
+Check also [this notebook](./example_data/points_data/loading_points_data_example.ipynb) to learn how to load these data from code.
+
+### 3. Surface Layer with Segmentation Results
+
+The `Surface` layer could contain a surface representing a segmentation result.
+
+To generate this surface from a labeled image containing the segmentation results, a classical algorithm is the [Marching Cubes](https://en.wikipedia.org/wiki/Marching_cubes). It is available in [scikit-image](https://scikit-image.org/docs/stable/api/skimage.measure.html#skimage.measure.marching_cubes), and you can also apply it via `Tools > Surfaces > Create surface from any label (marching cubes, scikit-image, nppas)` from the [napari-process-points-and-surfaces plugin](https://github.com/haesleinhuepf/napari-process-points-and-surfaces?tab=readme-ov-file#napari-process-points-and-surfaces-nppas). Choose which label id number you want to turn into a surface and click on `Run`:
+
+![](./images/surface.png)
+
+You will notice that the surface layer will be created.
+
+![](./images/surface2.png)
+
+You can derive quantitative measurements from the vertices of a surface via `Tools > Measurement tables > Surface quality table (vedo, nppas)` from [napari-process-points-and-surfaces plugin](https://github.com/haesleinhuepf/napari-process-points-and-surfaces?tab=readme-ov-file#surface-measurements-and-annotations):
+
+![](./images/surface3.png)
+
+Surface vertex measurements can be plotted and classified the same way with the plotter (`Tools > Visualization > Plot measurements (ncp)`):
+
+![](./images/surface4.png)
+
+Check [this notebook](./example_data/surface_data/loading_surface_data_example.ipynb) to learn how to load these data from code.
+
+### 4. Labels Layer with Tracking Results
+
+The **`Labels`** layer can be also used to display tracking results.
+
+[These notebooks](https://github.com/BiAPoL/napari-clusters-plotter-example-notebooks/tree/main/notebooks/mastodon) show you examples of how to load and format tracking features from [Mastodon](https://imagej.net/plugins/mastodon) in a way compatible with napari-clusters-plotter.
+
+For example, if you have a time-lapse labeled image where each label number represents a unique track ID, you can load tracking features to this `Labels` layer and use the plotter to cluster them. In the 'gif' below, the `Tracks` layer is NOT used for clustering, it is just shown along as a convenience. There is currently no support for the `Tracks` layer.
+
+![](./images/tracking_labels.gif)
+
+Check [this notebook](./example_data/tracking_data/loading_tracking_data_example.ipynb) to learn how to load these data from code.
 
 ### Dimensionality reduction
 

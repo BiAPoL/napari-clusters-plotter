@@ -9,7 +9,7 @@ on:
       - master
       - main
     tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "*" # Push events with any tag
   pull_request:
     branches:
       - master
@@ -22,14 +22,14 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        platform: [ubuntu-latest, macos-latest] # windows-latest (disabled, see related issue)
+        platform: [ubuntu-latest, windows-latest] # macos-latest (disabled, see related issue)
         python-version: [3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -90,7 +90,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   deploy:
-    # this will run when you have tagged a commit, starting with "v*"
+    # this will run when you have tagged a commit,
     # and requires that you have put your twine API key in your
     # github secrets (see readme for details)
     needs: [test]
@@ -99,18 +99,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.x"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U setuptools setuptools_scm wheel twine
+          pip install -U setuptools setuptools_scm wheel twine build
       - name: Build and publish
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TWINE_API_KEY }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           git tag
-          python setup.py sdist bdist_wheel
+          python -m build .
           twine upload dist/*

@@ -5,7 +5,7 @@ from enum import Enum, auto
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
-from napari.layers import Labels, Layer, Points, Surface
+from napari.layers import Image, Labels, Layer, Points, Surface
 from napari.utils import DirectLabelColormap
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
@@ -94,7 +94,6 @@ class PlotterWidget(QMainWindow):
 
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
-
             if self.analysed_layer is None or len(inside) == 0:
                 return  # if nothing was plotted yet, leave
             clustering_ID = "MANUAL_CLUSTER_ID"
@@ -103,8 +102,13 @@ class PlotterWidget(QMainWindow):
 
             modifiers = QGuiApplication.keyboardModifiers()
             if modifiers == Qt.ShiftModifier and clustering_ID in features.keys():
-                features[clustering_ID].mask(
-                    inside, other=features[clustering_ID].max() + 1, inplace=True
+                features[clustering_ID] = (
+                    features[clustering_ID]
+                    .mask(
+                        inside,
+                        other=features[clustering_ID].max() + 1,
+                    )
+                    .to_numpy()
                 )
             else:
                 features[clustering_ID] = inside.astype(int)
@@ -125,7 +129,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.layer_select.opacity = 0.2
+                self.layer_select.value.opacity = 0.2
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
@@ -235,7 +239,7 @@ class PlotterWidget(QMainWindow):
                 self.colormap_container.setVisible(False)
             replot()
 
-        def bin_number_set():
+        def bin_number_set_clicked():
             replot()
 
         def bin_auto():
@@ -267,7 +271,7 @@ class PlotterWidget(QMainWindow):
 
         self.bin_number_manual_container.layout().addWidget(self.bin_number_spinner)
         self.bin_number_set = QPushButton("Set")
-        self.bin_number_set.clicked.connect(bin_number_set)
+        self.bin_number_set.clicked.connect(bin_number_set_clicked)
         self.bin_number_manual_container.layout().addWidget(self.bin_number_set)
 
         self.bin_number_container.layout().addWidget(self.bin_number_manual_container)
@@ -498,9 +502,10 @@ class PlotterWidget(QMainWindow):
             self.last_connected.events.properties.disconnect(
                 self.update_axes_and_clustering_id_lists
             )
-        self.layer_select.value.events.properties.connect(
-            self.update_axes_and_clustering_id_lists
-        )
+        if not isinstance(self.layer_select.value, Image):
+            self.layer_select.value.events.properties.connect(
+                self.update_axes_and_clustering_id_lists
+            )
         self.last_connected = self.layer_select.value
 
     def update_axes_and_clustering_id_lists(self):
@@ -608,9 +613,9 @@ class PlotterWidget(QMainWindow):
             and plot_cluster_name in list(features.keys())
         ):
             if self.plot_hide_non_selected.isChecked():
-                features.loc[
-                    features[plot_cluster_name] == 0, plot_cluster_name
-                ] = -1  # make unselected points to noise points
+                features.loc[features[plot_cluster_name] == 0, plot_cluster_name] = (
+                    -1
+                )  # make unselected points to noise points
 
             # fill all prediction nan values with -1 -> turns them
             # into noise points
@@ -649,7 +654,6 @@ class PlotterWidget(QMainWindow):
                         self.bin_number_spinner.setValue(number_bins)
                 else:
                     number_bins = int(self.bin_number_spinner.value())
-
                 # if both axes are the same, plot 1D histogram
                 if plot_x_axis_name == plot_y_axis_name:
                     self.graphics_widget.make_1d_histogram(
@@ -853,7 +857,7 @@ class PlotterWidget(QMainWindow):
             cluster_data = generate_cluster_4d_labels(
                 self.analysed_layer, plot_cluster_name
             )
-
+            colormap = DirectLabelColormap(color_dict=cmap_dict)
             cluster_layer = Layer.create(
                 cluster_data,
                 {
