@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure
 from napari.layers import Image, Labels, Layer, Points, Surface
+from napari.utils import DirectLabelColormap
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari_tools_menu import register_dock_widget
 from qtpy import QtWidgets
@@ -719,7 +720,7 @@ class PlotterWidget(QMainWindow):
                 for prediction in np.unique(self.cluster_ids)
             }
             # take care of background label
-            cmap_dict[0] = [0, 0, 0, 0]
+            cmap_dict[None] = [0, 0, 0, 0]
 
             keep_selection = list(self.viewer.layers.selection)
 
@@ -820,7 +821,7 @@ class PlotterWidget(QMainWindow):
                 layer_in_viewer.colormap = self.visualized_layer.colormap
                 layer_in_viewer.contrast_limits = self.visualized_layer.contrast_limits
             elif isinstance(self.visualized_layer, Labels):
-                layer_in_viewer.color = self.visualized_layer.color
+                layer_in_viewer.colormap = self.visualized_layer.colormap
             else:
                 print("Update failed")
 
@@ -856,11 +857,10 @@ class PlotterWidget(QMainWindow):
             cluster_data = generate_cluster_4d_labels(
                 self.analysed_layer, plot_cluster_name
             )
-
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    "color": cmap_dict,
+                    "colormap": DirectLabelColormap(color_dict=cmap_dict),
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },
@@ -878,7 +878,7 @@ class PlotterWidget(QMainWindow):
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    "color": cmap_dict,
+                    "colormap": DirectLabelColormap(color_dict=cmap_dict),
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },
@@ -919,7 +919,7 @@ class PlotterWidget(QMainWindow):
             cluster_layer = Layer.create(
                 cluster_data,
                 {
-                    "color": cmap_dict,
+                    "colormap": DirectLabelColormap(color_dict=cmap_dict),
                     "name": "cluster_ids_in_space",
                     "scale": self.layer_select.value.scale,
                 },
