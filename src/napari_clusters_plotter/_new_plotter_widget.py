@@ -371,12 +371,13 @@ def _apply_layer_color(layer, colors):
         napari.layers.Labels: lambda l, c: setattr(
             l,
             "colormap",
-            DirectLabelColormap(
-                {label: c[label] for label in np.unique(l.data)}
-            ),
+            DirectLabelColormap(color_dict={label: c[label] for label in np.unique(l.data)} | {None: [0, 0, 0, 1], 0: [0, 0, 0, 0]})
         ),
     }
 
     if type(layer) in color_mapping:
+        if type(layer) == napari.layers.Labels:
+            # add a color for the background at the first index
+            colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
         color_mapping[type(layer)](layer, colors)
         layer.refresh()
