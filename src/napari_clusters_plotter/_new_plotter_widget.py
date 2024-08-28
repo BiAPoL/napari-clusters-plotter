@@ -319,7 +319,9 @@ class PlotterWidget(BaseWidget):
         self._selectors["hue"].addItem("None")
 
         # set the previous values if they are still available
-        for dim, value in zip(["x", "y", "hue"], [current_x, current_y, current_hue]):
+        for dim, value in zip(
+            ["x", "y", "hue"], [current_x, current_y, current_hue]
+        ):
             if value in self.common_columns:
                 self._selectors[dim].setCurrentText(value)
 
