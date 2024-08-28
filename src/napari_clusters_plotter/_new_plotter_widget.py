@@ -371,7 +371,10 @@ def _apply_layer_color(layer, colors):
         napari.layers.Labels: lambda l, c: setattr(
             l,
             "colormap",
-            DirectLabelColormap(color_dict={label: c[label] for label in np.unique(l.data)} | {None: [0, 0, 0, 1], 0: [0, 0, 0, 0]})
+            DirectLabelColormap(
+                color_dict={label: c[label] for label in np.unique(l.data)}
+                | {None: [0, 0, 0, 1], 0: [0, 0, 0, 0]}
+            ),
         ),
     }
 
