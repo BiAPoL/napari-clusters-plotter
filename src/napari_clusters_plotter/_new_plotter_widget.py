@@ -133,6 +133,9 @@ class PlotterWidget(BaseWidget):
             self._on_update_layer_selection
         )
 
+        # connect frame change to alpha update
+        self.viewer.dims.events.current_step.connect(self._on_frame_changed)
+
         # reset the coloring of the selected layer
         self.control_widget.reset_button.clicked.connect(self._reset)
 
@@ -152,6 +155,17 @@ class PlotterWidget(BaseWidget):
 
         data_to_plot = self._get_data()
         self.plotting_widget.active_artist.data = data_to_plot
+
+    def _on_frame_changed(self, event: napari.utils.events.Event):
+        """
+        Called when the frame changes. Updates the alpha values of the points.
+        """
+
+        if 'frame' in self._get_features().columns:
+            current_step = self.viewer.dims.current_step[0]
+            alpha = np.asarray(self._get_features()['frame'] == current_step, dtype=float)
+            alpha[alpha == 0] = 0.25
+            self.plotting_widget.active_artist.alpha = alpha
 
     def _checkbox_status_changed(self):
         self._replot()
