@@ -161,9 +161,11 @@ class PlotterWidget(BaseWidget):
         Called when the frame changes. Updates the alpha values of the points.
         """
 
-        if 'frame' in self._get_features().columns:
+        if "frame" in self._get_features().columns:
             current_step = self.viewer.dims.current_step[0]
-            alpha = np.asarray(self._get_features()['frame'] == current_step, dtype=float)
+            alpha = np.asarray(
+                self._get_features()["frame"] == current_step, dtype=float
+            )
             alpha[alpha == 0] = 0.25
             self.plotting_widget.active_artist.alpha = alpha
 
