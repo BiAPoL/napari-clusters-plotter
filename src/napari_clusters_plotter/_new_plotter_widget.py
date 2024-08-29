@@ -301,6 +301,11 @@ class PlotterWidget(BaseWidget):
         """
         Update the features in the dropdowns.
         """
+        self.blockSignals(True)
+        current_x = self.x_axis
+        current_y = self.y_axis
+        current_hue = self.hue_axis
+
         # block selector changed signals until all items added
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].blockSignals(True)
@@ -314,15 +319,17 @@ class PlotterWidget(BaseWidget):
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
 
-        features = self._get_features()
-        if self.n_selected_layers > 0 and not features.empty:
-            self.x_axis = self.common_columns[0]
-            self.y_axis = self.common_columns[0]
+        # set the previous values if they are still available
+        for dim, value in zip(
+            ["x", "y", "hue"], [current_x, current_y, current_hue]
+        ):
+            if value in self.common_columns:
+                self._selectors[dim].setCurrentText(value)
 
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].blockSignals(False)
 
-        # Emit signal once to replot after all updates
+        self.blockSignals(False)
         self.plot_needs_update.emit()
 
     def _color_layer_by_cluster_id(self):
