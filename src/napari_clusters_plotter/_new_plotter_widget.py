@@ -367,11 +367,14 @@ def _apply_layer_color(layer, colors):
 
     color_mapping = {
         napari.layers.Points: lambda _layer, _color: setattr(
-            _layer, "face_color", _color),
+            _layer, "face_color", _color
+        ),
         napari.layers.Vectors: lambda _layer, _color: setattr(
-            _layer, "edge_color", _color),
+            _layer, "edge_color", _color
+        ),
         napari.layers.Surface: lambda _layer, _color: setattr(
-            _layer, "vertex_colors", _color),
+            _layer, "vertex_colors", _color
+        ),
         napari.layers.Labels: lambda _layer, _color: setattr(
             _layer,
             "colormap",
