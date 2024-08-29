@@ -212,7 +212,8 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
             if widget.worker:
                 widget.worker.finished.connect(on_worker_finished)
 
-        # Connect the button clicked signal to the function that will connect the worker's finished signal
+        # Connect the button clicked signal to the function that will
+        # connect the worker's finished signal
         widget.selected_algorithm_widget.call_button.clicked.connect(
             on_button_clicked
         )
