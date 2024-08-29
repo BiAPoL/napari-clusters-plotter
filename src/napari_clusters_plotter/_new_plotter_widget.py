@@ -137,7 +137,8 @@ class PlotterWidget(BaseWidget):
         self.control_widget.reset_button.clicked.connect(self._reset)
 
         # connect data selection in plot to layer coloring update
-        self.plotting_widget.active_artist.color_indices_changed_signal.connect(
+        active_artist = self.plotting_widget.active_artist
+        active_artist.color_indices_changed_signal.connect(
             self._color_layer_by_cluster_id
         )
 
@@ -270,11 +271,11 @@ class PlotterWidget(BaseWidget):
         x_data = features[self.x_axis].values
         y_data = features[self.y_axis].values
 
-        # if no hue is selected, set it to 0
-        if self.hue_axis == "None":
-            hue = np.zeros(len(features))
-        elif self.hue_axis != "":
-            hue = features[self.hue_axis].values
+        # # if no hue is selected, set it to 0
+        # if self.hue_axis == "None":
+        #     hue = np.zeros(len(features))
+        # elif self.hue_axis != "":
+        #     hue = features[self.hue_axis].values
 
         return np.stack([x_data, y_data], axis=1)
 
@@ -365,14 +366,17 @@ def _apply_layer_color(layer, colors):
     from napari.utils import DirectLabelColormap
 
     color_mapping = {
-        napari.layers.Points: lambda l, c: setattr(l, "face_color", c),
-        napari.layers.Vectors: lambda l, c: setattr(l, "edge_color", c),
-        napari.layers.Surface: lambda l, c: setattr(l, "vertex_colors", c),
-        napari.layers.Labels: lambda l, c: setattr(
-            l,
+        napari.layers.Points: lambda _layer, _color: setattr(
+            _layer, "face_color", _color),
+        napari.layers.Vectors: lambda _layer, _color: setattr(
+            _layer, "edge_color", _color),
+        napari.layers.Surface: lambda _layer, _color: setattr(
+            _layer, "vertex_colors", _color),
+        napari.layers.Labels: lambda _layer, _color: setattr(
+            _layer,
             "colormap",
             DirectLabelColormap(
-                {label: c[label] for label in np.unique(l.data)}
+                {label: _color[label] for label in np.unique(_layer.data)}
             ),
         ),
     }
