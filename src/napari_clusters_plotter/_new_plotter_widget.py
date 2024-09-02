@@ -137,7 +137,8 @@ class PlotterWidget(BaseWidget):
         self.control_widget.reset_button.clicked.connect(self._reset)
 
         # connect data selection in plot to layer coloring update
-        self.plotting_widget.active_artist.color_indices_changed_signal.connect(
+        active_artist = self.plotting_widget.active_artist
+        active_artist.color_indices_changed_signal.connect(
             self._color_layer_by_cluster_id
         )
 
@@ -270,11 +271,11 @@ class PlotterWidget(BaseWidget):
         x_data = features[self.x_axis].values
         y_data = features[self.y_axis].values
 
-        # if no hue is selected, set it to 0
-        if self.hue_axis == "None":
-            hue = np.zeros(len(features))
-        elif self.hue_axis != "":
-            hue = features[self.hue_axis].values
+        # # if no hue is selected, set it to 0
+        # if self.hue_axis == "None":
+        #     hue = np.zeros(len(features))
+        # elif self.hue_axis != "":
+        #     hue = features[self.hue_axis].values
 
         return np.stack([x_data, y_data], axis=1)
 
@@ -300,6 +301,11 @@ class PlotterWidget(BaseWidget):
         """
         Update the features in the dropdowns.
         """
+        self.blockSignals(True)
+        current_x = self.x_axis
+        current_y = self.y_axis
+        current_hue = self.hue_axis
+
         # block selector changed signals until all items added
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].blockSignals(True)
@@ -313,15 +319,17 @@ class PlotterWidget(BaseWidget):
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
 
-        features = self._get_features()
-        if self.n_selected_layers > 0 and not features.empty:
-            self.x_axis = self.common_columns[0]
-            self.y_axis = self.common_columns[0]
+        # set the previous values if they are still available
+        for dim, value in zip(
+            ["x", "y", "hue"], [current_x, current_y, current_hue]
+        ):
+            if value in self.common_columns:
+                self._selectors[dim].setCurrentText(value)
 
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].blockSignals(False)
 
-        # Emit signal once to replot after all updates
+        self.blockSignals(False)
         self.plot_needs_update.emit()
 
     def _color_layer_by_cluster_id(self):
@@ -365,15 +373,20 @@ def _apply_layer_color(layer, colors):
     from napari.utils import DirectLabelColormap
 
     color_mapping = {
-        napari.layers.Points: lambda l, c: setattr(l, "face_color", c),
-        napari.layers.Vectors: lambda l, c: setattr(l, "edge_color", c),
-        napari.layers.Surface: lambda l, c: setattr(l, "vertex_colors", c),
-        napari.layers.Labels: lambda l, c: setattr(
-            l,
+        napari.layers.Points: lambda _layer, _color: setattr(
+            _layer, "face_color", _color
+        ),
+        napari.layers.Vectors: lambda _layer, _color: setattr(
+            _layer, "edge_color", _color
+        ),
+        napari.layers.Surface: lambda _layer, _color: setattr(
+            _layer, "vertex_colors", _color
+        ),
+        napari.layers.Labels: lambda _layer, _color: setattr(
+            _layer,
             "colormap",
             DirectLabelColormap(
-                color_dict={label: c[label] for label in np.unique(l.data)}
-                | {None: [0, 0, 0, 1], 0: [0, 0, 0, 0]}
+                {label: _color[label] for label in np.unique(_layer.data)}
             ),
         ),
     }
