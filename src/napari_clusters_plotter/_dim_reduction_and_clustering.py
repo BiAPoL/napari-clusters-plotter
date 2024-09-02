@@ -69,7 +69,7 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
 
     def _process_result(self, result):
         """
-        Process result of dimensionality reduction algorithm and update the layer
+        Process result of dimensionality reduction algorithm and update layer
         """
         column_names = [
             f"{self.algorithms[self.selected_algorithm]['column_string']}{i}"
