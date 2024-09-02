@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from napari_clusters_plotter import (ClusteringWidget,
-                                     DimensionalityReductionWidget)
+from napari_clusters_plotter import (
+    ClusteringWidget,
+    DimensionalityReductionWidget,
+)
 
 
 @pytest.fixture(
