@@ -1,10 +1,10 @@
+import napari
 import pandas as pd
 
 from ._algorithm_widget import AlgorithmWidgetBase
 from ._algorithms import (cluster_gaussian_mixture, cluster_hdbscan,
                           cluster_kmeans, cluster_spectral, reduce_pca,
                           reduce_tsne, reduce_umap)
-import napari
 
 
 class ClusteringWidget(AlgorithmWidgetBase):
