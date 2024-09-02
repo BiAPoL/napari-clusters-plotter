@@ -232,4 +232,4 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
         else:
             raise AssertionError(
                 f"Results not found in layer features for algorithm {algorithm}"
-                )
+            )
