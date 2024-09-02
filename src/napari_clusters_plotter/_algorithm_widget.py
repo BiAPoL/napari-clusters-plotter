@@ -1,7 +1,13 @@
 import pandas as pd
 from magicgui import magicgui
-from qtpy.QtWidgets import (QAbstractItemView, QComboBox, QLabel, QListWidget,
-                            QVBoxLayout, QWidget)
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
+    QLabel,
+    QListWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class BaseWidget(QWidget):

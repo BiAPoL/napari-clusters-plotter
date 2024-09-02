@@ -224,9 +224,9 @@ class PlotterWidget(BaseWidget):
         return self.control_widget.plot_type_box.currentText()
 
     @plotting_type.setter
-    def plotting_type(self, type):
-        if type in PlottingType.__members__.keys():
-            self.control_widget.plot_type_box.setCurrentText(type)
+    def plotting_type(self, plot_type):
+        if plot_type in PlottingType.__members__:
+            self.control_widget.plot_type_box.setCurrentText(plot_type)
 
     @property
     def x_axis(self):
@@ -392,5 +392,8 @@ def _apply_layer_color(layer, colors):
     }
 
     if type(layer) in color_mapping:
+        if type(layer) is napari.layers.Labels:
+            # add a color for the background at the first index
+            colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
         color_mapping[type(layer)](layer, colors)
         layer.refresh()
