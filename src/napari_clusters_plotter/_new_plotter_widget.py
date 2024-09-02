@@ -224,9 +224,9 @@ class PlotterWidget(BaseWidget):
         return self.control_widget.plot_type_box.currentText()
 
     @plotting_type.setter
-    def plotting_type(self, type):
-        if type in PlottingType.__members__.keys():
-            self.control_widget.plot_type_box.setCurrentText(type)
+    def plotting_type(self, plot_type):
+        if plot_type in PlottingType.__members__:
+            self.control_widget.plot_type_box.setCurrentText(plot_type)
 
     @property
     def x_axis(self):
