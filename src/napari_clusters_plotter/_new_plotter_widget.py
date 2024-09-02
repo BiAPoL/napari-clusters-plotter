@@ -392,7 +392,7 @@ def _apply_layer_color(layer, colors):
     }
 
     if type(layer) in color_mapping:
-        if type(layer) == napari.layers.Labels:
+        if type(layer) is napari.layers.Labels:
             # add a color for the background at the first index
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
         color_mapping[type(layer)](layer, colors)
