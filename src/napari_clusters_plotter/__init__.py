@@ -11,4 +11,5 @@ __all__ = [
     "PlotterWidget",
     "DimensionalityReductionWidget",
     "ClusteringWidget",
+    "bbbc_1_dataset",
 ]
