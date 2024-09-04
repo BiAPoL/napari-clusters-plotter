@@ -386,7 +386,9 @@ def _apply_layer_color(layer, colors):
             _layer,
             "colormap",
             DirectLabelColormap(
-                {label: _color[label] for label in np.unique(_layer.data)}
+                color_dict={
+                    label: _color[label] for label in np.unique(_layer.data)
+                }
             ),
         ),
     }
