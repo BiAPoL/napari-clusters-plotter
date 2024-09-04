@@ -1,6 +1,7 @@
 def test_sample_data(make_napari_viewer):
-    import napari_clusters_plotter as ncp
     from napari.layers import Layer
+
+    import napari_clusters_plotter as ncp
 
     viewer = make_napari_viewer()
 
