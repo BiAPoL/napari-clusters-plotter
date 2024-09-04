@@ -14,6 +14,10 @@ contributions:
     python_name: napari_clusters_plotter:ClusteringWidget
     title: Clustering
 
+  - id: napari-clusters-plotter.bbbc_sample_data
+    python_name: napari_clusters_plotter:bbbc_1_dataset
+    title: Load bbbc sample data
+
   menus:
     napari/layers/visualize:
       - submenu: features_submenu
@@ -35,3 +39,8 @@ contributions:
   submenus:
     - id : features_submenu
       label: Features
+
+  sample_data:
+  - command: napari-clusters-plotter.bbbc_sample_data
+    key: bbbc1
+    display_name: BBBC 1 dataset & segmentations
