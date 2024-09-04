@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 
-def bbbc_1_dataset() -> List["LayerData"]:
+def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     import numpy as np
     import pandas as pd
     from skimage import io
