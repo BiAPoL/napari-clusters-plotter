@@ -92,6 +92,8 @@ class PlotterWidget(QMainWindow):
         self.analysed_layer = None
         self.visualized_layer = None
 
+        self.manual_label_opacity = 0.2
+
         def manual_clustering_method(inside):
             inside = np.array(inside)  # leads to errors sometimes otherwise
             if self.analysed_layer is None or len(inside) == 0:
@@ -129,7 +131,7 @@ class PlotterWidget(QMainWindow):
                 plot_cluster_name=clustering_ID,
             )
             if isinstance(self.analysed_layer, Labels):
-                self.layer_select.value.opacity = 0.2
+                self.layer_select.value.opacity = self.manual_label_opacity
 
         # Canvas Widget that displays the 'figure', it takes the 'figure' instance
         self.graphics_widget = MplCanvas(
