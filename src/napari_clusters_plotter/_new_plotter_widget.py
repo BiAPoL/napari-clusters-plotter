@@ -32,6 +32,7 @@ class PlotterWidget(BaseWidget):
         napari.layers.Points,
         napari.layers.Surface,
         napari.layers.Vectors,
+        napari.layers.Shapes,
     ]
 
     plot_needs_update = Signal()
@@ -381,6 +382,9 @@ def _apply_layer_color(layer, colors):
         ),
         napari.layers.Surface: lambda _layer, _color: setattr(
             _layer, "vertex_colors", _color
+        ),
+        napari.layers.Shapes: lambda _layer, _color: setattr(
+            _layer, "face_color", _color
         ),
         napari.layers.Labels: lambda _layer, _color: setattr(
             _layer,
