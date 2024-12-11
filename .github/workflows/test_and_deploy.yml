@@ -5,9 +5,10 @@ name: tests
 
 on:
   push:
-    # branches:
-    #   - master
-    #   - main
+    branches:
+      - master
+      - main
+      - v0.9.0
     tags:
       - "*" # Push events with any tag
   pull_request:
