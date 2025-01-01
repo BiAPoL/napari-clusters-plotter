@@ -13,6 +13,7 @@ on:
       - "*" # Push events with any tag
   pull_request:
     branches:
+      - v0.9.0
       - master
       - main
   workflow_dispatch:
