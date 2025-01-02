@@ -294,13 +294,9 @@ class PlotterWidget(BaseWidget):
         selected_layer_types = [
             type(layer) for layer in self.viewer.layers.selection
         ]
-        if not all(
-            [
-                layer_type in self.input_layer_types
-                for layer_type in selected_layer_types
-            ]
-        ):
-            return
+        for layer_type in selected_layer_types:
+            if layer_type not in self.input_layer_types:
+                return
 
         # check if all selected layers are of the same type
         if len(set(selected_layer_types)) > 1:
