@@ -327,7 +327,7 @@ class PlotterWidget(BaseWidget):
             self._selectors[dim].clear()
 
         for dim in ["x", "y", "hue"]:
-            self._selectors[dim].addItems(self.common_columns)
+            self._selectors[dim].addItems(sorted(self.common_columns))
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
