@@ -135,7 +135,7 @@ class AlgorithmWidgetBase(BaseWidget):
             ]
         )
         self.feature_selection_widget.clear()
-        self.feature_selection_widget.addItems(features_to_add.columns)
+        self.feature_selection_widget.addItems(sorted(features_to_add.columns))
         self._update_features()
 
     @property
