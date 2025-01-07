@@ -20,13 +20,13 @@ def reduce_pca(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data.values)
+            preprocessed = StandardScaler().fit_transform(non_nan_data.values)
         else:
-            non_nan_data = non_nan_data.values
+            preprocessed = non_nan_data.values
 
         pca = PCA(n_components=n_components)
-        pca.fit(non_nan_data)
-        reduced_data = pca.transform(non_nan_data)
+        pca.fit(preprocessed)
+        reduced_data = pca.transform(preprocessed)
 
         # Add NaN rows back
         result = pd.DataFrame(index=data.index, columns=range(n_components))
@@ -58,9 +58,11 @@ def reduce_tsne(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
         tsne = TSNE(n_components=n_components, perplexity=perplexity)
-        reduced_data = tsne.fit_transform(non_nan_data)
+        reduced_data = tsne.fit_transform(preprocessed)
 
         # Add NaN rows back
         result = pd.DataFrame(index=data.index, columns=range(n_components))
@@ -92,10 +94,12 @@ def reduce_umap(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         reducer = umap.UMAP(n_components=n_components, n_neighbors=n_neighbors)
-        reduced_data = reducer.fit_transform(non_nan_data)
+        reduced_data = reducer.fit_transform(preprocessed)
 
         # Add NaN rows back
         result = pd.DataFrame(index=data.index, columns=range(n_components))
@@ -124,10 +128,12 @@ def cluster_kmeans(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         kmeans = KMeans(n_clusters=n_clusters)
-        clusters = kmeans.fit_predict(non_nan_data)
+        clusters = kmeans.fit_predict(preprocessed)
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
@@ -162,12 +168,14 @@ def cluster_hdbscan(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         clusterer = HDBSCAN(
             min_cluster_size=min_cluster_size, min_samples=min_samples
         )
-        clusters = clusterer.fit_predict(non_nan_data)
+        clusters = clusterer.fit_predict(preprocessed)
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
@@ -196,10 +204,12 @@ def cluster_gaussian_mixture(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         gmm = GaussianMixture(n_components=n_components)
-        clusters = gmm.fit_predict(non_nan_data)
+        clusters = gmm.fit_predict(preprocessed)
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
@@ -228,10 +238,12 @@ def cluster_spectral(
         non_nan_data = data.dropna()
 
         if scale:
-            non_nan_data = StandardScaler().fit_transform(non_nan_data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         clusterer = SpectralClustering(n_clusters=n_clusters)
-        clusters = clusterer.fit_predict(non_nan_data)
+        clusters = clusterer.fit_predict(preprocessed)
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
