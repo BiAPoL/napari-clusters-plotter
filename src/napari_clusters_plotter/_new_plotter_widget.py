@@ -7,7 +7,7 @@ from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget, QMenu, QAction
 
 from ._algorithm_widget import BaseWidget
 
@@ -68,6 +68,11 @@ class PlotterWidget(BaseWidget):
             ArtistType.SCATTER
         ]
 
+        # Context menu
+        self.context_menu = QMenu(self.plotting_widget)
+        self.export_clusters = self.context_menu.addAction("Export selected cluster to new layer")
+        self.export_clusters.triggered.connect(self._on_export_clusters)
+
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
         self.layout.addWidget(self.control_widget)
@@ -88,6 +93,25 @@ class PlotterWidget(BaseWidget):
         self.control_widget.manual_bins_container.setVisible(False)
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.log_scale_container.setVisible(False)
+
+    def contextMenuEvent(self, event):
+        self.context_menu.exec_(event.globalPos())
+
+    def _on_export_clusters(self):
+        """
+        Export the selected cluster to a new layer.
+        """
+
+        # get currently selected cluster from plotting widget
+        selected_cluster = self.plotting_widget.class_spinbox.value
+        indices = self.plotting_widget.active_artist.color_indices == selected_cluster
+        
+        # get the layer to export from
+        layer = self.layers[0]
+
+        export_layer = _export_cluster_to_layer(layer, indices, subcluster_index=selected_cluster)
+        if export_layer is not None:
+            self.viewer.add_layer(export_layer)
 
     def _setup_callbacks(self):
         """
@@ -415,3 +439,61 @@ def _apply_layer_color(layer, colors):
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
         color_mapping[type(layer)](layer, colors)
         layer.refresh()
+
+def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
+    """
+    Export the selected cluster to a new layer.
+
+    Parameters
+    ----------
+    layer : napari.layers.Layer
+        The layer to export the cluster from.
+
+    indices : np.ndarray
+        The indices of the cluster to export.
+
+    subcluster_index : str
+        The name of the new layer. If not provided, the name of the layer will be used.
+
+    Returns
+    -------
+    napari.layers.Layer
+        The new layer with the selected cluster.
+    """
+    
+    if isinstance(layer, napari.layers.Labels):
+        LUT = np.array([0] + list(np.arange(1, layer.data.max() + 1)))
+        LUT[indices == False] = 0
+        new_layer = napari.layers.Labels(LUT[layer.data])
+
+    elif isinstance(layer, napari.layers.Points):
+        new_layer = napari.layers.Points(layer.data[indices])
+        new_layer.size = layer.size[indices]
+
+    elif isinstance(layer, napari.layers.Surface):
+        # TODO implement surface export
+        return None
+    
+    elif isinstance(layer, napari.layers.Vectors):
+        new_layer = napari.layers.Vectors(layer.data[indices])
+
+    else:
+        return None
+
+    new_layer.scale = layer.scale
+    new_layer.translate = layer.translate
+    new_layer.rotate = layer.rotate
+
+    if not subcluster_index:
+        new_layer.name = f"{layer.name} subcluster"
+    else:
+        new_layer.name = f"{layer.name} subcluster {subcluster_index}"
+
+    # copy features to new layer if available and drop cluster column
+    new_layer.features = layer.features.iloc[indices].copy()
+    if "cluster" in new_layer.features.columns:
+        new_layer.features.drop(columns=["cluster"], inplace=True)
+
+    print(new_layer.features)
+
+    return new_layer
