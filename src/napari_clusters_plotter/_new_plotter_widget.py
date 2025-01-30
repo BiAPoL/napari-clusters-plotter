@@ -328,9 +328,9 @@ class PlotterWidget(BaseWidget):
 
         for dim in ["x", "y", "hue"]:
             features_to_add = sorted(self.common_columns)
-            if 'MANUAL_CLUSTER_ID' in features_to_add:
-                features_to_add.remove('MANUAL_CLUSTER_ID')
-                
+            if "MANUAL_CLUSTER_ID" in features_to_add:
+                features_to_add.remove("MANUAL_CLUSTER_ID")
+
             self._selectors[dim].addItems(features_to_add)
 
         # it should always be possible to select no color
