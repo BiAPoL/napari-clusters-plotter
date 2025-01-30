@@ -152,8 +152,16 @@ class PlotterWidget(BaseWidget):
         if self.x_axis == "" or self.y_axis == "":
             return
 
-        data_to_plot = self._get_data()
-        self.plotting_widget.active_artist.data = data_to_plot
+        # retrieve the data from the selected layers
+        features = self._get_features()
+        x_data = features[self.x_axis].values
+        y_data = features[self.y_axis].values
+
+        # # if no hue is selected, set it to 0
+        # if self.hue_axis == "None":
+        #     hue = np.zeros(len(features))
+        # elif self.hue_axis != "":
+        #     hue = features[self.hue_axis].values
 
     def _checkbox_status_changed(self):
         self._replot()
@@ -263,22 +271,6 @@ class PlotterWidget(BaseWidget):
         Number of currently selected layers.
         """
         return len(list(self.viewer.layers.selection))
-
-    def _get_data(self) -> np.ndarray:
-        """
-        Get the data from the selected layers features.
-        """
-        features = self._get_features()
-        x_data = features[self.x_axis].values
-        y_data = features[self.y_axis].values
-
-        # # if no hue is selected, set it to 0
-        # if self.hue_axis == "None":
-        #     hue = np.zeros(len(features))
-        # elif self.hue_axis != "":
-        #     hue = features[self.hue_axis].values
-
-        return np.stack([x_data, y_data], axis=1)
 
     def _on_update_layer_selection(
         self, event: napari.utils.events.Event
