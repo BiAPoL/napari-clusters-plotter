@@ -164,6 +164,9 @@ class PlotterWidget(BaseWidget):
         #     hue = features[self.hue_axis].values
 
         self.plotting_widget.active_artist.data = np.stack([x_data, y_data], axis=1)
+        if 'MANUAL_CLUSTER_ID' in features.columns:
+            self.plotting_widget.active_artist.color_indices = features['MANUAL_CLUSTER_ID'].values
+
     def _checkbox_status_changed(self):
         self._replot()
 
@@ -353,6 +356,9 @@ class PlotterWidget(BaseWidget):
                 features["layer"] == selected_layer.name
             ].index
             _apply_layer_color(selected_layer, colors[layer_indices])
+
+            # store cluster indeces in the features table
+            selected_layer.features["MANUAL_CLUSTER_ID"] = color_indices[layer_indices]
 
     def _reset(self):
         """
