@@ -163,6 +163,7 @@ class PlotterWidget(BaseWidget):
         # elif self.hue_axis != "":
         #     hue = features[self.hue_axis].values
 
+        self.plotting_widget.active_artist.data = np.stack([x_data, y_data], axis=1)
     def _checkbox_status_changed(self):
         self._replot()
 
