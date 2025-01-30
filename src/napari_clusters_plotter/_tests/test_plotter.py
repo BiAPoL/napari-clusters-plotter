@@ -75,15 +75,17 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
     viewer.window.add_dock_widget(plotter_widget, area='right')
 
     # select last layer and create a random cluster selection
-    viewer.layers.selection.active = viewer.layers[-1]
+    viewer.layers.selection.active = layer2
     plotter_widget._selectors['x'].setCurrentText('feature3')
-    cluster_indeces = np.random.randint(0, 2, n_samples)
+    cluster_indeces = np.random.randint(0, 2, len(layer2.data))
     plotter_widget.plotting_widget.active_artist.color_indices = cluster_indeces
+
+    assert 'MANUAL_CLUSTER_ID' in layer2.features.columns
     
     # select first layer and make sure that no clusters are selected
-    viewer.layers.selection.active = viewer.layers[0]
+    viewer.layers.selection.active = layer
     assert np.all(plotter_widget.plotting_widget.active_artist.color_indices == 0)
 
     # select last layer and make sure that the clusters are the same
-    viewer.layers.selection.active = viewer.layers[-1]
+    viewer.layers.selection.active = layer2
     assert np.all(plotter_widget.plotting_widget.active_artist.color_indices == cluster_indeces)
