@@ -74,7 +74,7 @@ def test_mixed_layers(make_napari_viewer):
     #
 
 
-def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
+def test_cluster_memorization(make_napari_viewer, qtbot, n_samples: int = 100):
     from napari_clusters_plotter import PlotterWidget
 
     viewer = make_napari_viewer()
@@ -104,6 +104,8 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
 
     # select last layer and make sure that the clusters are the same
     viewer.layers.selection.active = layer2
+
+    qtbot.wait(1000)
     assert np.all(
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
