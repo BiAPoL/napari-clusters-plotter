@@ -35,8 +35,8 @@ class BaseWidget(QWidget):
         common_columns = list(set.intersection(*map(set, common_columns)))
 
         # we do not want the manual cluster id to be used as a feature
-        if 'MANUAL_CLUSTER_ID' in common_columns:
-            common_columns.remove('MANUAL_CLUSTER_ID')
+        if "MANUAL_CLUSTER_ID" in common_columns:
+            common_columns.remove("MANUAL_CLUSTER_ID")
         return common_columns
 
 
