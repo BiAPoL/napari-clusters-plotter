@@ -11,10 +11,10 @@ def create_multi_point_layer(n_samples: int = 100):
     frame = np.arange(n_timeframes).repeat(n_samples//n_timeframes)
     # make some random points with random  features
     points = np.random.random((n_samples, 4))
-    points2 = np.random.random((n_samples, 4))
+    points2 = np.random.random((n_samples-1, 4))
 
     points[:, 0] = frame
-    points2[:, 0] = frame
+    points2[:, 0] = frame[:-1]
 
     features = pd.DataFrame({
         'frame': frame,
@@ -24,10 +24,10 @@ def create_multi_point_layer(n_samples: int = 100):
         'feature4': np.random.normal(size=n_samples, loc=loc),})
 
     features2 = pd.DataFrame({
-        'frame': frame,
-        'feature2': np.random.normal(size=n_samples, loc=-loc),
-        'feature3': np.random.normal(size=n_samples, loc=-loc),
-        'feature4': np.random.normal(size=n_samples, loc=-loc),})
+        'frame': frame[:-1],
+        'feature2': np.random.normal(size=n_samples-1, loc=-loc),
+        'feature3': np.random.normal(size=n_samples-1, loc=-loc),
+        'feature4': np.random.normal(size=n_samples-1, loc=-loc),})
 
     layer = Points(points, features=features, size=0.1, blending='translucent_no_depth')
     layer2 = Points(points2, features=features2, size=0.1, translate=(0, 0, 2), blending='translucent_no_depth')
