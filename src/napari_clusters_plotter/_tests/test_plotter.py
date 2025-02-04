@@ -136,7 +136,7 @@ def test_mixed_layers(make_napari_viewer):
     viewer.add_labels(sample_labels)
 
 
-@pytest.mark.parametrize("create_data", [create_points, create_shapes])
+@pytest.mark.parametrize("create_data", [create_points, create_shapes, create_labels])
 def test_cluster_export(make_napari_viewer, create_data):
     from napari_clusters_plotter import PlotterWidget
 
@@ -147,3 +147,23 @@ def test_cluster_export(make_napari_viewer, create_data):
     layer1, layer2 = create_data()
     viewer.add_layer(layer1)
     viewer.add_layer(layer2)
+
+
+def test_layer_export(make_napari_viewer):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
+
+    layer1, _ = create_points()
+    viewer.add_layer(layer1)
+    
+    # select some random features in the plotting widget
+    n_samples = layer1.features.shape[0]
+    random_clusters = np.random.randint(0, 2, n_samples)
+    widget.plotting_widget.active_artist.color_indices = random_clusters
+    widget._on_export_clusters()
+
+    assert len(viewer.layers) == 2
+    
