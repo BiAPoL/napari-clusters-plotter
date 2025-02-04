@@ -16,14 +16,23 @@ def reduce_pca(
         from sklearn.decomposition import PCA
         from sklearn.preprocessing import StandardScaler
 
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data.values)
+            preprocessed = StandardScaler().fit_transform(non_nan_data.values)
         else:
-            data = data.values
+            preprocessed = non_nan_data.values
 
         pca = PCA(n_components=n_components)
-        pca.fit(data)
-        return pca.transform(data)
+        pca.fit(preprocessed)
+        reduced_data = pca.transform(preprocessed)
+
+        # Add NaN rows back
+        result = pd.DataFrame(index=data.index, columns=range(n_components))
+        result.loc[non_nan_data.index] = reduced_data
+
+        return result
 
     return _reduce_pca(data, n_components, scale)
 
@@ -45,11 +54,21 @@ def reduce_tsne(
         from sklearn.manifold import TSNE
         from sklearn.preprocessing import StandardScaler
 
-        print("working on tsne")
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
         tsne = TSNE(n_components=n_components, perplexity=perplexity)
-        return tsne.fit_transform(data)
+        reduced_data = tsne.fit_transform(preprocessed)
+
+        # Add NaN rows back
+        result = pd.DataFrame(index=data.index, columns=range(n_components))
+        result.loc[non_nan_data.index] = reduced_data
+
+        return result
 
     return _reduce_tsne(data, n_components, perplexity, scale)
 
@@ -71,11 +90,22 @@ def reduce_umap(
         import umap
         from sklearn.preprocessing import StandardScaler
 
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         reducer = umap.UMAP(n_components=n_components, n_neighbors=n_neighbors)
-        return reducer.fit_transform(data)
+        reduced_data = reducer.fit_transform(preprocessed)
+
+        # Add NaN rows back
+        result = pd.DataFrame(index=data.index, columns=range(n_components))
+        result.loc[non_nan_data.index] = reduced_data
+
+        return result
 
     return _reduce_umap(data, n_components, n_neighbors, scale)
 
@@ -94,11 +124,22 @@ def cluster_kmeans(
         from sklearn.cluster import KMeans
         from sklearn.preprocessing import StandardScaler
 
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         kmeans = KMeans(n_clusters=n_clusters)
-        return kmeans.fit_predict(data)
+        clusters = kmeans.fit_predict(preprocessed)
+
+        # Add NaN rows back
+        result = pd.Series(index=data.index, dtype=int)
+        result.loc[non_nan_data.index] = clusters
+
+        return result
 
     return _cluster_kmeans(data, n_clusters, scale)
 
@@ -123,13 +164,24 @@ def cluster_hdbscan(
         from sklearn.cluster import HDBSCAN
         from sklearn.preprocessing import StandardScaler
 
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         clusterer = HDBSCAN(
             min_cluster_size=min_cluster_size, min_samples=min_samples
         )
-        return clusterer.fit_predict(data)
+        clusters = clusterer.fit_predict(preprocessed)
+
+        # Add NaN rows back
+        result = pd.Series(index=data.index, dtype=int)
+        result.loc[non_nan_data.index] = clusters
+
+        return result
 
     return _cluster_hdbscan(data, min_cluster_size, min_samples, scale)
 
@@ -148,11 +200,22 @@ def cluster_gaussian_mixture(
         from sklearn.mixture import GaussianMixture
         from sklearn.preprocessing import StandardScaler
 
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         gmm = GaussianMixture(n_components=n_components)
-        return gmm.fit_predict(data)
+        clusters = gmm.fit_predict(preprocessed)
+
+        # Add NaN rows back
+        result = pd.Series(index=data.index, dtype=int)
+        result.loc[non_nan_data.index] = clusters
+
+        return result
 
     return _cluster_gaussian_mixture(data, n_components, scale)
 
@@ -171,10 +234,21 @@ def cluster_spectral(
         from sklearn.cluster import SpectralClustering
         from sklearn.preprocessing import StandardScaler
 
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
         if scale:
-            data = StandardScaler().fit_transform(data)
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
 
         clusterer = SpectralClustering(n_clusters=n_clusters)
-        return clusterer.fit_predict(data)
+        clusters = clusterer.fit_predict(preprocessed)
+
+        # Add NaN rows back
+        result = pd.Series(index=data.index, dtype=int)
+        result.loc[non_nan_data.index] = clusters
+
+        return result
 
     return _cluster_spectral(data, n_clusters, scale)

@@ -38,6 +38,9 @@ def create_points(n_samples=100, loc=5):
         }
     )
 
+    # add some NaNs
+    features.iloc[::10] = np.nan
+
     layer = Points(points, features=features, size=0.1)
 
     return layer
