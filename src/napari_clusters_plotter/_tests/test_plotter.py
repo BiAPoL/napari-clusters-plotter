@@ -1,6 +1,6 @@
 import numpy as np
-import pytest
 import pandas as pd
+import pytest
 
 
 def create_points(n_samples=100, loc=5):
@@ -16,23 +16,35 @@ def create_points(n_samples=100, loc=5):
     points[:, 0] = frame
     points2[:, 0] = frame[:-1]
 
-    features = pd.DataFrame({
-        'frame': frame,
-        'feature1': np.random.normal(size=n_samples, loc=loc),
-        'feature2': np.random.normal(size=n_samples, loc=loc),
-        'feature3': np.random.normal(size=n_samples, loc=loc),
-        'feature4': np.random.normal(size=n_samples, loc=loc),
-    })
+    features = pd.DataFrame(
+        {
+            "frame": frame,
+            "feature1": np.random.normal(size=n_samples, loc=loc),
+            "feature2": np.random.normal(size=n_samples, loc=loc),
+            "feature3": np.random.normal(size=n_samples, loc=loc),
+            "feature4": np.random.normal(size=n_samples, loc=loc),
+        }
+    )
 
-    features2 = pd.DataFrame({
-        'frame': frame,
-        'feature2': np.random.normal(size=n_samples - 1, loc=-loc),
-        'feature3': np.random.normal(size=n_samples - 1, loc=-loc),
-        'feature4': np.random.normal(size=n_samples - 1, loc=-loc),
-    })
+    features2 = pd.DataFrame(
+        {
+            "frame": frame,
+            "feature2": np.random.normal(size=n_samples - 1, loc=-loc),
+            "feature3": np.random.normal(size=n_samples - 1, loc=-loc),
+            "feature4": np.random.normal(size=n_samples - 1, loc=-loc),
+        }
+    )
 
-    layer1 = Points(points, features=features, size=0.1, blending='translucent_no_depth')
-    layer2 = Points(points2, features=features2, size=0.1, translate=(0, 0, 2), blending='translucent_no_depth')
+    layer1 = Points(
+        points, features=features, size=0.1, blending="translucent_no_depth"
+    )
+    layer2 = Points(
+        points2,
+        features=features2,
+        size=0.1,
+        translate=(0, 0, 2),
+        blending="translucent_no_depth",
+    )
 
     return layer1, layer2
 
@@ -57,21 +69,25 @@ def create_shapes(n_samples=100):
     # create a list of polygons
     polygons = np.stack([corner1, corner2, corner3, corner4], axis=1)
 
-    layer1 = Shapes(polygons[:49], shape_type='polygon', edge_color='blue')
-    layer2 = Shapes(polygons[50:], shape_type='polygon', edge_color='red')
-    features1 = pd.DataFrame({
-        'feature1': np.random.normal(size=49),
-        'feature2': np.random.normal(size=49),
-        'feature3': np.random.normal(size=49),
-        'feature4': np.random.normal(size=49),
-    })
+    layer1 = Shapes(polygons[:49], shape_type="polygon", edge_color="blue")
+    layer2 = Shapes(polygons[50:], shape_type="polygon", edge_color="red")
+    features1 = pd.DataFrame(
+        {
+            "feature1": np.random.normal(size=49),
+            "feature2": np.random.normal(size=49),
+            "feature3": np.random.normal(size=49),
+            "feature4": np.random.normal(size=49),
+        }
+    )
 
-    features2 = pd.DataFrame({
-        'feature1': np.random.normal(size=50),
-        'feature2': np.random.normal(size=50),
-        'feature3': np.random.normal(size=50),
-        'feature4': np.random.normal(size=50),
-    })
+    features2 = pd.DataFrame(
+        {
+            "feature1": np.random.normal(size=50),
+            "feature2": np.random.normal(size=50),
+            "feature3": np.random.normal(size=50),
+            "feature4": np.random.normal(size=50),
+        }
+    )
 
     layer1.features = features1
     layer2.features = features2
