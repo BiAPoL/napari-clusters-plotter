@@ -79,6 +79,39 @@ def create_shapes(n_samples=100):
     return layer1, layer2
 
 
+def create_labels(n_samples=100):
+    from napari.layers import Labels
+    from skimage import data, measure
+
+    binary_image1 = data.binary_blobs(length=128, n_dim=3, volume_fraction=0.1)
+    binary_image2 = data.binary_blobs(length=128, n_dim=3, volume_fraction=0.1)
+
+    labels1 = measure.label(binary_image1)
+    labels2 = measure.label(binary_image2)
+
+    n_labels1 = len(np.unique(labels1))
+    n_labels2 = len(np.unique(labels2))
+
+    features1 = pd.DataFrame({
+        'feature1': np.random.normal(size=n_labels1),
+        'feature2': np.random.normal(size=n_labels1),
+        'feature3': np.random.normal(size=n_labels1),
+        'feature4': np.random.normal(size=n_labels1),
+    })
+
+    features2 = pd.DataFrame({
+        'feature1': np.random.normal(size=n_labels2),
+        'feature2': np.random.normal(size=n_labels2),
+        'feature3': np.random.normal(size=n_labels2),
+        'feature4': np.random.normal(size=n_labels2),
+    })
+
+    layer1 = Labels(labels1, features=features1)
+    layer2 = Labels(labels2, features=features2)
+
+    return layer1, layer2
+
+
 def test_mixed_layers(make_napari_viewer):
     from napari_clusters_plotter import PlotterWidget
 
