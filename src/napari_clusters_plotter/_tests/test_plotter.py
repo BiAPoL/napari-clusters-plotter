@@ -26,12 +26,14 @@ def create_points(n_samples=100, loc=5):
         }
     )
 
-    features2 = pd.DataFrame({
-        'frame': frame[:-1],
-        'feature2': np.random.normal(size=n_samples - 1, loc=-loc),
-        'feature3': np.random.normal(size=n_samples - 1, loc=-loc),
-        'feature4': np.random.normal(size=n_samples - 1, loc=-loc),
-    })
+    features2 = pd.DataFrame(
+        {
+            "frame": frame[:-1],
+            "feature2": np.random.normal(size=n_samples - 1, loc=-loc),
+            "feature3": np.random.normal(size=n_samples - 1, loc=-loc),
+            "feature4": np.random.normal(size=n_samples - 1, loc=-loc),
+        }
+    )
 
     layer1 = Points(
         points, features=features, size=0.1, blending="translucent_no_depth"
@@ -106,19 +108,23 @@ def create_labels(n_samples=100):
     n_labels1 = len(np.unique(labels1))
     n_labels2 = len(np.unique(labels2))
 
-    features1 = pd.DataFrame({
-        'feature1': np.random.normal(size=n_labels1),
-        'feature2': np.random.normal(size=n_labels1),
-        'feature3': np.random.normal(size=n_labels1),
-        'feature4': np.random.normal(size=n_labels1),
-    })
+    features1 = pd.DataFrame(
+        {
+            "feature1": np.random.normal(size=n_labels1),
+            "feature2": np.random.normal(size=n_labels1),
+            "feature3": np.random.normal(size=n_labels1),
+            "feature4": np.random.normal(size=n_labels1),
+        }
+    )
 
-    features2 = pd.DataFrame({
-        'feature1': np.random.normal(size=n_labels2),
-        'feature2': np.random.normal(size=n_labels2),
-        'feature3': np.random.normal(size=n_labels2),
-        'feature4': np.random.normal(size=n_labels2),
-    })
+    features2 = pd.DataFrame(
+        {
+            "feature1": np.random.normal(size=n_labels2),
+            "feature2": np.random.normal(size=n_labels2),
+            "feature3": np.random.normal(size=n_labels2),
+            "feature4": np.random.normal(size=n_labels2),
+        }
+    )
 
     layer1 = Labels(labels1, features=features1)
     layer2 = Labels(labels2, features=features2)
@@ -150,7 +156,9 @@ def test_mixed_layers(make_napari_viewer):
     viewer.add_labels(sample_labels)
 
 
-@pytest.mark.parametrize("create_data", [create_points, create_shapes, create_labels])
+@pytest.mark.parametrize(
+    "create_data", [create_points, create_shapes, create_labels]
+)
 def test_cluster_export(make_napari_viewer, create_data):
     from napari_clusters_plotter import PlotterWidget
 
@@ -172,7 +180,7 @@ def test_layer_export(make_napari_viewer):
 
     layer1, _ = create_points()
     viewer.add_layer(layer1)
-    
+
     # select some random features in the plotting widget
     n_samples = layer1.features.shape[0]
     random_clusters = np.random.randint(0, 2, n_samples)
@@ -180,4 +188,3 @@ def test_layer_export(make_napari_viewer):
     widget._on_export_clusters()
 
     assert len(viewer.layers) == 2
-    
