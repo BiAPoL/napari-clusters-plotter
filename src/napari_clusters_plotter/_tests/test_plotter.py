@@ -25,7 +25,7 @@ def create_points(n_samples=100, loc=5):
     })
 
     features2 = pd.DataFrame({
-        'frame': frame,
+        'frame': frame[:-1],
         'feature2': np.random.normal(size=n_samples - 1, loc=-loc),
         'feature3': np.random.normal(size=n_samples - 1, loc=-loc),
         'feature4': np.random.normal(size=n_samples - 1, loc=-loc),
