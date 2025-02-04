@@ -183,8 +183,24 @@ class PlotterWidget(BaseWidget):
         if self.x_axis == "" or self.y_axis == "":
             return
 
-        data_to_plot = self._get_data()
-        self.plotting_widget.active_artist.data = data_to_plot
+        # retrieve the data from the selected layers
+        features = self._get_features()
+        x_data = features[self.x_axis].values
+        y_data = features[self.y_axis].values
+
+        # # if no hue is selected, set it to 0
+        # if self.hue_axis == "None":
+        #     hue = np.zeros(len(features))
+        # elif self.hue_axis != "":
+        #     hue = features[self.hue_axis].values
+
+        self.plotting_widget.active_artist.data = np.stack(
+            [x_data, y_data], axis=1
+        )
+        if "MANUAL_CLUSTER_ID" in features.columns:
+            self.plotting_widget.active_artist.color_indices = features[
+                "MANUAL_CLUSTER_ID"
+            ].values
 
     def _checkbox_status_changed(self):
         self._replot()
@@ -295,22 +311,6 @@ class PlotterWidget(BaseWidget):
         """
         return len(list(self.viewer.layers.selection))
 
-    def _get_data(self) -> np.ndarray:
-        """
-        Get the data from the selected layers features.
-        """
-        features = self._get_features()
-        x_data = features[self.x_axis].values
-        y_data = features[self.y_axis].values
-
-        # # if no hue is selected, set it to 0
-        # if self.hue_axis == "None":
-        #     hue = np.zeros(len(features))
-        # elif self.hue_axis != "":
-        #     hue = features[self.hue_axis].values
-
-        return np.stack([x_data, y_data], axis=1)
-
     def _on_update_layer_selection(
         self, event: napari.utils.events.Event
     ) -> None:
@@ -358,7 +358,11 @@ class PlotterWidget(BaseWidget):
             self._selectors[dim].clear()
 
         for dim in ["x", "y", "hue"]:
-            self._selectors[dim].addItems(sorted(self.common_columns))
+            features_to_add = sorted(self.common_columns)
+            if "MANUAL_CLUSTER_ID" in features_to_add:
+                features_to_add.remove("MANUAL_CLUSTER_ID")
+
+            self._selectors[dim].addItems(features_to_add)
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
@@ -391,6 +395,11 @@ class PlotterWidget(BaseWidget):
                 features["layer"] == selected_layer.name
             ].index
             _apply_layer_color(selected_layer, colors[layer_indices])
+
+            # store cluster indeces in the features table
+            selected_layer.features["MANUAL_CLUSTER_ID"] = color_indices[
+                layer_indices
+            ]
 
     def _reset(self):
         """
