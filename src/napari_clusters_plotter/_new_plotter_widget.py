@@ -7,7 +7,7 @@ from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget, QMenu, QAction
+from qtpy.QtWidgets import QComboBox, QMenu, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
 
@@ -70,7 +70,9 @@ class PlotterWidget(BaseWidget):
 
         # Context menu
         self.context_menu = QMenu(self.plotting_widget)
-        self.export_clusters = self.context_menu.addAction("Export selected cluster to new layer")
+        self.export_clusters = self.context_menu.addAction(
+            "Export selected cluster to new layer"
+        )
         self.export_clusters.triggered.connect(self._on_export_clusters)
 
         # Add plot and options as widgets
@@ -104,12 +106,17 @@ class PlotterWidget(BaseWidget):
 
         # get currently selected cluster from plotting widget
         selected_cluster = self.plotting_widget.class_spinbox.value
-        indices = self.plotting_widget.active_artist.color_indices == selected_cluster
-        
+        indices = (
+            self.plotting_widget.active_artist.color_indices
+            == selected_cluster
+        )
+
         # get the layer to export from
         layer = self.layers[0]
 
-        export_layer = _export_cluster_to_layer(layer, indices, subcluster_index=selected_cluster)
+        export_layer = _export_cluster_to_layer(
+            layer, indices, subcluster_index=selected_cluster
+        )
         if export_layer is not None:
             self.viewer.add_layer(export_layer)
 
@@ -440,6 +447,7 @@ def _apply_layer_color(layer, colors):
         color_mapping[type(layer)](layer, colors)
         layer.refresh()
 
+
 def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
     """
     Export the selected cluster to a new layer.
@@ -460,7 +468,7 @@ def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
     napari.layers.Layer
         The new layer with the selected cluster.
     """
-    
+
     if isinstance(layer, napari.layers.Labels):
         LUT = np.array([0] + list(np.arange(1, layer.data.max() + 1)))
         LUT[indices == False] = 0
@@ -473,7 +481,7 @@ def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
     elif isinstance(layer, napari.layers.Surface):
         # TODO implement surface export
         return None
-    
+
     elif isinstance(layer, napari.layers.Vectors):
         new_layer = napari.layers.Vectors(layer.data[indices])
 
