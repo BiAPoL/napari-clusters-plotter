@@ -48,7 +48,7 @@ dependencies = [
     "scikit-image",
     "superqt",
     "scipy",
-    "biaplotter"
+    "biaplotter@https://github.com/BiAPoL/biaplotter/archive/refs/heads/main.zip"
 ]
 
 
