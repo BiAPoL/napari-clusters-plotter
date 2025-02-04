@@ -502,6 +502,4 @@ def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
     if "cluster" in new_layer.features.columns:
         new_layer.features.drop(columns=["cluster"], inplace=True)
 
-    print(new_layer.features)
-
     return new_layer
