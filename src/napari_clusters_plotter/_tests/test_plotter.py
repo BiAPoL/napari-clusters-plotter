@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from napari.layers import Labels, Points, Shapes
 
 
@@ -201,9 +200,7 @@ def test_mixed_layers(make_napari_viewer):
     viewer.add_labels(sample_labels)
 
 
-@pytest.mark.parametrize(
-    "create_data", [create_points, create_shapes]
-)
+@pytest.mark.parametrize("create_data", [create_points, create_shapes])
 def test_cluster_export(make_napari_viewer, create_data):
     from napari_clusters_plotter import PlotterWidget
 
@@ -223,10 +220,15 @@ def test_cluster_export(make_napari_viewer, create_data):
     widget._on_export_clusters()
 
     assert len(viewer.layers) == 2
-    
+
     if isinstance(layer1, Points):
-        assert viewer.layers[-1].data.shape[0] == n_samples - 5  # selected cluster is 0, by default.
-        assert np.array_equal(viewer.layers[-1].data, layer1.data[~selected_clusters.astype(bool)])
+        assert (
+            viewer.layers[-1].data.shape[0] == n_samples - 5
+        )  # selected cluster is 0, by default.
+        assert np.array_equal(
+            viewer.layers[-1].data,
+            layer1.data[~selected_clusters.astype(bool)],
+        )
 
 
 def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
@@ -264,6 +266,8 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
         == cluster_indeces
     )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import napari
+
     test_cluster_export(napari.Viewer, create_points)
