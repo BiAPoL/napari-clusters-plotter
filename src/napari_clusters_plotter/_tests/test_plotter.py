@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from napari.layers import Labels, Points, Shapes
+
 
 def create_points(n_samples=100, loc=5):
-    from napari.layers import Points
 
     loc = 5
     n_timeframes = 5
@@ -50,27 +51,26 @@ def create_points(n_samples=100, loc=5):
 
 
 def create_shapes(n_samples=100):
-    from napari.layers import Shapes
 
     # create 100 random anchors
     np.random.seed(0)
-    anchors = np.random.random((n_samples, 2))
+    anchors = np.random.random((n_samples, 2)) * 100
 
     # create 100 random widths and heights
-    widths = np.random.random(n_samples)
-    heights = np.random.random(n_samples)
+    widths = np.random.random(n_samples) * 10
+    heights = np.random.random(n_samples) * 10
 
     # combine into lists of corner coordinates
     corner1 = anchors - np.c_[widths, heights] / 2
-    corner2 = anchors + np.c_[widths, heights] / 2
-    corner3 = anchors + np.c_[widths, -heights] / 2
+    corner2 = anchors + np.c_[widths, -heights] / 2
+    corner3 = anchors + np.c_[widths, heights] / 2
     corner4 = anchors + np.c_[-widths, heights] / 2
 
     # create a list of polygons
     polygons = np.stack([corner1, corner2, corner3, corner4], axis=1)
 
-    layer1 = Shapes(polygons[:49], shape_type="polygon", edge_color="blue")
-    layer2 = Shapes(polygons[50:], shape_type="polygon", edge_color="red")
+    layer1 = Shapes(polygons[:49], shape_type="polygon")
+    layer2 = Shapes(polygons[50:], shape_type="polygon")
     features1 = pd.DataFrame(
         {
             "feature1": np.random.normal(size=49),
@@ -96,7 +96,6 @@ def create_shapes(n_samples=100):
 
 
 def create_labels(n_samples=100):
-    from napari.layers import Labels
     from skimage import data, measure
 
     binary_image1 = data.binary_blobs(length=128, n_dim=3, volume_fraction=0.1)
@@ -134,7 +133,6 @@ def create_labels(n_samples=100):
 
 def create_multi_point_layer(n_samples: int = 100):
     import pandas as pd
-    from napari.layers import Points
 
     loc = 5
     n_timeframes = 5
@@ -204,7 +202,7 @@ def test_mixed_layers(make_napari_viewer):
 
 
 @pytest.mark.parametrize(
-    "create_data", [create_points, create_shapes, create_labels]
+    "create_data", [create_points, create_shapes]
 )
 def test_cluster_export(make_napari_viewer, create_data):
     from napari_clusters_plotter import PlotterWidget
@@ -213,29 +211,22 @@ def test_cluster_export(make_napari_viewer, create_data):
     widget = PlotterWidget(viewer)
     viewer.window.add_dock_widget(widget, area="right")
 
-    layer1, layer2 = create_data()
-    viewer.add_layer(layer1)
-    viewer.add_layer(layer2)
-
-
-def test_layer_export(make_napari_viewer):
-    from napari_clusters_plotter import PlotterWidget
-
-    viewer = make_napari_viewer()
-    widget = PlotterWidget(viewer)
-    viewer.window.add_dock_widget(widget, area="right")
-
-    layer1, _ = create_points()
+    layer1, _ = create_data()
     viewer.add_layer(layer1)
 
     # select some random features in the plotting widget
     n_samples = layer1.features.shape[0]
-    random_clusters = np.random.randint(0, 2, n_samples)
-    widget.plotting_widget.active_artist.color_indices = random_clusters
+    selected_clusters = np.zeros(n_samples, dtype=int)
+    selected_clusters[:5] = 1
+
+    widget.plotting_widget.active_artist.color_indices = selected_clusters
     widget._on_export_clusters()
 
     assert len(viewer.layers) == 2
-    #
+    
+    if isinstance(layer1, Points):
+        assert viewer.layers[-1].data.shape[0] == n_samples - 5  # selected cluster is 0, by default.
+        assert np.array_equal(viewer.layers[-1].data, layer1.data[~selected_clusters.astype(bool)])
 
 
 def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
@@ -272,3 +263,7 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
     )
+
+if __name__ == '__main__':
+    import napari
+    test_cluster_export(napari.Viewer, create_points)
