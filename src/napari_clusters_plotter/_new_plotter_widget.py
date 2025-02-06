@@ -488,7 +488,8 @@ def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
         new_layer.size = layer.size[indices]
 
     elif isinstance(layer, napari.layers.Shapes):
-        new_layer = napari.layers.Shapes(layer.data[indices])
+        new_shapes = [shape for shape, i in zip(layer.data, indices) if i]
+        new_layer = napari.layers.Shapes(new_shapes)
 
     elif isinstance(layer, napari.layers.Surface):
         # TODO implement surface export
