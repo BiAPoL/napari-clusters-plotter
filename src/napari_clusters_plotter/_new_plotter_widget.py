@@ -308,6 +308,27 @@ class PlotterWidget(BaseWidget):
         for layer in self.layers:
             layer.events.features.connect(self._update_feature_selection)
 
+            # if layer is a Point Layer
+            if type(layer) is napari.layers.Points:
+                layer.selected_data.events.items_changed.connect(
+                    lambda selected_data: self._update_layer_selected_data_feature(
+                        layer,
+                        selected_data
+                    )
+                )
+
+    def _update_layer_selected_data_feature(
+            self,
+            layer: napari.layers.Points,
+            selected_data: np.ndarray
+    ) -> None:
+        """
+        Update the layer selected_data to feature.
+        """
+        cluster = np.zeros(layer.data.shape[0])
+        cluster[list(selected_data)] = 1
+        layer.features["LAYER_SELECTED_DATA_CLUSTER_ID"] = cluster
+
     def _update_feature_selection(
         self, event: napari.utils.events.Event
     ) -> None:
