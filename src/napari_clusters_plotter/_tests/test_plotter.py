@@ -108,3 +108,29 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
     )
+
+
+def test_layer_selection(make_napari_viewer, n_samples: int = 100):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    _, layer2 = create_multi_point_layer(n_samples=n_samples)
+
+    # add layers to viewer
+    viewer.add_layer(layer2)
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    # select last layer and create a random selection on the layer
+    viewer.layers.selection.active = layer2
+    selection = np.random.randint(0, 1, len(layer2.data))
+    layer2.selected_data = selection
+
+    assert "LAYER_SELECTED_DATA_CLUSTER_ID" in layer2.features.columns
+
+    # make sure that the cluster selection is the same
+    cluster = np.zeros(layer2.data.shape[0])
+    cluster[list(selection)] = 1
+    assert np.all(
+        layer2.features["LAYER_SELECTED_DATA_CLUSTER_ID"] == cluster
+    )
