@@ -312,15 +312,12 @@ class PlotterWidget(BaseWidget):
             if type(layer) is napari.layers.Points:
                 layer.selected_data.events.items_changed.connect(
                     lambda selected_data: self._update_layer_selected_data_feature(
-                        layer,
-                        selected_data
+                        layer, selected_data
                     )
                 )
 
     def _update_layer_selected_data_feature(
-            self,
-            layer: napari.layers.Points,
-            selected_data: np.ndarray
+        self, layer: napari.layers.Points, selected_data: np.ndarray
     ) -> None:
         """
         Update the layer selected_data to feature.

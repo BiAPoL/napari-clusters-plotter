@@ -131,6 +131,4 @@ def test_layer_selection(make_napari_viewer, n_samples: int = 100):
     # make sure that the cluster selection is the same
     cluster = np.zeros(layer2.data.shape[0])
     cluster[list(selection)] = 1
-    assert np.all(
-        layer2.features["LAYER_SELECTED_DATA_CLUSTER_ID"] == cluster
-    )
+    assert np.all(layer2.features["LAYER_SELECTED_DATA_CLUSTER_ID"] == cluster)
