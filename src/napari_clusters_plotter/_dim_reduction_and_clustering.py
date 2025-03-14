@@ -88,9 +88,7 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
         for layer in self.layers:
             current_features = layer.features
             for column in column_names:
-                layer_feature_subset = result[
-                    result["layer"] == layer.name
-                ]
+                layer_feature_subset = result[result["layer"] == layer.name]
 
                 # add the columns to the features
                 current_features[column] = layer_feature_subset[column].values

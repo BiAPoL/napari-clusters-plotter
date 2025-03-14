@@ -1,5 +1,12 @@
 import pandas as pd
 from magicgui import magicgui
+from napari.layers import (
+    Labels,
+    Points,
+    Shapes,
+    Surface,
+    Vectors,
+)
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -7,14 +14,6 @@ from qtpy.QtWidgets import (
     QListWidget,
     QVBoxLayout,
     QWidget,
-)
-
-from napari.layers import (
-    Labels,
-    Points,
-    Surface,
-    Vectors,
-    Shapes,
 )
 
 
@@ -27,7 +26,7 @@ class BaseWidget(QWidget):
         Vectors,
         Shapes,
     ]
-    
+
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -51,7 +50,7 @@ class BaseWidget(QWidget):
         ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns
-    
+
     @property
     def n_selected_layers(self) -> int:
         """
