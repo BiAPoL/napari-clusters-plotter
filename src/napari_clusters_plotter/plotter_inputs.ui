@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="plotting_options">
       <attribute name="title">
@@ -51,7 +51,11 @@
         <widget class="QComboBox" name="y_axis_box"/>
        </item>
        <item row="2" column="1">
-        <widget class="QComboBox" name="hue_box"/>
+        <widget class="QComboBox" name="hue_box">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0">
         <widget class="QLabel" name="label">
@@ -79,6 +83,9 @@
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="5" column="0" colspan="4">
         <widget class="QWidget" name="additional_options_container" native="true">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <layout class="QGridLayout" name="gridLayout_5">
           <item row="0" column="0">
            <widget class="QLabel" name="label_7">
@@ -109,6 +116,9 @@
        </item>
        <item row="2" column="0" colspan="4">
         <widget class="QWidget" name="log_scale_container" native="true">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QLabel" name="log_label">
@@ -132,6 +142,9 @@
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="1" column="2">
            <widget class="QCheckBox" name="auto_bins_checkbox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Auto</string>
             </property>
@@ -156,7 +169,7 @@
              <item>
               <widget class="QSpinBox" name="n_bins_box">
                <property name="enabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="minimum">
                 <number>1</number>
@@ -171,6 +184,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="set_bins_button">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="text">
                 <string>Set</string>
                </property>
@@ -193,7 +209,11 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QComboBox" name="plot_type_box"/>
+           <widget class="QComboBox" name="plot_type_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
