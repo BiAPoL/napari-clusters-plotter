@@ -74,7 +74,7 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
             ["PCA", "t-SNE", "UMAP"],
         )
 
-    def _process_result(self, result):
+    def _process_result(self, result: pd.DataFrame):
         """
         Process result of dimensionality reduction algorithm and update layer
         """
@@ -82,14 +82,14 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
             f"{self.algorithms[self.selected_algorithm]['column_string']}{i}"
             for i in range(result.shape[1])
         ]
-        features_reduced = pd.DataFrame(result, columns=column_names)
-        features_reduced["layer"] = self._get_features()["layer"].values
+        result.columns = column_names
+        result["layer"] = self._get_features()["layer"].values
 
         for layer in self.layers:
             current_features = layer.features
             for column in column_names:
-                layer_feature_subset = features_reduced[
-                    features_reduced["layer"] == layer.name
+                layer_feature_subset = result[
+                    result["layer"] == layer.name
                 ]
 
                 # add the columns to the features
