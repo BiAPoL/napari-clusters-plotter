@@ -27,14 +27,6 @@ class PlotterWidget(BaseWidget):
         The napari viewer to connect to.
     """
 
-    input_layer_types = [
-        napari.layers.Labels,
-        napari.layers.Points,
-        napari.layers.Surface,
-        napari.layers.Vectors,
-        napari.layers.Shapes,
-    ]
-
     plot_needs_update = Signal()
 
     def __init__(self, napari_viewer):
@@ -272,13 +264,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.hue_box.setCurrentText(
             column
         )  # TODO insert checks and change values
-
-    @property
-    def n_selected_layers(self) -> int:
-        """
-        Number of currently selected layers.
-        """
-        return len(list(self.viewer.layers.selection))
 
     def _on_update_layer_selection(
         self, event: napari.utils.events.Event
