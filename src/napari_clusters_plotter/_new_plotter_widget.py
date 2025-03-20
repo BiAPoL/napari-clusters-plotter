@@ -8,6 +8,7 @@ from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
+from PyQt5.QtGui import QColor
 
 from ._algorithm_widget import BaseWidget
 
@@ -15,7 +16,6 @@ from ._algorithm_widget import BaseWidget
 class PlottingType(Enum):
     HISTOGRAM = auto()
     SCATTER = auto()
-
 
 class PlotterWidget(BaseWidget):
     """
@@ -311,12 +311,21 @@ class PlotterWidget(BaseWidget):
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].clear()
 
+
+        special_items = ["label"]
         for dim in ["x", "y", "hue"]:
             features_to_add = sorted(self.common_columns)
             if "MANUAL_CLUSTER_ID" in features_to_add:
                 features_to_add.remove("MANUAL_CLUSTER_ID")
 
             self._selectors[dim].addItems(features_to_add)
+            for feature in features_to_add:
+                if feature in special_items:
+                    index = self._selectors[dim].findText(feature)
+                    self._selectors[dim].setItemData(
+                        index, QColor("red"), Qt.BackgroundRole
+                    )
+                    
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")
