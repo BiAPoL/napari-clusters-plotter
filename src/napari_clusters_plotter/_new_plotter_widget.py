@@ -8,7 +8,7 @@ from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
-from PyQt5.QtGui import QColor
+from qtpy.QtGui import QColor
 
 from ._algorithm_widget import BaseWidget
 
