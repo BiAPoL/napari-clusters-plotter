@@ -7,8 +7,8 @@ from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
-from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 from qtpy.QtGui import QColor
+from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
 
@@ -16,6 +16,7 @@ from ._algorithm_widget import BaseWidget
 class PlottingType(Enum):
     HISTOGRAM = auto()
     SCATTER = auto()
+
 
 class PlotterWidget(BaseWidget):
     """
@@ -317,7 +318,9 @@ class PlotterWidget(BaseWidget):
             # Remove category_columns from features to add if dim is x or y
             if dim in ["x", "y"]:
                 features_to_add = [
-                    feature for feature in features_to_add if feature not in category_columns
+                    feature
+                    for feature in features_to_add
+                    if feature not in category_columns
                 ]
             # TODO: remove this once "MANUAL_CLUSTER_ID" becomes categorical
             if "MANUAL_CLUSTER_ID" in features_to_add:
@@ -334,7 +337,6 @@ class PlotterWidget(BaseWidget):
                     self._selectors[dim].setItemData(
                         index, "Categorical Column", Qt.ToolTipRole
                     )
-                    
 
         # it should always be possible to select no color
         self._selectors["hue"].addItem("None")

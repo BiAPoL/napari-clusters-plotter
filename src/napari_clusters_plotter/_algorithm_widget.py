@@ -50,7 +50,7 @@ class BaseWidget(QWidget):
         ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns
-    
+
     @property
     def category_columns(self):
         """Return the column names that are of type 'category'."""
