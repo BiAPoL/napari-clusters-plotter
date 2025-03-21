@@ -311,19 +311,28 @@ class PlotterWidget(BaseWidget):
         for dim in ["x", "y", "hue"]:
             self._selectors[dim].clear()
 
-
-        special_items = ["label"]
         for dim in ["x", "y", "hue"]:
             features_to_add = sorted(self.common_columns)
+            category_columns = self.category_columns
+            # Remove category_columns from features to add if dim is x or y
+            if dim in ["x", "y"]:
+                features_to_add = [
+                    feature for feature in features_to_add if feature not in category_columns
+                ]
+            # TODO: remove this once "MANUAL_CLUSTER_ID" becomes categorical
             if "MANUAL_CLUSTER_ID" in features_to_add:
                 features_to_add.remove("MANUAL_CLUSTER_ID")
 
             self._selectors[dim].addItems(features_to_add)
             for feature in features_to_add:
-                if feature in special_items:
+                if feature in category_columns:
                     index = self._selectors[dim].findText(feature)
                     self._selectors[dim].setItemData(
-                        index, QColor("red"), Qt.BackgroundRole
+                        index, QColor("darkCyan"), Qt.BackgroundRole
+                    )
+                    # Set tooltip
+                    self._selectors[dim].setItemData(
+                        index, "Categorical Column", Qt.ToolTipRole
                     )
                     
 
