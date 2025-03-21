@@ -50,6 +50,18 @@ class BaseWidget(QWidget):
         ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns
+    
+    @property
+    def category_columns(self):
+        """Return the column names that are of type 'category'."""
+        if len(self.layers) == 0:
+            return []
+        category_columns = [
+            list(layer.features.select_dtypes(include=["category"]).columns)
+            for layer in self.layers
+        ]
+        category_columns = list(set.intersection(*map(set, category_columns)))
+        return category_columns
 
     @property
     def n_selected_layers(self) -> int:
