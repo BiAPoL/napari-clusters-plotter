@@ -108,3 +108,15 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
     )
+
+
+
+if __name__ == '__main__':
+    import napari
+    #import napari_clusters_plotter as ncp
+    viewer = napari.Viewer()
+
+    # plotter_widget = ncp.PlotterWidget(viewer)
+    # viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    napari.run()
