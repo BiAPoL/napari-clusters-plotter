@@ -5,13 +5,13 @@ import napari
 import numpy as np
 import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
+from matplotlib.pyplot import cm as plt_colormaps
+from nap_plot_tools.cmap import cat10_mod_cmap
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
-from nap_plot_tools.cmap import cat10_mod_cmap
-from matplotlib.pyplot import cm as plt_colormaps
 
 from ._algorithm_widget import BaseWidget
 
@@ -135,8 +135,7 @@ class PlotterWidget(BaseWidget):
 
         # connect data selection in plot to layer coloring update
         for selector in self.plotting_widget.selectors.values():
-            selector.selection_applied_signal.connect(
-                self._on_finish_draw)
+            selector.selection_applied_signal.connect(self._on_finish_draw)
 
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
@@ -149,13 +148,12 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         for layer in self.viewer.layers.selection:
-            layer_indices = features[
-                features["layer"] == layer.name
-            ].index
+            layer_indices = features[features["layer"] == layer.name].index
 
             # store latest cluster indeces in the features table
             layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
-                color_indices[layer_indices]).astype("category")
+                color_indices[layer_indices]
+            ).astype("category")
 
         if self.hue_axis != "MANUAL_CLUSTER_ID":
             self.hue_axis = "MANUAL_CLUSTER_ID"
@@ -178,9 +176,13 @@ class PlotterWidget(BaseWidget):
 
         # check hue axis for categorical data
         if self.hue_axis in self.categorical_columns:
-            self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap
+            self.plotting_widget.active_artist.overlay_colormap = (
+                cat10_mod_cmap
+            )
         else:
-            self.plotting_widget.active_artist.overlay_colormap = plt_colormaps.magma
+            self.plotting_widget.active_artist.overlay_colormap = (
+                plt_colormaps.magma
+            )
 
         # set the data and color indices in the active artist
         active_artist = self.plotting_widget.active_artist
@@ -354,14 +356,15 @@ class PlotterWidget(BaseWidget):
         # and the columns that are not categorical
         continuous_features = sorted(
             [
-                col for col in self.common_columns
+                col
+                for col in self.common_columns
                 if col not in self.categorical_columns
-                ]
+            ]
         )
 
         for dim, current_value in zip(
             ["x", "y", "hue"], [current_x, current_y, current_hue]
-            ):
+        ):
             # block selector changed signals until all items added
             selector = self._selectors[dim]
             selector.blockSignals(True)
@@ -369,7 +372,7 @@ class PlotterWidget(BaseWidget):
 
             if dim in ["x", "y"]:
                 selector.addItems(continuous_features)
-            elif dim == 'hue':
+            elif dim == "hue":
                 selector.addItems(self.common_columns)
                 self._set_categorical_column_styles(
                     selector, self.categorical_columns
@@ -389,8 +392,12 @@ class PlotterWidget(BaseWidget):
         for feature in categorical_columns:
             index = selector.findText(feature)
             if index != -1:  # Ensure the feature exists in the dropdown
-                selector.setItemData(index, QColor("darkOrange"), Qt.BackgroundRole)
-                selector.setItemData(index, "Categorical Column", Qt.ToolTipRole)
+                selector.setItemData(
+                    index, QColor("darkOrange"), Qt.BackgroundRole
+                )
+                selector.setItemData(
+                    index, "Categorical Column", Qt.ToolTipRole
+                )
 
     def _color_layer_by_value(self):
         """
@@ -399,8 +406,12 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         color_indices = self.plotting_widget.active_artist.color_indices
-        norm = self.plotting_widget.active_artist._get_normalization(color_indices)
-        colors = self.plotting_widget.active_artist._get_rgba_colors(color_indices, norm)
+        norm = self.plotting_widget.active_artist._get_normalization(
+            color_indices
+        )
+        colors = self.plotting_widget.active_artist._get_rgba_colors(
+            color_indices, norm
+        )
 
         for selected_layer in self.viewer.layers.selection:
             layer_indices = features[
@@ -411,7 +422,8 @@ class PlotterWidget(BaseWidget):
             # store latest cluster indeces in the features table
             if self.hue_axis == "MANUAL_CLUSTER_ID":
                 selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
-                    color_indices[layer_indices]).astype("category")
+                    color_indices[layer_indices]
+                ).astype("category")
 
     def _reset(self):
         """
