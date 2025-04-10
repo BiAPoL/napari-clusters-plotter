@@ -8,6 +8,7 @@ from biaplotter.plotter import ArtistType, CanvasWidget
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 from nap_plot_tools.cmap import cat10_mod_cmap
 from matplotlib.pyplot import cm as plt_colormaps
@@ -369,6 +370,18 @@ class PlotterWidget(BaseWidget):
 
         # populate hue selector with all possible columns
         self._selectors['hue'].addItems(self.common_columns)
+
+        for feature in self.common_columns:
+            if feature in self.categorical_columns:
+                index = self._selectors['hue'].findText(feature)
+                self._selectors['hue'].setItemData(
+                        index, QColor("darkCyan"), Qt.BackgroundRole
+                )
+                    # Set tooltip
+                self._selectors['hue'].setItemData(
+                        index, "Categorical Column", Qt.ToolTipRole
+                )
+
 
         # set the previous values if they are still available
         for dim, value in zip(
