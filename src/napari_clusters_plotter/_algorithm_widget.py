@@ -55,6 +55,10 @@ class BaseWidget(QWidget):
         return common_columns
 
     @property
+    def categorical_columns(self):
+        return self._get_features().select_dtypes(include="category").columns
+
+    @property
     def n_selected_layers(self) -> int:
         """
         Number of currently selected layers.
