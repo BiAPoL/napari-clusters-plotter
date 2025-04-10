@@ -42,6 +42,7 @@ class ClusteringWidget(AlgorithmWidgetBase):
 
         column_name = self.algorithms[self.selected_algorithm]["column_string"]
         features_clustered = pd.DataFrame(result, columns=[column_name])
+        features_clustered[column_name] = features_clustered[column_name].astype('category')
         features_clustered["layer"] = self._get_features()["layer"]
 
         for layer in self.layers:
