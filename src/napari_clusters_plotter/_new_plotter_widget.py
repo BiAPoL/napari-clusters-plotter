@@ -350,51 +350,47 @@ class PlotterWidget(BaseWidget):
         current_y = self.y_axis
         current_hue = self.hue_axis
 
-        # block selector changed signals until all items added
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].blockSignals(True)
-
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].clear()
-
         # get the common columns between the selected layers
         # and the columns that are not categorical
-        xyfeatures_to_add = sorted(
+        continuous_features = sorted(
             [
                 col for col in self.common_columns
                 if col not in self.categorical_columns
                 ]
         )
-        for dim in ["x", "y"]:
-            self._selectors[dim].addItems(xyfeatures_to_add)
 
-        # populate hue selector with all possible columns
-        self._selectors['hue'].addItems(self.common_columns)
-
-        for feature in self.common_columns:
-            if feature in self.categorical_columns:
-                index = self._selectors['hue'].findText(feature)
-                self._selectors['hue'].setItemData(
-                        index, QColor("darkCyan"), Qt.BackgroundRole
-                )
-                    # Set tooltip
-                self._selectors['hue'].setItemData(
-                        index, "Categorical Column", Qt.ToolTipRole
-                )
-
-
-        # set the previous values if they are still available
-        for dim, value in zip(
+        for dim, current_value in zip(
             ["x", "y", "hue"], [current_x, current_y, current_hue]
-        ):
-            if value in self.common_columns:
-                self._selectors[dim].setCurrentText(value)
+            ):
+            # block selector changed signals until all items added
+            selector = self._selectors[dim]
+            selector.blockSignals(True)
+            selector.clear()
 
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].blockSignals(False)
+            if dim in ["x", "y"]:
+                selector.addItems(continuous_features)
+            elif dim == 'hue':
+                selector.addItems(self.common_columns)
+                self._set_categorical_column_styles(
+                    selector, self.categorical_columns
+                )
+
+            # set the previous values if they are still available
+            if current_value in self.common_columns:
+                selector.setCurrentText(current_value)
+
+            selector.blockSignals(False)
 
         self.blockSignals(False)
         self.plot_needs_update.emit()
+
+    def _set_categorical_column_styles(self, selector, categorical_columns):
+        """Highlight categorical columns and set tooltips."""
+        for feature in categorical_columns:
+            index = selector.findText(feature)
+            if index != -1:  # Ensure the feature exists in the dropdown
+                selector.setItemData(index, QColor("darkOrange"), Qt.BackgroundRole)
+                selector.setItemData(index, "Categorical Column", Qt.ToolTipRole)
 
     def _color_layer_by_value(self):
         """
