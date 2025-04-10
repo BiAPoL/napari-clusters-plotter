@@ -88,16 +88,16 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
 
     # select last layer and create a random cluster selection
     viewer.layers.selection.active = layer2
+    assert "MANUAL_CLUSTER_ID" in layer2.features.columns
+
     plotter_widget._selectors["x"].setCurrentText("feature3")
     cluster_indeces = np.random.randint(0, 2, len(layer2.data))
-    plotter_widget.plotting_widget.active_artist.color_indices = (
-        cluster_indeces
-    )
-
-    assert "MANUAL_CLUSTER_ID" in layer2.features.columns
+    layer2.features["MANUAL_CLUSTER_ID"] = cluster_indeces
+    plotter_widget._selectors["hue"].setCurrentText("MANUAL_CLUSTER_ID")
 
     # select first layer and make sure that no clusters are selected
     viewer.layers.selection.active = layer
+    assert "MANUAL_CLUSTER_ID" in layer.features.columns
     assert np.all(
         plotter_widget.plotting_widget.active_artist.color_indices == 0
     )
@@ -108,3 +108,9 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
     )
+
+
+if __name__ == '__main__':
+    import napari
+
+    test_cluster_memorization(napari.Viewer)
