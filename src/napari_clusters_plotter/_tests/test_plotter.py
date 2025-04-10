@@ -110,7 +110,7 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import napari
 
     test_cluster_memorization(napari.Viewer)
