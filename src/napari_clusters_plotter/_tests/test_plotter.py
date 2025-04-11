@@ -112,7 +112,7 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
 
 def test_categorical_handling(make_napari_viewer, n_samples: int = 100):
     from napari_clusters_plotter import PlotterWidget
-    
+
     viewer = make_napari_viewer()
     layer, layer2 = create_multi_point_layer(n_samples=n_samples)
 
@@ -125,8 +125,10 @@ def test_categorical_handling(make_napari_viewer, n_samples: int = 100):
     # select last layer and create a random cluster selection
     viewer.layers.selection.active = layer2
     assert "MANUAL_CLUSTER_ID" in layer2.features.columns
-    
+
     categorical_columns = plotter_widget.categorical_columns
-    assert len(categorical_columns) == 2  # should only be MANUAL_CLUSTER_ID and layer name
+    assert (
+        len(categorical_columns) == 2
+    )  # should only be MANUAL_CLUSTER_ID and layer name
     assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
     assert categorical_columns[1] == "layer"
