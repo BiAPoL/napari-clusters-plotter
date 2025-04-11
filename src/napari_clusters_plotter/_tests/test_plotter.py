@@ -110,7 +110,6 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
     )
 
 
-if __name__ == '__main__':
 def test_categorical_handling(make_napari_viewer, n_samples: int = 100):
     from napari_clusters_plotter import PlotterWidget
     
@@ -131,8 +130,3 @@ def test_categorical_handling(make_napari_viewer, n_samples: int = 100):
     assert len(categorical_columns) == 2  # should only be MANUAL_CLUSTER_ID and layer name
     assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
     assert categorical_columns[1] == "layer"
-
-if __name__ == "__main__":
-    import napari
-
-    test_cluster_memorization(napari.Viewer)
