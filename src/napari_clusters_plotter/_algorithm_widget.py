@@ -56,6 +56,8 @@ class BaseWidget(QWidget):
 
     @property
     def categorical_columns(self):
+        if len(self.layers) == 0:
+            return []
         return self._get_features().select_dtypes(include="category").columns
 
     @property

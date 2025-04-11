@@ -236,3 +236,8 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
             raise AssertionError(
                 f"Results not found in layer features for algorithm {algorithm}"
             )
+
+        # if a clustering algorithm is executed, assert that the resulting
+        # columns are of type "category"
+        if widget_config["widget_class"] == ClusteringWidget:
+            assert layer.features[col].dtype.name == "category"
