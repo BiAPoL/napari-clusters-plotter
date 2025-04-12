@@ -373,7 +373,7 @@ class PlotterWidget(BaseWidget):
             if dim in ["x", "y"]:
                 selector.addItems(continuous_features)
             elif dim == "hue":
-                selector.addItems(self.common_columns)
+                selector.addItems(sorted(self.common_columns))
                 self._set_categorical_column_styles(
                     selector, self.categorical_columns
                 )
