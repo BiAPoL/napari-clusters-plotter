@@ -42,6 +42,12 @@ class BaseWidget(QWidget):
             _features["layer"] = layer.name
             _features["layer"] = _features["layer"].astype("category")
             features = pd.concat([features, _features], axis=0)
+
+        # make sure that MANUAL_CLUSTER_ID is always categorical
+        if "MANUAL_CLUSTER_ID" in features.columns:
+            features["MANUAL_CLUSTER_ID"] = features[
+                "MANUAL_CLUSTER_ID"
+            ].astype("category")
         return features.reset_index(drop=True)
 
     @property
