@@ -1,5 +1,12 @@
 import pandas as pd
 from magicgui import magicgui
+from napari.layers import (
+    Labels,
+    Points,
+    Shapes,
+    Surface,
+    Vectors,
+)
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -11,6 +18,15 @@ from qtpy.QtWidgets import (
 
 
 class BaseWidget(QWidget):
+
+    input_layer_types = [
+        Labels,
+        Points,
+        Surface,
+        Vectors,
+        Shapes,
+    ]
+
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -34,6 +50,13 @@ class BaseWidget(QWidget):
         ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns
+
+    @property
+    def n_selected_layers(self) -> int:
+        """
+        Number of currently selected layers.
+        """
+        return len(list(self.viewer.layers.selection))
 
 
 class AlgorithmWidgetBase(BaseWidget):
@@ -123,6 +146,19 @@ class AlgorithmWidgetBase(BaseWidget):
 
     def _on_update_layer_selection(self, layer):
         self.layers = list(self.viewer.layers.selection)
+
+        # don't do anything if no layer is selected
+        if self.n_selected_layers == 0:
+            return
+
+        # check if the selected layers are of the correct type
+        selected_layer_types = [
+            type(layer) for layer in self.viewer.layers.selection
+        ]
+        for layer_type in selected_layer_types:
+            if layer_type not in self.input_layer_types:
+                return
+
         features_to_add = self._get_features()[self.common_columns]
         column_strings = [
             algo["column_string"] for algo in self.algorithms.values()
