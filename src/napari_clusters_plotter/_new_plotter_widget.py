@@ -11,7 +11,7 @@ from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget, QMenu
+from qtpy.QtWidgets import QComboBox, QMenu, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
 
