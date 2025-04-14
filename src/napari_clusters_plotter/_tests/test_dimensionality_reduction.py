@@ -77,6 +77,11 @@ def test_initialization(make_napari_viewer, widget_config):
     # check that all features are in reduce_wdiget.feature_selection_widget
     assert len(feature_selection_items) == len(layer.features.columns)
 
+    # clear layers to make sure cleanup works
+    viewer.layers.clear()
+
+    assert widget.feature_selection_widget.count() == 0
+
 
 def test_layer_update(make_napari_viewer, widget_config):
     viewer = make_napari_viewer()
