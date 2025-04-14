@@ -1,6 +1,39 @@
 import numpy as np
 
 
+def create_multiscale_labels():
+    """
+    Create a multiscale labels layer with two scales.
+    """
+    from napari.layers import Labels
+
+    labels = np.array([
+        [1, 1, 1, 4, 4, 4],
+        [1, 1, 1, 4, 4, 4],
+        [1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 2, 2, 2],
+        [3, 3, 0, 2, 2, 2],
+        [3, 3, 0, 2, 2, 2],
+    ])
+
+    multi_scale_labels = [
+        labels,
+        labels[::2, ::2]
+    ]
+
+    layer = Labels(
+        multi_scale_labels,
+        name="multiscale_labels",
+    )
+
+    layer.features['feature1'] = np.random.normal(4)
+    layer.features['feature2'] = np.random.normal(4)
+    layer.features['feature3'] = np.random.normal(4)
+    layer.features['feature4'] = np.random.normal(4)
+
+    return layer
+
+
 def create_multi_point_layer(n_samples: int = 100):
     import pandas as pd
     from napari.layers import Points
@@ -108,3 +141,18 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
     )
+
+
+def test_multiscale_plotter(make_napari_viewer):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    layer = create_multiscale_labels()
+    viewer.add_layer(layer)
+
+    # select some random features in the plotting widget
+    plotter_widget._selectors["x"].setCurrentText("feature1")
+    plotter_widget._selectors["y"].setCurrentText("feature2")
