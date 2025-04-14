@@ -534,8 +534,8 @@ def _export_cluster_to_layer(layer, indices, subcluster_index: int = None):
     """
 
     if isinstance(layer, napari.layers.Labels):
-        LUT = np.array([0] + list(np.arange(1, layer.data.max() + 1)))
-        LUT[indices == False] = 0
+        LUT = np.arange(layer.data.max() + 1)
+        LUT[1:][~indices] = 0
         new_layer = napari.layers.Labels(LUT[layer.data])
 
     elif isinstance(layer, napari.layers.Points):
