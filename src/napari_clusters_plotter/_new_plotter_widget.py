@@ -495,9 +495,7 @@ def _apply_layer_color(layer, colors):
     elif isinstance(layer, napari.layers.Labels):
 
         colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-        color_dict = {
-            label: color for label, color in zip(np.unique(layer.data), colors)
-        }
+        color_dict = dict(zip(np.unique(layer.data), colors))
 
         # Insert default colors for labels that are not in the color_dict
         # Relevant for non-sequential label images
