@@ -40,7 +40,7 @@ dependencies = [
     "napari-skimage-regionprops>=0.3.1",
     "scikit-image",
     "scipy",
-    "biaplotter@https://github.com/BiAPoL/biaplotter/archive/refs/heads/main.zip"
+    "biaplotter>=0.1.0"
 ]
 
 
