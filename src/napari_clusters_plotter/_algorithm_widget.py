@@ -149,7 +149,8 @@ class AlgorithmWidgetBase(BaseWidget):
         # escape empty input data
         if self.selected_algorithm_widget.data.value.empty:
             warnings.warn(
-                "No features selected. Please select features before running the algorithm."
+                "No features selected. Please select features before running the algorithm.",
+                stacklevel=1
             )
             return
         self.worker = worker
