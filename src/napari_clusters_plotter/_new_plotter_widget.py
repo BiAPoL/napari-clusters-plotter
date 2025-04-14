@@ -146,6 +146,9 @@ class PlotterWidget(BaseWidget):
         # if the hue axis is not set to MANUAL_CLUSTER_ID, set it to that
         # otherwise replot the data
 
+        if self.n_selected_layers == 0:
+            return
+
         features = self._get_features()
         for layer in self.viewer.layers.selection:
             layer_indices = features[features["layer"] == layer.name].index
@@ -447,6 +450,10 @@ class PlotterWidget(BaseWidget):
         """
         Reset the selection in the current plotting widget.
         """
+
+        if self.n_selected_layers == 0:
+            return
+
         self.plotting_widget.active_artist.color_indices = np.zeros(
             len(self._get_features())
         )
