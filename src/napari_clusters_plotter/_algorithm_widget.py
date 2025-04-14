@@ -1,3 +1,5 @@
+import warnings
+
 import pandas as pd
 from magicgui import magicgui
 from napari.layers import (
@@ -15,7 +17,6 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-import warnings
 
 
 class BaseWidget(QWidget):
@@ -50,7 +51,7 @@ class BaseWidget(QWidget):
                 "MANUAL_CLUSTER_ID"
             ].astype("category")
         return features.reset_index(drop=True)
-    
+
     def _clean_up(self):
         """Determines what happens in case of no layer selected"""
 

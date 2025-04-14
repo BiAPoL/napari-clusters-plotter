@@ -50,6 +50,7 @@ def create_multi_point_layer(n_samples: int = 100):
 
 def create_multi_vectors_layer(n_samples: int = 100):
     from napari.layers import Vectors
+
     points1, points2 = create_multi_point_layer(n_samples=n_samples)
 
     points_direction1 = np.random.normal(size=points1.data.shape)
@@ -187,7 +188,7 @@ def test_empty_layer_clean_up(make_napari_viewer, n_samples: int = 100):
     assert widget._selectors["y"].currentText() == ""
     assert widget._selectors["hue"].currentText() == ""
 
-    widget._reset()  
+    widget._reset()
 
     # add vectors to viewer
     viewer.add_layer(vectors1)
