@@ -48,6 +48,26 @@ def create_multi_point_layer(n_samples: int = 100):
     return layer, layer2
 
 
+def create_multi_vectors_layer(n_samples: int = 100):
+    from napari.layers import Vectors
+    points1, points2 = create_multi_point_layer(n_samples=n_samples)
+
+    points_direction1 = np.random.normal(size=points1.data.shape)
+    points_direction2 = np.random.normal(size=points2.data.shape)
+
+    # set time index correctly
+    points_direction1[:, 0] = points1.data[:, 0]
+    points_direction2[:, 0] = points2.data[:, 1]
+
+    vectors1 = np.stack([points1.data, points_direction1], axis=1)
+    vectors2 = np.stack([points2.data, points_direction2], axis=1)
+
+    vectors1 = Vectors(vectors1, features=points1.features, name="vectors1")
+    vectors2 = Vectors(vectors2, features=points2.features, name="vectors2")
+
+    return vectors1, vectors2
+
+
 def test_mixed_layers(make_napari_viewer):
     from napari_clusters_plotter import PlotterWidget
 
@@ -132,3 +152,42 @@ def test_categorical_handling(make_napari_viewer, n_samples: int = 100):
     )  # should only be MANUAL_CLUSTER_ID and layer name
     assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
     assert categorical_columns[1] == "layer"
+
+
+def test_empty_layer_clean_up(make_napari_viewer, n_samples: int = 100):
+    """
+    This test checks what happenns when you add some layers,
+    do a manual clustering , then delete the layers and add some others
+    """
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+
+    points1, points2 = create_multi_point_layer(n_samples=n_samples)
+    vectors1, _ = create_multi_vectors_layer(n_samples=n_samples)
+
+    # add points to viewer
+    viewer.add_layer(points1)
+    viewer.add_layer(points2)
+
+    widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
+    viewer.layers.selection.active = points1
+
+    # do a random drawing
+    assert "MANUAL_CLUSTER_ID" in points1.features.columns
+    random_cluster_indeces = np.random.randint(0, 2, len(points1.data))
+    widget._on_finish_draw(random_cluster_indeces)
+
+    # delete the layers
+    viewer.layers.clear()
+
+    # check that all widget._selectros ('x', 'y', 'hue') are empty
+    assert widget._selectors["x"].currentText() == ""
+    assert widget._selectors["y"].currentText() == ""
+    assert widget._selectors["hue"].currentText() == ""
+
+    widget._reset()  
+
+    # add vectors to viewer
+    viewer.add_layer(vectors1)
