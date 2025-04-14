@@ -7,29 +7,28 @@ def create_multiscale_labels():
     """
     from napari.layers import Labels
 
-    labels = np.array([
-        [1, 1, 1, 4, 4, 4],
-        [1, 1, 1, 4, 4, 4],
-        [1, 1, 1, 0, 0, 0],
-        [0, 0, 0, 2, 2, 2],
-        [3, 3, 0, 2, 2, 2],
-        [3, 3, 0, 2, 2, 2],
-    ])
+    labels = np.array(
+        [
+            [1, 1, 1, 4, 4, 4],
+            [1, 1, 1, 4, 4, 4],
+            [1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 2, 2, 2],
+            [3, 3, 0, 2, 2, 2],
+            [3, 3, 0, 2, 2, 2],
+        ]
+    )
 
-    multi_scale_labels = [
-        labels,
-        labels[::2, ::2]
-    ]
+    multi_scale_labels = [labels, labels[::2, ::2]]
 
     layer = Labels(
         multi_scale_labels,
         name="multiscale_labels",
     )
 
-    layer.features['feature1'] = np.random.normal(4)
-    layer.features['feature2'] = np.random.normal(4)
-    layer.features['feature3'] = np.random.normal(4)
-    layer.features['feature4'] = np.random.normal(4)
+    layer.features["feature1"] = np.random.normal(4)
+    layer.features["feature2"] = np.random.normal(4)
+    layer.features["feature3"] = np.random.normal(4)
+    layer.features["feature4"] = np.random.normal(4)
 
     return layer
 
