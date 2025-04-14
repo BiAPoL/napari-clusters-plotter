@@ -15,6 +15,7 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+import warnings
 
 
 class BaseWidget(QWidget):
@@ -144,6 +145,12 @@ class AlgorithmWidgetBase(BaseWidget):
         return features
 
     def _wait_for_finish(self, worker):
+        # escape empty input data
+        if self.selected_algorithm_widget.data.value.empty:
+            warnings.warn(
+                "No features selected. Please select features before running the algorithm."
+            )
+            return
         self.worker = worker
         self.worker.start()
         self.worker.returned.connect(self._process_result)
@@ -171,6 +178,7 @@ class AlgorithmWidgetBase(BaseWidget):
 
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
+            self._clean_up()
             return
 
         # check if the selected layers are of the correct type
@@ -195,6 +203,16 @@ class AlgorithmWidgetBase(BaseWidget):
         self.feature_selection_widget.clear()
         self.feature_selection_widget.addItems(sorted(features_to_add.columns))
         self._update_features()
+
+    def _clean_up(self):
+        """
+        Clean up the widget when it is closed.
+        """
+
+        # block signals for feature selection
+        self.feature_selection_widget.blockSignals(True)
+        self.feature_selection_widget.clear()
+        self.feature_selection_widget.blockSignals(False)
 
     @property
     def selected_algorithm(self):
