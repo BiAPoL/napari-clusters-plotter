@@ -37,8 +37,17 @@ class BaseWidget(QWidget):
         features = pd.DataFrame()
         for layer in self.layers:
             _features = layer.features[self.common_columns].copy()
+
+            # Add layer name as a categorical column
             _features["layer"] = layer.name
+            _features["layer"] = _features["layer"].astype("category")
             features = pd.concat([features, _features], axis=0)
+
+        # make sure that MANUAL_CLUSTER_ID is always categorical
+        if "MANUAL_CLUSTER_ID" in features.columns:
+            features["MANUAL_CLUSTER_ID"] = features[
+                "MANUAL_CLUSTER_ID"
+            ].astype("category")
         return features.reset_index(drop=True)
 
     @property
@@ -50,6 +59,12 @@ class BaseWidget(QWidget):
         ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns
+
+    @property
+    def categorical_columns(self):
+        if len(self.layers) == 0:
+            return []
+        return self._get_features().select_dtypes(include="category").columns
 
     @property
     def n_selected_layers(self) -> int:

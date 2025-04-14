@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="plotting_options">
       <attribute name="title">
@@ -53,7 +53,7 @@
        <item row="2" column="1">
         <widget class="QComboBox" name="hue_box">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
