@@ -70,6 +70,50 @@ def create_multi_vectors_layer(n_samples: int = 100):
     return vectors1, vectors2
 
 
+def create_multi_surface_layer(n_samples: int = 100):
+    from napari.layers import Surface
+    
+    vertices1, vertices2 = create_multi_point_layer(n_samples=n_samples)
+
+    faces1 = []
+    faces2 = []
+    for t in range(int(vertices1.data[:, 0].max())):
+        vertex_indeces_t = np.argwhere(
+            vertices1.data[:, 0] == t
+        ).flatten()
+
+        # draw some random triangles from the indeces
+        _faces = np.random.randint(low=vertex_indeces_t.min(),
+                                   high=vertex_indeces_t.max(), size=(10, 3))
+        faces1.append(_faces)
+
+        vertex_indeces_t = np.argwhere(
+            vertices2.data[:, 0] == t
+        ).flatten()
+
+        # draw some random triangles from the indeces
+        _faces = np.random.randint(low=vertex_indeces_t.min(),
+                                   high=vertex_indeces_t.max(), size=(10, 3))
+        faces2.append(_faces)
+
+    faces1 = np.concatenate(faces1, axis=0)
+    faces2 = np.concatenate(faces2, axis=0)
+
+    surface1 = Surface(
+        (vertices1.data, faces1),
+        features=vertices1.features,
+        name="surface1",
+    )
+
+    surface2 = Surface(
+        (vertices2.data, faces2),
+        features=vertices2.features,
+        name="surface2",
+        translate=(0, 0, 2),
+    )
+    return surface1, surface2
+
+
 def create_multi_labels_layer():
     from skimage import data, measure
     from napari.layers import Labels
@@ -130,6 +174,7 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_point_layer,
         create_multi_labels_layer,
         create_multi_vectors_layer,
+        create_multi_surface_layer,
     ],
 )
 def test_cluster_memorization(make_napari_viewer, create_sample_layers):
@@ -173,6 +218,7 @@ def test_cluster_memorization(make_napari_viewer, create_sample_layers):
         create_multi_point_layer,
         create_multi_labels_layer,
         create_multi_vectors_layer,
+        create_multi_surface_layer,
     ],
 )
 def test_categorical_handling(make_napari_viewer, create_sample_layers):
