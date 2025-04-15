@@ -72,28 +72,30 @@ def create_multi_vectors_layer(n_samples: int = 100):
 
 def create_multi_surface_layer(n_samples: int = 100):
     from napari.layers import Surface
-    
+
     vertices1, vertices2 = create_multi_point_layer(n_samples=n_samples)
 
     faces1 = []
     faces2 = []
     for t in range(int(vertices1.data[:, 0].max())):
-        vertex_indeces_t = np.argwhere(
-            vertices1.data[:, 0] == t
-        ).flatten()
+        vertex_indeces_t = np.argwhere(vertices1.data[:, 0] == t).flatten()
 
         # draw some random triangles from the indeces
-        _faces = np.random.randint(low=vertex_indeces_t.min(),
-                                   high=vertex_indeces_t.max(), size=(10, 3))
+        _faces = np.random.randint(
+            low=vertex_indeces_t.min(),
+            high=vertex_indeces_t.max(),
+            size=(10, 3),
+        )
         faces1.append(_faces)
 
-        vertex_indeces_t = np.argwhere(
-            vertices2.data[:, 0] == t
-        ).flatten()
+        vertex_indeces_t = np.argwhere(vertices2.data[:, 0] == t).flatten()
 
         # draw some random triangles from the indeces
-        _faces = np.random.randint(low=vertex_indeces_t.min(),
-                                   high=vertex_indeces_t.max(), size=(10, 3))
+        _faces = np.random.randint(
+            low=vertex_indeces_t.min(),
+            high=vertex_indeces_t.max(),
+            size=(10, 3),
+        )
         faces2.append(_faces)
 
     faces1 = np.concatenate(faces1, axis=0)
@@ -153,15 +155,17 @@ def create_multi_shapes_layers(n_samples: int = 100):
         shapes2.append(shape2)
 
     shape1 = Shapes(shapes1, features=points1.features, name="shapes1")
-    shape2 = Shapes(shapes2, features=points2.features, name="shapes2", translate=(0, 2))
+    shape2 = Shapes(
+        shapes2, features=points2.features, name="shapes2", translate=(0, 2)
+    )
 
     return shape1, shape2
 
 
 def create_multi_labels_layer():
-    from skimage import data, measure
-    from napari.layers import Labels
     import pandas as pd
+    from napari.layers import Labels
+    from skimage import data, measure
 
     labels1 = measure.label(data.binary_blobs(length=64, n_dim=2))
     labels2 = measure.label(data.binary_blobs(length=64, n_dim=2))
@@ -183,7 +187,9 @@ def create_multi_labels_layer():
     )
 
     labels1 = Labels(labels1, name="labels1", features=features1)
-    labels2 = Labels(labels2, name="labels2", features=features2, translate=(0, 128))
+    labels2 = Labels(
+        labels2, name="labels2", features=features2, translate=(0, 128)
+    )
 
     return labels1, labels2
 
@@ -219,7 +225,7 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_labels_layer,
         create_multi_vectors_layer,
         create_multi_surface_layer,
-        create_multi_shapes_layers
+        create_multi_shapes_layers,
     ],
 )
 def test_cluster_memorization(make_napari_viewer, create_sample_layers):
@@ -264,7 +270,7 @@ def test_cluster_memorization(make_napari_viewer, create_sample_layers):
         create_multi_labels_layer,
         create_multi_vectors_layer,
         create_multi_surface_layer,
-        create_multi_shapes_layers
+        create_multi_shapes_layers,
     ],
 )
 def test_categorical_handling(make_napari_viewer, create_sample_layers):

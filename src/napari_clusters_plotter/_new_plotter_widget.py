@@ -477,4 +477,3 @@ def _apply_layer_color(layer, colors):
         layer.colormap = DirectLabelColormap(color_dict=color_dict)
 
     layer.refresh()
-
