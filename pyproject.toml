@@ -33,22 +33,14 @@ dependencies = [
     "qtpy",
     "napari",
     "npe2",
-    "numpy>=1.21,<=1.23.5",
     "scikit-learn",
-    "matplotlib",
     "pandas",
     "umap-learn",
     "napari-tools-menu",
     "napari-skimage-regionprops>=0.3.1",
-    "hdbscan",
-    "qtpy",
-    "dask",
-    "napari",
-    "magicgui",
     "scikit-image",
-    "superqt",
     "scipy",
-    "biaplotter"
+    "biaplotter>=0.1.0"
 ]
 
 

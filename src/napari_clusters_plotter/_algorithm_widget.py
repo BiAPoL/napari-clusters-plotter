@@ -1,10 +1,32 @@
 import pandas as pd
 from magicgui import magicgui
-from qtpy.QtWidgets import (QAbstractItemView, QComboBox, QLabel, QListWidget,
-                            QVBoxLayout, QWidget)
+from napari.layers import (
+    Labels,
+    Points,
+    Shapes,
+    Surface,
+    Vectors,
+)
+from qtpy.QtWidgets import (
+    QAbstractItemView,
+    QComboBox,
+    QLabel,
+    QListWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class BaseWidget(QWidget):
+
+    input_layer_types = [
+        Labels,
+        Points,
+        Surface,
+        Vectors,
+        Shapes,
+    ]
+
     def __init__(self, napari_viewer):
         super().__init__()
 
@@ -15,8 +37,17 @@ class BaseWidget(QWidget):
         features = pd.DataFrame()
         for layer in self.layers:
             _features = layer.features[self.common_columns].copy()
+
+            # Add layer name as a categorical column
             _features["layer"] = layer.name
+            _features["layer"] = _features["layer"].astype("category")
             features = pd.concat([features, _features], axis=0)
+
+        # make sure that MANUAL_CLUSTER_ID is always categorical
+        if "MANUAL_CLUSTER_ID" in features.columns:
+            features["MANUAL_CLUSTER_ID"] = features[
+                "MANUAL_CLUSTER_ID"
+            ].astype("category")
         return features.reset_index(drop=True)
 
     @property
@@ -28,6 +59,19 @@ class BaseWidget(QWidget):
         ]
         common_columns = list(set.intersection(*map(set, common_columns)))
         return common_columns
+
+    @property
+    def categorical_columns(self):
+        if len(self.layers) == 0:
+            return []
+        return self._get_features().select_dtypes(include="category").columns
+
+    @property
+    def n_selected_layers(self) -> int:
+        """
+        Number of currently selected layers.
+        """
+        return len(list(self.viewer.layers.selection))
 
 
 class AlgorithmWidgetBase(BaseWidget):
@@ -117,6 +161,19 @@ class AlgorithmWidgetBase(BaseWidget):
 
     def _on_update_layer_selection(self, layer):
         self.layers = list(self.viewer.layers.selection)
+
+        # don't do anything if no layer is selected
+        if self.n_selected_layers == 0:
+            return
+
+        # check if the selected layers are of the correct type
+        selected_layer_types = [
+            type(layer) for layer in self.viewer.layers.selection
+        ]
+        for layer_type in selected_layer_types:
+            if layer_type not in self.input_layer_types:
+                return
+
         features_to_add = self._get_features()[self.common_columns]
         column_strings = [
             algo["column_string"] for algo in self.algorithms.values()
@@ -129,7 +186,7 @@ class AlgorithmWidgetBase(BaseWidget):
             ]
         )
         self.feature_selection_widget.clear()
-        self.feature_selection_widget.addItems(features_to_add.columns)
+        self.feature_selection_widget.addItems(sorted(features_to_add.columns))
         self._update_features()
 
     @property

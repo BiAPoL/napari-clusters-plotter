@@ -2,8 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from napari_clusters_plotter import (ClusteringWidget,
-                                     DimensionalityReductionWidget)
+from napari_clusters_plotter import (
+    ClusteringWidget,
+    DimensionalityReductionWidget,
+)
 
 
 @pytest.fixture(
@@ -35,6 +37,9 @@ def create_points(n_samples=100, loc=5):
             "feature4": np.random.normal(size=n_samples, loc=loc),
         }
     )
+
+    # add some NaNs
+    features.iloc[::10] = np.nan
 
     layer = Points(points, features=features, size=0.1)
 
@@ -149,9 +154,8 @@ def test_feature_update(make_napari_viewer, widget_config):
                 item.text()
                 for item in widget.feature_selection_widget.selectedItems()
             ]
-            assert all(
-                [feature in selected_features for feature in features.columns]
-            )
+            for feature in features.columns:
+                assert feature in selected_features
 
             for selected_feature in selected_features:
                 assert selected_feature in features.columns
@@ -204,7 +208,7 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
         loop = QEventLoop()
 
         # Connect the worker's finished signal to the loop quit slot
-        def on_worker_finished():
+        def on_worker_finished(loop=loop):
             loop.quit()
 
         # Wait until the worker is created and then connect the finished signal
@@ -229,6 +233,11 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
             if col.startswith(column_prefix):
                 break
         else:
-            assert (
-                False
-            ), f"Results not found in layer features for algorithm {algorithm}"
+            raise AssertionError(
+                f"Results not found in layer features for algorithm {algorithm}"
+            )
+
+        # if a clustering algorithm is executed, assert that the resulting
+        # columns are of type "category"
+        if widget_config["widget_class"] == ClusteringWidget:
+            assert layer.features[col].dtype.name == "category"

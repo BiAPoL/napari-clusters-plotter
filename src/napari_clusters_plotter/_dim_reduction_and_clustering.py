@@ -1,9 +1,16 @@
+import napari
 import pandas as pd
 
 from ._algorithm_widget import AlgorithmWidgetBase
-from ._algorithms import (cluster_gaussian_mixture, cluster_hdbscan,
-                          cluster_kmeans, cluster_spectral, reduce_pca,
-                          reduce_tsne, reduce_umap)
+from ._algorithms import (
+    cluster_gaussian_mixture,
+    cluster_hdbscan,
+    cluster_kmeans,
+    cluster_spectral,
+    reduce_pca,
+    reduce_tsne,
+    reduce_umap,
+)
 
 
 class ClusteringWidget(AlgorithmWidgetBase):
@@ -20,7 +27,7 @@ class ClusteringWidget(AlgorithmWidgetBase):
         },
     }
 
-    def __init__(self, napari_viewer: "napari.Viewer"):
+    def __init__(self, napari_viewer: napari.Viewer):
         super().__init__(
             napari_viewer,
             ClusteringWidget.algorithms,
@@ -35,6 +42,9 @@ class ClusteringWidget(AlgorithmWidgetBase):
 
         column_name = self.algorithms[self.selected_algorithm]["column_string"]
         features_clustered = pd.DataFrame(result, columns=[column_name])
+        features_clustered[column_name] = features_clustered[
+            column_name
+        ].astype("category")
         features_clustered["layer"] = self._get_features()["layer"]
 
         for layer in self.layers:
@@ -59,7 +69,7 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
         "UMAP": {"callback": reduce_umap, "column_string": "UMAP"},
     }
 
-    def __init__(self, napari_viewer: "napari.Viewer"):
+    def __init__(self, napari_viewer: napari.Viewer):
         super().__init__(
             napari_viewer,
             DimensionalityReductionWidget.algorithms,
@@ -67,23 +77,21 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
             ["PCA", "t-SNE", "UMAP"],
         )
 
-    def _process_result(self, result):
+    def _process_result(self, result: pd.DataFrame):
         """
-        Process the result of the dimensionality reduction algorithm and update the layer
+        Process result of dimensionality reduction algorithm and update layer
         """
         column_names = [
             f"{self.algorithms[self.selected_algorithm]['column_string']}{i}"
             for i in range(result.shape[1])
         ]
-        features_reduced = pd.DataFrame(result, columns=column_names)
-        features_reduced["layer"] = self._get_features()["layer"].values
+        result.columns = column_names
+        result["layer"] = self._get_features()["layer"].values
 
         for layer in self.layers:
             current_features = layer.features
             for column in column_names:
-                layer_feature_subset = features_reduced[
-                    features_reduced["layer"] == layer.name
-                ]
+                layer_feature_subset = result[result["layer"] == layer.name]
 
                 # add the columns to the features
                 current_features[column] = layer_feature_subset[column].values

@@ -3,10 +3,14 @@ from pathlib import Path
 
 import napari
 import numpy as np
+import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
+from matplotlib.pyplot import cm as plt_colormaps
+from nap_plot_tools.cmap import cat10_mod_cmap
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
+from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
@@ -26,13 +30,6 @@ class PlotterWidget(BaseWidget):
     napari_viewer : napari.Viewer
         The napari viewer to connect to.
     """
-
-    input_layer_types = [
-        napari.layers.Labels,
-        napari.layers.Points,
-        napari.layers.Surface,
-        napari.layers.Vectors,
-    ]
 
     plot_needs_update = Signal()
 
@@ -140,10 +137,31 @@ class PlotterWidget(BaseWidget):
         self.control_widget.reset_button.clicked.connect(self._reset)
 
         # connect data selection in plot to layer coloring update
-        active_artist = self.plotting_widget.active_artist
-        active_artist.color_indices_changed_signal.connect(
-            self._color_layer_by_cluster_id
-        )
+        for selector in self.plotting_widget.selectors.values():
+            selector.selection_applied_signal.connect(self._on_finish_draw)
+
+    def _on_finish_draw(self, color_indices: np.ndarray):
+        """
+        Called when user finsihes drawing. Will change the hue combo box to the
+        feature 'MANUAL_CLUSTER_ID', which then triggers a redraw.
+        """
+
+        # if the hue axis is not set to MANUAL_CLUSTER_ID, set it to that
+        # otherwise replot the data
+
+        features = self._get_features()
+        for layer in self.viewer.layers.selection:
+            layer_indices = features[features["layer"] == layer.name].index
+
+            # store latest cluster indeces in the features table
+            layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
+                color_indices[layer_indices]
+            ).astype("category")
+
+        if self.hue_axis != "MANUAL_CLUSTER_ID":
+            self.hue_axis = "MANUAL_CLUSTER_ID"
+
+        self.plot_needs_update.emit()
 
     def _replot(self):
         """
@@ -154,8 +172,34 @@ class PlotterWidget(BaseWidget):
         if self.x_axis == "" or self.y_axis == "":
             return
 
-        data_to_plot = self._get_data()
-        self.plotting_widget.active_artist.data = data_to_plot
+        # retrieve the data from the selected layers
+        features = self._get_features()
+        x_data = features[self.x_axis].values
+        y_data = features[self.y_axis].values
+
+        # check hue axis for categorical data
+        if self.hue_axis in self.categorical_columns:
+            self.plotting_widget.active_artist.overlay_colormap = (
+                cat10_mod_cmap
+            )
+        else:
+            self.plotting_widget.active_artist.overlay_colormap = (
+                plt_colormaps.magma
+            )
+
+        # set the data and color indices in the active artist
+        active_artist = self.plotting_widget.active_artist
+        active_artist.data = np.stack([x_data, y_data], axis=1)
+        active_artist.color_indices = features[self.hue_axis].to_numpy()
+
+        self._color_layer_by_value()
+
+        # this makes sure that previously drawn clusters are preserved
+        # when a layer is re-selected or different features are plotted
+        # if "MANUAL_CLUSTER_ID" in features.columns:
+        #     self.plotting_widget.active_artist.color_indices = features[
+        #         "MANUAL_CLUSTER_ID"
+        #     ].to_numpy()
 
     def _on_frame_changed(self, event: napari.utils.events.Event):
         """
@@ -240,9 +284,9 @@ class PlotterWidget(BaseWidget):
         return self.control_widget.plot_type_box.currentText()
 
     @plotting_type.setter
-    def plotting_type(self, type):
-        if type in PlottingType.__members__.keys():
-            self.control_widget.plot_type_box.setCurrentText(type)
+    def plotting_type(self, plot_type):
+        if plot_type in PlottingType.__members__:
+            self.control_widget.plot_type_box.setCurrentText(plot_type)
 
     @property
     def x_axis(self):
@@ -268,32 +312,15 @@ class PlotterWidget(BaseWidget):
 
     @hue_axis.setter
     def hue_axis(self, column: str):
-        self.control_widget.hue_box.setCurrentText(
-            column
-        )  # TODO insert checks and change values
-
-    @property
-    def n_selected_layers(self) -> int:
         """
-        Number of currently selected layers.
+        Set the hue axis to the given value.
         """
-        return len(list(self.viewer.layers.selection))
-
-    def _get_data(self) -> np.ndarray:
-        """
-        Get the data from the selected layers features.
-        """
-        features = self._get_features()
-        x_data = features[self.x_axis].values
-        y_data = features[self.y_axis].values
-
-        # # if no hue is selected, set it to 0
-        # if self.hue_axis == "None":
-        #     hue = np.zeros(len(features))
-        # elif self.hue_axis != "":
-        #     hue = features[self.hue_axis].values
-
-        return np.stack([x_data, y_data], axis=1)
+        # check if the column is in the common columns
+        if column not in self.common_columns:
+            raise ValueError(
+                f"{column} is not in the features: {self.common_columns}"
+            )
+        self.control_widget.hue_box.setCurrentText(column)
 
     def _on_update_layer_selection(
         self, event: napari.utils.events.Event
@@ -304,6 +331,25 @@ class PlotterWidget(BaseWidget):
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
             return
+
+        # check if the selected layers are of the correct type
+        selected_layer_types = [
+            type(layer) for layer in self.viewer.layers.selection
+        ]
+        for layer_type in selected_layer_types:
+            if layer_type not in self.input_layer_types:
+                return
+
+        # check if all selected layers are of the same type
+        if len(set(selected_layer_types)) > 1:
+            return
+
+        # insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
+        for layer in self.viewer.layers.selection:
+            if "MANUAL_CLUSTER_ID" not in layer.features.columns:
+                layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
+                    np.zeros(len(layer.features), dtype=np.int32)
+                ).astype("category")
 
         self.layers = list(self.viewer.layers.selection)
         self._update_feature_selection(None)
@@ -322,40 +368,65 @@ class PlotterWidget(BaseWidget):
         current_y = self.y_axis
         current_hue = self.hue_axis
 
-        # block selector changed signals until all items added
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].blockSignals(True)
+        # get the common columns between the selected layers
+        # and the columns that are not categorical
+        continuous_features = sorted(
+            [
+                col
+                for col in self.common_columns
+                if col not in self.categorical_columns
+            ]
+        )
 
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].clear()
-
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].addItems(self.common_columns)
-
-        # it should always be possible to select no color
-        self._selectors["hue"].addItem("None")
-
-        # set the previous values if they are still available
-        for dim, value in zip(
+        for dim, current_value in zip(
             ["x", "y", "hue"], [current_x, current_y, current_hue]
         ):
-            if value in self.common_columns:
-                self._selectors[dim].setCurrentText(value)
+            # block selector changed signals until all items added
+            selector = self._selectors[dim]
+            selector.blockSignals(True)
+            selector.clear()
 
-        for dim in ["x", "y", "hue"]:
-            self._selectors[dim].blockSignals(False)
+            if dim in ["x", "y"]:
+                selector.addItems(continuous_features)
+            elif dim == "hue":
+                selector.addItems(sorted(self.common_columns))
+                self._set_categorical_column_styles(
+                    selector, self.categorical_columns
+                )
+
+            # set the previous values if they are still available
+            if current_value in self.common_columns:
+                selector.setCurrentText(current_value)
+
+            selector.blockSignals(False)
 
         self.blockSignals(False)
         self.plot_needs_update.emit()
 
-    def _color_layer_by_cluster_id(self):
+    def _set_categorical_column_styles(self, selector, categorical_columns):
+        """Highlight categorical columns and set tooltips."""
+        for feature in categorical_columns:
+            index = selector.findText(feature)
+            if index != -1:  # Ensure the feature exists in the dropdown
+                selector.setItemData(
+                    index, QColor("darkOrange"), Qt.BackgroundRole
+                )
+                selector.setItemData(
+                    index, "Categorical Column", Qt.ToolTipRole
+                )
+
+    def _color_layer_by_value(self):
         """
         Color the selected layer according to the color indices.
         """
+
         features = self._get_features()
         color_indices = self.plotting_widget.active_artist.color_indices
-        colors = self.plotting_widget.active_artist.categorical_colormap(
+        norm = self.plotting_widget.active_artist._get_normalization(
             color_indices
+        )
+        colors = self.plotting_widget.active_artist._get_rgba_colors(
+            color_indices, norm
         )
 
         for selected_layer in self.viewer.layers.selection:
@@ -364,6 +435,12 @@ class PlotterWidget(BaseWidget):
             ].index
             _apply_layer_color(selected_layer, colors[layer_indices])
 
+            # store latest cluster indeces in the features table
+            if self.hue_axis == "MANUAL_CLUSTER_ID":
+                selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
+                    color_indices[layer_indices]
+                ).astype("category")
+
     def _reset(self):
         """
         Reset the selection in the current plotting widget.
@@ -371,7 +448,7 @@ class PlotterWidget(BaseWidget):
         self.plotting_widget.active_artist.color_indices = np.zeros(
             len(self._get_features())
         )
-        self._color_layer_by_cluster_id()
+        self._color_layer_by_value()
 
 
 def _apply_layer_color(layer, colors):
@@ -388,25 +465,29 @@ def _apply_layer_color(layer, colors):
     """
     from napari.utils import DirectLabelColormap
 
-    color_mapping = {
-        napari.layers.Points: lambda _layer, _color: setattr(
-            _layer, "face_color", _color
-        ),
-        napari.layers.Vectors: lambda _layer, _color: setattr(
-            _layer, "edge_color", _color
-        ),
-        napari.layers.Surface: lambda _layer, _color: setattr(
-            _layer, "vertex_colors", _color
-        ),
-        napari.layers.Labels: lambda _layer, _color: setattr(
-            _layer,
-            "colormap",
-            DirectLabelColormap(
-                {label: _color[label] for label in np.unique(_layer.data)}
-            ),
-        ),
-    }
+    if isinstance(layer, napari.layers.Points):
+        layer.face_color = colors
 
-    if type(layer) in color_mapping:
-        color_mapping[type(layer)](layer, colors)
-        layer.refresh()
+    elif isinstance(layer, napari.layers.Vectors):
+        layer.edge_color = colors
+
+    elif isinstance(layer, napari.layers.Surface):
+        layer.vertex_colors = colors
+
+    elif isinstance(layer, napari.layers.Shapes):
+        layer.face_color = colors
+
+    elif isinstance(layer, napari.layers.Labels):
+
+        colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
+        color_dict = dict(zip(np.unique(layer.data), colors))
+
+        # Insert default colors for labels that are not in the color_dict
+        # Relevant for non-sequential label images
+        if max(color_dict.keys()) > len(colors):
+            for i in range(1, max(color_dict.keys()) - 1):
+                color_dict[i] = [0, 0, 0, 0]
+        # Add a color for the background at the first index
+        layer.colormap = DirectLabelColormap(color_dict=color_dict)
+
+    layer.refresh()
