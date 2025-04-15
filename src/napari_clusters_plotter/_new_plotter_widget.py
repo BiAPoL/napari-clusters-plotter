@@ -449,33 +449,29 @@ def _apply_layer_color(layer, colors):
     """
     from napari.utils import DirectLabelColormap
 
-    color_mapping = {
-        napari.layers.Points: lambda _layer, _color: setattr(
-            _layer, "face_color", _color
-        ),
-        napari.layers.Vectors: lambda _layer, _color: setattr(
-            _layer, "edge_color", _color
-        ),
-        napari.layers.Surface: lambda _layer, _color: setattr(
-            _layer, "vertex_colors", _color
-        ),
-        napari.layers.Shapes: lambda _layer, _color: setattr(
-            _layer, "face_color", _color
-        ),
-        napari.layers.Labels: lambda _layer, _color: setattr(
-            _layer,
-            "colormap",
-            DirectLabelColormap(
-                color_dict={
-                    label: _color[label] for label in np.unique(_layer.data)
-                }
-            ),
-        ),
-    }
+    if isinstance(layer, napari.layers.Points):
+        layer.face_color = colors
 
-    if type(layer) in color_mapping:
-        if type(layer) is napari.layers.Labels:
-            # add a color for the background at the first index
-            colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-        color_mapping[type(layer)](layer, colors)
-        layer.refresh()
+    elif isinstance(layer, napari.layers.Vectors):
+        layer.edge_color = colors
+
+    elif isinstance(layer, napari.layers.Surface):
+        layer.vertex_colors = colors
+
+    elif isinstance(layer, napari.layers.Shapes):
+        layer.face_color = colors
+
+    elif isinstance(layer, napari.layers.Labels):
+
+        colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
+        color_dict = dict(zip(np.unique(layer.data), colors))
+
+        # Insert default colors for labels that are not in the color_dict
+        # Relevant for non-sequential label images
+        if max(color_dict.keys()) > len(colors):
+            for i in range(1, max(color_dict.keys()) - 1):
+                color_dict[i] = [0, 0, 0, 0]
+        # Add a color for the background at the first index
+        layer.colormap = DirectLabelColormap(color_dict=color_dict)
+
+    layer.refresh()
