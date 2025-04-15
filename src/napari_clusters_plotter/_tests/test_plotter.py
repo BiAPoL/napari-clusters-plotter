@@ -310,7 +310,6 @@ def test_multiscale_plotter(make_napari_viewer):
     plotter_widget._selectors["y"].setCurrentText("feature2")
 
 
-
 @pytest.mark.parametrize(
     "create_sample_layers",
     [
