@@ -114,6 +114,50 @@ def create_multi_surface_layer(n_samples: int = 100):
     return surface1, surface2
 
 
+def create_multi_shapes_layers(n_samples: int = 100):
+    from napari.layers import Shapes
+
+    points1, points2 = create_multi_point_layer(n_samples=n_samples)
+
+    shapes1, shapes2 = [], []
+    for i in range(len(points1.data)):
+        # create a random shape around the point, whereas the shape consists of the coordinates
+        # of the four corner of the rectangle
+        y, x = points1.data[i, 2], points1.data[i, 3]
+        w, h = np.random.randint(1, 5), np.random.randint(1, 5)
+
+        shape1 = np.array(
+            [
+                [y - h, x - w],
+                [y - h, x + w],
+                [y + h, x + w],
+                [y + h, x - w],
+            ]
+        )
+        shapes1.append(shape1)
+
+    for i in range(len(points2.data)):
+        # create a random shape around the point, whereas the shape consists of the coordinates
+        # of the four corner of the rectangle
+        y, x = points2.data[i, 2], points2.data[i, 3]
+        w, h = np.random.randint(1, 5), np.random.randint(1, 5)
+
+        shape2 = np.array(
+            [
+                [y - h, x - w],
+                [y - h, x + w],
+                [y + h, x + w],
+                [y + h, x - w],
+            ]
+        )
+        shapes2.append(shape2)
+
+    shape1 = Shapes(shapes1, features=points1.features, name="shapes1")
+    shape2 = Shapes(shapes2, features=points2.features, name="shapes2", translate=(0, 2))
+
+    return shape1, shape2
+
+
 def create_multi_labels_layer():
     from skimage import data, measure
     from napari.layers import Labels
@@ -175,6 +219,7 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_labels_layer,
         create_multi_vectors_layer,
         create_multi_surface_layer,
+        create_multi_shapes_layers
     ],
 )
 def test_cluster_memorization(make_napari_viewer, create_sample_layers):
@@ -219,6 +264,7 @@ def test_cluster_memorization(make_napari_viewer, create_sample_layers):
         create_multi_labels_layer,
         create_multi_vectors_layer,
         create_multi_surface_layer,
+        create_multi_shapes_layers
     ],
 )
 def test_categorical_handling(make_napari_viewer, create_sample_layers):
