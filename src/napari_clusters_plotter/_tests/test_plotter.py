@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 
 def create_multi_point_layer(n_samples: int = 100):
@@ -124,12 +125,19 @@ def test_mixed_layers(make_napari_viewer):
 
     #
 
-
-def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+        create_multi_labels_layer,
+        create_multi_vectors_layer,
+    ],
+)
+def test_cluster_memorization(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
 
     viewer = make_napari_viewer()
-    layer, layer2 = create_multi_point_layer(n_samples=n_samples)
+    layer, layer2 = create_sample_layers()
 
     # add layers to viewer
     viewer.add_layer(layer)
@@ -161,11 +169,19 @@ def test_cluster_memorization(make_napari_viewer, n_samples: int = 100):
     )
 
 
-def test_categorical_handling(make_napari_viewer, n_samples: int = 100):
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+        create_multi_labels_layer,
+        create_multi_vectors_layer,
+    ],
+)
+def test_categorical_handling(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
 
     viewer = make_napari_viewer()
-    layer, layer2 = create_multi_point_layer(n_samples=n_samples)
+    layer, layer2 = create_sample_layers()
 
     # add layers to viewer
     viewer.add_layer(layer)
