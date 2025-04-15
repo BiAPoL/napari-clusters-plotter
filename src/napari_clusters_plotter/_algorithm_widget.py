@@ -8,6 +8,7 @@ from napari.layers import (
     Shapes,
     Surface,
     Vectors,
+    Tracks,
 )
 from qtpy.QtWidgets import (
     QAbstractItemView,
@@ -27,6 +28,7 @@ class BaseWidget(QWidget):
         Surface,
         Vectors,
         Shapes,
+        Tracks
     ]
 
     def __init__(self, napari_viewer):

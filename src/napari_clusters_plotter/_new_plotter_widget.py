@@ -507,6 +507,9 @@ def _apply_layer_color(layer, colors):
     elif isinstance(layer, napari.layers.Shapes):
         layer.face_color = colors
 
+    elif isinstance(layer, napari.layers.Tracks):
+        layer.track_colors = colors
+
     elif isinstance(layer, napari.layers.Labels):
 
         colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
