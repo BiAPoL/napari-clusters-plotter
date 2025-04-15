@@ -123,7 +123,6 @@ def test_mixed_layers(make_napari_viewer):
     viewer.add_image(random_image)
     viewer.add_labels(sample_labels)
 
-    #
 
 @pytest.mark.parametrize(
     "create_sample_layers",
@@ -150,9 +149,8 @@ def test_cluster_memorization(make_napari_viewer, create_sample_layers):
     assert "MANUAL_CLUSTER_ID" in layer2.features.columns
 
     plotter_widget._selectors["x"].setCurrentText("feature3")
-    cluster_indeces = np.random.randint(0, 2, len(layer2.data))
-    layer2.features["MANUAL_CLUSTER_ID"] = cluster_indeces
-    plotter_widget._selectors["hue"].setCurrentText("MANUAL_CLUSTER_ID")
+    cluster_indeces = np.random.randint(0, 2, len(layer2.features))
+    plotter_widget._on_finish_draw(cluster_indeces)
 
     # select first layer and make sure that no clusters are selected
     viewer.layers.selection.active = layer
