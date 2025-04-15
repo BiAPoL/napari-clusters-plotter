@@ -364,7 +364,7 @@ class PlotterWidget(BaseWidget):
         self._update_feature_selection(None)
 
         for layer in self.layers:
-            layer.events.features.connect(self._update_feature_selection)
+            layer.events.properties.connect(self._update_feature_selection)
 
     def _clean_up(self):
         """In case of empty layer selection"""
