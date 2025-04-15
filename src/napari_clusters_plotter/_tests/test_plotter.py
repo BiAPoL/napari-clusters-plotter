@@ -295,3 +295,37 @@ def test_categorical_handling(make_napari_viewer, create_sample_layers):
     )  # should only be MANUAL_CLUSTER_ID and layer name
     assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
     assert categorical_columns[1] == "layer"
+
+
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+        create_multi_vectors_layer,
+        create_multi_surface_layer,
+        create_multi_shapes_layers,
+    ],
+)
+def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    layer, layer2 = create_sample_layers()
+
+    # add layers to viewer
+    viewer.add_layer(layer)
+    viewer.add_layer(layer2)
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    plotter_widget._selectors["x"].setCurrentText("feature3")
+
+    # move time slider
+    current_step = viewer.dims.current_step[0]
+    viewer.dims.set_current_step(0, current_step + 1)
+
+    # check that the dots in the plotter widget update alpha and size
+    # to highlight out-of and in-frame data points
+    assert plotter_widget.plotting_widget.active_artist.alpha.min() == 0.25
+    assert plotter_widget.plotting_widget.active_artist.size.min() == 35
+
