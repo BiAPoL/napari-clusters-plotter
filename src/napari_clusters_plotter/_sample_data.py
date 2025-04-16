@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 
-def tgmm_mini_dataset() -> List["LayerData"]:
+def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
     import pandas as pd
     from skimage.io import imread
 
