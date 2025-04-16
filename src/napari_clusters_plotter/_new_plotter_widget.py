@@ -508,7 +508,8 @@ def _apply_layer_color(layer, colors):
         layer.face_color = colors
 
     elif isinstance(layer, napari.layers.Tracks):
-        layer.track_colors = colors
+        layer._track_colors = colors
+        layer.events.color_by()
 
     elif isinstance(layer, napari.layers.Labels):
 
