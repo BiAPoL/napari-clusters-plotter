@@ -3,13 +3,19 @@ import os
 from pathlib import Path
 from typing import List
 
+
 def tgmm_mini_dataset() -> List["LayerData"]:
     import pandas as pd
     from skimage.io import imread
 
     path = Path(__file__).parent / "sample_data" / "tracking_data"
     data = pd.read_csv(path / Path("tgmm-mini-tracks-layer-data.csv"))
-    features = pd.read_csv(path / Path("tgmm-mini-spot.csv"), skiprows=[1, 2], low_memory=False, encoding='utf-8')
+    features = pd.read_csv(
+        path / Path("tgmm-mini-spot.csv"),
+        skiprows=[1, 2],
+        low_memory=False,
+        encoding="utf-8",
+    )
     tracking_label_image = imread(path / Path("tgmm-mini.tif"))
 
     layer_data_tuple_tracks = (
@@ -31,6 +37,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:
     )
 
     return [layer_data_tuple_tracks, layer_data_tuple_labels]
+
 
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     import numpy as np
