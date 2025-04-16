@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from matplotlib.pyplot import cm as plt_colormaps
-from nap_plot_tools.cmap import cat10_mod_cmap
+from nap_plot_tools.cmap import cat10_mod_cmap, cat10_mod_cmap_first_transparent
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
@@ -36,6 +36,7 @@ class PlotterWidget(BaseWidget):
     def __init__(self, napari_viewer):
         super().__init__(napari_viewer)
         self._setup_ui(napari_viewer)
+        self._layer_colormap_cache = {}
         self._on_update_layer_selection(None)
         self._setup_callbacks()
 
@@ -63,6 +64,9 @@ class PlotterWidget(BaseWidget):
         self.plotting_widget.active_artist = self.plotting_widget.artists[
             ArtistType.SCATTER
         ]
+        # self.plotting_widget.active_artist = self.plotting_widget.artists[
+        #     ArtistType.HISTOGRAM2D
+        # ]
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -170,6 +174,7 @@ class PlotterWidget(BaseWidget):
 
         # if no x or y axis is selected, return
         if self.x_axis == "" or self.y_axis == "":
+            self._clear_plot_data()
             return
 
         # retrieve the data from the selected layers
@@ -177,18 +182,23 @@ class PlotterWidget(BaseWidget):
         x_data = features[self.x_axis].values
         y_data = features[self.y_axis].values
 
+        active_artist = self.plotting_widget.active_artist
+
         # check hue axis for categorical data
         if self.hue_axis in self.categorical_columns:
-            self.plotting_widget.active_artist.overlay_colormap = (
-                cat10_mod_cmap
-            )
+            if active_artist == self.plotting_widget.artists[ArtistType.SCATTER]:
+                self.plotting_widget.active_artist.overlay_colormap = (
+                    cat10_mod_cmap
+                )
+            elif active_artist == self.plotting_widget.artists[ArtistType.HISTOGRAM2D]:
+                self.plotting_widget.active_artist.overlay_colormap = (
+                    cat10_mod_cmap_first_transparent
+                )
         else:
             self.plotting_widget.active_artist.overlay_colormap = (
                 plt_colormaps.magma
             )
-
         # set the data and color indices in the active artist
-        active_artist = self.plotting_widget.active_artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
         active_artist.color_indices = features[self.hue_axis].to_numpy()
 
@@ -218,6 +228,13 @@ class PlotterWidget(BaseWidget):
             size[index_out_of_frame] = 35
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
+
+    def _clear_plot_data(self):
+        """
+        Clear the plot data.
+        """
+        self.plotting_widget.active_artist.data = None
+        self.plotting_widget.active_artist.color_indices = None
 
     def _checkbox_status_changed(self):
         self._replot()
@@ -331,13 +348,14 @@ class PlotterWidget(BaseWidget):
         self, event: napari.utils.events.Event
     ) -> None:
         """
-        Called when the layer selection changes. Updates the layers attribute.
+        Called when the layer selection changes. Updates the layers attribute
+        and caches the colormap of newly selected layers.
         """
-        # don't do anything if no layer is selected
+        # Don't do anything if no layer is selected
         if self.n_selected_layers == 0:
             return
 
-        # check if the selected layers are of the correct type
+        # Check if the selected layers are of the correct type
         selected_layer_types = [
             type(layer) for layer in self.viewer.layers.selection
         ]
@@ -345,11 +363,19 @@ class PlotterWidget(BaseWidget):
             if layer_type not in self.input_layer_types:
                 return
 
-        # check if all selected layers are of the same type
+        # Check if all selected layers are of the same type
         if len(set(selected_layer_types)) > 1:
             return
 
-        # insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
+        # Cache the colormap for newly selected layers
+        for layer in self.viewer.layers.selection:
+            if layer.name not in self._layer_colormap_cache:
+                if isinstance(layer, napari.layers.Labels):
+                    self._layer_colormap_cache[layer.name] = layer.colormap
+                elif isinstance(layer, (napari.layers.Points, napari.layers.Shapes, napari.layers.Vectors, napari.layers.Surface)):
+                    self._layer_colormap_cache[layer.name] = layer.face_color
+
+        # Insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
         for layer in self.viewer.layers.selection:
             if "MANUAL_CLUSTER_ID" not in layer.features.columns:
                 layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
@@ -357,6 +383,8 @@ class PlotterWidget(BaseWidget):
                 ).astype("category")
 
         self.layers = list(self.viewer.layers.selection)
+        # Clear the plot data
+        self._clear_plot_data()
         self._update_feature_selection(None)
 
         for layer in self.layers:
@@ -424,23 +452,25 @@ class PlotterWidget(BaseWidget):
         """
         Color the selected layer according to the color indices.
         """
-
         features = self._get_features()
         color_indices = self.plotting_widget.active_artist.color_indices
-        norm = self.plotting_widget.active_artist._get_normalization(
-            color_indices
-        )
-        colors = self.plotting_widget.active_artist._get_rgba_colors(
-            color_indices, norm
-        )
+
+        # Check if all color_indices are 0 or np.nan
+        if np.all(color_indices == 0) or np.all(np.isnan(color_indices)):
+            for selected_layer in self.viewer.layers.selection:
+                if selected_layer.name in self._layer_colormap_cache:
+                    # Restore the cached colormap
+                    _apply_layer_color(selected_layer, None, self._layer_colormap_cache[selected_layer.name])
+            return
+
+        norm = self.plotting_widget.active_artist._get_normalization_instance()
+        colors = self.plotting_widget.active_artist._get_rgba_colors(color_indices, norm)
 
         for selected_layer in self.viewer.layers.selection:
-            layer_indices = features[
-                features["layer"] == selected_layer.name
-            ].index
+            layer_indices = features[features["layer"] == selected_layer.name].index
             _apply_layer_color(selected_layer, colors[layer_indices])
 
-            # store latest cluster indeces in the features table
+            # Store latest cluster indices in the features table
             if self.hue_axis == "MANUAL_CLUSTER_ID":
                 selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     color_indices[layer_indices]
@@ -456,19 +486,31 @@ class PlotterWidget(BaseWidget):
         self._color_layer_by_value()
 
 
-def _apply_layer_color(layer, colors):
+def _apply_layer_color(layer, colors, cached_colormap=None):
     """
-    Apply colors to the layer based on the layer type.
+    Apply colors to the layer based on the layer type or restore cached colormap.
 
     Parameters
     ----------
     layer : napari.layers.Layer
         The layer to color.
 
-    colors : np.ndarray
-        The color array (Nx4).
+    colors : np.ndarray or None
+        The color array (Nx4). If None, the cached colormap will be restored.
+
+    cached_colormap : Any, optional
+        The cached colormap to restore if colors is None.
     """
     from napari.utils import DirectLabelColormap
+
+    if cached_colormap is not None:
+        # Restore the cached colormap
+        if isinstance(layer, napari.layers.Labels):
+            layer.colormap = cached_colormap
+        elif isinstance(layer, (napari.layers.Points, napari.layers.Shapes, napari.layers.Vectors, napari.layers.Surface)):
+            layer.face_color = cached_colormap
+        layer.refresh()
+        return
 
     if isinstance(layer, napari.layers.Points):
         layer.face_color = colors
@@ -483,16 +525,13 @@ def _apply_layer_color(layer, colors):
         layer.face_color = colors
 
     elif isinstance(layer, napari.layers.Labels):
-
         colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
         color_dict = dict(zip(np.unique(layer.data), colors))
 
         # Insert default colors for labels that are not in the color_dict
-        # Relevant for non-sequential label images
         if max(color_dict.keys()) > len(colors):
             for i in range(1, max(color_dict.keys()) - 1):
                 color_dict[i] = [0, 0, 0, 0]
-        # Add a color for the background at the first index
         layer.colormap = DirectLabelColormap(color_dict=color_dict)
 
     layer.refresh()
