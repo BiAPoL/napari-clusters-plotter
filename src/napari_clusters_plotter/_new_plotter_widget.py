@@ -6,7 +6,10 @@ import numpy as np
 import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from matplotlib.pyplot import cm as plt_colormaps
-from nap_plot_tools.cmap import cat10_mod_cmap, cat10_mod_cmap_first_transparent
+from nap_plot_tools.cmap import (
+    cat10_mod_cmap,
+    cat10_mod_cmap_first_transparent,
+)
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
@@ -186,11 +189,17 @@ class PlotterWidget(BaseWidget):
 
         # check hue axis for categorical data
         if self.hue_axis in self.categorical_columns:
-            if active_artist == self.plotting_widget.artists[ArtistType.SCATTER]:
+            if (
+                active_artist
+                == self.plotting_widget.artists[ArtistType.SCATTER]
+            ):
                 self.plotting_widget.active_artist.overlay_colormap = (
                     cat10_mod_cmap
                 )
-            elif active_artist == self.plotting_widget.artists[ArtistType.HISTOGRAM2D]:
+            elif (
+                active_artist
+                == self.plotting_widget.artists[ArtistType.HISTOGRAM2D]
+            ):
                 self.plotting_widget.active_artist.overlay_colormap = (
                     cat10_mod_cmap_first_transparent
                 )
@@ -372,7 +381,15 @@ class PlotterWidget(BaseWidget):
             if layer.name not in self._layer_colormap_cache:
                 if isinstance(layer, napari.layers.Labels):
                     self._layer_colormap_cache[layer.name] = layer.colormap
-                elif isinstance(layer, (napari.layers.Points, napari.layers.Shapes, napari.layers.Vectors, napari.layers.Surface)):
+                elif isinstance(
+                    layer,
+                    (
+                        napari.layers.Points,
+                        napari.layers.Shapes,
+                        napari.layers.Vectors,
+                        napari.layers.Surface,
+                    ),
+                ):
                     self._layer_colormap_cache[layer.name] = layer.face_color
 
         # Insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
@@ -460,14 +477,24 @@ class PlotterWidget(BaseWidget):
             for selected_layer in self.viewer.layers.selection:
                 if selected_layer.name in self._layer_colormap_cache:
                     # Restore the cached colormap
-                    _apply_layer_color(selected_layer, None, self._layer_colormap_cache[selected_layer.name])
+                    _apply_layer_color(
+                        selected_layer,
+                        None,
+                        self._layer_colormap_cache[selected_layer.name],
+                    )
             return
 
-        norm = self.plotting_widget.active_artist._get_normalization_instance() #TODO: Fix this for biaplotter.Histogram2D (vmax seems wrong)
-        colors = self.plotting_widget.active_artist._get_rgba_colors(color_indices, norm)
+        norm = (
+            self.plotting_widget.active_artist._get_normalization_instance()
+        )  # TODO: Fix this for biaplotter.Histogram2D (vmax seems wrong)
+        colors = self.plotting_widget.active_artist._get_rgba_colors(
+            color_indices, norm
+        )
 
         for selected_layer in self.viewer.layers.selection:
-            layer_indices = features[features["layer"] == selected_layer.name].index
+            layer_indices = features[
+                features["layer"] == selected_layer.name
+            ].index
             _apply_layer_color(selected_layer, colors[layer_indices])
 
             # Store latest cluster indices in the features table
@@ -507,7 +534,15 @@ def _apply_layer_color(layer, colors, cached_colormap=None):
         # Restore the cached colormap
         if isinstance(layer, napari.layers.Labels):
             layer.colormap = cached_colormap
-        elif isinstance(layer, (napari.layers.Points, napari.layers.Shapes, napari.layers.Vectors, napari.layers.Surface)):
+        elif isinstance(
+            layer,
+            (
+                napari.layers.Points,
+                napari.layers.Shapes,
+                napari.layers.Vectors,
+                napari.layers.Surface,
+            ),
+        ):
             layer.face_color = cached_colormap
         layer.refresh()
         return
