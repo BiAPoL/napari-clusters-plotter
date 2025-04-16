@@ -288,6 +288,7 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_shapes_layers,
+        create_multi_tracks_layer
     ],
 )
 def test_cluster_memorization(make_napari_viewer, create_sample_layers):
@@ -348,6 +349,7 @@ def test_multiscale_plotter(make_napari_viewer):
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_shapes_layers,
+        create_multi_tracks_layer
     ],
 )
 def test_categorical_handling(make_napari_viewer, create_sample_layers):
