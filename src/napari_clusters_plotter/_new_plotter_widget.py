@@ -64,9 +64,9 @@ class PlotterWidget(BaseWidget):
         self.plotting_widget.active_artist = self.plotting_widget.artists[
             ArtistType.SCATTER
         ]
-        # self.plotting_widget.active_artist = self.plotting_widget.artists[
-        #     ArtistType.HISTOGRAM2D
-        # ]
+        self.plotting_widget.active_artist = self.plotting_widget.artists[
+            ArtistType.HISTOGRAM2D
+        ]
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -463,7 +463,7 @@ class PlotterWidget(BaseWidget):
                     _apply_layer_color(selected_layer, None, self._layer_colormap_cache[selected_layer.name])
             return
 
-        norm = self.plotting_widget.active_artist._get_normalization_instance()
+        norm = self.plotting_widget.active_artist._get_normalization_instance() #TODO: Fix this for biaplotter.Histogram2D (vmax seems wrong)
         colors = self.plotting_widget.active_artist._get_rgba_colors(color_indices, norm)
 
         for selected_layer in self.viewer.layers.selection:
