@@ -130,6 +130,9 @@ class PlotterWidget(BaseWidget):
             self._on_update_layer_selection
         )
 
+        # connect frame change to alpha update
+        self.viewer.dims.events.current_step.connect(self._on_frame_changed)
+
         # reset the coloring of the selected layer
         self.control_widget.reset_button.clicked.connect(self._reset)
 
@@ -200,6 +203,24 @@ class PlotterWidget(BaseWidget):
         #     self.plotting_widget.active_artist.color_indices = features[
         #         "MANUAL_CLUSTER_ID"
         #     ].to_numpy()
+
+    def _on_frame_changed(self, event: napari.utils.events.Event):
+        """
+        Called when the frame changes. Updates the alpha values of the points.
+        """
+
+        if "frame" in self._get_features().columns:
+            current_step = self.viewer.dims.current_step[0]
+            alpha = np.asarray(
+                self._get_features()["frame"] == current_step, dtype=float
+            )
+            size = np.ones(len(alpha)) * 50
+
+            index_out_of_frame = alpha == 0
+            alpha[index_out_of_frame] = 0.25
+            size[index_out_of_frame] = 35
+            self.plotting_widget.active_artist.alpha = alpha
+            self.plotting_widget.active_artist.size = size
 
     def _checkbox_status_changed(self):
         self._replot()
@@ -474,33 +495,29 @@ def _apply_layer_color(layer, colors):
     """
     from napari.utils import DirectLabelColormap
 
-    color_mapping = {
-        napari.layers.Points: lambda _layer, _color: setattr(
-            _layer, "face_color", _color
-        ),
-        napari.layers.Vectors: lambda _layer, _color: setattr(
-            _layer, "edge_color", _color
-        ),
-        napari.layers.Surface: lambda _layer, _color: setattr(
-            _layer, "vertex_colors", _color
-        ),
-        napari.layers.Shapes: lambda _layer, _color: setattr(
-            _layer, "face_color", _color
-        ),
-        napari.layers.Labels: lambda _layer, _color: setattr(
-            _layer,
-            "colormap",
-            DirectLabelColormap(
-                color_dict={
-                    label: _color[label] for label in np.unique(_layer.data)
-                }
-            ),
-        ),
-    }
+    if isinstance(layer, napari.layers.Points):
+        layer.face_color = colors
 
-    if type(layer) in color_mapping:
-        if type(layer) is napari.layers.Labels:
-            # add a color for the background at the first index
-            colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-        color_mapping[type(layer)](layer, colors)
-        layer.refresh()
+    elif isinstance(layer, napari.layers.Vectors):
+        layer.edge_color = colors
+
+    elif isinstance(layer, napari.layers.Surface):
+        layer.vertex_colors = colors
+
+    elif isinstance(layer, napari.layers.Shapes):
+        layer.face_color = colors
+
+    elif isinstance(layer, napari.layers.Labels):
+
+        colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
+        color_dict = dict(zip(np.unique(layer.data), colors))
+
+        # Insert default colors for labels that are not in the color_dict
+        # Relevant for non-sequential label images
+        if max(color_dict.keys()) > len(colors):
+            for i in range(1, max(color_dict.keys()) - 1):
+                color_dict[i] = [0, 0, 0, 0]
+        # Add a color for the background at the first index
+        layer.colormap = DirectLabelColormap(color_dict=color_dict)
+
+    layer.refresh()
