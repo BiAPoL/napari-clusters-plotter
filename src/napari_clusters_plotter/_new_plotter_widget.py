@@ -17,7 +17,7 @@ from ._algorithm_widget import BaseWidget
 
 
 class PlottingType(Enum):
-    HISTOGRAM = auto()
+    HISTOGRAM2D = auto()
     SCATTER = auto()
 
 
@@ -81,7 +81,7 @@ class PlotterWidget(BaseWidget):
         self.hue: QComboBox = self.control_widget.hue_box
 
         self.control_widget.plot_type_box.addItems(
-            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM.name]
+            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM2D.name]
         )
 
         self.control_widget.cmap_box.addItems(list(ALL_COLORMAPS.keys()))
