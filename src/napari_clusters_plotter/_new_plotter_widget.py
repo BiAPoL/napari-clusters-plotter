@@ -149,6 +149,9 @@ class PlotterWidget(BaseWidget):
         # if the hue axis is not set to MANUAL_CLUSTER_ID, set it to that
         # otherwise replot the data
 
+        if self.n_selected_layers == 0:
+            return
+
         features = self._get_features()
         for layer in self.viewer.layers.selection:
             layer_indices = features[features["layer"] == layer.name].index
@@ -335,6 +338,7 @@ class PlotterWidget(BaseWidget):
         """
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
+            self._clean_up()
             return
 
         # check if the selected layers are of the correct type
@@ -361,6 +365,23 @@ class PlotterWidget(BaseWidget):
 
         for layer in self.layers:
             layer.events.features.connect(self._update_feature_selection)
+
+    def _clean_up(self):
+        """In case of empty layer selection"""
+
+        # disconnect the events from the layers
+        for layer in self.viewer.layers.selection:
+            layer.events.features.disconnect(self._update_feature_selection)
+
+        # reset the selected layers
+        self.layers = []
+
+        # reset the selectors
+        for dim in ["x", "y", "hue"]:
+            selector = self._selectors[dim]
+            selector.blockSignals(True)
+            selector.clear()
+            selector.blockSignals(False)
 
     def _update_feature_selection(
         self, event: napari.utils.events.Event
@@ -450,6 +471,10 @@ class PlotterWidget(BaseWidget):
         """
         Reset the selection in the current plotting widget.
         """
+
+        if self.n_selected_layers == 0:
+            return
+
         self.plotting_widget.active_artist.color_indices = np.zeros(
             len(self._get_features())
         )
