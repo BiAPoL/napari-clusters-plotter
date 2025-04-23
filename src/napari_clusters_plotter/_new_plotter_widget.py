@@ -150,6 +150,10 @@ class PlotterWidget(BaseWidget):
         for selector in self.plotting_widget.selectors.values():
             selector.selection_applied_signal.connect(self._on_finish_draw)
 
+        # connect scatter/histogram switch
+        self.control_widget.plot_type_box.currentTextChanged.connect(
+            self._on_plot_type_changed)
+
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
         Called when user finsihes drawing. Will change the hue combo box to the
