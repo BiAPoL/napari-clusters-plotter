@@ -225,25 +225,24 @@ class PlotterWidget(BaseWidget):
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
 
-    def _checkbox_status_changed(self):
+    def _on_plot_type_changed(self):
+        """
+        Called when the plot type changes.
+        """
+        if self.plotting_type == PlottingType.HISTOGRAM2D.name:
+            self.plotting_widget.active_artist = self.plotting_widget.artists[
+                ArtistType.HISTOGRAM2D
+            ]
+            self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap_first_transparent
+            
+        elif self.plotting_type == PlottingType.SCATTER.name:
+            self.plotting_widget.active_artist = self.plotting_widget.artists[
+                ArtistType.SCATTER
+            ]
+            self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap
         self._replot()
 
-    def _plotting_type_changed(
-        self,
-    ):  # TODO NEED TO ADD WHICH VARIABLE STORES THE TYPE
-        if (
-            self.control_widget.plot_type_box.currentText()
-            == PlottingType.HISTOGRAM.name
-        ):
-            self.control_widget.bins_settings_container.setVisible(True)
-            self.control_widget.log_scale_container.setVisible(True)
-        elif (
-            self.control_widget.plot_type_box.currentText()
-            == PlottingType.SCATTER.name
-        ):
-            self.control_widget.bins_settings_container.setVisible(False)
-            self.control_widget.log_scale_container.setVisible(False)
-
+    def _checkbox_status_changed(self):
         self._replot()
 
     def _bin_number_set(self):
