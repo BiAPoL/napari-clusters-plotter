@@ -71,7 +71,7 @@ class PlotterWidget(BaseWidget):
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
         self.plotting_widget.active_artist = self.plotting_widget.artists[
-            ArtistType.SCATTER
+            ArtistType.SCATTER            
         ]
 
         # Add plot and options as widgets
