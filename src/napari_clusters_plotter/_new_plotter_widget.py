@@ -431,24 +431,19 @@ class PlotterWidget(BaseWidget):
         """
 
         features = self._get_features()
-        color_indices = self.plotting_widget.active_artist.color_indices
-        norm = self.plotting_widget.active_artist._get_normalization(
-            color_indices
-        )
-        colors = self.plotting_widget.active_artist._get_rgba_colors(
-            color_indices, norm
-        )
+        active_artist = self.plotting_widget.active_artist
+        rgba_colors = active_artist.color_indices_to_rgba(active_artist.color_indices)
 
         for selected_layer in self.viewer.layers.selection:
             layer_indices = features[
                 features["layer"] == selected_layer.name
             ].index
-            _apply_layer_color(selected_layer, colors[layer_indices])
+            _apply_layer_color(selected_layer, rgba_colors[layer_indices])
 
             # store latest cluster indeces in the features table
             if self.hue_axis == "MANUAL_CLUSTER_ID":
                 selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
-                    color_indices[layer_indices]
+                    active_artist.color_indices[layer_indices]
                 ).astype("category")
 
     def _reset(self):
