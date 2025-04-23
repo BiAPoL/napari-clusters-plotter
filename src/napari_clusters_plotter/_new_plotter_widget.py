@@ -41,6 +41,15 @@ class PlotterWidget(BaseWidget):
 
         self.plot_needs_update.connect(self._replot)
 
+        # Colormap reference to be indexed like this:
+        # reference[is_categorical, plot_type]
+        self.colormap_reference = {
+            (True, 'HISTOGRAM2D'): cat10_mod_cmap_first_transparent,
+            (True, 'SCATTER'): cat10_mod_cmap,
+            (False, 'HISTOGRAM2D'): plt_colormaps.magma,
+            (False, 'SCATTER'): plt_colormaps.magma,
+        }
+
     def _setup_ui(self, napari_viewer):
         """
         Helper function to set up the UI of the widget.
@@ -177,15 +186,12 @@ class PlotterWidget(BaseWidget):
         x_data = features[self.x_axis].values
         y_data = features[self.y_axis].values
 
-        # check hue axis for categorical data
-        if self.hue_axis in self.categorical_columns:
-            self.plotting_widget.active_artist.overlay_colormap = (
-                cat10_mod_cmap
-            )
-        else:
-            self.plotting_widget.active_artist.overlay_colormap = (
-                plt_colormaps.magma
-            )
+        # select appropriate colormap for usecase
+        cmap = self.colormap_reference[
+            (self.hue_axis in self.categorical_columns,
+            self.plotting_type)
+        ]
+        self.plotting_widget.active_artist.overlay_colormap = cmap
 
         # set the data and color indices in the active artist
         active_artist = self.plotting_widget.active_artist
