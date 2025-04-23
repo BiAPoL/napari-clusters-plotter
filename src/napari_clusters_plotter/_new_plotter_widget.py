@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 from biaplotter.plotter import ArtistType, CanvasWidget
 from matplotlib.pyplot import cm as plt_colormaps
-from nap_plot_tools.cmap import cat10_mod_cmap
+from nap_plot_tools.cmap import (cat10_mod_cmap,
+                                 cat10_mod_cmap_first_transparent)
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
