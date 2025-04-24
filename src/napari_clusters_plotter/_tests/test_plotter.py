@@ -414,3 +414,36 @@ def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
     # to highlight out-of and in-frame data points
     assert plotter_widget.plotting_widget.active_artist.alpha.min() == 0.25
     assert plotter_widget.plotting_widget.active_artist.size.min() == 35
+
+
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+        create_multi_vectors_layer,
+        create_multi_surface_layer,
+        create_multi_shapes_layers,
+    ],
+)
+def test_histogram_support(make_napari_viewer, create_sample_layers):
+
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    layer, layer2 = create_sample_layers()
+
+    # add layers to viewer
+    viewer.add_layer(layer)
+    viewer.add_layer(layer2)
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    plotter_widget._selectors["x"].setCurrentText("feature3")
+    plotter_widget.plotting_type = "HISTOGRAM2D"
+
+    # select both layers
+    viewer.layers.selection.active = layer
+    assert "MANUAL_CLUSTER_ID" in layer.features.columns
+    assert "MANUAL_CLUSTER_ID" in layer2.features.columns
+
+    plotter_widget.plotting_type = "SCATTER"
