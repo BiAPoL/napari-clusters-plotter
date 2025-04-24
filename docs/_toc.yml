@@ -9,6 +9,7 @@ parts:
   - file: usage/plotter_widget
   - file: usage/dimensionality_reduction_widget
   - file: usage/clustering_widget
+  - file: usage/supported_layers
 - caption: Contributing
   chapters:
   - file: contributing/new_algorithm
