@@ -376,6 +376,7 @@ def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
     assert plotter_widget.plotting_widget.active_artist.alpha.min() == 0.25
     assert plotter_widget.plotting_widget.active_artist.size.min() == 35
 
+
 @pytest.mark.parametrize(
     "create_sample_layers",
     [
@@ -386,10 +387,8 @@ def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
     ],
 )
 def test_histogram_support(make_napari_viewer, create_sample_layers):
+
     from napari_clusters_plotter import PlotterWidget
-    from matplotlib.pyplot import cm as plt_colormaps
-    from nap_plot_tools.cmap import (cat10_mod_cmap,
-                                    cat10_mod_cmap_first_transparent)
 
     viewer = make_napari_viewer()
     layer, layer2 = create_sample_layers()
@@ -409,4 +408,3 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     assert "MANUAL_CLUSTER_ID" in layer2.features.columns
 
     plotter_widget.plotting_type = "SCATTER"
-

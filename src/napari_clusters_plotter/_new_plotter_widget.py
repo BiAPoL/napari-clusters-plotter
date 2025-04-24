@@ -6,8 +6,10 @@ import numpy as np
 import pandas as pd
 from biaplotter.plotter import CanvasWidget
 from matplotlib.pyplot import cm as plt_colormaps
-from nap_plot_tools.cmap import (cat10_mod_cmap,
-                                 cat10_mod_cmap_first_transparent)
+from nap_plot_tools.cmap import (
+    cat10_mod_cmap,
+    cat10_mod_cmap_first_transparent,
+)
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
@@ -45,10 +47,10 @@ class PlotterWidget(BaseWidget):
         # Colormap reference to be indexed like this:
         # reference[is_categorical, plot_type]
         self.colormap_reference = {
-            (True, 'HISTOGRAM2D'): cat10_mod_cmap_first_transparent,
-            (True, 'SCATTER'): cat10_mod_cmap,
-            (False, 'HISTOGRAM2D'): plt_colormaps.magma,
-            (False, 'SCATTER'): plt_colormaps.magma,
+            (True, "HISTOGRAM2D"): cat10_mod_cmap_first_transparent,
+            (True, "SCATTER"): cat10_mod_cmap,
+            (False, "HISTOGRAM2D"): plt_colormaps.magma,
+            (False, "SCATTER"): plt_colormaps.magma,
         }
 
     def _setup_ui(self, napari_viewer):
@@ -70,7 +72,7 @@ class PlotterWidget(BaseWidget):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
-        self.plotting_widget.active_artist = 'SCATTER'
+        self.plotting_widget.active_artist = "SCATTER"
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -79,9 +81,7 @@ class PlotterWidget(BaseWidget):
         # Setting of Widget options
         self.hue: QComboBox = self.control_widget.hue_box
 
-        self.control_widget.plot_type_box.addItems(
-            ['SCATTER', 'HISTOGRAM2D']
-        )
+        self.control_widget.plot_type_box.addItems(["SCATTER", "HISTOGRAM2D"])
 
         self.control_widget.cmap_box.addItems(list(ALL_COLORMAPS.keys()))
         self.control_widget.cmap_box.setCurrentIndex(
@@ -150,7 +150,8 @@ class PlotterWidget(BaseWidget):
 
         # connect scatter/histogram switch
         self.control_widget.plot_type_box.currentTextChanged.connect(
-            self._on_plot_type_changed)
+            self._on_plot_type_changed
+        )
 
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
@@ -191,8 +192,7 @@ class PlotterWidget(BaseWidget):
 
         # select appropriate colormap for usecase
         cmap = self.colormap_reference[
-            (self.hue_axis in self.categorical_columns,
-            self.plotting_type)
+            (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
         self.plotting_widget.active_artist.overlay_colormap = cmap
 
@@ -233,12 +233,16 @@ class PlotterWidget(BaseWidget):
         Called when the plot type changes.
         """
         if self.plotting_type == PlottingType.HISTOGRAM2D.name:
-            self.plotting_widget.active_artist = 'HISTOGRAM2D'
-            self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap_first_transparent
-            
+            self.plotting_widget.active_artist = "HISTOGRAM2D"
+            self.plotting_widget.active_artist.overlay_colormap = (
+                cat10_mod_cmap_first_transparent
+            )
+
         elif self.plotting_type == PlottingType.SCATTER.name:
-            self.plotting_widget.active_artist = 'SCATTER'
-            self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap
+            self.plotting_widget.active_artist = "SCATTER"
+            self.plotting_widget.active_artist.overlay_colormap = (
+                cat10_mod_cmap
+            )
         self._replot()
 
     def _checkbox_status_changed(self):
@@ -431,7 +435,9 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         active_artist = self.plotting_widget.active_artist
-        rgba_colors = active_artist.color_indices_to_rgba(active_artist.color_indices)
+        rgba_colors = active_artist.color_indices_to_rgba(
+            active_artist.color_indices
+        )
 
         for selected_layer in self.viewer.layers.selection:
             layer_indices = features[
