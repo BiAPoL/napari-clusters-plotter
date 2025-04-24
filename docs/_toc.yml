@@ -4,6 +4,12 @@
 format: jb-book
 root: intro
 parts:
+- caption: Usage
+  chapters:
+  - file: usage/plotter_widget
+  - file: usage/dimensionality_reduction_widget
+  - file: usage/clustering_widget
+- caption: Contributing
 - caption: API
   chapters:
   - file: api
