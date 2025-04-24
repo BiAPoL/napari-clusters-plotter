@@ -4,7 +4,7 @@ from pathlib import Path
 import napari
 import numpy as np
 import pandas as pd
-from biaplotter.plotter import ArtistType, CanvasWidget
+from biaplotter.plotter import CanvasWidget
 from matplotlib.pyplot import cm as plt_colormaps
 from nap_plot_tools.cmap import (cat10_mod_cmap,
                                  cat10_mod_cmap_first_transparent)
@@ -70,9 +70,7 @@ class PlotterWidget(BaseWidget):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
-        self.plotting_widget.active_artist = self.plotting_widget.artists[
-            ArtistType.SCATTER            
-        ]
+        self.plotting_widget.active_artist = 'SCATTER'
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -82,7 +80,7 @@ class PlotterWidget(BaseWidget):
         self.hue: QComboBox = self.control_widget.hue_box
 
         self.control_widget.plot_type_box.addItems(
-            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM2D.name]
+            ['SCATTER', 'HISTOGRAM2D']
         )
 
         self.control_widget.cmap_box.addItems(list(ALL_COLORMAPS.keys()))
@@ -235,15 +233,11 @@ class PlotterWidget(BaseWidget):
         Called when the plot type changes.
         """
         if self.plotting_type == PlottingType.HISTOGRAM2D.name:
-            self.plotting_widget.active_artist = self.plotting_widget.artists[
-                ArtistType.HISTOGRAM2D
-            ]
+            self.plotting_widget.active_artist = 'HISTOGRAM2D'
             self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap_first_transparent
             
         elif self.plotting_type == PlottingType.SCATTER.name:
-            self.plotting_widget.active_artist = self.plotting_widget.artists[
-                ArtistType.SCATTER
-            ]
+            self.plotting_widget.active_artist = 'SCATTER'
             self.plotting_widget.active_artist.overlay_colormap = cat10_mod_cmap
         self._replot()
 
