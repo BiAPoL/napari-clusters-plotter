@@ -17,6 +17,9 @@ contributions:
   - id: napari-clusters-plotter.bbbc_sample_data
     python_name: napari_clusters_plotter:bbbc_1_dataset
     title: Load bbbc sample data
+  - id: napari-clusters-plotter.cells3d_hks
+    python_name: napari_clusters_plotter:cells3d_hks
+    title: Load cells3d heat kernel signature
 
   menus:
     napari/layers/visualize:
@@ -44,3 +47,6 @@ contributions:
   - command: napari-clusters-plotter.bbbc_sample_data
     key: bbbc1
     display_name: BBBC 1 dataset & segmentations
+  - command: napari-clusters-plotter.cells3d_hks
+    key: cells3d_hks
+    display_name: Cells3D heat kernel signature

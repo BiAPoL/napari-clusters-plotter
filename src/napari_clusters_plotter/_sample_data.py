@@ -58,3 +58,27 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         labels_layers.append(ldtuple_labels)
 
     return image_layers + labels_layers
+
+
+def cells3d_hks() -> List["LayerData"]:  # noqa: F821
+    import numpy as np
+    import pandas as pd
+    from napari.utils import nbscreenshot
+
+    path = Path(__file__).parent / "sample_data" / "cells3d"
+
+    # load data
+    vertices = np.loadtxt(path / "vertices.txt")
+    faces = np.loadtxt(path / "faces.txt").astype(int)
+    hks = pd.read_csv(path / "signature.csv")
+
+    # create layer data tuples
+    layer_data = [
+        (vertices, faces),
+        {
+            "name": "cells_3d_heat_kernel_signature",
+            'features': hks,},
+         "surface",
+    ]
+
+    return [layer_data]
