@@ -4,9 +4,8 @@ from pathlib import Path
 import napari
 import numpy as np
 import pandas as pd
+from biaplotter.artists import Histogram2D
 from biaplotter.plotter import CanvasWidget
-from biaplotter.artists import Histogram2D, Scatter
-from matplotlib.pyplot import cm as plt_colormaps
 from matplotlib.colors import LinearSegmentedColormap
 from nap_plot_tools.cmap import (
     cat10_mod_cmap,
@@ -51,12 +50,19 @@ class PlotterWidget(BaseWidget):
         self.colormap_reference = {
             (True, "HISTOGRAM2D"): cat10_mod_cmap_first_transparent,
             (True, "SCATTER"): cat10_mod_cmap,
-            (False, "HISTOGRAM2D"): self._convert_napari_to_mpl_cmap(self.overlay_colormap_plot),
-            (False, "SCATTER"): self._convert_napari_to_mpl_cmap(self.overlay_colormap_plot),
+            (False, "HISTOGRAM2D"): self._convert_napari_to_mpl_cmap(
+                self.overlay_colormap_plot
+            ),
+            (False, "SCATTER"): self._convert_napari_to_mpl_cmap(
+                self.overlay_colormap_plot
+            ),
         }
 
     def _convert_napari_to_mpl_cmap(self, colormap_name):
-        return LinearSegmentedColormap.from_list(ALL_COLORMAPS[colormap_name].name, ALL_COLORMAPS[colormap_name].colors)
+        return LinearSegmentedColormap.from_list(
+            ALL_COLORMAPS[colormap_name].name,
+            ALL_COLORMAPS[colormap_name].colors,
+        )
 
     def _setup_ui(self, napari_viewer):
         """
@@ -88,7 +94,9 @@ class PlotterWidget(BaseWidget):
 
         self.control_widget.plot_type_box.addItems(["SCATTER", "HISTOGRAM2D"])
         # Fill overlay colormap box with all available colormaps
-        self.control_widget.overlay_cmap_box.addItems(list(ALL_COLORMAPS.keys()))
+        self.control_widget.overlay_cmap_box.addItems(
+            list(ALL_COLORMAPS.keys())
+        )
         self.control_widget.overlay_cmap_box.setCurrentIndex(
             np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "turbo")[0][0]
         )
@@ -216,16 +224,19 @@ class PlotterWidget(BaseWidget):
         else:
             self.control_widget.overlay_cmap_box.setEnabled(True)
 
-
         # First set the data related properties in the active artist
         active_artist = self.plotting_widget.active_artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
-            active_artist.histogram_color_normalization_method = ["log" if self.log_scale else "linear"][0]
+            active_artist.histogram_color_normalization_method = [
+                "log" if self.log_scale else "linear"
+            ][0]
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
-        active_artist.overlay_color_normalization_method = ["log" if self.log_scale else "linear"][0]
+        active_artist.overlay_color_normalization_method = [
+            "log" if self.log_scale else "linear"
+        ][0]
 
         self._color_layer_by_value()
 
@@ -270,12 +281,16 @@ class PlotterWidget(BaseWidget):
                 cat10_mod_cmap
             )
         self._replot()
-    
+
     def _on_overlay_colormap_changed(self):
         colormap_name = self.overlay_colormap_plot
         # Dynamically update the colormap_reference dictionary
-        self.colormap_reference[(False, "HISTOGRAM2D")] = self._convert_napari_to_mpl_cmap(colormap_name)
-        self.colormap_reference[(False, "SCATTER")] = self._convert_napari_to_mpl_cmap(colormap_name)
+        self.colormap_reference[(False, "HISTOGRAM2D")] = (
+            self._convert_napari_to_mpl_cmap(colormap_name)
+        )
+        self.colormap_reference[(False, "SCATTER")] = (
+            self._convert_napari_to_mpl_cmap(colormap_name)
+        )
         self._replot()
 
     def _checkbox_status_changed(self):
@@ -324,7 +339,7 @@ class PlotterWidget(BaseWidget):
     @property
     def overlay_colormap_plot(self):
         return self.control_widget.overlay_cmap_box.currentText()
-    
+
     @property
     def histogram_colormap_plot(self):
         return self.control_widget.histogram_cmap_box.currentText()
