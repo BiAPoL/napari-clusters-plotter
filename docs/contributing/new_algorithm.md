@@ -81,6 +81,6 @@ The relevant parts here are to add the above-implemented function as a callback 
 
 ## New clustering algorithm
 
-To add a new clustering algorithm, follow the steps above analogeously for the clustering widget. For the implementation of the algorithm itself, nothing changes. 
+To add a new clustering algorithm, follow the steps above analogeously for the clustering widget. For the implementation of the algorithm itself, nothing changes.
 
-**Note**: Clustering algorithms are expected to return a single integer column! 
+**Note**: Clustering algorithms are expected to return a single integer column!

@@ -47,4 +47,4 @@ sphinx:
   config:
     add_module_names: True
     autosummary_generate: True
-      
+

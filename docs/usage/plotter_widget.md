@@ -1,7 +1,7 @@
 (widget:plotter)=
 # Plotting
 
-The plotter widget is the heart of the napari-clusters-plotter. To open it, open a napari viewer and find the Plotter Widget either under 
+The plotter widget is the heart of the napari-clusters-plotter. To open it, open a napari viewer and find the Plotter Widget either under
 
 - `Layers > Visualize > Features > Clusters Plotter (napari-clusters-plotter)`
 - `Plugins > napari-clusters-plotter > Clusters Plotter (napari-clusters-plotter)`
