@@ -4,6 +4,41 @@ from pathlib import Path
 from typing import List
 
 
+def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
+    import pandas as pd
+    from skimage.io import imread
+
+    path = Path(__file__).parent / "sample_data" / "tracking_data"
+    data = pd.read_csv(path / Path("tgmm-mini-tracks-layer-data.csv"))
+    features = pd.read_csv(
+        path / Path("tgmm-mini-spot.csv"),
+        skiprows=[1, 2],
+        low_memory=False,
+        encoding="utf-8",
+    )
+    tracking_label_image = imread(path / Path("tgmm-mini.tif"))
+
+    layer_data_tuple_tracks = (
+        data,
+        {
+            "name": "tgmm-mini-tracks",
+            "features": features,
+        },
+        "tracks",
+    )
+
+    layer_data_tuple_labels = (
+        tracking_label_image,
+        {
+            "name": "tgmm-mini-labels",
+            "features": features,
+        },
+        "labels",
+    )
+
+    return [layer_data_tuple_tracks, layer_data_tuple_labels]
+
+
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     import numpy as np
     import pandas as pd
@@ -78,8 +113,9 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
         (vertices, faces),
         {
             "name": "cells_3d_mitotic_nucleus_surface_curvatures",
-            'features': hks,},
-         "surface",
+            "features": hks,
+        },
+        "surface",
     ]
 
     layer_data_nuclei = (
