@@ -1,20 +1,20 @@
 import pytest
-from napari_clusters_plotter ._sample_data import (
+
+from napari_clusters_plotter._sample_data import (
     bbbc_1_dataset,
-    cells3d_curvatures
+    cells3d_curvatures,
 )
+
 
 @pytest.mark.parametrize(
     "sample_data_function",
     [
         bbbc_1_dataset,
         cells3d_curvatures,
-    ]
+    ],
 )
 def test_bbbc_1_sample_data(make_napari_viewer, sample_data_function):
     from napari.layers import Layer
-
-    import napari_clusters_plotter as ncp
 
     viewer = make_napari_viewer()
 

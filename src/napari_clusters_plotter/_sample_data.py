@@ -78,8 +78,9 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
         (vertices, faces),
         {
             "name": "cells_3d_heat_kernel_signature",
-            'features': hks,},
-         "surface",
+            "features": hks,
+        },
+        "surface",
     ]
 
     layer_data_nuclei = (
