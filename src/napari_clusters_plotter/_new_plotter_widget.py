@@ -364,14 +364,22 @@ class PlotterWidget(BaseWidget):
         self._update_feature_selection(None)
 
         for layer in self.layers:
-            layer.events.properties.connect(self._update_feature_selection)
+            event_attr = getattr(layer.events, "features", None) or getattr(layer.events, "properties", None)
+            if event_attr:
+                event_attr.connect(self._update_feature_selection)
+            else:
+                Warning(f"Layer {layer.name} does not have events.features or events.properties")
 
     def _clean_up(self):
         """In case of empty layer selection"""
 
         # disconnect the events from the layers
         for layer in self.viewer.layers.selection:
-            layer.events.features.disconnect(self._update_feature_selection)
+            event_attr = getattr(layer.events, "features", None) or getattr(layer.events, "properties", None)
+            if event_attr:
+                event_attr.disconnect(self._update_feature_selection)
+            else:
+                Warning(f"Layer {layer.name} does not have events.features or events.properties")
 
         # reset the selected layers
         self.layers = []
