@@ -60,7 +60,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     return image_layers + labels_layers
 
 
-def cells3d_hks() -> List["LayerData"]:  # noqa: F821
+def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
     import numpy as np
     import pandas as pd
     from napari.utils import nbscreenshot
