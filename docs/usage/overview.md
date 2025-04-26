@@ -37,4 +37,3 @@ In combination with the dimensionality reduction and clustering algorithms, this
 The drawing of the plotted data is triggered whenever the data in the `layer.features` attribute has been updated. This gives trise to a few cool use cases of the clusters plotter. One of them is the simple generation of feature maps directly on top of an existing layer:
 
 ![Feature map generation](./imgs/features_immediacy1.gif)
-
