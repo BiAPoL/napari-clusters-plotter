@@ -1,3 +1,4 @@
+(widget:clustering)=
 # Clustering
 
 [Clustering](https://en.wikipedia.org/wiki/Cluster_analysis) is an unsupervised machine-learning technique to assign or detect groups among a group of objects according to provided features. This clustering can be done irrespective of the dimensionality of the feature space. The napari-clusters-plotter provides the following clustering algorithms:
