@@ -63,7 +63,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
 def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
     import numpy as np
     import pandas as pd
-    from napari.utils import nbscreenshot
+    from skimage import io
 
     path = Path(__file__).parent / "sample_data" / "cells3d"
 
@@ -71,9 +71,10 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
     vertices = np.loadtxt(path / "vertices.txt")
     faces = np.loadtxt(path / "faces.txt").astype(int)
     hks = pd.read_csv(path / "signature.csv")
+    nuclei = io.imread(path / "nucleus.tif")
 
     # create layer data tuples
-    layer_data = [
+    layer_data_surface = [
         (vertices, faces),
         {
             "name": "cells_3d_heat_kernel_signature",
@@ -81,4 +82,13 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
          "surface",
     ]
 
-    return [layer_data]
+    layer_data_nuclei = (
+        nuclei,
+        {
+            "name": "cells_3d_nucleus",
+            "colormap": "gray",
+        },
+        "image",
+    )
+
+    return [layer_data_nuclei, layer_data_surface]
