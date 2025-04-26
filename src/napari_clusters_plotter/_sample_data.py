@@ -93,3 +93,37 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         labels_layers.append(ldtuple_labels)
 
     return image_layers + labels_layers
+
+
+def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
+    import numpy as np
+    import pandas as pd
+    from skimage import io
+
+    path = Path(__file__).parent / "sample_data" / "cells3d"
+
+    # load data
+    vertices = np.loadtxt(path / "vertices.txt")
+    faces = np.loadtxt(path / "faces.txt").astype(int)
+    hks = pd.read_csv(path / "signature.csv")
+    nuclei = io.imread(path / "nucleus.tif")
+
+    # create layer data tuples
+    layer_data_surface = [
+        (vertices, faces),
+        {
+            "name": "cells_3d_mitotic_nucleus_surface_curvatures",
+            'features': hks,},
+         "surface",
+    ]
+
+    layer_data_nuclei = (
+        nuclei,
+        {
+            "name": "cells_3d_nucleus",
+            "colormap": "gray",
+        },
+        "image",
+    )
+
+    return [layer_data_nuclei, layer_data_surface]

@@ -4,9 +4,12 @@ from pathlib import Path
 import napari
 import numpy as np
 import pandas as pd
-from biaplotter.plotter import ArtistType, CanvasWidget
+from biaplotter.plotter import CanvasWidget
 from matplotlib.pyplot import cm as plt_colormaps
-from nap_plot_tools.cmap import cat10_mod_cmap
+from nap_plot_tools.cmap import (
+    cat10_mod_cmap,
+    cat10_mod_cmap_first_transparent,
+)
 from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
@@ -17,7 +20,7 @@ from ._algorithm_widget import BaseWidget
 
 
 class PlottingType(Enum):
-    HISTOGRAM = auto()
+    HISTOGRAM2D = auto()
     SCATTER = auto()
 
 
@@ -41,6 +44,15 @@ class PlotterWidget(BaseWidget):
 
         self.plot_needs_update.connect(self._replot)
 
+        # Colormap reference to be indexed like this:
+        # reference[is_categorical, plot_type]
+        self.colormap_reference = {
+            (True, "HISTOGRAM2D"): cat10_mod_cmap_first_transparent,
+            (True, "SCATTER"): cat10_mod_cmap,
+            (False, "HISTOGRAM2D"): plt_colormaps.magma,
+            (False, "SCATTER"): plt_colormaps.magma,
+        }
+
     def _setup_ui(self, napari_viewer):
         """
         Helper function to set up the UI of the widget.
@@ -60,9 +72,7 @@ class PlotterWidget(BaseWidget):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
-        self.plotting_widget.active_artist = self.plotting_widget.artists[
-            ArtistType.SCATTER
-        ]
+        self.plotting_widget.active_artist = "SCATTER"
 
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
@@ -71,9 +81,7 @@ class PlotterWidget(BaseWidget):
         # Setting of Widget options
         self.hue: QComboBox = self.control_widget.hue_box
 
-        self.control_widget.plot_type_box.addItems(
-            [PlottingType.SCATTER.name, PlottingType.HISTOGRAM.name]
-        )
+        self.control_widget.plot_type_box.addItems(["SCATTER", "HISTOGRAM2D"])
 
         self.control_widget.cmap_box.addItems(list(ALL_COLORMAPS.keys()))
         self.control_widget.cmap_box.setCurrentIndex(
@@ -140,6 +148,11 @@ class PlotterWidget(BaseWidget):
         for selector in self.plotting_widget.selectors.values():
             selector.selection_applied_signal.connect(self._on_finish_draw)
 
+        # connect scatter/histogram switch
+        self.control_widget.plot_type_box.currentTextChanged.connect(
+            self._on_plot_type_changed
+        )
+
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
         Called when user finsihes drawing. Will change the hue combo box to the
@@ -180,15 +193,11 @@ class PlotterWidget(BaseWidget):
         x_data = features[self.x_axis].values
         y_data = features[self.y_axis].values
 
-        # check hue axis for categorical data
-        if self.hue_axis in self.categorical_columns:
-            self.plotting_widget.active_artist.overlay_colormap = (
-                cat10_mod_cmap
-            )
-        else:
-            self.plotting_widget.active_artist.overlay_colormap = (
-                plt_colormaps.magma
-            )
+        # select appropriate colormap for usecase
+        cmap = self.colormap_reference[
+            (self.hue_axis in self.categorical_columns, self.plotting_type)
+        ]
+        self.plotting_widget.active_artist.overlay_colormap = cmap
 
         # set the data and color indices in the active artist
         active_artist = self.plotting_widget.active_artist
@@ -222,25 +231,24 @@ class PlotterWidget(BaseWidget):
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
 
-    def _checkbox_status_changed(self):
+    def _on_plot_type_changed(self):
+        """
+        Called when the plot type changes.
+        """
+        if self.plotting_type == PlottingType.HISTOGRAM2D.name:
+            self.plotting_widget.active_artist = "HISTOGRAM2D"
+            self.plotting_widget.active_artist.overlay_colormap = (
+                cat10_mod_cmap_first_transparent
+            )
+
+        elif self.plotting_type == PlottingType.SCATTER.name:
+            self.plotting_widget.active_artist = "SCATTER"
+            self.plotting_widget.active_artist.overlay_colormap = (
+                cat10_mod_cmap
+            )
         self._replot()
 
-    def _plotting_type_changed(
-        self,
-    ):  # TODO NEED TO ADD WHICH VARIABLE STORES THE TYPE
-        if (
-            self.control_widget.plot_type_box.currentText()
-            == PlottingType.HISTOGRAM.name
-        ):
-            self.control_widget.bins_settings_container.setVisible(True)
-            self.control_widget.log_scale_container.setVisible(True)
-        elif (
-            self.control_widget.plot_type_box.currentText()
-            == PlottingType.SCATTER.name
-        ):
-            self.control_widget.bins_settings_container.setVisible(False)
-            self.control_widget.log_scale_container.setVisible(False)
-
+    def _checkbox_status_changed(self):
         self._replot()
 
     def _bin_number_set(self):
@@ -455,24 +463,21 @@ class PlotterWidget(BaseWidget):
         """
 
         features = self._get_features()
-        color_indices = self.plotting_widget.active_artist.color_indices
-        norm = self.plotting_widget.active_artist._get_normalization(
-            color_indices
-        )
-        colors = self.plotting_widget.active_artist._get_rgba_colors(
-            color_indices, norm
+        active_artist = self.plotting_widget.active_artist
+        rgba_colors = active_artist.color_indices_to_rgba(
+            active_artist.color_indices
         )
 
         for selected_layer in self.viewer.layers.selection:
             layer_indices = features[
                 features["layer"] == selected_layer.name
             ].index
-            _apply_layer_color(selected_layer, colors[layer_indices])
+            _apply_layer_color(selected_layer, rgba_colors[layer_indices])
 
             # store latest cluster indeces in the features table
             if self.hue_axis == "MANUAL_CLUSTER_ID":
                 selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
-                    color_indices[layer_indices]
+                    active_artist.color_indices[layer_indices]
                 ).astype("category")
 
     def _reset(self):

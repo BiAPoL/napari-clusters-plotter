@@ -5,7 +5,11 @@ from ._dim_reduction_and_clustering import (
     DimensionalityReductionWidget,
 )
 from ._new_plotter_widget import PlotterWidget
-from ._sample_data import bbbc_1_dataset, tgmm_mini_dataset
+from ._sample_data import (
+    bbbc_1_dataset,
+    tgmm_mini_dataset,
+    cells3d_curvatures
+)
 
 __all__ = [
     "PlotterWidget",
@@ -13,4 +17,5 @@ __all__ = [
     "ClusteringWidget",
     "bbbc_1_dataset",
     "tgmm_mini_dataset",
+    "cells3d_curvatures",
 ]

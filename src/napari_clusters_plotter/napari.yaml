@@ -17,6 +17,9 @@ contributions:
   - id: napari-clusters-plotter.bbbc_sample_data
     python_name: napari_clusters_plotter:bbbc_1_dataset
     title: Load bbbc sample data
+  - id: napari-clusters-plotter.cells3d_curvatures
+    python_name: napari_clusters_plotter:cells3d_curvatures
+    title: Load cells3d mitotic nucleus surface curvatures
 
   - id: napari-clusters-plotter.tgmm_mini_data
     python_name: napari_clusters_plotter:tgmm_mini_dataset
@@ -51,3 +54,6 @@ contributions:
   - command: napari-clusters-plotter.tgmm_mini_data
     key: tgmm_mini
     display_name: TGMM mini dataset (tracks and segmentations)
+  - command: napari-clusters-plotter.cells3d_curvatures
+    key: cells3d_curvatures
+    display_name: Cells3D mitotic nucleus surface curvatures
