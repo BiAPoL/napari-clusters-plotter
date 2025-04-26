@@ -1,4 +1,5 @@
 import pytest
+
 from napari_clusters_plotter._sample_data import (
     bbbc_1_dataset,
     cells3d_curvatures,
