@@ -4,7 +4,7 @@ from pathlib import Path
 import napari
 import numpy as np
 import pandas as pd
-from biaplotter.artists import Histogram2D
+from biaplotter.artists import Histogram2D, Scatter
 from biaplotter.plotter import CanvasWidget
 from matplotlib.colors import LinearSegmentedColormap
 from nap_plot_tools.cmap import (
@@ -221,8 +221,10 @@ class PlotterWidget(BaseWidget):
         # self.control_widget.overlay_cmap_box.setCurrentText(cmap.name)
         if self.hue_axis in self.categorical_columns:
             self.control_widget.overlay_cmap_box.setEnabled(False)
+            self.control_widget.log_scale_checkbutton.setEnabled(False)
         else:
             self.control_widget.overlay_cmap_box.setEnabled(True)
+            self.control_widget.log_scale_checkbutton.setEnabled(True)
 
         # First set the data related properties in the active artist
         active_artist = self.plotting_widget.active_artist
@@ -234,9 +236,14 @@ class PlotterWidget(BaseWidget):
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
-        active_artist.overlay_color_normalization_method = [
-            "log" if self.log_scale else "linear"
-        ][0]
+        if isinstance(active_artist, Histogram2D):
+            active_artist.overlay_color_normalization_method = [
+                "log" if self.log_scale else "linear"
+            ][0]
+        elif isinstance(active_artist, Scatter):
+            active_artist.color_normalization_method = [
+                "log" if self.log_scale else "linear"
+            ][0]
 
         self._color_layer_by_value()
 
