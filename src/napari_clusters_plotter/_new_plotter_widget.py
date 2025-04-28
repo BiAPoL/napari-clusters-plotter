@@ -224,7 +224,7 @@ class PlotterWidget(BaseWidget):
         cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-        # self.control_widget.overlay_cmap_box.setCurrentText(cmap.name)
+
         if self.hue_axis in self.categorical_columns:
             self.control_widget.overlay_cmap_box.setEnabled(False)
             self.control_widget.log_scale_checkbutton.setEnabled(False)
@@ -242,9 +242,10 @@ class PlotterWidget(BaseWidget):
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
-        # If color_indices are all zeros and the hue axis is categorical,
-        if np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns:
+        # If color_indices are all zeros and the hue axis is categorical, apply default colors
+        if (np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns):
             self._apply_default_layer_color()
+        # Otherwise, color the layer by value (optionally applying log scale to colormap)
         else:
             if isinstance(active_artist, Histogram2D):
                 active_artist.overlay_color_normalization_method = [
@@ -255,6 +256,11 @@ class PlotterWidget(BaseWidget):
                     "log" if self.log_scale else "linear"
                 ][0]
             self._color_layer_by_value()
+
+        # Ensures overlay is not shown if the show_overlay_button is not checked (fixes issue when enabling log scale would show overlay, probably because setting normalization calls _colorize in biaplotter)
+        if not self.plotting_widget.show_overlay_button.isChecked():
+            self.plotting_widget.active_artist.overlay_visible = False
+            self._apply_default_layer_color()
 
         # this makes sure that previously drawn clusters are preserved
         # when a layer is re-selected or different features are plotted
