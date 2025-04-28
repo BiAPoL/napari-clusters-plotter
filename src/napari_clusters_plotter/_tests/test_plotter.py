@@ -81,6 +81,38 @@ def create_multi_point_layer(n_samples: int = 100):
     return layer, layer2
 
 
+def create_multi_tracks_layer(n_samples: int = 100):
+    from napari.layers import Tracks
+
+    points1, points2 = create_multi_point_layer(n_samples=n_samples)
+
+    tracks1 = points1.data.copy()
+    tracks2 = points2.data.copy()
+
+    # insert empty track id column
+    tracks1 = np.insert(tracks1, 0, 0, axis=1)
+    tracks2 = np.insert(tracks2, 0, 0, axis=1)
+
+    for t in range(int(points1.data[:, 0].max() + 1)):
+        # set the track id for each point
+        tracks1[tracks1[:, 1] == t, 0] = np.arange(
+            len(tracks1[tracks1[:, 1] == t]), dtype=int
+        )
+
+    for t in range(int(points2.data[:, 0].max() + 1)):
+        # set the track id for each point
+        tracks2[tracks2[:, 1] == t, 0] = np.arange(
+            len(tracks2[tracks2[:, 1] == t]), dtype=int
+        )
+
+    tracks1 = Tracks(tracks1, features=points1.features, name="tracks1")
+    tracks2 = Tracks(
+        tracks2, features=points2.features, name="tracks2", translate=(0, 0, 2)
+    )
+
+    return tracks1, tracks2
+
+
 def create_multi_vectors_layer(n_samples: int = 100):
     from napari.layers import Vectors
 
@@ -258,6 +290,7 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_shapes_layers,
+        create_multi_tracks_layer,
     ],
 )
 def test_cluster_memorization(make_napari_viewer, create_sample_layers):
@@ -318,6 +351,7 @@ def test_multiscale_plotter(make_napari_viewer):
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_shapes_layers,
+        create_multi_tracks_layer,
     ],
 )
 def test_categorical_handling(make_napari_viewer, create_sample_layers):
