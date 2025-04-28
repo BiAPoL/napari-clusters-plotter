@@ -165,6 +165,9 @@ class PlotterWidget(BaseWidget):
         # connect data selection in plot to layer coloring update
         for selector in self.plotting_widget.selectors.values():
             selector.selection_applied_signal.connect(self._on_finish_draw)
+        self.plotting_widget.show_overlay_signal.connect(
+            self._on_show_plot_overlay
+        )
 
         # connect scatter/histogram switch
         self.control_widget.plot_type_box.currentTextChanged.connect(
@@ -505,6 +508,36 @@ class PlotterWidget(BaseWidget):
                     index, "Categorical Column", Qt.ToolTipRole
                 )
 
+    def _on_show_plot_overlay(self, state: bool) -> None:
+        """
+        Called when the plot overlay is hidden or shown.
+        """
+        if state:
+            self._color_layer_by_value()
+        else:
+            self._apply_default_layer_color() # Hide the overlay
+
+    def _apply_default_layer_color(self):
+        """
+        Restore the default colors for the selected layers based on their type.
+        """
+        if self.n_selected_layers == 0:
+            return
+
+        for selected_layer in self.viewer.layers.selection:
+            if isinstance(selected_layer, napari.layers.Labels):
+                # Use CyclicLabelColormap with N colors
+                from napari.utils.colormaps.colormap_utils import label_colormap
+                n_labels = np.unique(selected_layer.data).size - 1 # unique labels (minus background: 0)
+                default_colors = np.asarray(label_colormap(
+                    n_labels
+                    ).dict()['colors']) #rgba
+            else:
+                # Default to white for other layer types
+                default_colors = np.array([[1, 1, 1, 1]])
+
+            _apply_layer_color(selected_layer, default_colors)
+
     def _color_layer_by_value(self):
         """
         Color the selected layer according to the color indices.
@@ -554,8 +587,6 @@ def _apply_layer_color(layer, colors):
     colors : np.ndarray
         The color array (Nx4).
     """
-    from napari.utils import DirectLabelColormap
-
     if isinstance(layer, napari.layers.Points):
         layer.face_color = colors
 
@@ -569,16 +600,10 @@ def _apply_layer_color(layer, colors):
         layer.face_color = colors
 
     elif isinstance(layer, napari.layers.Labels):
-
+        # Ensure the first color is transparent for the background
         colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
+        from napari.utils import DirectLabelColormap
         color_dict = dict(zip(np.unique(layer.data), colors))
-
-        # Insert default colors for labels that are not in the color_dict
-        # Relevant for non-sequential label images
-        if max(color_dict.keys()) > len(colors):
-            for i in range(1, max(color_dict.keys()) - 1):
-                color_dict[i] = [0, 0, 0, 0]
-        # Add a color for the background at the first index
         layer.colormap = DirectLabelColormap(color_dict=color_dict)
 
     layer.refresh()
