@@ -4,8 +4,10 @@ from pathlib import Path
 import napari
 import numpy as np
 import pandas as pd
+from matplotlib.cm import viridis
 from biaplotter.artists import Histogram2D, Scatter
 from biaplotter.plotter import CanvasWidget
+from biaplotter.colormap import BiaColormap
 from matplotlib.colors import LinearSegmentedColormap
 from nap_plot_tools.cmap import (
     cat10_mod_cmap,
@@ -83,6 +85,7 @@ class PlotterWidget(BaseWidget):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
+        self.plotting_widget.artists['HISTOGRAM2D']._histogram_colormap = BiaColormap(viridis) # Start histogram colormap with viridis
         self.plotting_widget.active_artist = "SCATTER"
 
         # Add plot and options as widgets
@@ -98,14 +101,14 @@ class PlotterWidget(BaseWidget):
             list(ALL_COLORMAPS.keys())
         )
         self.control_widget.overlay_cmap_box.setCurrentIndex(
-            np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "turbo")[0][0]
+            np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "magma")[0][0]
         )
         # Fill histogram colormap box with all available colormaps
         self.control_widget.histogram_cmap_box.addItems(
             list(ALL_COLORMAPS.keys())
         )
         self.control_widget.histogram_cmap_box.setCurrentIndex(
-            np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "magma")[0][0]
+            np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "viridis")[0][0]
         )
 
         # Setting Visibility Defaults
