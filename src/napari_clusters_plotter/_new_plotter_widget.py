@@ -239,16 +239,19 @@ class PlotterWidget(BaseWidget):
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
-        if isinstance(active_artist, Histogram2D):
-            active_artist.overlay_color_normalization_method = [
-                "log" if self.log_scale else "linear"
-            ][0]
-        elif isinstance(active_artist, Scatter):
-            active_artist.color_normalization_method = [
-                "log" if self.log_scale else "linear"
-            ][0]
-
-        self._color_layer_by_value()
+        # If color_indices are all zeros and the hue axis is categorical,
+        if np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns:
+            self._apply_default_layer_color()
+        else:
+            if isinstance(active_artist, Histogram2D):
+                active_artist.overlay_color_normalization_method = [
+                    "log" if self.log_scale else "linear"
+                ][0]
+            elif isinstance(active_artist, Scatter):
+                active_artist.color_normalization_method = [
+                    "log" if self.log_scale else "linear"
+                ][0]
+            self._color_layer_by_value()
 
         # this makes sure that previously drawn clusters are preserved
         # when a layer is re-selected or different features are plotted
@@ -572,7 +575,7 @@ class PlotterWidget(BaseWidget):
         self.plotting_widget.active_artist.color_indices = np.zeros(
             len(self._get_features())
         )
-        self._color_layer_by_value()
+        self._apply_default_layer_color()
 
 
 def _apply_layer_color(layer, colors):
