@@ -420,16 +420,7 @@ class PlotterWidget(BaseWidget):
             self._clean_up()
             return
 
-        # check if the selected layers are of the correct type
-        selected_layer_types = [
-            type(layer) for layer in self.viewer.layers.selection
-        ]
-        for layer_type in selected_layer_types:
-            if layer_type not in self.input_layer_types:
-                return
-
-        # check if all selected layers are of the same type
-        if len(set(selected_layer_types)) > 1:
+        if not self._is_valid_layer_selection():
             return
 
         # insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
