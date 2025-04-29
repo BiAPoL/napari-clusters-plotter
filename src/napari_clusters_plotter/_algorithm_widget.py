@@ -59,6 +59,24 @@ class BaseWidget(QWidget):
             "This function should be implemented in the subclass."
         )
 
+    def _is_valid_layer_selection(self) -> bool:
+        """
+        Validate the selected layers. Check if they are of the correct type.
+        """
+        # check if the selected layers are of the correct type
+        selected_layer_types = [
+            type(layer) for layer in self.viewer.layers.selection
+        ]
+        for layer_type in selected_layer_types:
+            if layer_type not in self.input_layer_types:
+                return False
+
+        # check if all selected layers are of the same type
+        if len(set(selected_layer_types)) > 1:
+            return False
+
+        return True
+
     @property
     def common_columns(self):
         if len(self.layers) == 0:
@@ -183,13 +201,8 @@ class AlgorithmWidgetBase(BaseWidget):
             self._clean_up()
             return
 
-        # check if the selected layers are of the correct type
-        selected_layer_types = [
-            type(layer) for layer in self.viewer.layers.selection
-        ]
-        for layer_type in selected_layer_types:
-            if layer_type not in self.input_layer_types:
-                return
+        if not self._is_valid_layer_selection():
+            return
 
         features_to_add = self._get_features()[self.common_columns]
         column_strings = [
