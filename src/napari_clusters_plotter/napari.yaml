@@ -28,9 +28,20 @@ contributions:
   menus:
     napari/layers/visualize:
       - submenu: features_submenu
-
     features_submenu:
       - command: napari-clusters-plotter.plotter
+
+    napari/layers/transform:
+      - submenu: features_submenu
+    features_submenu:
+      - command: napari-clusters-plotter.Dimensionality_Reduction
+
+    napari/layers/classify:
+      - submenu: features_submenu
+    features_submenu:
+      - command: napari-clusters-plotter.Clustering
+
+    
 
   widgets:
     - command: napari-clusters-plotter.plotter
