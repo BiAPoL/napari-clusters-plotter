@@ -41,7 +41,7 @@ contributions:
     features_submenu:
       - command: napari-clusters-plotter.Clustering
 
-    
+
 
   widgets:
     - command: napari-clusters-plotter.plotter
