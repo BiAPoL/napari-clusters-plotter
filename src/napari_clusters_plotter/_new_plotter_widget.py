@@ -112,11 +112,9 @@ class PlotterWidget(BaseWidget):
         )
 
         # Setting Visibility Defaults
-        # self.control_widget.manual_bins_container.setVisible(False)
         self.control_widget.cmap_container.setVisible(False)
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.additional_options_container.setVisible(False)
-        # self.control_widget.log_scale_container.setVisible(True)
 
     def _setup_callbacks(self):
         """
@@ -179,6 +177,10 @@ class PlotterWidget(BaseWidget):
         self.control_widget.overlay_cmap_box.currentTextChanged.connect(
             self._on_overlay_colormap_changed
         )
+        self.control_widget.histogram_cmap_box.currentTextChanged.connect(
+            self._on_histogram_colormap_changed
+        )
+
 
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
@@ -206,6 +208,30 @@ class PlotterWidget(BaseWidget):
 
         self.plot_needs_update.emit()
 
+    def _handle_advanced_options_widget_visibility(self):
+        """
+        Control the visibility of the overlay colormap box and log scale checkbox
+        based on the selected hue axis and active artist.
+        """
+        active_artist = self.plotting_widget.active_artist
+        # Control the visibility of the overlay colormap box and log scale checkbox
+        if self.hue_axis in self.categorical_columns:
+            self.control_widget.overlay_cmap_box.setEnabled(False)
+            self.control_widget.log_scale_checkbutton.setEnabled(False)
+            if isinstance(active_artist, Histogram2D):
+                # Enable if it is histogram to allow log scale of the histogram itself
+                self.control_widget.log_scale_checkbutton.setEnabled(True)
+        else:
+            self.control_widget.overlay_cmap_box.setEnabled(True)
+            self.control_widget.log_scale_checkbutton.setEnabled(True)
+        
+        if isinstance(active_artist, Histogram2D):
+            self.control_widget.cmap_container.setVisible(True)
+            self.control_widget.bins_settings_container.setVisible(True)
+        else:
+            self.control_widget.cmap_container.setVisible(False)
+            self.control_widget.bins_settings_container.setVisible(False)
+
     def _replot(self):
         """
         Replot the data with the current settings.
@@ -221,28 +247,24 @@ class PlotterWidget(BaseWidget):
         y_data = features[self.y_axis].values
 
         # select appropriate overlay colormap for usecase
-        cmap = self.colormap_reference[
+        overlay_cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-        active_artist = self.plotting_widget.active_artist
-        if self.hue_axis in self.categorical_columns:
-            self.control_widget.overlay_cmap_box.setEnabled(False)
-            self.control_widget.log_scale_checkbutton.setEnabled(False)
-            if isinstance(active_artist, Histogram2D):
-                # Enable if it is histogram to allow log scale of the histogram itself
-                self.control_widget.log_scale_checkbutton.setEnabled(True)
-        else:
-            self.control_widget.overlay_cmap_box.setEnabled(True)
-            self.control_widget.log_scale_checkbutton.setEnabled(True)
+        histogram_cmap = self._convert_napari_to_mpl_cmap(
+            self.histogram_colormap_plot
+        )
+        self._handle_advanced_options_widget_visibility()     
 
+        active_artist = self.plotting_widget.active_artist
         # First set the data related properties in the active artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
+            active_artist.histogram_colormap = histogram_cmap
             active_artist.histogram_color_normalization_method = [
                 "log" if self.log_scale else "linear"
             ][0]
         # Then set color_indices and colormap properties in the active artist
-        active_artist.overlay_colormap = cmap
+        active_artist.overlay_colormap = overlay_cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
         # If color_indices are all zeros and the hue axis is categorical, apply default colors
         if (np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns):
@@ -315,6 +337,9 @@ class PlotterWidget(BaseWidget):
         self.colormap_reference[(False, "SCATTER")] = (
             self._convert_napari_to_mpl_cmap(colormap_name)
         )
+        self._replot()
+    
+    def _on_histogram_colormap_changed(self):
         self._replot()
 
     def _checkbox_status_changed(self):
