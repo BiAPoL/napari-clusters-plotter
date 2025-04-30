@@ -163,7 +163,7 @@ class PlotterWidget(BaseWidget):
         # connect data selection in plot to layer coloring update
         for selector in self.plotting_widget.selectors.values():
             selector.selection_applied_signal.connect(self._on_finish_draw)
-        self.plotting_widget.show_overlay_signal.connect(
+        self.plotting_widget.show_color_overlay_signal.connect(
             self._on_show_plot_overlay
         )
 
