@@ -297,13 +297,6 @@ class PlotterWidget(BaseWidget):
             self.plotting_widget.active_artist.overlay_visible = False
             self._apply_default_layer_color()
 
-        # this makes sure that previously drawn clusters are preserved
-        # when a layer is re-selected or different features are plotted
-        # if "MANUAL_CLUSTER_ID" in features.columns:
-        #     self.plotting_widget.active_artist.color_indices = features[
-        #         "MANUAL_CLUSTER_ID"
-        #     ].to_numpy()
-
     def _on_frame_changed(self, event: napari.utils.events.Event):
         """
         Called when the frame changes. Updates the alpha values of the points.
