@@ -435,6 +435,24 @@ class PlotterWidget(BaseWidget):
             )
         self.control_widget.hue_box.setCurrentText(column)
 
+    def _estimate_number_bins(self, data) -> int:
+        """
+        Estimates number of bins according Freedman–Diaconis rule
+
+        Parameters
+        ----------
+        data: Numpy array
+
+        Returns
+        -------
+        Estimated number of bins
+        """
+        from scipy.stats import iqr
+        est_a = (np.max(data) - np.min(data)) / (2 * iqr(data) / np.cbrt(len(data)))
+        if np.isnan(est_a):
+            return 256
+        return int(est_a)
+
     def _on_update_layer_selection(
         self, event: napari.utils.events.Event
     ) -> None:
