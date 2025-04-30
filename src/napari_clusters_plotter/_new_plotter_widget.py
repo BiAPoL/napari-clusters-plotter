@@ -42,6 +42,7 @@ class PlotterWidget(BaseWidget):
     def __init__(self, napari_viewer):
         super().__init__(napari_viewer)
         self._setup_ui(napari_viewer)
+        self.layers_being_unselected = []
         self._on_update_layer_selection(None)
         self._setup_callbacks()
 
@@ -499,6 +500,10 @@ class PlotterWidget(BaseWidget):
                 ).astype("category")
 
         self.layers = list(self.viewer.layers.selection)
+        if event is not None:
+            if len(event.removed) > 0:
+                # remove the layers that are not in the selection anymore
+                self.layers_being_unselected = list(event.removed)
         self._update_feature_selection(None)
 
         for layer in self.layers:
@@ -588,6 +593,29 @@ class PlotterWidget(BaseWidget):
         else:
             self._apply_default_layer_color() # Hide the overlay
 
+    def _generate_default_colors(self, layer):
+        """
+        Generate default colors for a given layer based on its type.
+
+        Parameters
+        ----------
+        layer : napari.layers.Layer
+            The layer for which to generate default colors.
+
+        Returns
+        -------
+        np.ndarray
+            An array of default colors (Nx4).
+        """
+        if isinstance(layer, napari.layers.Labels):
+            # Use CyclicLabelColormap with N colors
+            from napari.utils.colormaps.colormap_utils import label_colormap
+            n_labels = np.unique(layer.data).size - 1  # unique labels (minus background: 0)
+            return np.asarray(label_colormap(n_labels).dict()['colors'])  # rgba
+        else:
+            # Default to white for other layer types
+            return np.array([[1, 1, 1, 1]])
+
     def _apply_default_layer_color(self):
         """
         Restore the default colors for the selected layers based on their type.
@@ -596,18 +624,9 @@ class PlotterWidget(BaseWidget):
             return
 
         for selected_layer in self.viewer.layers.selection:
-            if isinstance(selected_layer, napari.layers.Labels):
-                # Use CyclicLabelColormap with N colors
-                from napari.utils.colormaps.colormap_utils import label_colormap
-                n_labels = np.unique(selected_layer.data).size - 1 # unique labels (minus background: 0)
-                default_colors = np.asarray(label_colormap(
-                    n_labels
-                    ).dict()['colors']) #rgba
-            else:
-                # Default to white for other layer types
-                default_colors = np.array([[1, 1, 1, 1]])
-
-            _apply_layer_color(selected_layer, default_colors)
+            rgba_colors = self._generate_default_colors(selected_layer)
+            _apply_layer_color(selected_layer, rgba_colors)
+        self.layers_being_unselected = []
 
     def _color_layer_by_value(self):
         """
@@ -619,7 +638,6 @@ class PlotterWidget(BaseWidget):
         rgba_colors = active_artist.color_indices_to_rgba(
             active_artist.color_indices
         )
-
         for selected_layer in self.viewer.layers.selection:
             layer_indices = features[
                 features["layer"] == selected_layer.name
@@ -631,6 +649,13 @@ class PlotterWidget(BaseWidget):
                 selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     active_artist.color_indices[layer_indices]
                 ).astype("category")
+        # apply default colors on layers being unselected and reset the list
+        for layer in self.layers_being_unselected:
+            if layer in self.viewer.layers:
+                # apply default colors to the layer
+                rgba_colors = self._generate_default_colors(layer)
+                _apply_layer_color(layer, rgba_colors)
+        self.layers_being_unselected = []
 
     def _reset(self):
         """
