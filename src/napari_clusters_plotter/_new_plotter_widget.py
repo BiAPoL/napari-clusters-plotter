@@ -292,6 +292,10 @@ class PlotterWidget(BaseWidget):
                 ][0]
             self._color_layer_by_value()
 
+        if self.hue_axis not in self.categorical_columns:
+            # Make overlay visible if non-categorical hue axis is selected
+            self.plotting_widget.show_overlay_button.setChecked(True)
+
         # Ensures overlay is not shown if the show_overlay_button is not checked (fixes issue when enabling log scale would show overlay, probably because setting normalization calls _colorize in biaplotter)
         if not self.plotting_widget.show_overlay_button.isChecked():
             self.plotting_widget.active_artist.overlay_visible = False
