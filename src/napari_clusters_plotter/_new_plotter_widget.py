@@ -132,6 +132,10 @@ class PlotterWidget(BaseWidget):
                 self.plot_needs_update.emit,
             ),
             (
+                self.control_widget.n_bins_box.valueChanged,
+                self.plot_needs_update.emit,
+            ),
+            (
                 self.control_widget.non_selected_checkbutton.stateChanged,
                 self.plot_needs_update.emit,
             ),
@@ -169,8 +173,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.overlay_cmap_box.currentTextChanged.connect(
             self._on_overlay_colormap_changed
         )
-        self.control_widget.n_bins_box.valueChanged.connect(
-            self._on_bin_number_set
         )
 
 
@@ -338,13 +340,8 @@ class PlotterWidget(BaseWidget):
     def _checkbox_status_changed(self):
         self._replot()
 
-    def _on_bin_number_set(self):
         """
-        Called when the bin number is set manually.
         """
-        # if the bin number is set manually, disable the auto bins checkbox
-        self.control_widget.auto_bins_checkbox.setChecked(False)
-        self._replot()
 
     def _bin_auto(self):
         self.control_widget.manual_bins_container.setVisible(
