@@ -194,7 +194,7 @@
              <item>
               <widget class="QSpinBox" name="n_bins_box">
                <property name="enabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="minimum">
                 <number>1</number>
