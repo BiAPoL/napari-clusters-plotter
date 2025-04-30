@@ -124,19 +124,11 @@ class PlotterWidget(BaseWidget):
         # Connect all necessary functions to the replot
         connections_to_replot = [
             (
-                self.control_widget.plot_type_box.currentIndexChanged,
+                self.control_widget.log_scale_checkbutton.toggled,
                 self.plot_needs_update.emit,
             ),
             (
-                self.control_widget.set_bins_button.clicked,
-                self.plot_needs_update.emit,
-            ),
-            (
-                self.control_widget.auto_bins_checkbox.stateChanged,
-                self.plot_needs_update.emit,
-            ),
-            (
-                self.control_widget.log_scale_checkbutton.stateChanged,
+                self.control_widget.histogram_cmap_box.currentTextChanged,
                 self.plot_needs_update.emit,
             ),
             (
@@ -177,8 +169,8 @@ class PlotterWidget(BaseWidget):
         self.control_widget.overlay_cmap_box.currentTextChanged.connect(
             self._on_overlay_colormap_changed
         )
-        self.control_widget.histogram_cmap_box.currentTextChanged.connect(
-            self._on_histogram_colormap_changed
+        self.control_widget.n_bins_box.valueChanged.connect(
+            self._on_bin_number_set
         )
 
 
@@ -260,6 +252,7 @@ class PlotterWidget(BaseWidget):
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
             active_artist.histogram_colormap = histogram_cmap
+            active_artist.bins = self.bin_number
             active_artist.histogram_color_normalization_method = [
                 "log" if self.log_scale else "linear"
             ][0]
@@ -345,7 +338,12 @@ class PlotterWidget(BaseWidget):
     def _checkbox_status_changed(self):
         self._replot()
 
-    def _bin_number_set(self):
+    def _on_bin_number_set(self):
+        """
+        Called when the bin number is set manually.
+        """
+        # if the bin number is set manually, disable the auto bins checkbox
+        self.control_widget.auto_bins_checkbox.setChecked(False)
         self._replot()
 
     def _bin_auto(self):
