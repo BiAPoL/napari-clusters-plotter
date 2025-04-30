@@ -374,6 +374,10 @@ class PlotterWidget(BaseWidget):
     @property
     def bin_number(self):
         return self.control_widget.n_bins_box.value()
+    
+    @bin_number.setter
+    def bin_number(self, val: int):
+        self.control_widget.n_bins_box.setValue(val)
 
     @property
     def hide_non_selected(self):
