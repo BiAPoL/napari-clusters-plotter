@@ -224,16 +224,18 @@ class PlotterWidget(BaseWidget):
         cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-
+        active_artist = self.plotting_widget.active_artist
         if self.hue_axis in self.categorical_columns:
             self.control_widget.overlay_cmap_box.setEnabled(False)
             self.control_widget.log_scale_checkbutton.setEnabled(False)
+            if isinstance(active_artist, Histogram2D):
+                # Enable if it is histogram to allow log scale of the histogram itself
+                self.control_widget.log_scale_checkbutton.setEnabled(True)
         else:
             self.control_widget.overlay_cmap_box.setEnabled(True)
             self.control_widget.log_scale_checkbutton.setEnabled(True)
 
         # First set the data related properties in the active artist
-        active_artist = self.plotting_widget.active_artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
             active_artist.histogram_color_normalization_method = [
