@@ -173,6 +173,8 @@ class PlotterWidget(BaseWidget):
         self.control_widget.overlay_cmap_box.currentTextChanged.connect(
             self._on_overlay_colormap_changed
         )
+        self.control_widget.auto_bins_checkbox.toggled.connect(
+            self._on_bin_auto_toggled
         )
 
 
@@ -254,6 +256,19 @@ class PlotterWidget(BaseWidget):
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
             active_artist.histogram_colormap = histogram_cmap
+            if self.automatic_bins:
+                number_bins = int(
+                    np.max(
+                        [
+                            self._estimate_number_bins(x_data),
+                            self._estimate_number_bins(y_data),
+                        ]
+                    )
+                )
+                # Block the n_bins_box signal to avoid replotting while setting the value
+                self.control_widget.n_bins_box.blockSignals(True)
+                self.bin_number = number_bins
+                self.control_widget.n_bins_box.blockSignals(False)
             active_artist.bins = self.bin_number
             active_artist.histogram_color_normalization_method = [
                 "log" if self.log_scale else "linear"
@@ -340,15 +355,15 @@ class PlotterWidget(BaseWidget):
     def _checkbox_status_changed(self):
         self._replot()
 
+    def _on_bin_auto_toggled(self, state: bool):
         """
+        Called when the automatic bin checkbox is toggled.
+        Enables or disables the bin number box accordingly.
         """
-
-    def _bin_auto(self):
-        self.control_widget.manual_bins_container.setVisible(
-            not self.control_widget.auto_bins_checkbox.isChecked()
+        self.control_widget.n_bins_box.setEnabled(
+            not state
         )
-        if self.control_widget.auto_bins_checkbox.isChecked():
-            self._replot()
+        self._replot()
 
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
