@@ -611,11 +611,16 @@ class PlotterWidget(BaseWidget):
         Parameters
         ----------
         use_color_indices : bool, optional
-            If True, apply colors based on the active artist's color indices.
+            If True, apply colors based on the active artist's color indices (unless show_color_overlay is False).
             If False, apply default colors to the layers.
+            Defaults to False.
         """
         if self.n_selected_layers == 0:
             return
+
+        # Disable coloring based on color_indices if the overlay toggle is unchecked
+        if not self.plotting_widget.show_color_overlay:
+            use_color_indices = False
 
         features = self._get_features()
         active_artist = self.plotting_widget.active_artist
