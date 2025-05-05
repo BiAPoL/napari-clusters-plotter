@@ -295,11 +295,6 @@ class PlotterWidget(BaseWidget):
                 ][0]
             self._update_layer_colors(use_color_indices=True)
 
-        # Ensures overlay is not shown if the show_overlay_button is not checked (fixes issue when enabling log scale would show overlay, probably because setting normalization calls _colorize in biaplotter)
-        if not self.plotting_widget.show_overlay_button.isChecked():
-            self.plotting_widget.active_artist.overlay_visible = False
-            self._update_layer_colors(use_color_indices=False)
-
     def _on_frame_changed(self, event: napari.utils.events.Event):
         """
         Called when the frame changes. Updates the alpha values of the points.
