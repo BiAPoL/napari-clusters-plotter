@@ -277,7 +277,10 @@ class PlotterWidget(BaseWidget):
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = overlay_cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
-        # If color_indices are all zeros and the hue axis is categorical, apply default colors
+        # Force overlay to be visible if non-categorical hue axis is selected
+        if self.hue_axis not in self.categorical_columns:
+            self.plotting_widget.show_color_overlay = True
+        # If color_indices are all zeros (no selection) and the hue axis is categorical, apply default colors
         if (np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns):
             self._update_layer_colors(use_color_indices=False)
         # Otherwise, color the layer by value (optionally applying log scale to colormap)
@@ -291,10 +294,6 @@ class PlotterWidget(BaseWidget):
                     "log" if self.log_scale else "linear"
                 ][0]
             self._update_layer_colors(use_color_indices=True)
-
-        if self.hue_axis not in self.categorical_columns:
-            # Make overlay visible if non-categorical hue axis is selected
-            self.plotting_widget.show_overlay_button.setChecked(True)
 
         # Ensures overlay is not shown if the show_overlay_button is not checked (fixes issue when enabling log scale would show overlay, probably because setting normalization calls _colorize in biaplotter)
         if not self.plotting_widget.show_overlay_button.isChecked():
