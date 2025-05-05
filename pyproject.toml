@@ -40,7 +40,7 @@ dependencies = [
     "napari-skimage-regionprops>=0.3.1",
     "scikit-image",
     "scipy",
-    "biaplotter>=0.3.0"
+    "biaplotter>=0.3.1"
 ]
 
 
