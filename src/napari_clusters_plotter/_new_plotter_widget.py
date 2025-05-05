@@ -279,7 +279,7 @@ class PlotterWidget(BaseWidget):
         active_artist.color_indices = features[self.hue_axis].to_numpy()
         # If color_indices are all zeros and the hue axis is categorical, apply default colors
         if (np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns):
-            self._apply_default_layer_color()
+            self._update_layer_colors(use_color_indices=False)
         # Otherwise, color the layer by value (optionally applying log scale to colormap)
         else:
             if isinstance(active_artist, Histogram2D):
@@ -290,7 +290,7 @@ class PlotterWidget(BaseWidget):
                 active_artist.color_normalization_method = [
                     "log" if self.log_scale else "linear"
                 ][0]
-            self._color_layer_by_value()
+            self._update_layer_colors(use_color_indices=True)
 
         if self.hue_axis not in self.categorical_columns:
             # Make overlay visible if non-categorical hue axis is selected
@@ -299,7 +299,7 @@ class PlotterWidget(BaseWidget):
         # Ensures overlay is not shown if the show_overlay_button is not checked (fixes issue when enabling log scale would show overlay, probably because setting normalization calls _colorize in biaplotter)
         if not self.plotting_widget.show_overlay_button.isChecked():
             self.plotting_widget.active_artist.overlay_visible = False
-            self._apply_default_layer_color()
+            self._update_layer_colors(use_color_indices=False)
 
     def _on_frame_changed(self, event: napari.utils.events.Event):
         """
@@ -585,10 +585,7 @@ class PlotterWidget(BaseWidget):
         """
         Called when the plot overlay is hidden or shown.
         """
-        if state:
-            self._color_layer_by_value()
-        else:
-            self._apply_default_layer_color() # Hide the overlay
+        self._update_layer_colors(use_color_indices=state)
 
     def _generate_default_colors(self, layer):
         """
@@ -613,90 +610,86 @@ class PlotterWidget(BaseWidget):
             # Default to white for other layer types
             return np.array([[1, 1, 1, 1]])
 
-    def _apply_default_layer_color(self):
+    def _update_layer_colors(self, use_color_indices: bool = False) -> None:
         """
-        Restore the default colors for the selected layers based on their type.
+        Update colors for the selected layers based on the context.
+
+        Parameters
+        ----------
+        use_color_indices : bool, optional
+            If True, apply colors based on the active artist's color indices.
+            If False, apply default colors to the layers.
         """
         if self.n_selected_layers == 0:
             return
 
-        for selected_layer in self.viewer.layers.selection:
-            rgba_colors = self._generate_default_colors(selected_layer)
-            _apply_layer_color(selected_layer, rgba_colors)
-        self.layers_being_unselected = []
-
-    def _color_layer_by_value(self):
-        """
-        Color the selected layer according to the color indices.
-        """
-
         features = self._get_features()
         active_artist = self.plotting_widget.active_artist
-        rgba_colors = active_artist.color_indices_to_rgba(
-            active_artist.color_indices
-        )
-        for selected_layer in self.viewer.layers.selection:
-            layer_indices = features[
-                features["layer"] == selected_layer.name
-            ].index
-            _apply_layer_color(selected_layer, rgba_colors[layer_indices])
 
-            # store latest cluster indeces in the features table
-            if self.hue_axis == "MANUAL_CLUSTER_ID":
-                selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
-                    active_artist.color_indices[layer_indices]
-                ).astype("category")
-        # apply default colors on layers being unselected and reset the list
+        for selected_layer in self.viewer.layers.selection:
+            if use_color_indices:
+                # Apply colors based on color indices
+                rgba_colors = active_artist.color_indices_to_rgba(
+                    active_artist.color_indices
+                )
+                layer_indices = features[
+                    features["layer"] == selected_layer.name
+                ].index
+                self._set_layer_color(selected_layer, rgba_colors[layer_indices])
+
+                # Update MANUAL_CLUSTER_ID if applicable
+                if self.hue_axis == "MANUAL_CLUSTER_ID":
+                    selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
+                        active_artist.color_indices[layer_indices]
+                    ).astype("category")
+            else:
+                # Apply default colors
+                rgba_colors = self._generate_default_colors(selected_layer)
+                self._set_layer_color(selected_layer, rgba_colors)
+
+        # Apply default colors to layers being unselected
         for layer in self.layers_being_unselected:
             if layer in self.viewer.layers:
-                # apply default colors to the layer
                 rgba_colors = self._generate_default_colors(layer)
-                _apply_layer_color(layer, rgba_colors)
+                self._set_layer_color(layer, rgba_colors)
         self.layers_being_unselected = []
+
+    def _set_layer_color(self, layer, colors):
+        """
+        Set colors for a specific layer based on its type.
+
+        Parameters
+        ----------
+        layer : napari.layers.Layer
+            The layer to color.
+
+        colors : np.ndarray
+            The color array (Nx4).
+        """
+        if isinstance(layer, napari.layers.Points):
+            layer.face_color = colors
+        elif isinstance(layer, napari.layers.Vectors):
+            layer.edge_color = colors
+        elif isinstance(layer, napari.layers.Surface):
+            layer.vertex_colors = colors
+        elif isinstance(layer, napari.layers.Shapes):
+            layer.face_color = colors
+        elif isinstance(layer, napari.layers.Labels):
+            # Ensure the first color is transparent for the background
+            colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
+            from napari.utils import DirectLabelColormap
+            color_dict = dict(zip(np.unique(layer.data), colors))
+            layer.colormap = DirectLabelColormap(color_dict=color_dict)
+        layer.refresh()
 
     def _reset(self):
         """
         Reset the selection in the current plotting widget.
         """
-
         if self.n_selected_layers == 0:
             return
 
         self.plotting_widget.active_artist.color_indices = np.zeros(
             len(self._get_features())
         )
-        self._apply_default_layer_color()
-
-
-def _apply_layer_color(layer, colors):
-    """
-    Apply colors to the layer based on the layer type.
-
-    Parameters
-    ----------
-    layer : napari.layers.Layer
-        The layer to color.
-
-    colors : np.ndarray
-        The color array (Nx4).
-    """
-    if isinstance(layer, napari.layers.Points):
-        layer.face_color = colors
-
-    elif isinstance(layer, napari.layers.Vectors):
-        layer.edge_color = colors
-
-    elif isinstance(layer, napari.layers.Surface):
-        layer.vertex_colors = colors
-
-    elif isinstance(layer, napari.layers.Shapes):
-        layer.face_color = colors
-
-    elif isinstance(layer, napari.layers.Labels):
-        # Ensure the first color is transparent for the background
-        colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-        from napari.utils import DirectLabelColormap
-        color_dict = dict(zip(np.unique(layer.data), colors))
-        layer.colormap = DirectLabelColormap(color_dict=color_dict)
-
-    layer.refresh()
+        self._update_layer_colors(use_color_indices=False)
