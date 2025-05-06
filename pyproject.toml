@@ -40,7 +40,7 @@ dependencies = [
     "napari-skimage-regionprops>=0.3.1",
     "scikit-image",
     "scipy",
-    "biaplotter>=0.3.1"
+    "biaplotter@git+https://github.com/biapol/biaplotter.git@fix_overlay_bug2",
 ]
 
 
