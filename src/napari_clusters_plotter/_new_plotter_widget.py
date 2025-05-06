@@ -626,25 +626,26 @@ class PlotterWidget(BaseWidget):
         active_artist = self.plotting_widget.active_artist
 
         for selected_layer in self.viewer.layers.selection:
-            if use_color_indices:
-                # Apply colors based on color indices
-                rgba_colors = active_artist.color_indices_to_rgba(
-                    active_artist.color_indices
-                )
-                layer_indices = features[
-                    features["layer"] == selected_layer.name
-                ].index
-                _apply_layer_color(selected_layer, rgba_colors[layer_indices])
-
-                # Update MANUAL_CLUSTER_ID if applicable
-                if self.hue_axis == "MANUAL_CLUSTER_ID":
-                    selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
-                        active_artist.color_indices[layer_indices]
-                    ).astype("category")
-            else:
+            if not use_color_indices:
                 # Apply default colors
                 rgba_colors = self._generate_default_colors(selected_layer)
                 _apply_layer_color(selected_layer, rgba_colors)
+                continue
+
+            # Apply colors based on color indices
+            rgba_colors = active_artist.color_indices_to_rgba(
+                active_artist.color_indices
+            )
+            layer_indices = features[
+                features["layer"] == selected_layer.name
+            ].index
+            _apply_layer_color(selected_layer, rgba_colors[layer_indices])
+
+            # Update MANUAL_CLUSTER_ID if applicable
+            if self.hue_axis == "MANUAL_CLUSTER_ID":
+                selected_layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
+                    active_artist.color_indices[layer_indices]
+                ).astype("category")
 
         # Apply default colors to layers being unselected
         for layer in self.layers_being_unselected:
