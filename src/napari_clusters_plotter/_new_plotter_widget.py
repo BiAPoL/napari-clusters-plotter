@@ -221,7 +221,7 @@ class PlotterWidget(BaseWidget):
         else:
             self.control_widget.overlay_cmap_box.setEnabled(True)
             self.control_widget.log_scale_checkbutton.setEnabled(True)
-        
+
         if isinstance(active_artist, Histogram2D):
             self.control_widget.cmap_container.setVisible(True)
             self.control_widget.bins_settings_container.setVisible(True)
@@ -250,7 +250,7 @@ class PlotterWidget(BaseWidget):
         histogram_cmap = self._convert_napari_to_mpl_cmap(
             self.histogram_colormap_plot
         )
-        self._handle_advanced_options_widget_visibility()     
+        self._handle_advanced_options_widget_visibility()
 
         active_artist = self.plotting_widget.active_artist
         # First set the data related properties in the active artist
@@ -340,7 +340,7 @@ class PlotterWidget(BaseWidget):
             self._convert_napari_to_mpl_cmap(colormap_name)
         )
         self._replot()
-    
+
     def _on_histogram_colormap_changed(self):
         self._replot()
 
@@ -378,7 +378,7 @@ class PlotterWidget(BaseWidget):
     @property
     def bin_number(self):
         return self.control_widget.n_bins_box.value()
-    
+
     @bin_number.setter
     def bin_number(self, val: int):
         self.control_widget.n_bins_box.setValue(val)
