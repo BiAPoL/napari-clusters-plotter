@@ -164,7 +164,7 @@ class PlotterWidget(BaseWidget):
         for selector in self.plotting_widget.selectors.values():
             selector.selection_applied_signal.connect(self._on_finish_draw)
         self.plotting_widget.show_color_overlay_signal.connect(
-            self._on_show_plot_overlay
+            self._update_layer_colors
         )
 
         # connect scatter/histogram switch
@@ -574,12 +574,6 @@ class PlotterWidget(BaseWidget):
                 selector.setItemData(
                     index, "Categorical Column", Qt.ToolTipRole
                 )
-
-    def _on_show_plot_overlay(self, state: bool) -> None:
-        """
-        Called when the plot overlay is hidden or shown.
-        """
-        self._update_layer_colors(use_color_indices=state)
 
     def _generate_default_colors(self, layer):
         """
