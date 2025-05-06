@@ -634,7 +634,7 @@ class PlotterWidget(BaseWidget):
                 layer_indices = features[
                     features["layer"] == selected_layer.name
                 ].index
-                self._set_layer_color(selected_layer, rgba_colors[layer_indices])
+                _apply_layer_color(selected_layer, rgba_colors[layer_indices])
 
                 # Update MANUAL_CLUSTER_ID if applicable
                 if self.hue_axis == "MANUAL_CLUSTER_ID":
@@ -644,42 +644,14 @@ class PlotterWidget(BaseWidget):
             else:
                 # Apply default colors
                 rgba_colors = self._generate_default_colors(selected_layer)
-                self._set_layer_color(selected_layer, rgba_colors)
+                _apply_layer_color(selected_layer, rgba_colors)
 
         # Apply default colors to layers being unselected
         for layer in self.layers_being_unselected:
             if layer in self.viewer.layers:
                 rgba_colors = self._generate_default_colors(layer)
-                self._set_layer_color(layer, rgba_colors)
+                _apply_layer_color(layer, rgba_colors)
         self.layers_being_unselected = []
-
-    def _set_layer_color(self, layer, colors):
-        """
-        Set colors for a specific layer based on its type.
-
-        Parameters
-        ----------
-        layer : napari.layers.Layer
-            The layer to color.
-
-        colors : np.ndarray
-            The color array (Nx4).
-        """
-        if isinstance(layer, napari.layers.Points):
-            layer.face_color = colors
-        elif isinstance(layer, napari.layers.Vectors):
-            layer.edge_color = colors
-        elif isinstance(layer, napari.layers.Surface):
-            layer.vertex_colors = colors
-        elif isinstance(layer, napari.layers.Shapes):
-            layer.face_color = colors
-        elif isinstance(layer, napari.layers.Labels):
-            # Ensure the first color is transparent for the background
-            colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-            from napari.utils import DirectLabelColormap
-            color_dict = dict(zip(np.unique(layer.data), colors))
-            layer.colormap = DirectLabelColormap(color_dict=color_dict)
-        layer.refresh()
 
     def _reset(self):
         """
@@ -692,3 +664,32 @@ class PlotterWidget(BaseWidget):
             len(self._get_features())
         )
         self._update_layer_colors(use_color_indices=False)
+
+
+def _apply_layer_color(layer, colors):
+    """
+    Set colors for a specific layer based on its type.
+
+    Parameters
+    ----------
+    layer : napari.layers.Layer
+        The layer to color.
+
+    colors : np.ndarray
+        The color array (Nx4).
+    """
+    if isinstance(layer, napari.layers.Points):
+        layer.face_color = colors
+    elif isinstance(layer, napari.layers.Vectors):
+        layer.edge_color = colors
+    elif isinstance(layer, napari.layers.Surface):
+        layer.vertex_colors = colors
+    elif isinstance(layer, napari.layers.Shapes):
+        layer.face_color = colors
+    elif isinstance(layer, napari.layers.Labels):
+        # Ensure the first color is transparent for the background
+        colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
+        from napari.utils import DirectLabelColormap
+        color_dict = dict(zip(np.unique(layer.data), colors))
+        layer.colormap = DirectLabelColormap(color_dict=color_dict)
+    layer.refresh()
