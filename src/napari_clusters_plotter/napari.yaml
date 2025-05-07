@@ -41,10 +41,10 @@ contributions:
       display_name: Plot & select features
     - command: napari-clusters-plotter.Dimensionality_Reduction
       autogenerate: false
-      display_name: Dimensionality reduction on features
+      display_name: Dimensionality reduction (features)
     - command: napari-clusters-plotter.Clustering
       autogenerate: false
-      display_name: Clustering on features
+      display_name: Clustering (features)
 
   sample_data:
   - command: napari-clusters-plotter.bbbc_sample_data
