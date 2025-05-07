@@ -29,7 +29,7 @@ contributions:
     napari/layers/visualize:
       - command: napari-clusters-plotter.plotter
 
-    napari/layers/project:
+    napari/layers/measure:
       - command: napari-clusters-plotter.Dimensionality_Reduction
 
     napari/layers/classify:
