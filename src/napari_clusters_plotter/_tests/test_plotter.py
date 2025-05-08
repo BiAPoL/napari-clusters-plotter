@@ -187,7 +187,7 @@ def create_multi_shapes_layers(n_samples: int = 100):
 
     shapes1, shapes2 = [], []
     for i in range(len(points1.data)):
-        # create a random shape around the point, whereas the shape 
+        # create a random shape around the point, whereas the shape
         # consists of the coordinates of the four corner of the rectangle
         y, x = points1.data[i, 2], points1.data[i, 3]
         w, h = np.random.randint(1, 5), np.random.randint(1, 5)
