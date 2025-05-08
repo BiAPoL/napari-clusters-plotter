@@ -250,10 +250,10 @@ class PlotterWidget(BaseWidget):
         overlay_cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-        histogram_cmap = 
         self._handle_advanced_options_widget_visibility()
 
         active_artist = self.plotting_widget.active_artist
+        color_norm = "log" if self.log_scale else "linear"
         # First set the data related properties in the active artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
@@ -274,31 +274,29 @@ class PlotterWidget(BaseWidget):
                 self.bin_number = number_bins
                 self.control_widget.n_bins_box.blockSignals(False)
             active_artist.bins = self.bin_number
-            active_artist.histogram_color_normalization_method = [
-                "log" if self.log_scale else "linear"
-            ][0]
+            active_artist.histogram_color_normalization_method = color_norm
+
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = overlay_cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
+
         # Force overlay to be visible if non-categorical hue axis is selected
         if self.hue_axis not in self.categorical_columns:
             self.plotting_widget.show_color_overlay = True
+
         # If color_indices are all zeros (no selection) and the hue axis is categorical, apply default colors
         if (
             np.all(active_artist.color_indices == 0)
             and self.hue_axis in self.categorical_columns
         ):
             self._update_layer_colors(use_color_indices=False)
+
         # Otherwise, color the layer by value (optionally applying log scale to colormap)
         else:
             if isinstance(active_artist, Histogram2D):
-                active_artist.overlay_color_normalization_method = [
-                    "log" if self.log_scale else "linear"
-                ][0]
+                active_artist.overlay_color_normalization_method = color_norm
             elif isinstance(active_artist, Scatter):
-                active_artist.color_normalization_method = [
-                    "log" if self.log_scale else "linear"
-                ][0]
+                active_artist.color_normalization_method = color_norm
             self._update_layer_colors(use_color_indices=True)
 
     def _on_frame_changed(self, event: napari.utils.events.Event):
