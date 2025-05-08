@@ -341,8 +341,8 @@ class PlotterWidget(BaseWidget):
         self.colormap_reference[(False, "HISTOGRAM2D")] = (
             self._napari_to_mpl_cmap(colormap_name)
         )
-        self.colormap_reference[(False, "SCATTER")] = (
-            self._napari_to_mpl_cmap(colormap_name)
+        self.colormap_reference[(False, "SCATTER")] = self._napari_to_mpl_cmap(
+            colormap_name
         )
         self._replot()
 
