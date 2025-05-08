@@ -53,15 +53,15 @@ class PlotterWidget(BaseWidget):
         self.colormap_reference = {
             (True, "HISTOGRAM2D"): cat10_mod_cmap_first_transparent,
             (True, "SCATTER"): cat10_mod_cmap,
-            (False, "HISTOGRAM2D"): self._convert_napari_to_mpl_cmap(
+            (False, "HISTOGRAM2D"): self._napari_to_mpl_cmap(
                 self.overlay_colormap_plot
             ),
-            (False, "SCATTER"): self._convert_napari_to_mpl_cmap(
+            (False, "SCATTER"): self._napari_to_mpl_cmap(
                 self.overlay_colormap_plot
             ),
         }
 
-    def _convert_napari_to_mpl_cmap(self, colormap_name):
+    def _napari_to_mpl_cmap(self, colormap_name):
         return LinearSegmentedColormap.from_list(
             ALL_COLORMAPS[colormap_name].name,
             ALL_COLORMAPS[colormap_name].colors,
@@ -250,16 +250,16 @@ class PlotterWidget(BaseWidget):
         overlay_cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-        histogram_cmap = self._convert_napari_to_mpl_cmap(
-            self.histogram_colormap_plot
-        )
+        histogram_cmap = 
         self._handle_advanced_options_widget_visibility()
 
         active_artist = self.plotting_widget.active_artist
         # First set the data related properties in the active artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
         if isinstance(active_artist, Histogram2D):
-            active_artist.histogram_colormap = histogram_cmap
+            active_artist.histogram_colormap = self._napari_to_mpl_cmap(
+                self.histogram_colormap_plot
+            )
             if self.automatic_bins:
                 number_bins = int(
                     np.max(
@@ -340,10 +340,10 @@ class PlotterWidget(BaseWidget):
         colormap_name = self.overlay_colormap_plot
         # Dynamically update the colormap_reference dictionary
         self.colormap_reference[(False, "HISTOGRAM2D")] = (
-            self._convert_napari_to_mpl_cmap(colormap_name)
+            self._napari_to_mpl_cmap(colormap_name)
         )
         self.colormap_reference[(False, "SCATTER")] = (
-            self._convert_napari_to_mpl_cmap(colormap_name)
+            self._napari_to_mpl_cmap(colormap_name)
         )
         self._replot()
 
