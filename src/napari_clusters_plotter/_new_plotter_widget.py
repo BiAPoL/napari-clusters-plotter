@@ -498,10 +498,9 @@ class PlotterWidget(BaseWidget):
                 ).astype("category")
 
         self.layers = list(self.viewer.layers.selection)
-        if event is not None:
-            if len(event.removed) > 0:
-                # remove the layers that are not in the selection anymore
-                self.layers_being_unselected = list(event.removed)
+        if event is not None and len(event.removed) > 0:
+            # remove the layers that are not in the selection anymore
+            self.layers_being_unselected = list(event.removed)
         self._update_feature_selection(None)
 
         for layer in self.layers:
