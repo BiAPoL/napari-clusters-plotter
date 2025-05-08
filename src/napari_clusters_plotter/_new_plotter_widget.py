@@ -4,10 +4,10 @@ from pathlib import Path
 import napari
 import numpy as np
 import pandas as pd
-from matplotlib.cm import viridis
 from biaplotter.artists import Histogram2D, Scatter
-from biaplotter.plotter import CanvasWidget
 from biaplotter.colormap import BiaColormap
+from biaplotter.plotter import CanvasWidget
+from matplotlib.cm import viridis
 from matplotlib.colors import LinearSegmentedColormap
 from nap_plot_tools.cmap import (
     cat10_mod_cmap,
@@ -86,7 +86,9 @@ class PlotterWidget(BaseWidget):
         self.layout.setAlignment(Qt.AlignTop)
 
         self.plotting_widget = CanvasWidget(napari_viewer, self)
-        self.plotting_widget.artists['HISTOGRAM2D']._histogram_colormap = BiaColormap(viridis) # Start histogram colormap with viridis
+        self.plotting_widget.artists["HISTOGRAM2D"]._histogram_colormap = (
+            BiaColormap(viridis)
+        )  # Start histogram colormap with viridis
         self.plotting_widget.active_artist = "SCATTER"
 
         # Add plot and options as widgets
@@ -109,7 +111,9 @@ class PlotterWidget(BaseWidget):
             list(ALL_COLORMAPS.keys())
         )
         self.control_widget.histogram_cmap_box.setCurrentIndex(
-            np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "viridis")[0][0]
+            np.argwhere(np.array(list(ALL_COLORMAPS.keys())) == "viridis")[0][
+                0
+            ]
         )
 
         # Setting Visibility Defaults
@@ -177,7 +181,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.auto_bins_checkbox.toggled.connect(
             self._on_bin_auto_toggled
         )
-
 
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
@@ -281,7 +284,10 @@ class PlotterWidget(BaseWidget):
         if self.hue_axis not in self.categorical_columns:
             self.plotting_widget.show_color_overlay = True
         # If color_indices are all zeros (no selection) and the hue axis is categorical, apply default colors
-        if (np.all(active_artist.color_indices == 0) and self.hue_axis in self.categorical_columns):
+        if (
+            np.all(active_artist.color_indices == 0)
+            and self.hue_axis in self.categorical_columns
+        ):
             self._update_layer_colors(use_color_indices=False)
         # Otherwise, color the layer by value (optionally applying log scale to colormap)
         else:
@@ -352,9 +358,7 @@ class PlotterWidget(BaseWidget):
         Called when the automatic bin checkbox is toggled.
         Enables or disables the bin number box accordingly.
         """
-        self.control_widget.n_bins_box.setEnabled(
-            not state
-        )
+        self.control_widget.n_bins_box.setEnabled(not state)
         self._replot()
 
     # Connecting the widgets to actual object variables:
@@ -455,7 +459,10 @@ class PlotterWidget(BaseWidget):
         Estimated number of bins
         """
         from scipy.stats import iqr
-        est_a = (np.max(data) - np.min(data)) / (2 * iqr(data) / np.cbrt(len(data)))
+
+        est_a = (np.max(data) - np.min(data)) / (
+            2 * iqr(data) / np.cbrt(len(data))
+        )
         if np.isnan(est_a):
             return 256
         return int(est_a)
@@ -614,8 +621,13 @@ class PlotterWidget(BaseWidget):
         if isinstance(layer, napari.layers.Labels):
             # Use CyclicLabelColormap with N colors
             from napari.utils.colormaps.colormap_utils import label_colormap
-            n_labels = np.unique(layer.data).size - 1  # unique labels (minus background: 0)
-            return np.asarray(label_colormap(n_labels).dict()['colors'])  # rgba
+
+            n_labels = (
+                np.unique(layer.data).size - 1
+            )  # unique labels (minus background: 0)
+            return np.asarray(
+                label_colormap(n_labels).dict()["colors"]
+            )  # rgba
         else:
             # Default to white for other layer types
             return np.array([[1, 1, 1, 1]])
@@ -650,7 +662,9 @@ class PlotterWidget(BaseWidget):
                 layer_indices = features[
                     features["layer"] == selected_layer.name
                 ].index
-                self._set_layer_color(selected_layer, rgba_colors[layer_indices])
+                self._set_layer_color(
+                    selected_layer, rgba_colors[layer_indices]
+                )
 
                 # Update MANUAL_CLUSTER_ID if applicable
                 if self.hue_axis == "MANUAL_CLUSTER_ID":
@@ -693,6 +707,7 @@ class PlotterWidget(BaseWidget):
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
             from napari.utils import DirectLabelColormap
+
             color_dict = dict(zip(np.unique(layer.data), colors))
             layer.colormap = DirectLabelColormap(color_dict=color_dict)
         layer.refresh()
