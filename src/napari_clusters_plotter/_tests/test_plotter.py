@@ -483,5 +483,7 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     # trigger manual bin size
     plotter_widget.automatic_bins = False
     plotter_widget.bin_number = 10
+    plotter_widget.control_widget.histogram_cmap_box.setCurrentText("viridis")
+    plotter_widget.control_widget.overlay_cmap_box.setCurrentText("viridis")
 
     plotter_widget.plotting_type = "SCATTER"
