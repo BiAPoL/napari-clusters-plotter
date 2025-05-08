@@ -484,5 +484,4 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     plotter_widget.automatic_bins = False
     plotter_widget.bin_number = 10
 
-
     plotter_widget.plotting_type = "SCATTER"
