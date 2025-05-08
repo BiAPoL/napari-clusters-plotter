@@ -38,7 +38,7 @@ dependencies = [
     "umap-learn",
     "scikit-image",
     "scipy",
-    "biaplotter>=0.2.0",
+    "biaplotter>=0.3.1",
     "imagecodecs"
 ]
 
