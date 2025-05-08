@@ -510,8 +510,7 @@ class PlotterWidget(BaseWidget):
                 event_attr.connect(self._update_feature_selection)
             else:
                 Warning(
-                    f"Layer {layer.name} does not have events.features" +
-                    "or events.properties"
+                    f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
     def _clean_up(self):
@@ -526,8 +525,7 @@ class PlotterWidget(BaseWidget):
                 event_attr.disconnect(self._update_feature_selection)
             else:
                 Warning(
-                    f"Layer {layer.name} does not have events.features " +
-                    "or events.properties"
+                    f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
         # reset the selected layers
