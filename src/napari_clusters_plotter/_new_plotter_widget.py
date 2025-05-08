@@ -210,16 +210,16 @@ class PlotterWidget(BaseWidget):
 
     def _handle_advanced_options_widget_visibility(self):
         """
-        Control the visibility of the overlay colormap box and log scale checkbox
+        Control visibility of overlay colormap box and log scale checkbox
         based on the selected hue axis and active artist.
         """
         active_artist = self.plotting_widget.active_artist
-        # Control the visibility of the overlay colormap box and log scale checkbox
+        # Control visibility of overlay colormap box and log scale checkbox
         if self.hue_axis in self.categorical_columns:
             self.control_widget.overlay_cmap_box.setEnabled(False)
             self.control_widget.log_scale_checkbutton.setEnabled(False)
             if isinstance(active_artist, Histogram2D):
-                # Enable if it is histogram to allow log scale of the histogram itself
+                # Enable if histogram to allow log scale of histogram itself
                 self.control_widget.log_scale_checkbutton.setEnabled(True)
         else:
             self.control_widget.overlay_cmap_box.setEnabled(True)
@@ -269,7 +269,7 @@ class PlotterWidget(BaseWidget):
                         ]
                     )
                 )
-                # Block the n_bins_box signal to avoid replotting while setting the value
+                # Block signal to avoid replotting while setting value
                 self.control_widget.n_bins_box.blockSignals(True)
                 self.bin_number = number_bins
                 self.control_widget.n_bins_box.blockSignals(False)
@@ -284,14 +284,15 @@ class PlotterWidget(BaseWidget):
         if self.hue_axis not in self.categorical_columns:
             self.plotting_widget.show_color_overlay = True
 
-        # If color_indices are all zeros (no selection) and the hue axis is categorical, apply default colors
+        # If color_indices are all zeros (no selection) and the hue axis
+        # is categorical, apply default colors
         if (
             np.all(active_artist.color_indices == 0)
             and self.hue_axis in self.categorical_columns
         ):
             self._update_layer_colors(use_color_indices=False)
 
-        # Otherwise, color the layer by value (optionally applying log scale to colormap)
+        # Otherwise, color layer by value (optionally applying log scale)
         else:
             if isinstance(active_artist, Histogram2D):
                 active_artist.overlay_color_normalization_method = color_norm
@@ -509,7 +510,8 @@ class PlotterWidget(BaseWidget):
                 event_attr.connect(self._update_feature_selection)
             else:
                 Warning(
-                    f"Layer {layer.name} does not have events.features or events.properties"
+                    f"Layer {layer.name} does not have events.features" +
+                    "or events.properties"
                 )
 
     def _clean_up(self):
@@ -524,7 +526,8 @@ class PlotterWidget(BaseWidget):
                 event_attr.disconnect(self._update_feature_selection)
             else:
                 Warning(
-                    f"Layer {layer.name} does not have events.features or events.properties"
+                    f"Layer {layer.name} does not have events.features " +
+                    "or events.properties"
                 )
 
         # reset the selected layers
@@ -636,14 +639,15 @@ class PlotterWidget(BaseWidget):
         Parameters
         ----------
         use_color_indices : bool, optional
-            If True, apply colors based on the active artist's color indices (unless show_color_overlay is False).
+            If True, apply colors based on the active artist's color indices
+            (unless show_color_overlay is False).
             If False, apply default colors to the layers.
             Defaults to False.
         """
         if self.n_selected_layers == 0:
             return
 
-        # Disable coloring based on color_indices if the overlay toggle is unchecked
+        # Disable coloring based on color_indices if overlay toggle unchecked
         if not self.plotting_widget.show_color_overlay:
             use_color_indices = False
 
