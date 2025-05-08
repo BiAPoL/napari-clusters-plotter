@@ -341,8 +341,8 @@ class PlotterWidget(BaseWidget):
         self.colormap_reference[(False, "HISTOGRAM2D")] = (
             self._napari_to_mpl_cmap(colormap_name)
         )
-        self.colormap_reference[(False, "SCATTER")] = (
-            self._napari_to_mpl_cmap(colormap_name)
+        self.colormap_reference[(False, "SCATTER")] = self._napari_to_mpl_cmap(
+            colormap_name
         )
         self._replot()
 
@@ -510,8 +510,8 @@ class PlotterWidget(BaseWidget):
                 event_attr.connect(self._update_feature_selection)
             else:
                 Warning(
-                    f"Layer {layer.name} does not have events.features" +
-                    "or events.properties"
+                    f"Layer {layer.name} does not have events.features"
+                    + "or events.properties"
                 )
 
     def _clean_up(self):
@@ -526,8 +526,8 @@ class PlotterWidget(BaseWidget):
                 event_attr.disconnect(self._update_feature_selection)
             else:
                 Warning(
-                    f"Layer {layer.name} does not have events.features " +
-                    "or events.properties"
+                    f"Layer {layer.name} does not have events.features "
+                    + "or events.properties"
                 )
 
         # reset the selected layers
