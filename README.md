@@ -21,19 +21,24 @@ A napari-plugin for clustering objects according to their properties.
 Jump to:
 - [Usage](#usage)
   - [Starting point](#starting-point)
-  - [Measurements](#measurements)
-  - [Time-Lapse Measurements](#time-lapse-measurements)
-  - [Plotting](#plotting)
-  - [Time-Lapse Plotting](#time-lapse-plotting)
-  - [Dimensionality reduction: UMAP, t-SNE or PCA](#dimensionality-reduction-umap-t-sne-or-pca)
-  - [Clustering](#clustering)
-  - [Plotting clustering results](#plotting-clustering-results)
+  - [Labels layer with Segmentation Results](#1-labels-layer-with-segmentation-results)
+    - [Measurements](#measurements)
+    - [Plotting](#plotting)
+    - [Manual clustering](#manual-clustering)
+    - [Saving manual clustering](#saving-manual-clustering)
+    - [Time-Lapse analysis](#time-lapse-analysis)
+  - [Points Layer with Coordinates](#2-points-layer-with-coordinates)
+  - [Surface Layer with Segmentation Results](#3-surface-layer-with-segmentation-results)
+  - [Labels Layer with Tracking Results](#4-labels-layer-with-tracking-results)
+  - [Dimensionality reduction](#4-dimensionality-reduction)
+  - [Clustering](#5-clustering)
+  - [Plotting clustering results](#6-plotting-clustering-results)
 - [Installation](#installation)
 - [Troubleshooting installation](#troubleshooting-installation)
 - [Contributing](#contributing)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
-
+- [Issues](#issues)
 
 ## Usage
 
@@ -56,7 +61,7 @@ in the napari plugin [napari-segment-blobs-and-things-with-membranes](https://ww
 
 In case you have 2D time-lapse data you need to convert it into a suitable shape using the menu `Tools > Utilities > Convert 3D stack to 2D time-lapse (time-slicer)` ([documentation](https://www.napari-hub.org/plugins/napari-time-slicer)).
 
-### Measurements
+#### Measurements
 The first step is deriving measurements from the labeled image and the corresponding pixels in the grey-value image.
 Use the menu `Tools > Measurement tables > Regionprops (scikit-image, nsr)` to get to the measurement widget ([documentation](https://www.napari-hub.org/plugins/napari-skimage-regionprops)).
 Select the image, the corresponding label image and the measurements to analyse and click on `Run`.
@@ -67,7 +72,7 @@ You can also load your own measurements. You can do this using the menu `Tools >
 If you load custom measurements, please make sure that there is a `label` column that specifies which measurement belongs to which labeled object.
 Make sure to avoid the label `0` as this is reserved for the background. Tables for time-lapse data need to include an additional column named `frame`.
 
-### Plotting
+#### Plotting
 
 Once measurements were saved in the labels layer which was analysed, you can then plot these measurements using the menu `Tools > Visualization > Plot measurements (ncp)`.
 
@@ -87,7 +92,7 @@ If you choose the same measurement for the X and the Y axis, a histogram will be
 Under advanced options you will also find the checkbox determining whether not-selected data points should be hidden (shown in grey) or automatically
 clustered as another cluster.
 
-### Manual clustering
+#### Manual clustering
 
 You can manually select a region in the plot. To use lasso (freehand) tool use left mouse click, and to use a
 rectangle - right click. The resulting manual clustering will also be visualized in the original image. To optimize
@@ -99,12 +104,12 @@ Hold down the SHIFT key while annotating regions in the plot to manually select 
 
 ![](https://github.com/BiAPoL/napari-clusters-plotter/raw/main/images/multi-select-manual-clustering.gif)
 
-### Saving manual clustering
+#### Saving manual clustering
 
 Manual clustering results can be saved by going to `Tools > Measurement > Show table (nsr)`, and clicking on `Save as csv`.
 The saved table will contain a "MANUAL_CLUSTER_ID" column. This column is overwritten every time different clusters are manually selected.
 
-### Time-Lapse analysis
+#### Time-Lapse analysis
 
 When you plot your time-lapse datasets you will notice that the plots look slightly different.
 Datapoints of the current time frame are highlighted in bright color and you can see the datapoints move through the plot while you navigate through time:
@@ -172,7 +177,7 @@ For example, if you have a time-lapse labeled image where each label number repr
 
 Check [this notebook](./example_data/tracking_data/loading_tracking_data_example.ipynb) to learn how to load these data from code.
 
-### Dimensionality reduction
+### 4. Dimensionality reduction
 
 For getting more insights into your data, you can reduce the dimensionality of the measurements, using these algorithms:
 * [Uniform Manifold Approximation Projection (UMAP)](https://umap-learn.readthedocs.io/en/latest/)
@@ -192,7 +197,7 @@ These columns are automatically saved in the labels layer and can be further pro
 
 Afterwards, you can again save and/or close the table.
 
-### Clustering
+### 5. Clustering
 If manual clustering, as shown above, is not an option, you can automatically cluster your data, using these implemented algorithms:
 * [k-means clustering (KMEANS)](https://towardsdatascience.com/k-means-clustering-algorithm-applications-evaluation-methods-and-drawbacks-aa03e644b48a)
 * [Hierarchical Density-Based Spatial Clustering of Applications with Noise (HDBSCAN)](https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html)
@@ -211,7 +216,7 @@ ID of each datapoint.
 
 Afterwards, you can save and/or close the table.
 
-### Plotting clustering results
+### 6. Plotting clustering results
 
 Return to the Plotter widget using the menu `Tools > Visualization > Plot measurement (ncp)`.
 Select `UMAP_0` and `UMAP_1` as X- and Y-axis and the `ALGORITHM_NAME_CLUSTERING_ID` as `Clustering`, and click on `Plot`.
