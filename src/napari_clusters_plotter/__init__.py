@@ -1,4 +1,7 @@
-__version__ = "0.8.0"
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown"
 
 from ._dim_reduction_and_clustering import (
     ClusteringWidget,

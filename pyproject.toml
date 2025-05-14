@@ -63,7 +63,7 @@ testing = [
 "User Support" = "https://github.com/BiAPoL/napari-clusters-plotter/issues"
 
 [build-system]
-requires = ["setuptools>=42.0.0", "wheel"]
+requires = ["setuptools>=42.0.0", "wheel", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -75,8 +75,9 @@ where = ["src"]
 [tool.setuptools.package-data]
 "*" = ["*.yaml"]
 
-[tool.setuptools.dynamic]
-version = {attr = "napari_clusters_plotter.__version__"}
+[tool.setuptools_scm]
+write_to = "src/napari_clusters_plotter/_version.py"
+fallback_version = "0.0.1+nogit"
 
 [tool.black]
 line-length = 79
