@@ -3,8 +3,8 @@
 
 The plotter widget is the heart of the napari-clusters-plotter. To open it, open a napari viewer and find the Plotter Widget either under
 
-- `Layers > Visualize > Features > Clusters Plotter (napari-clusters-plotter)`
-- `Plugins > napari-clusters-plotter > Clusters Plotter (napari-clusters-plotter)`
+- `Layers > Visualize > Plot & select features (napari-clusters-plotter)`
+- `Plugins > napari-clusters-plotter > Plot & select features (napari-clusters-plotter)`
 
 ## Widget overview
 
@@ -18,9 +18,20 @@ The core functionality of the plugin is available to you directly upon opening i
     - Ellipse selector (drag and drop, confirm with rightclick)
     - Rectangle selector (drag & drop, confirm with right-click)
 3. Selected cluster index: Depending on which color/number is selected here, regions in the plot will be counted as members of this cluster group and highlighted accordingly
-4. Canvas: Features will be visualized here
-5. What feature to plot on the x-axis and y-axis, respectively. The `Hue` dropdown controls the coloring of the data on the canvas, categorical features are highlighted in orange.
-6. Reset button: Resets all drawn clusters
+4. Show/Hide: Show or hide the selected points or histogram bins on the canvas.
+5. Canvas: Features will be visualized here
+6. What feature to plot on the x-axis and y-axis, respectively. The `Hue` dropdown controls the coloring of the data on the canvas, categorical features are highlighted in orange.
+7. Reset button: Resets all drawn clusters
+
+![Advanced settings](./imgs/plotter_overview3_annotated.png)
+
+Under the `Advanced Options` tab, you have access to some more customization options for the visualization:
+
+8. Change the colormap for the chosen overlay color. If a layer is colored by a non-categorical feature, this determines the colormap for the depiction. Only enabled if a non-categorical feature is selected in the `Hue` dropdown.
+9. Apply a log-scale to the chosen feature
+10. Switch plot type between `SCATTER` and `HISTOGRAM2D`
+11. Colorap for 2D histogram (only enabled if `HISTOGRAM2D` is selected in 10.)
+12. Change the size of the bins (only enabled if `HISTOGRAM2D` is selected in 10.)
 
 ## Visualizing layer features
 
@@ -34,9 +45,13 @@ The dropdown menus for `x-axis`, `y-axis` and `Hue` are then automatically popul
 
 ![Selecting layer features: defaults](./imgs/selecting_layers2.png)
 
-For Label layers, we can observe, that all colors turn into a default white color as soon as we start visualizing the data. When we start drawing, we see the respective items showing up in the color we selected as cluster index (see above). If we want to reset the selection, we can press the `Reset` button. Note, that for `Labels` data, this will not make the coloring of the labels go back to the random coloring that you may be used to from napari. To reset the colors back to their random coloring, you can use the `Shuffle Colors` button on the napari layer control for the selected layer:
+For Label layers, we can observe that the initial random label colors are retained by default (i.e., the selection overlay is invisible by default):
 
-![Drawning and reseting colors](./imgs/selecting_layers3.gif)
+![Invisible overlay for labels](./imgs/selecting_layers5.png)
+
+When we start drawing or untoggle the visibility button, we see the respective items showing up in the color we selected as cluster index (see above). If we want to reset the selection, we can press the `Reset` button. For `Labels` data, the color will revert back to the default (random colors) as soon as the layer is unselected. To retain the cluster selection, simply keep the layer selected in the napari layer list.
+
+![Drawing and reseting colors](./imgs/selecting_layers3.gif)
 
 ## Cross-layer visualization
 
