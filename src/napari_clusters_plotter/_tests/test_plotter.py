@@ -187,8 +187,8 @@ def create_multi_shapes_layers(n_samples: int = 100):
 
     shapes1, shapes2 = [], []
     for i in range(len(points1.data)):
-        # create a random shape around the point, whereas the shape consists of the coordinates
-        # of the four corner of the rectangle
+        # create a random shape around the point, whereas the shape
+        # consists of the coordinates of the four corner of the rectangle
         y, x = points1.data[i, 2], points1.data[i, 3]
         w, h = np.random.randint(1, 5), np.random.randint(1, 5)
 
@@ -203,8 +203,8 @@ def create_multi_shapes_layers(n_samples: int = 100):
         shapes1.append(shape1)
 
     for i in range(len(points2.data)):
-        # create a random shape around the point, whereas the shape consists of the coordinates
-        # of the four corner of the rectangle
+        # create a random shape around the point, whereas the shape consists
+        # of the coordinates of the four corner of the rectangle
         y, x = points2.data[i, 2], points2.data[i, 3]
         w, h = np.random.randint(1, 5), np.random.randint(1, 5)
 
@@ -479,5 +479,11 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     viewer.layers.selection.active = layer
     assert "MANUAL_CLUSTER_ID" in layer.features.columns
     assert "MANUAL_CLUSTER_ID" in layer2.features.columns
+
+    # trigger manual bin size
+    plotter_widget.automatic_bins = False
+    plotter_widget.bin_number = 10
+    plotter_widget.control_widget.histogram_cmap_box.setCurrentText("viridis")
+    plotter_widget.control_widget.overlay_cmap_box.setCurrentText("viridis")
 
     plotter_widget.plotting_type = "SCATTER"

@@ -36,11 +36,9 @@ dependencies = [
     "scikit-learn",
     "pandas",
     "umap-learn",
-    "napari-tools-menu",
-    "napari-skimage-regionprops>=0.3.1",
     "scikit-image",
     "scipy",
-    "biaplotter>=0.2.0",
+    "biaplotter>=0.3.1",
     "imagecodecs"
 ]
 
