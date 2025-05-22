@@ -181,8 +181,9 @@ def create_multi_surface_layer(n_samples: int = 100):
 
 
 def create_multi_surface_layer2():
-    from napari_clusters_plotter._sample_data import cells3d_curvatures
     from napari.layers import Layer
+
+    from napari_clusters_plotter._sample_data import cells3d_curvatures
 
     layer1 = cells3d_curvatures()[1]
     layer2 = cells3d_curvatures()[1]
@@ -190,9 +191,13 @@ def create_multi_surface_layer2():
     layer1 = Layer.create(*layer1)
     layer2 = Layer.create(*layer2)
 
-    #rename features to feature1, feature2, etc
-    layer1.features.columns = [f"feature{i}" for i in range(1, len(layer1.features.columns) + 1)]
-    layer2.features.columns = [f"feature{i}" for i in range(1, len(layer2.features.columns) + 1)]
+    # rename features to feature1, feature2, etc
+    layer1.features.columns = [
+        f"feature{i}" for i in range(1, len(layer1.features.columns) + 1)
+    ]
+    layer2.features.columns = [
+        f"feature{i}" for i in range(1, len(layer2.features.columns) + 1)
+    ]
 
     return layer1, layer2
 
@@ -521,7 +526,7 @@ def test_cluster_visibility_toggle(make_napari_viewer, create_sample_layers):
 
     viewer = make_napari_viewer()
     viewer.dims.ndisplay = 3
-    
+
     # add layers to viewer
     layer, layer2 = create_sample_layers()
     viewer.add_layer(layer)
