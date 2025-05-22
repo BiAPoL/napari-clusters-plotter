@@ -180,6 +180,23 @@ def create_multi_surface_layer(n_samples: int = 100):
     return surface1, surface2
 
 
+def create_multi_surface_layer2():
+    from napari_clusters_plotter._sample_data import cells3d_curvatures
+    from napari.layers import Layer
+
+    layer1 = cells3d_curvatures()[1]
+    layer2 = cells3d_curvatures()[1]
+
+    layer1 = Layer.create(*layer1)
+    layer2 = Layer.create(*layer2)
+
+    #rename features to feature1, feature2, etc
+    layer1.features.columns = [f"feature{i}" for i in range(1, len(layer1.features.columns) + 1)]
+    layer2.features.columns = [f"feature{i}" for i in range(1, len(layer2.features.columns) + 1)]
+
+    return layer1, layer2
+
+
 def create_multi_shapes_layers(n_samples: int = 100):
     from napari.layers import Shapes
 
@@ -487,3 +504,33 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     plotter_widget.control_widget.overlay_cmap_box.setCurrentText("viridis")
 
     plotter_widget.plotting_type = "SCATTER"
+
+
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+        create_multi_vectors_layer,
+        create_multi_surface_layer,
+        create_multi_surface_layer2,
+        create_multi_shapes_layers,
+    ],
+)
+def test_cluster_visibility_toggle(make_napari_viewer, create_sample_layers):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    viewer.dims.ndisplay = 3
+    
+    # add layers to viewer
+    layer, layer2 = create_sample_layers()
+    viewer.add_layer(layer)
+    viewer.add_layer(layer2)
+
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+    plotter_widget._selectors["x"].setCurrentText("feature3")
+
+    plotter_widget._on_show_plot_overlay(state=False)
+    plotter_widget._on_show_plot_overlay(state=True)
+    plotter_widget._on_show_plot_overlay(state=False)
