@@ -628,7 +628,8 @@ class PlotterWidget(BaseWidget):
             )  # rgba
         else:
             # Default to white for other layer types
-            return np.array([[1, 1, 1, 1]])
+            default_color = np.array([[1, 1, 1, 1]])
+            return default_color.repeat(len(layer.features), axis=0)
 
     def _update_layer_colors(self, use_color_indices: bool = False) -> None:
         """
