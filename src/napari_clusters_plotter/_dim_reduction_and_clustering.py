@@ -15,15 +15,25 @@ from ._algorithms import (
 
 class ClusteringWidget(AlgorithmWidgetBase):
     algorithms = {
-        "KMeans": {"callback": cluster_kmeans, "column_string": "KMeans"},
-        "HDBSCAN": {"callback": cluster_hdbscan, "column_string": "HDBSCAN"},
+        "KMeans": {
+            "callback": cluster_kmeans,
+            "column_string": "KMeans",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html",
+            },
+        "HDBSCAN": {
+            "callback": cluster_hdbscan,
+            "column_string": "HDBSCAN",
+            "doc_url": "https://hdbscan.readthedocs.io/en/latest/how_hdbscan_works.html",
+            },
         "Gaussian Mixture": {
             "callback": cluster_gaussian_mixture,
             "column_string": "Gaussian Mixture",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html",
         },
         "Spectral": {
             "callback": cluster_spectral,
             "column_string": "Spectral",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.cluster.SpectralClustering.html",
         },
     }
 
@@ -64,9 +74,22 @@ class ClusteringWidget(AlgorithmWidgetBase):
 
 class DimensionalityReductionWidget(AlgorithmWidgetBase):
     algorithms = {
-        "PCA": {"callback": reduce_pca, "column_string": "PC"},
-        "t-SNE": {"callback": reduce_tsne, "column_string": "t-SNE"},
-        "UMAP": {"callback": reduce_umap, "column_string": "UMAP"},
+        "PCA": {
+            "callback":
+            reduce_pca,
+            "column_string": "PC",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html",
+            },
+        "t-SNE": {
+            "callback": reduce_tsne,
+            "column_string": "t-SNE",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html",
+            },
+        "UMAP": {
+            "callback": reduce_umap,
+            "column_string": "UMAP",
+            "doc_url": "https://umap-learn.readthedocs.io/en/latest/",
+            },
     }
 
     def __init__(self, napari_viewer: napari.Viewer):
