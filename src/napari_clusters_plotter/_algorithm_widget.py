@@ -1,8 +1,8 @@
 import warnings
+
 import pandas as pd
 from magicgui import magic_factory
 from magicgui.widgets import Label
-from qtpy.QtCore import Qt
 from napari.layers import (
     Labels,
     Points,
@@ -11,6 +11,7 @@ from napari.layers import (
     Tracks,
     Vectors,
 )
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -166,8 +167,8 @@ class AlgorithmWidgetBase(BaseWidget):
         widget_factory = magic_factory(
             self.algorithms[algorithm]["callback"],
             call_button="Run",
-            widget_init = init_function,
-            )
+            widget_init=init_function,
+        )
         self.selected_algorithm_widget = widget_factory()
         self.selected_algorithm_widget.native_parent_changed.emit(self)
         self.selected_algorithm_widget.called.connect(self._wait_for_finish)
@@ -186,11 +187,13 @@ class AlgorithmWidgetBase(BaseWidget):
         widget : magicgui.widgets.Widget
             The widget to add the label to.
         """
-        label_widget = Label(value='')
+        label_widget = Label(value="")
 
         algorithm = self.algorithms[self.algorithm_selection.currentText()]
 
-        label_widget.value = f'<a href=\"{algorithm["doc_url"]}\">{algorithm["doc_url"]}</a>'
+        label_widget.value = (
+            f'<a href="{algorithm["doc_url"]}">{algorithm["doc_url"]}</a>'
+        )
         label_widget.native.setTextFormat(Qt.RichText)
         label_widget.native.setTextInteractionFlags(Qt.TextBrowserInteraction)
         label_widget.native.setOpenExternalLinks(True)
