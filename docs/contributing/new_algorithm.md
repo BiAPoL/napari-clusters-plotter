@@ -61,10 +61,26 @@ Once that is done, you need to make the method available for the clustering or d
 ```python
 class DimensionalityReductionWidget(AlgorithmWidgetBase):
     algorithms = {
-        "PCA": {"callback": reduce_pca, "column_string": "PC"},
-        "t-SNE": {"callback": reduce_tsne, "column_string": "t-SNE"},
-        "UMAP": {"callback": reduce_umap, "column_string": "UMAP"},
-        "My algorithm" : {"callback": reduce_my_algorithm, "column_string": "some_acronym_for_your_algorithm"}
+        "PCA": {
+            "callback": reduce_pca,
+            "column_string": "PC",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html",
+        },
+        "t-SNE": {
+            "callback": reduce_tsne,
+            "column_string": "t-SNE",
+            "doc_url": "https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html",
+        },
+        "UMAP": {
+            "callback": reduce_umap,
+            "column_string": "UMAP",
+            "doc_url": "https://umap-learn.readthedocs.io/en/latest/",
+        },
+        "my-new-algorithm": {
+            "callback": reduce_my_algorithm,
+            "column_string": "acronym_of_my_algorithm",
+            "doc_url": "https://link-to-my-algorithm-that-explains-what-it-does.com"
+        }
     }
 
     def __init__(self, napari_viewer: napari.Viewer):
@@ -77,7 +93,7 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
 
 ```
 
-The relevant parts here are to add the above-implemented function as a callback to the widget. Secondly, you'll need to provide an acronym for your algorithm. The reduced features will then appear in the list of features as `ACRONYM_0` and `ACRONYM_1` (e.g., `PC_0` and `PC_1` for PCA).
+The relevant parts here are to add the above-implemented function as a callback to the widget. Secondly, you'll need to provide an acronym for your algorithm. The reduced features will then appear in the list of features as `ACRONYM_0` and `ACRONYM_1` (e.g., `PC_0` and `PC_1` for PCA). Lastly, please add a link to a documentation page that describes how your algorithm works, what it does and what its parameters mean.
 
 ## New clustering algorithm
 
