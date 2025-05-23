@@ -176,6 +176,16 @@ class AlgorithmWidgetBase(BaseWidget):
         self._update_features()
 
     def _on_init_algorithm(self, widget):
+        """
+        Add a label with the documentation link to the algorithm widget.
+
+        Taken from https://github.com/guiwitz/napari-skimage/blob/main/src/napari_skimage/skimage_detection_widget.py
+
+        Parameters
+        ----------
+        widget : magicgui.widgets.Widget
+            The widget to add the label to.
+        """
         label_widget = Label(value='')
 
         algorithm = self.algorithms[self.algorithm_selection.currentText()]
