@@ -1,7 +1,8 @@
 import warnings
 
 import pandas as pd
-from magicgui import magicgui
+from magicgui import magic_factory
+from magicgui.widgets import Label
 from napari.layers import (
     Labels,
     Points,
@@ -10,6 +11,7 @@ from napari.layers import (
     Tracks,
     Vectors,
 )
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -161,14 +163,40 @@ class AlgorithmWidgetBase(BaseWidget):
             self.selected_algorithm_widget.native.deleteLater()
 
         algorithm = self.algorithm_selection.currentText()
-        self.selected_algorithm_widget = magicgui(
-            self.algorithms[algorithm]["callback"], call_button="Run"
+        widget_factory = magic_factory(
+            self.algorithms[algorithm]["callback"],
+            call_button="Run",
+            widget_init=lambda widget: self._on_init_algorithm(widget),
         )
+        self.selected_algorithm_widget = widget_factory()
         self.selected_algorithm_widget.native_parent_changed.emit(self)
         self.selected_algorithm_widget.called.connect(self._wait_for_finish)
         self.layout.addWidget(self.selected_algorithm_widget.native)
 
         self._update_features()
+
+    def _on_init_algorithm(self, widget):
+        """
+        Add a label with the documentation link to the algorithm widget.
+
+        Taken from https://github.com/guiwitz/napari-skimage/blob/main/src/napari_skimage/skimage_detection_widget.py
+
+        Parameters
+        ----------
+        widget : magicgui.widgets.Widget
+            The widget to add the label to.
+        """
+        label_widget = Label(value="")
+
+        algorithm = self.algorithms[self.algorithm_selection.currentText()]
+
+        label_widget.value = (
+            f'<a href="{algorithm["doc_url"]}">{algorithm["doc_url"]}</a>'
+        )
+        label_widget.native.setTextFormat(Qt.RichText)
+        label_widget.native.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label_widget.native.setOpenExternalLinks(True)
+        widget.extend([label_widget])
 
     def _on_update_layer_selection(self, layer):
         self.layers = list(self.viewer.layers.selection)
