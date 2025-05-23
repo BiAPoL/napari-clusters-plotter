@@ -166,8 +166,8 @@ class AlgorithmWidgetBase(BaseWidget):
         widget_factory = magic_factory(
             self.algorithms[algorithm]["callback"],
             call_button="Run",
-            widget_init = lambda widget: self._on_init_algorithm(widget),
-            )
+            widget_init=lambda widget: self._on_init_algorithm(widget),
+        )
         self.selected_algorithm_widget = widget_factory()
         self.selected_algorithm_widget.native_parent_changed.emit(self)
         self.selected_algorithm_widget.called.connect(self._wait_for_finish)
