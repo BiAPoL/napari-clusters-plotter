@@ -111,14 +111,14 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
     nuclei = io.imread(path / "nucleus.tif")
 
     # create layer data tuples
-    layer_data_surface = [
+    layer_data_surface = (
         (vertices, faces),
         {
             "name": "cells_3d_mitotic_nucleus_surface_curvatures",
             "features": hks,
         },
         "surface",
-    ]
+    )
 
     layer_data_nuclei = (
         nuclei,
