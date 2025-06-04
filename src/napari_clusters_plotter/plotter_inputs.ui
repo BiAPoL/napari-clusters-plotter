@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="plotting_options">
       <attribute name="title">
@@ -70,7 +70,7 @@
        <item row="3" column="0" colspan="2">
         <widget class="QPushButton" name="reset_button">
          <property name="text">
-          <string>Reset</string>
+          <string>Clear Selection</string>
          </property>
         </widget>
        </item>
@@ -84,82 +84,7 @@
        <string>Advanced Options</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="3" column="0" colspan="2">
-        <widget class="QWidget" name="log_scale_container" native="true">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_2">
-          <item>
-           <widget class="QLabel" name="log_label">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string/>
-            </property>
-            <property name="text">
-             <string>Colors in Log Scale</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="log_scale_checkbutton">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, display histogram colors and overlay colors in log scale.&lt;/p&gt;&lt;p&gt;To enale this, select a HISTOGRAM2D in the &lt;span style=&quot; font-weight:600;&quot;&gt;Plotting Type&lt;/span&gt; Combobox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="4" column="0" colspan="2">
-        <widget class="QWidget" name="plotting_type_container" native="true">
-         <layout class="QGridLayout" name="gridLayout">
-          <item row="0" column="1">
-           <widget class="QComboBox" name="plot_type_box">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_4">
-            <property name="text">
-             <string>Plotting Type</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QWidget" name="overlay_cmap_container" native="true">
-         <layout class="QGridLayout" name="gridLayout_6">
-          <item row="1" column="1">
-           <widget class="QComboBox" name="overlay_cmap_box">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display a feature as colors over plotted data.&lt;/p&gt;&lt;p&gt;Use the eye button in the plotter controls to hide/show the overlay colors.&lt;/p&gt;&lt;p&gt;To enale this, select a non-categorical feature in the &lt;span style=&quot; font-weight:600;&quot;&gt;Hue&lt;/span&gt; Combobox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Overlay Colormap</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="6" column="0" colspan="2">
+       <item row="7" column="0" colspan="2">
         <widget class="QWidget" name="bins_settings_container" native="true">
          <property name="enabled">
           <bool>true</bool>
@@ -213,27 +138,112 @@
          </layout>
         </widget>
        </item>
-       <item row="5" column="0" colspan="2">
+       <item row="6" column="0" colspan="2">
         <widget class="QWidget" name="cmap_container" native="true">
-         <layout class="QGridLayout" name="gridLayout_7">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Histogram Colormap</string>
+         <widget class="QLabel" name="label_8">
+          <property name="geometry">
+           <rect>
+            <x>9</x>
+            <y>9</y>
+            <width>191</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Histogram Colormap</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="histogram_cmap_box">
+          <property name="geometry">
+           <rect>
+            <x>300</x>
+            <y>9</y>
+            <width>97</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display the histogram data (not the colors overlay).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="QWidget" name="plotting_type_container" native="true">
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="1">
+           <widget class="QComboBox" name="plot_type_box">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string/>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="histogram_cmap_box">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display the histogram data (not the colors overlay).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Plotting Type</string>
             </property>
            </widget>
           </item>
          </layout>
         </widget>
        </item>
-       <item row="7" column="0" colspan="2">
+       <item row="3" column="0" colspan="2">
+        <widget class="QWidget" name="log_scale_container" native="true">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QLabel" name="log_label">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string/>
+            </property>
+            <property name="text">
+             <string>Colors in Log Scale</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="log_scale_checkbutton">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If checked, display histogram colors and overlay colors in log scale.&lt;/p&gt;&lt;p&gt;To enale this, select a HISTOGRAM2D in the &lt;span style=&quot; font-weight:600;&quot;&gt;Plotting Type&lt;/span&gt; Combobox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QWidget" name="overlay_cmap_container" native="true">
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="overlay_cmap_box">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display a feature as colors over plotted data.&lt;/p&gt;&lt;p&gt;Use the eye button in the plotter controls to hide/show the overlay colors.&lt;/p&gt;&lt;p&gt;To enale this, select a non-categorical feature in the &lt;span style=&quot; font-weight:600;&quot;&gt;Hue&lt;/span&gt; Combobox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Overlay Colormap</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="2">
         <widget class="QWidget" name="additional_options_container" native="true">
          <property name="enabled">
           <bool>false</bool>
@@ -250,6 +260,19 @@
            <widget class="QCheckBox" name="non_selected_checkbutton">
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QWidget" name="highlight_frame_container" native="true">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QCheckBox" name="checkBox_highlight_frame">
+            <property name="text">
+             <string>Highlight frame (only timelapse)</string>
             </property>
            </widget>
           </item>
