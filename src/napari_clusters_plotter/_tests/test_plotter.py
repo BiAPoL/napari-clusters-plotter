@@ -315,7 +315,9 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_tracks_layer,
     ],
 )
-def test_cluster_memorization_and_clearing(make_napari_viewer, create_sample_layers):
+def test_cluster_memorization_and_clearing(
+    make_napari_viewer, create_sample_layers
+):
     from napari_clusters_plotter import PlotterWidget
 
     viewer = make_napari_viewer()
@@ -351,9 +353,7 @@ def test_cluster_memorization_and_clearing(make_napari_viewer, create_sample_lay
 
     # check that clearing the plot actually sets all "Manual Cluster IDs" to 0
     plotter_widget._reset()
-    assert np.all(
-        layer2.features["MANUAL_CLUSTER_ID"] == 0
-    )
+    assert np.all(layer2.features["MANUAL_CLUSTER_ID"] == 0)
 
 
 def test_multiscale_plotter(make_napari_viewer):
