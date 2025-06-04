@@ -42,9 +42,9 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
 
 
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
+    import napari
     import pandas as pd
     from skimage import io
-    import napari
 
     # get path of this file
     path = Path(__file__).parent / "sample_data" / "BBBC007_v1_images"
