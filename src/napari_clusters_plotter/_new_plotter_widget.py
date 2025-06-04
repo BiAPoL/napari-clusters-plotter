@@ -719,8 +719,13 @@ class PlotterWidget(BaseWidget):
         if self.n_selected_layers == 0:
             return
 
-        self.plotting_widget.active_artist.color_indices = np.zeros(
-            len(self._get_features())
-        )
+        for layer in self.viewer.layers.selection:
+            if "MANUAL_CLUSTER_ID" in layer.features.columns:
+                layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
+                    np.zeros(len(layer.features), dtype=np.int32)
+                ).astype("category")
+        # self.plotting_widget.active_artist.color_indices = np.zeros(
+        #     len(self._get_features())
+        # )
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
