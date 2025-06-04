@@ -493,21 +493,25 @@ class PlotterWidget(BaseWidget):
         """
         # check if the selected layers are of the correct type and remove unsupported layers
         selection = self.viewer.layers.selection
-        selection = [layer for layer in selection if type(layer) in self.input_layer_types]
+        selection = [
+            layer
+            for layer in selection
+            if type(layer) in self.input_layer_types
+        ]
         self.layers = list(selection)
 
         # don't do anything if no layer is selected
         if len(selection) == 0:
             self._clean_up()
             return
-    
+
         # insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
         for layer in selection:
             if "MANUAL_CLUSTER_ID" not in layer.features.columns:
                 layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     np.zeros(len(layer.features), dtype=np.int32)
                 ).astype("category")
-        
+
         if event is not None and len(event.removed) > 0:
             # remove the layers that are not in the selection anymore
             self.layers_being_unselected = list(event.removed)
@@ -689,7 +693,10 @@ class PlotterWidget(BaseWidget):
 
         # Apply default colors to layers being unselected
         for layer in self.layers_being_unselected:
-            if layer in self.viewer.layers and type(layer) in self.input_layer_types:
+            if (
+                layer in self.viewer.layers
+                and type(layer) in self.input_layer_types
+            ):
                 rgba_colors = self._generate_default_colors(layer)
                 self._set_layer_color(layer, rgba_colors)
         self.layers_being_unselected = []
