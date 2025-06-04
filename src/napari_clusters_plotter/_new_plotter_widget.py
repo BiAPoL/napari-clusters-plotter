@@ -232,6 +232,18 @@ class PlotterWidget(BaseWidget):
             self.control_widget.cmap_container.setVisible(False)
             self.control_widget.bins_settings_container.setVisible(False)
 
+    def _reset_axes_labels(self):
+        """
+        Clear the x and y axis labels in the plotting widget.
+        """
+        for artist in self.plotting_widget.artists.values():
+            if hasattr(artist, "x_label"):
+                artist.x_label_text = ""
+                artist.x_label_color = "white"
+            if hasattr(artist, "y_label"):
+                artist.y_label_text = ""
+                artist.y_label_color = "white"
+
     def _replot(self):
         """
         Replot the data with the current settings.
