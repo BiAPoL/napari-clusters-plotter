@@ -60,6 +60,7 @@ class PlotterWidget(BaseWidget):
                 self.overlay_colormap_plot
             ),
         }
+        self._replot()
 
     def _napari_to_mpl_cmap(self, colormap_name):
         return LinearSegmentedColormap.from_list(
@@ -232,6 +233,18 @@ class PlotterWidget(BaseWidget):
             self.control_widget.cmap_container.setVisible(False)
             self.control_widget.bins_settings_container.setVisible(False)
 
+    def _reset_axes_labels(self):
+        """
+        Clear the x and y axis labels in the plotting widget.
+        """
+        for artist in self.plotting_widget.artists.values():
+            if hasattr(artist, "x_label"):
+                artist.x_label_text = ""
+                artist.x_label_color = "white"
+            if hasattr(artist, "y_label"):
+                artist.y_label_text = ""
+                artist.y_label_color = "white"
+
     def _replot(self):
         """
         Replot the data with the current settings.
@@ -251,8 +264,10 @@ class PlotterWidget(BaseWidget):
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
         self._handle_advanced_options_widget_visibility()
-
+        self._reset_axes_labels()
         active_artist = self.plotting_widget.active_artist
+        active_artist.x_label_text = self.x_axis
+        active_artist.y_label_text = self.y_axis
         color_norm = "log" if self.log_scale else "linear"
         # First set the data related properties in the active artist
         active_artist.data = np.stack([x_data, y_data], axis=1)
