@@ -55,7 +55,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     raw_images = [f for f in tif_files if "labels" not in f]
     layers = []
 
-    for i, raw_image_filename in enumerate(raw_images):
+    for raw_image_filename in raw_images:
 
         label_filename = raw_image_filename.replace(".tif", "_labels.tif")
         feature_filename = raw_image_filename.replace(".tif", "_features.csv")
