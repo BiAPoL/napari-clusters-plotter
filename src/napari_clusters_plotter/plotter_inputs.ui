@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>636</width>
-    <height>672</height>
+    <width>1303</width>
+    <height>871</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="plotting_options">
       <attribute name="title">
@@ -70,7 +70,7 @@
        <item row="3" column="0" colspan="2">
         <widget class="QPushButton" name="reset_button">
          <property name="text">
-          <string>Clear Clusters</string>
+          <string>Clear Manual Cluster Selection</string>
          </property>
         </widget>
        </item>
