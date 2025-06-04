@@ -23,6 +23,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
         {
             "name": "tgmm-mini-tracks",
             "features": features,
+            "scale": [5, 1, 1],
         },
         "tracks",
     )
@@ -32,6 +33,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
         {
             "name": "tgmm-mini-labels",
             "features": features,
+            "scale": [5, 1, 1],
         },
         "labels",
     )
