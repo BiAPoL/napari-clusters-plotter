@@ -1,14 +1,14 @@
 import pytest
 
+
 @pytest.mark.parametrize(
     "sample_data_function",
-    ['bbbc1', 'cells3d_curvatures', 'tgmm_mini'],
+    ["bbbc1", "cells3d_curvatures", "tgmm_mini"],
 )
 def test_bbbc_1_sample_data(make_napari_viewer, sample_data_function):
-    from napari.layers import Layer
 
     viewer = make_napari_viewer()
-    viewer.open_sample('napari-clusters-plotter', sample_data_function)
+    viewer.open_sample("napari-clusters-plotter", sample_data_function)
     assert len(viewer.layers) > 0
 
     # sample_dataset = sample_data_function()
