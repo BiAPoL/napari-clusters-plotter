@@ -191,7 +191,8 @@ class AlgorithmWidgetBase(BaseWidget):
         algorithm = self.algorithms[self.algorithm_selection.currentText()]
 
         label_widget.value = (
-            f'<a href="{algorithm["doc_url"]}">{algorithm["doc_url"]}</a>'
+            f'Doc pages: <a href="{algorithm["doc_url"]}" '
+            f'style="color: white;">{algorithm["doc_url"]}</a>'
         )
         label_widget.native.setTextFormat(Qt.RichText)
         label_widget.native.setTextInteractionFlags(Qt.TextBrowserInteraction)
