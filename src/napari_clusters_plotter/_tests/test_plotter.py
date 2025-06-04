@@ -315,7 +315,7 @@ def test_mixed_layers(make_napari_viewer):
         create_multi_tracks_layer,
     ],
 )
-def test_cluster_memorization(make_napari_viewer, create_sample_layers):
+def test_cluster_memorization_and_clearing(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
 
     viewer = make_napari_viewer()
@@ -347,6 +347,12 @@ def test_cluster_memorization(make_napari_viewer, create_sample_layers):
     assert np.all(
         plotter_widget.plotting_widget.active_artist.color_indices
         == cluster_indeces
+    )
+
+    # check that clearing the plot actually sets all "Manual Cluster IDs" to 0
+    plotter_widget._reset()
+    assert np.all(
+        layer2.features["MANUAL_CLUSTER_ID"] == 0
     )
 
 
