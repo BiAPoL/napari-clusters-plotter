@@ -1,0 +1,22 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+- caption: Usage
+  chapters:
+  - file: usage/overview
+  - file: usage/plotter_widget
+  - file: usage/dimensionality_reduction_widget
+  - file: usage/clustering_widget
+
+- caption: Examples
+  chapters:
+  - file: examples/sample_data
+- caption: Contributing
+  chapters:
+  - file: contributing/new_algorithm
+- caption: API
+  chapters:
+  - file: api

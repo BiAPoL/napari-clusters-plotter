@@ -1,44 +1,21 @@
 repos:
--   repo: https://github.com/psf/black
-    rev: 24.10.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
     hooks:
-    - id: black
-      pass_filenames: true
--   repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
+      - id: check-docstring-first
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: ^\.napari-hub/.*
+      - id: check-yaml # checks for correct yaml syntax for github actions ex.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
     hooks:
-    - id: flake8
-      pass_filenames: true
-      # this seems to need to be here in addition to setup.cfg
-      exclude: vendored|__init__.py|examples
-      additional_dependencies:
-      - flake8-tidy-imports
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+      - id: ruff
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
     hooks:
-    - id: check-yaml
-    - id: check-merge-conflict
-    - id: end-of-file-fixer
-      exclude: napari_clusters_plotter/__init__.py
-    - id: trailing-whitespace
-    - id: debug-statements
-    - id: mixed-line-ending
--   repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-    - id: isort
--   repo: https://github.com/tlambert03/napari-plugin-checks
+      - id: black
+  - repo: https://github.com/tlambert03/napari-plugin-checks
     rev: v0.3.0
     hooks:
-    - id: napari-plugin-checks
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.0
-    hooks:
-    - id: pyupgrade
-      args: ["--py37-plus"]
--   repo: https://github.com/PyCQA/autoflake
-    rev: 'v2.3.1'
-    hooks:
-    - id: autoflake
-      args: ["--remove-all-unused-imports", "-i"]
-      exclude: napari_clusters_plotter/__init__.py
+      - id: napari-plugin-checks
