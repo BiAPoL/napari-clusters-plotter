@@ -13,11 +13,9 @@
 
 A napari-plugin for clustering objects according to their properties.
 
-## Documentation
+## [Documentation](https://biapol.github.io/napari-clusters-plotter/)
 
 The documentation for the napari-clusters-plotter is available under the above link.
-
-# TODO insert link once pushed to main.
 
 ## License
 
