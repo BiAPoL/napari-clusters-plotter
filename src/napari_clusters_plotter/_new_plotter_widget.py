@@ -723,3 +723,4 @@ class PlotterWidget(BaseWidget):
             len(self._get_features())
         )
         self._update_layer_colors(use_color_indices=False)
+        self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
