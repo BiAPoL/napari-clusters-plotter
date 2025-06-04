@@ -60,6 +60,7 @@ class PlotterWidget(BaseWidget):
                 self.overlay_colormap_plot
             ),
         }
+        self._replot()
 
     def _napari_to_mpl_cmap(self, colormap_name):
         return LinearSegmentedColormap.from_list(
