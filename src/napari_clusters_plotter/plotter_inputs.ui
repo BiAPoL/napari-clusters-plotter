@@ -23,7 +23,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="plotting_options">
       <attribute name="title">
@@ -70,7 +70,7 @@
        <item row="3" column="0" colspan="2">
         <widget class="QPushButton" name="reset_button">
          <property name="text">
-          <string>Clear Selection</string>
+          <string>Clear Clusters</string>
          </property>
         </widget>
        </item>
