@@ -86,6 +86,15 @@ class BaseWidget(QWidget):
         """
         return len(list(self.viewer.layers.selection))
 
+    def get_valid_layers(self):
+        """
+        Check if the currently selected layers are of the correct type.
+        """
+        return [
+            layer for layer in self.viewer.layers.selection
+            if type(layer) in self.input_layer_types
+        ]
+
 
 class AlgorithmWidgetBase(BaseWidget):
     def __init__(self, napari_viewer, algorithms, label_text, combo_box_items):
