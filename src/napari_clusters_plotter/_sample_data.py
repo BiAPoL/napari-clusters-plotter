@@ -4,6 +4,61 @@ from pathlib import Path
 from typing import List
 
 
+def skan_skeleton() -> List["LayerData"]:  # noqa: F821
+    import pandas as pd
+    from skimage.io import imread
+
+    paths_data = Path(__file__).parent / "sample_data" / "shapes_skeleton"
+    df_paths = pd.read_csv(
+        paths_data / Path("all_paths.csv"),
+    )
+    df_features = pd.read_csv(
+        paths_data / Path("skeleton_features.csv"),
+        index_col="Unnamed: 0",  # Adjusted to match the CSV structure
+    )
+
+    # skeleton_id column should be categorical
+    categorical_columns = [
+        "skeleton_id",
+        "node_id_src",
+        "branch_type",
+        "path_id",
+        "random_path_id",
+    ]
+    for feature in categorical_columns:
+        df_features[feature] = df_features[feature].astype("category")
+
+    list_of_paths = []
+    shape_types = []
+    for _, group in list(df_paths.groupby("index")):
+        list_of_paths.append(group[["axis-0", "axis-1", "axis-2"]].values)
+        shape_types.append(group["shape-type"].values[0])
+
+    layer_paths = (
+        list_of_paths,
+        {
+            "name": "shapes_skeleton",
+            "shape_type": shape_types,
+            "features": df_features,
+            "edge_width": 0.25,
+            "blending": "translucent",
+        },
+        "shapes",
+    )
+
+    layer_blobs = (
+        imread(paths_data / Path("blobs.tif")),
+        {
+            "name": "binary blobs",
+            "opacity": 0.5,
+            "blending": "additive",
+        },
+        "labels",
+    )
+
+    return [layer_paths, layer_blobs]
+
+
 def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
     import pandas as pd
     from skimage.io import imread
@@ -16,6 +71,15 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
         low_memory=False,
         encoding="utf-8",
     )
+
+    categorical_columns = [
+        "Label",
+        "ID",
+        "Branch spot ID",
+        "Spot track ID",
+    ]
+    for feature in categorical_columns:
+        features[feature] = features[feature].astype("category")
     tracking_label_image = imread(path / Path("tgmm-mini.tif"))
 
     layer_data_tuple_tracks = (
