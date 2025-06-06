@@ -99,4 +99,47 @@ The relevant parts here are to add the above-implemented function as a callback 
 
 To add a new clustering algorithm, follow the steps above analogeously for the clustering widget. For the implementation of the algorithm itself, nothing changes.
 
-**Note**: Clustering algorithms are expected to return a single integer column!
+```{hint}
+Clustering algorithms are expected to return a single integer column!
+```
+
+```{hint}
+In the napari-clusters-plotter convention, cluster ids **start with 1** - the value 0 is reserved for unclustered data points. This means that if your algorithm returns a cluster id of 0, you should change it to 1 before returning the result.
+```
+
+This being said, a clustering algorithm should look like this:
+
+```python
+def cluster_method(
+    data: pd.DataFrame, n_clusters: int = 3, scale: bool = True
+) -> FunctionWorker[pd.Series]:
+    """
+    Cluster the data using Spectral Clustering
+    """
+
+    @thread_worker(progress=True)
+    def _cluster_method(
+        data: pd.DataFrame, some_parameter: int, scale: bool
+    ) -> pd.Series:
+        from module import MyClusteringAlgorithm
+
+        # Remove NaN rows
+        non_nan_data = data.dropna()
+
+        if scale:
+            preprocessed = StandardScaler().fit_transform(non_nan_data)
+        else:
+            preprocessed = non_nan_data.values
+
+        # Perform Spectral Clustering (+1 to start clusters from 1)
+        clusterer = MyClusteringAlgorithm(some_parameter=some_parameter)
+        clusters = clusterer.fit_predict(preprocessed) + 1
+
+        # Add NaN rows back
+        result = pd.Series(index=data.index, dtype=int)
+        result.loc[non_nan_data.index] = clusters
+
+        return result
+
+    return _cluster_method(data, n_clusters, scale)
+```
