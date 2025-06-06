@@ -19,7 +19,7 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
 
     list_of_paths = []
     shape_types = []
-    for idx, group in list(df_paths.groupby("index")):
+    for _, group in list(df_paths.groupby("index")):
         list_of_paths.append(group[["axis-0", "axis-1", "axis-2"]].values)
         shape_types.append(group["shape-type"].values[0])
 
