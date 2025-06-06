@@ -14,14 +14,14 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
     )
     df_features = pd.read_csv(
         paths_data / Path("skeleton_features.csv"),
-        index_col='Unnamed: 0',  # Adjusted to match the CSV structure
+        index_col="Unnamed: 0",  # Adjusted to match the CSV structure
     )
 
     list_of_paths = []
     shape_types = []
-    for idx, group in list(df_paths.groupby('index')):
-        list_of_paths.append(group[['axis-0', 'axis-1', 'axis-2']].values)
-        shape_types.append(group['shape-type'].values[0])
+    for idx, group in list(df_paths.groupby("index")):
+        list_of_paths.append(group[["axis-0", "axis-1", "axis-2"]].values)
+        shape_types.append(group["shape-type"].values[0])
 
     layer_paths = (
         list_of_paths,
@@ -29,7 +29,7 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
             "name": "shapes_skeleton",
             "shape_type": shape_types,
             "features": df_features,
-            "edge_width": 0.25
+            "edge_width": 0.25,
         },
         "shapes",
     )
