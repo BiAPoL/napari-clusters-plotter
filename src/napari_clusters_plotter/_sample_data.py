@@ -17,6 +17,17 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
         index_col="Unnamed: 0",  # Adjusted to match the CSV structure
     )
 
+    # skeleton_id column should be categorical
+    categorical_columns = [
+        'skeleton_id',
+        'node_id_src',
+        'branch_type',
+        'path_id',
+        'random_path_id'
+        ]
+    for feature in categorical_columns:
+        df_features[feature] = df_features[feature].astype("category")
+
     list_of_paths = []
     shape_types = []
     for _, group in list(df_paths.groupby("index")):
