@@ -30,7 +30,7 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
             "shape_type": shape_types,
             "features": df_features,
             "edge_width": 0.25,
-            "blending": "additive",
+            "blending": "translucent",
         },
         "shapes",
     )
