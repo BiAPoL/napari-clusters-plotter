@@ -718,6 +718,9 @@ class PlotterWidget(BaseWidget):
             layer.vertex_colors = colors
         elif isinstance(layer, napari.layers.Shapes):
             layer.edge_color = colors
+        elif isinstance(layer, napari.layers.Tracks):
+            layer._track_colors = colors
+            layer.events.color_by()
         elif isinstance(layer, napari.layers.Labels):
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
