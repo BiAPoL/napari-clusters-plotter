@@ -24,7 +24,14 @@ from qtpy.QtWidgets import (
 
 class BaseWidget(QWidget):
 
-    input_layer_types = [Labels, Points, Surface, Vectors, Shapes, Tracks]
+    input_layer_types = [
+        Labels,
+        Points,
+        Surface,
+        Vectors,
+        Shapes,
+        Tracks
+        ]
 
     def __init__(self, napari_viewer):
         super().__init__()
