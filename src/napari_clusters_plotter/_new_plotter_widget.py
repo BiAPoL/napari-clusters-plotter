@@ -491,22 +491,16 @@ class PlotterWidget(BaseWidget):
         """
         Called when the layer selection changes. Updates the layers attribute.
         """
-        # check if the selected layers are of the correct type and remove unsupported layers
-        selection = self.viewer.layers.selection
-        selection = [
-            layer
-            for layer in selection
-            if type(layer) in self.input_layer_types
-        ]
-        self.layers = list(selection)
+        # check if the selected layers are of the correct type
+        self.layers = self.get_valid_layers()
 
         # don't do anything if no layer is selected
-        if len(selection) == 0:
+        if len(self.layers) == 0:
             self._clean_up()
             return
 
         # insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
-        for layer in selection:
+        for layer in self.layers:
             if "MANUAL_CLUSTER_ID" not in layer.features.columns:
                 layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     np.zeros(len(layer.features), dtype=np.int32)

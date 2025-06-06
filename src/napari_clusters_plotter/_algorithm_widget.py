@@ -216,7 +216,7 @@ class AlgorithmWidgetBase(BaseWidget):
         widget.extend([label_widget])
 
     def _on_update_layer_selection(self, layer):
-        self.layers = list(self.viewer.layers.selection)
+        self.layers = self.get_valid_layers()
 
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
