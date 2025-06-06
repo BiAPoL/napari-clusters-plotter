@@ -73,10 +73,10 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
     )
 
     categorical_columns = [
-        'Label',
-        'ID',
-        'Branch spot ID',
-        'Spot track ID',
+        "Label",
+        "ID",
+        "Branch spot ID",
+        "Spot track ID",
     ]
     for feature in categorical_columns:
         features[feature] = features[feature].astype("category")
