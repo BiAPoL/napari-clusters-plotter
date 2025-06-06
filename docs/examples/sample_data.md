@@ -27,3 +27,11 @@ The data is licensed under the conditions in [LICENSE](../../src/napari_clusters
 ![TGMM mini dataset overview](./imgs/sample_data_tgmm.gif)
 
 The dataset is available in the napari viewer under `File > Open Sample > napari clusters plotter > TGMM mini dataset (tracks and segmentations)`
+
+## Shapes: Skan skeleton
+
+For shapes data, we provide a set of skeleton paths that were determined from a [random dataset](https://scikit-image.org/docs/stable/api/skimage.data.html#skimage.data.binary_blobs) using the [skan library](https://skeleton-analysis.org/stable/) according to [this workflow](https://skeleton-analysis.org/stable/examples/visualizing_3d_skeletons.html).
+
+![Skan skeleton](./imgs/sample_data_skan_skeleton.gif)
+
+The dataset is available in the napari viewer under `File > Open Sample > napari clusters plotter > Skan skeleton dataset(labels and paths)`
