@@ -71,6 +71,15 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
         low_memory=False,
         encoding="utf-8",
     )
+
+    categorical_columns = [
+        'Label',
+        'ID',
+        'Branch spot ID',
+        'Spot track ID',
+    ]
+    for feature in categorical_columns:
+        features[feature] = features[feature].astype("category")
     tracking_label_image = imread(path / Path("tgmm-mini.tif"))
 
     layer_data_tuple_tracks = (
