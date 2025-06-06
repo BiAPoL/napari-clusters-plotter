@@ -19,12 +19,12 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
 
     # skeleton_id column should be categorical
     categorical_columns = [
-        'skeleton_id',
-        'node_id_src',
-        'branch_type',
-        'path_id',
-        'random_path_id'
-        ]
+        "skeleton_id",
+        "node_id_src",
+        "branch_type",
+        "path_id",
+        "random_path_id",
+    ]
     for feature in categorical_columns:
         df_features[feature] = df_features[feature].astype("category")
 
