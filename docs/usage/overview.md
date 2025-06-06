@@ -11,12 +11,7 @@ The clusters plotter currently supports the following layers:
 - Surface layers
 - Vectors layers
 - Shapes layers
-- Tracks layers (coming soon...)
-
-<p align="center">
-  <img alt="Tracking data demo" src="./imgs/layer_demo_tracks.gif" width="29%">
-&nbsp; &nbsp; &nbsp; &nbsp;
-</p>
+- Tracks layers
 
 
 It is important to understand that while the these layer types are all supported, the cluster plotter functionality depends entirely on the attached features, as written above. For a napari layer, the features are attached to a layer as an attribute (`layer.feature`). By default, it is simply a [pandas dataframe](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html) where each row refers to a single item in the respective layer. For the different layers, these correspond to:
