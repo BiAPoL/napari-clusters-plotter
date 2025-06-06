@@ -248,6 +248,6 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
             assert layer.features[col].dtype.name == "category"
 
             # check that there are no -1 values in the clustering results
-            assert not any(layer.features[col] == -1), (
-                f"-1 values found in clustering results for {algorithm}"
-            )
+            assert not any(
+                layer.features[col] == -1
+            ), f"-1 values found in clustering results for {algorithm}"
