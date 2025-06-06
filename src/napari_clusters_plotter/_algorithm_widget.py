@@ -24,14 +24,7 @@ from qtpy.QtWidgets import (
 
 class BaseWidget(QWidget):
 
-    input_layer_types = [
-        Labels,
-        Points,
-        Surface,
-        Vectors,
-        Shapes,
-        Tracks
-        ]
+    input_layer_types = [Labels, Points, Surface, Vectors, Shapes, Tracks]
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -91,7 +84,8 @@ class BaseWidget(QWidget):
         Check if the currently selected layers are of the correct type.
         """
         return [
-            layer for layer in self.viewer.layers.selection
+            layer
+            for layer in self.viewer.layers.selection
             if type(layer) in self.input_layer_types
         ]
 
