@@ -211,19 +211,14 @@ class AlgorithmWidgetBase(BaseWidget):
 
     def _on_update_layer_selection(self, layer):
         self.layers = self.get_valid_layers()
+        if len(self.layers) == 0:
+            self._clean_up()
+            return
 
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
             self._clean_up()
             return
-
-        # check if the selected layers are of the correct type
-        selected_layer_types = [
-            type(layer) for layer in self.viewer.layers.selection
-        ]
-        for layer_type in selected_layer_types:
-            if layer_type not in self.input_layer_types:
-                return
 
         features_to_add = self._get_features()[self.common_columns]
         column_strings = [
