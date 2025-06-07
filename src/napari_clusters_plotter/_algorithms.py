@@ -132,8 +132,9 @@ def cluster_kmeans(
         else:
             preprocessed = non_nan_data.values
 
+        # Perform KMeans clustering (+1 to start clusters from 1)
         kmeans = KMeans(n_clusters=n_clusters)
-        clusters = kmeans.fit_predict(preprocessed)
+        clusters = kmeans.fit_predict(preprocessed) + 1
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
@@ -172,10 +173,11 @@ def cluster_hdbscan(
         else:
             preprocessed = non_nan_data.values
 
+        # Perform HDBSCAN clustering (+1 to start clusters from 1)
         clusterer = HDBSCAN(
             min_cluster_size=min_cluster_size, min_samples=min_samples
         )
-        clusters = clusterer.fit_predict(preprocessed)
+        clusters = clusterer.fit_predict(preprocessed) + 1
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
@@ -208,8 +210,9 @@ def cluster_gaussian_mixture(
         else:
             preprocessed = non_nan_data.values
 
+        # Perform Gaussian Mixture clustering (+1 to start clusters from 1)
         gmm = GaussianMixture(n_components=n_components)
-        clusters = gmm.fit_predict(preprocessed)
+        clusters = gmm.fit_predict(preprocessed) + 1
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)
@@ -242,8 +245,9 @@ def cluster_spectral(
         else:
             preprocessed = non_nan_data.values
 
+        # Perform Spectral Clustering (+1 to start clusters from 1)
         clusterer = SpectralClustering(n_clusters=n_clusters)
-        clusters = clusterer.fit_predict(preprocessed)
+        clusters = clusterer.fit_predict(preprocessed) + 1
 
         # Add NaN rows back
         result = pd.Series(index=data.index, dtype=int)

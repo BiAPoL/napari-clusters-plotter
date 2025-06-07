@@ -196,7 +196,7 @@ class PlotterWidget(BaseWidget):
             return
 
         features = self._get_features()
-        for layer in self.viewer.layers.selection:
+        for layer in self.layers:
             layer_indices = features[features["layer"] == layer.name].index
 
             # store latest cluster indeces in the features table
@@ -249,6 +249,10 @@ class PlotterWidget(BaseWidget):
         """
         Replot the data with the current settings.
         """
+        # check if there are any valid layers selected
+        if len(self.layers) == 0:
+            self._clean_up()
+            return
 
         # if no x or y axis is selected, return
         if self.x_axis == "" or self.y_axis == "":
@@ -487,31 +491,21 @@ class PlotterWidget(BaseWidget):
         """
         Called when the layer selection changes. Updates the layers attribute.
         """
+        # check if the selected layers are of the correct type
+        self.layers = self.get_valid_layers()
+
         # don't do anything if no layer is selected
-        if self.n_selected_layers == 0:
+        if len(self.layers) == 0:
             self._clean_up()
             return
 
-        # check if the selected layers are of the correct type
-        selected_layer_types = [
-            type(layer) for layer in self.viewer.layers.selection
-        ]
-        for layer_type in selected_layer_types:
-            if layer_type not in self.input_layer_types:
-                return
-
-        # check if all selected layers are of the same type
-        if len(set(selected_layer_types)) > 1:
-            return
-
         # insert 'MANUAL_CLUSTER_ID' column if it doesn't exist
-        for layer in self.viewer.layers.selection:
+        for layer in self.layers:
             if "MANUAL_CLUSTER_ID" not in layer.features.columns:
                 layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     np.zeros(len(layer.features), dtype=np.int32)
                 ).astype("category")
 
-        self.layers = list(self.viewer.layers.selection)
         if event is not None and len(event.removed) > 0:
             # remove the layers that are not in the selection anymore
             self.layers_being_unselected = list(event.removed)
@@ -532,7 +526,7 @@ class PlotterWidget(BaseWidget):
         """In case of empty layer selection"""
 
         # disconnect the events from the layers
-        for layer in self.viewer.layers.selection:
+        for layer in self.layers:
             event_attr = getattr(layer.events, "features", None) or getattr(
                 layer.events, "properties", None
             )
@@ -668,7 +662,7 @@ class PlotterWidget(BaseWidget):
         features = self._get_features()
         active_artist = self.plotting_widget.active_artist
 
-        for selected_layer in self.viewer.layers.selection:
+        for selected_layer in self.layers:
             if use_color_indices:
                 # Apply colors based on color indices
                 rgba_colors = active_artist.color_indices_to_rgba(
@@ -693,7 +687,10 @@ class PlotterWidget(BaseWidget):
 
         # Apply default colors to layers being unselected
         for layer in self.layers_being_unselected:
-            if layer in self.viewer.layers:
+            if (
+                layer in self.viewer.layers
+                and type(layer) in self.input_layer_types
+            ):
                 rgba_colors = self._generate_default_colors(layer)
                 self._set_layer_color(layer, rgba_colors)
         self.layers_being_unselected = []
@@ -717,7 +714,10 @@ class PlotterWidget(BaseWidget):
         elif isinstance(layer, napari.layers.Surface):
             layer.vertex_colors = colors
         elif isinstance(layer, napari.layers.Shapes):
-            layer.face_color = colors
+            layer.edge_color = colors
+        elif isinstance(layer, napari.layers.Tracks):
+            layer._track_colors = colors
+            layer.events.color_by()
         elif isinstance(layer, napari.layers.Labels):
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
