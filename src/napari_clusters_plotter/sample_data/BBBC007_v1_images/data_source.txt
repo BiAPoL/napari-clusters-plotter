@@ -1,5 +1,5 @@
 We used image set BBBC007v1 image set version 1 (Jones et al., Proc. ICCV Workshop on Computer Vision for Biomedical Image Applications, 2005), available from the Broad Bioimage Benchmark Collection [Ljosa et al., Nature Methods, 2012].
 
-Images were cropped with a 340x340 window size and converted to 16-bit format.
+Some images (17P1_POS0006_D_1UL, 17P1_POS0014_D_1UL, 20P1_POS0005_D_1UL, 20P1_POS0010_D_1UL, 20P1_POS0011_D_1UL) were converted from RGB to grayscale (8-bit).
 
 Link: https://bbbc.broadinstitute.org/BBBC007

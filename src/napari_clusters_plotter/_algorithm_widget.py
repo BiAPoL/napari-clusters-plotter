@@ -1,12 +1,17 @@
+import warnings
+
 import pandas as pd
-from magicgui import magicgui
+from magicgui import magic_factory
+from magicgui.widgets import Label
 from napari.layers import (
     Labels,
     Points,
     Shapes,
     Surface,
+    Tracks,
     Vectors,
 )
+from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -19,13 +24,7 @@ from qtpy.QtWidgets import (
 
 class BaseWidget(QWidget):
 
-    input_layer_types = [
-        Labels,
-        Points,
-        Surface,
-        Vectors,
-        Shapes,
-    ]
+    input_layer_types = [Labels, Points, Surface, Vectors, Shapes, Tracks]
 
     def __init__(self, napari_viewer):
         super().__init__()
@@ -50,6 +49,13 @@ class BaseWidget(QWidget):
             ].astype("category")
         return features.reset_index(drop=True)
 
+    def _clean_up(self):
+        """Determines what happens in case of no layer selected"""
+
+        raise NotImplementedError(
+            "This function should be implemented in the subclass."
+        )
+
     @property
     def common_columns(self):
         if len(self.layers) == 0:
@@ -72,6 +78,16 @@ class BaseWidget(QWidget):
         Number of currently selected layers.
         """
         return len(list(self.viewer.layers.selection))
+
+    def get_valid_layers(self):
+        """
+        Check if the currently selected layers are of the correct type.
+        """
+        return [
+            layer
+            for layer in self.viewer.layers.selection
+            if type(layer) in self.input_layer_types
+        ]
 
 
 class AlgorithmWidgetBase(BaseWidget):
@@ -137,6 +153,13 @@ class AlgorithmWidgetBase(BaseWidget):
         return features
 
     def _wait_for_finish(self, worker):
+        # escape empty input data
+        if self.selected_algorithm_widget.data.value.empty:
+            warnings.warn(
+                "No features selected. Please select features before running the algorithm.",
+                stacklevel=1,
+            )
+            return
         self.worker = worker
         self.worker.start()
         self.worker.returned.connect(self._process_result)
@@ -150,29 +173,52 @@ class AlgorithmWidgetBase(BaseWidget):
             self.selected_algorithm_widget.native.deleteLater()
 
         algorithm = self.algorithm_selection.currentText()
-        self.selected_algorithm_widget = magicgui(
-            self.algorithms[algorithm]["callback"], call_button="Run"
+        widget_factory = magic_factory(
+            self.algorithms[algorithm]["callback"],
+            call_button="Run",
+            widget_init=lambda widget: self._on_init_algorithm(widget),
         )
+        self.selected_algorithm_widget = widget_factory()
         self.selected_algorithm_widget.native_parent_changed.emit(self)
         self.selected_algorithm_widget.called.connect(self._wait_for_finish)
         self.layout.addWidget(self.selected_algorithm_widget.native)
 
         self._update_features()
 
+    def _on_init_algorithm(self, widget):
+        """
+        Add a label with the documentation link to the algorithm widget.
+
+        Taken from https://github.com/guiwitz/napari-skimage/blob/main/src/napari_skimage/skimage_detection_widget.py
+
+        Parameters
+        ----------
+        widget : magicgui.widgets.Widget
+            The widget to add the label to.
+        """
+        label_widget = Label(value="")
+
+        algorithm = self.algorithms[self.algorithm_selection.currentText()]
+
+        label_widget.value = (
+            f'Doc pages: <a href="{algorithm["doc_url"]}" '
+            f'style="color: white;">{algorithm["doc_url"]}</a>'
+        )
+        label_widget.native.setTextFormat(Qt.RichText)
+        label_widget.native.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label_widget.native.setOpenExternalLinks(True)
+        widget.extend([label_widget])
+
     def _on_update_layer_selection(self, layer):
-        self.layers = list(self.viewer.layers.selection)
+        self.layers = self.get_valid_layers()
+        if len(self.layers) == 0:
+            self._clean_up()
+            return
 
         # don't do anything if no layer is selected
         if self.n_selected_layers == 0:
+            self._clean_up()
             return
-
-        # check if the selected layers are of the correct type
-        selected_layer_types = [
-            type(layer) for layer in self.viewer.layers.selection
-        ]
-        for layer_type in selected_layer_types:
-            if layer_type not in self.input_layer_types:
-                return
 
         features_to_add = self._get_features()[self.common_columns]
         column_strings = [
@@ -188,6 +234,16 @@ class AlgorithmWidgetBase(BaseWidget):
         self.feature_selection_widget.clear()
         self.feature_selection_widget.addItems(sorted(features_to_add.columns))
         self._update_features()
+
+    def _clean_up(self):
+        """
+        Clean up the widget when it is closed.
+        """
+
+        # block signals for feature selection
+        self.feature_selection_widget.blockSignals(True)
+        self.feature_selection_widget.clear()
+        self.feature_selection_widget.blockSignals(False)
 
     @property
     def selected_algorithm(self):
