@@ -106,7 +106,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
 
 
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
-    import numpy as np
+    import napari
     import pandas as pd
     from skimage import io
 
@@ -117,22 +117,14 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         os.path.join(str(path), "**", "*.tif"), recursive=True
     )
     raw_images = [f for f in tif_files if "labels" not in f]
+    layers = []
 
-    spacing = 500
-    # calculate positions of images on grid
-    n_cols = np.sqrt(len(raw_images))
-    image_layers = []
-    labels_layers = []
-
-    for i, raw_image_filename in enumerate(raw_images):
+    for raw_image_filename in raw_images:
 
         label_filename = raw_image_filename.replace(".tif", "_labels.tif")
         feature_filename = raw_image_filename.replace(".tif", "_features.csv")
         image = io.imread(raw_image_filename)
         labels = io.imread(label_filename)
-
-        row = i // n_cols
-        col = i % n_cols
 
         features = pd.read_csv(feature_filename)
 
@@ -140,7 +132,6 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
             image,
             {
                 "name": Path(raw_image_filename).stem,
-                "translate": [spacing * col, spacing * row],
             },
             "image",
         )
@@ -149,16 +140,19 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
             labels,
             {
                 "name": Path(raw_image_filename).stem + "_labels",
-                "translate": [spacing * col, spacing * row],
                 "features": features,
             },
             "labels",
         )
 
-        image_layers.append(ldtuple_image)
-        labels_layers.append(ldtuple_labels)
+        layers.append(ldtuple_image)
+        layers.append(ldtuple_labels)
 
-    return image_layers + labels_layers
+    viewer = napari.current_viewer()
+    viewer.grid.enabled = True
+    viewer.grid.stride = 2
+
+    return layers
 
 
 def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
