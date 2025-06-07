@@ -128,7 +128,6 @@ def create_labels(n_samples=100):
     layer2 = Labels(labels2, features=features2)
 
     return layer1, layer2
-import pytest
 
 
 def create_multiscale_labels():
@@ -461,6 +460,7 @@ def test_cluster_export(make_napari_viewer, create_data):
             viewer.layers[-1].data,
             layer1.data[~selected_clusters.astype(bool)],
         )
+
 
 @pytest.mark.parametrize(
     "create_sample_layers",
