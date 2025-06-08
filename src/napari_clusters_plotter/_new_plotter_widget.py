@@ -145,13 +145,13 @@ class PlotterWidget(BaseWidget):
         )
 
         # get the layer to export from
-        layer = self.layers[0]
+        for layer in self.layers:
 
-        export_layer = _export_cluster_to_layer(
-            layer, indices, subcluster_index=selected_cluster
-        )
-        if export_layer is not None:
-            self.viewer.add_layer(export_layer)
+            export_layer = _export_cluster_to_layer(
+                layer, indices, subcluster_index=selected_cluster
+            )
+            if export_layer is not None:
+                self.viewer.add_layer(export_layer)
 
     def _setup_callbacks(self):
         """
