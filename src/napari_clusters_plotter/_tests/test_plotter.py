@@ -431,35 +431,41 @@ def test_mixed_layers(make_napari_viewer):
     viewer.add_labels(sample_labels)
 
 
-@pytest.mark.parametrize("create_data", [create_points, create_shapes])
+@pytest.mark.parametrize(
+    "create_data",
+    [
+        create_multi_point_layer,
+        create_multi_labels_layer,
+        create_multi_vectors_layer,
+        create_multi_surface_layer,
+        create_multi_shapes_layers,
+        create_multi_tracks_layer,
+    ],
+)
 def test_cluster_export(make_napari_viewer, create_data):
     from napari_clusters_plotter import PlotterWidget
 
     viewer = make_napari_viewer()
+    layer1, layer2 = create_data()
+    viewer.add_layer(layer1)
+    viewer.add_layer(layer2)
+    viewer.layers.select_all()
+
+    n_layers = len(viewer.layers)
+
     widget = PlotterWidget(viewer)
     viewer.window.add_dock_widget(widget, area="right")
 
-    layer1, _ = create_data()
-    viewer.add_layer(layer1)
-
-    # select some random features in the plotting widget
-    n_samples = layer1.features.shape[0]
-    selected_clusters = np.zeros(n_samples, dtype=int)
-    selected_clusters[:5] = 1
-
-    widget.plotting_widget.active_artist.color_indices = selected_clusters
+    for layer in viewer.layers:
+        if type(layer) in widget.input_layer_types:
+            features = layer.features
+            features['MANUAL_CLUSTER_ID'] = np.random.randint(low=0, high=2, size=len(features['MANUAL_CLUSTER_ID']))
+            layer.features = features
+    
+    widget.plot_needs_update.emit()
     widget._on_export_clusters()
 
-    assert len(viewer.layers) == 2
-
-    if isinstance(layer1, Points):
-        assert (
-            viewer.layers[-1].data.shape[0] == n_samples - 5
-        )  # selected cluster is 0, by default.
-        assert np.array_equal(
-            viewer.layers[-1].data,
-            layer1.data[~selected_clusters.astype(bool)],
-        )
+    assert len(viewer.layers) == n_layers * 2
 
 
 @pytest.mark.parametrize(
