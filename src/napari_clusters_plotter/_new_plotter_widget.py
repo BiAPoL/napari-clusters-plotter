@@ -228,7 +228,9 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         for layer in self.layers:
-            layer_indices = features[features["layer"] == layer.unique_id].index
+            layer_indices = features[
+                features["layer"] == layer.unique_id
+            ].index
 
             # store latest cluster indeces in the features table
             layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
