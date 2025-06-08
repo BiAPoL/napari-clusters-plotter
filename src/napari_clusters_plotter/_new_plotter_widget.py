@@ -228,7 +228,7 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         for layer in self.layers:
-            layer_indices = features[features["layer"] == layer.name].index
+            layer_indices = features[features["layer"] == layer.unique_id].index
 
             # store latest cluster indeces in the features table
             layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
@@ -700,7 +700,7 @@ class PlotterWidget(BaseWidget):
                     active_artist.color_indices
                 )
                 layer_indices = features[
-                    features["layer"] == selected_layer.name
+                    features["layer"] == selected_layer.unique_id
                 ].index
                 self._set_layer_color(
                     selected_layer, rgba_colors[layer_indices]
