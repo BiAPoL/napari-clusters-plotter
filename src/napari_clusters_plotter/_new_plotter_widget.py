@@ -139,10 +139,6 @@ class PlotterWidget(BaseWidget):
 
         # get currently selected cluster from plotting widget
         selected_cluster = self.plotting_widget.class_spinbox.value
-        indices = (
-            self.plotting_widget.active_artist.color_indices
-            == selected_cluster
-        )
         features = self._get_features()
 
         # get the layer to export from
