@@ -60,7 +60,7 @@ class PlotterWidget(BaseWidget):
                 self.overlay_colormap_plot
             ),
         }
-        self._replot()
+        self.plot_needs_update.emit()
 
     def _napari_to_mpl_cmap(self, colormap_name):
         return LinearSegmentedColormap.from_list(
@@ -383,7 +383,7 @@ class PlotterWidget(BaseWidget):
             self.plotting_widget.active_artist.overlay_colormap = (
                 cat10_mod_cmap
             )
-        self._replot()
+        self.plot_needs_update.emit()
 
     def _on_overlay_colormap_changed(self):
         colormap_name = self.overlay_colormap_plot
@@ -394,13 +394,13 @@ class PlotterWidget(BaseWidget):
         self.colormap_reference[(False, "SCATTER")] = self._napari_to_mpl_cmap(
             colormap_name
         )
-        self._replot()
+        self.plot_needs_update.emit()
 
     def _on_histogram_colormap_changed(self):
-        self._replot()
+        self.plot_needs_update.emit()
 
     def _checkbox_status_changed(self):
-        self._replot()
+        self.plot_needs_update.emit()
 
     def _on_bin_auto_toggled(self, state: bool):
         """
@@ -408,7 +408,7 @@ class PlotterWidget(BaseWidget):
         Enables or disables the bin number box accordingly.
         """
         self.control_widget.n_bins_box.setEnabled(not state)
-        self._replot()
+        self.plot_needs_update.emit()
 
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
@@ -468,7 +468,7 @@ class PlotterWidget(BaseWidget):
     @x_axis.setter
     def x_axis(self, column: str):
         self.control_widget.x_axis_box.setCurrentText(column)
-        self._replot()
+        self.plot_needs_update.emit()
 
     @property
     def y_axis(self):
@@ -477,7 +477,7 @@ class PlotterWidget(BaseWidget):
     @y_axis.setter
     def y_axis(self, column: str):
         self.control_widget.y_axis_box.setCurrentText(column)
-        self._replot()
+        self.plot_needs_update.emit()
 
     @property
     def hue_axis(self):
@@ -775,6 +775,7 @@ class PlotterWidget(BaseWidget):
         # )
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
+        self.plot_needs_update.emit()
 
 
 def _export_cluster_to_layer(
