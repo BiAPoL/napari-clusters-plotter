@@ -143,8 +143,12 @@ class PlotterWidget(BaseWidget):
 
         # get the layer to export from
         for layer in self.layers:
-            features_subset = features[features['layer'] == layer.unique_id].reset_index()
-            indices = features_subset['MANUAL_CLUSTER_ID'].values == selected_cluster
+            features_subset = features[
+                features["layer"] == layer.unique_id
+            ].reset_index()
+            indices = (
+                features_subset["MANUAL_CLUSTER_ID"].values == selected_cluster
+            )
             export_layer = _export_cluster_to_layer(
                 layer, indices, subcluster_index=selected_cluster
             )
