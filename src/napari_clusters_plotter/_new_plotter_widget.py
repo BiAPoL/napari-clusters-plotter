@@ -767,7 +767,7 @@ class PlotterWidget(BaseWidget):
         if self.n_selected_layers == 0:
             return
 
-        for layer in self.viewer.layers.selection:
+        for layer in self.layers:
             if "MANUAL_CLUSTER_ID" in layer.features.columns:
                 layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     np.zeros(len(layer.features), dtype=np.int32)
