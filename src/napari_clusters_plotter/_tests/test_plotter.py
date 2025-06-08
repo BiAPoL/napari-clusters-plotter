@@ -385,17 +385,17 @@ def create_multi_labels_layer():
 
     features1 = pd.DataFrame(
         {
-            "feature1": np.random.normal(size=labels1.max() + 1),
-            "feature2": np.random.normal(size=labels1.max() + 1),
-            "feature3": np.random.normal(size=labels1.max() + 1),
+            "feature1": np.random.normal(size=labels1.max()),
+            "feature2": np.random.normal(size=labels1.max()),
+            "feature3": np.random.normal(size=labels1.max()),
         }
     )
 
     features2 = pd.DataFrame(
         {
-            "feature1": np.random.normal(size=labels2.max() + 1),
-            "feature2": np.random.normal(size=labels2.max() + 1),
-            "feature3": np.random.normal(size=labels2.max() + 1),
+            "feature1": np.random.normal(size=labels2.max()),
+            "feature2": np.random.normal(size=labels2.max()),
+            "feature3": np.random.normal(size=labels2.max()),
         }
     )
 
