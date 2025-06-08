@@ -836,7 +836,7 @@ def _export_cluster_to_layer(
 
     # copy features to new layer if available and drop cluster column
     new_layer.features = layer.features.iloc[indices].copy()
-    if "cluster" in new_layer.features.columns:
-        new_layer.features.drop(columns=["cluster"], inplace=True)
+    # if "cluster" in new_layer.features.columns:
+    #     new_layer.features.drop(columns=["cluster"], inplace=True)
 
     return new_layer
