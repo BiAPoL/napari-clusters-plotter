@@ -820,6 +820,10 @@ def _export_cluster_to_layer(
         new_shapes = [shape for shape, i in zip(layer.data, indices) if i]
         new_layer = napari.layers.Shapes(new_shapes)
 
+    elif isinstance(layer, napari.layers.Tracks):
+        new_tracks = layer.data[indices]
+        new_layer = napari.layers.Tracks(new_tracks)
+
     elif isinstance(layer, napari.layers.Surface):
         new_vertices = layer.data[0][indices]
         old_to_new_index = {
