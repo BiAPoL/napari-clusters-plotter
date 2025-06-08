@@ -459,9 +459,11 @@ def test_cluster_export(make_napari_viewer, create_data):
     for layer in viewer.layers:
         if type(layer) in widget.input_layer_types:
             features = layer.features
-            features['MANUAL_CLUSTER_ID'] = np.random.randint(low=0, high=2, size=len(features['MANUAL_CLUSTER_ID']))
+            features["MANUAL_CLUSTER_ID"] = np.random.randint(
+                low=0, high=2, size=len(features["MANUAL_CLUSTER_ID"])
+            )
             layer.features = features
-    
+
     widget.plot_needs_update.emit()
     widget._on_export_clusters()
 
