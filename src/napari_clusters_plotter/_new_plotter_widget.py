@@ -821,8 +821,20 @@ def _export_cluster_to_layer(
         new_layer = napari.layers.Shapes(new_shapes)
 
     elif isinstance(layer, napari.layers.Surface):
-        # TODO implement surface export
-        return None
+        new_vertices = layer.data[0][indices]
+        old_to_new_index = {
+            old_idx: new_idx for new_idx, old_idx in enumerate(np.where(indices)[0])
+            }
+
+        # Vectorized update of faces using list comprehension
+        new_faces = [
+            [old_to_new_index[vertex_idx] for vertex_idx in face]
+            for face in layer.data[1]
+            if all(vertex_idx in old_to_new_index for vertex_idx in face)
+        ]
+        new_layer =  napari.layers.Surface(
+            (new_vertices, np.asarray(new_faces, dtype=np.int32)),
+        )
 
     elif isinstance(layer, napari.layers.Vectors):
         new_layer = napari.layers.Vectors(layer.data[indices])
