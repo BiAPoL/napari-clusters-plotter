@@ -4,8 +4,109 @@ from pathlib import Path
 from typing import List
 
 
+def skan_skeleton() -> List["LayerData"]:  # noqa: F821
+    import pandas as pd
+    from skimage.io import imread
+
+    paths_data = Path(__file__).parent / "sample_data" / "shapes_skeleton"
+    df_paths = pd.read_csv(
+        paths_data / Path("all_paths.csv"),
+    )
+    df_features = pd.read_csv(
+        paths_data / Path("skeleton_features.csv"),
+        index_col="Unnamed: 0",  # Adjusted to match the CSV structure
+    )
+
+    # skeleton_id column should be categorical
+    categorical_columns = [
+        "skeleton_id",
+        "node_id_src",
+        "branch_type",
+        "path_id",
+        "random_path_id",
+    ]
+    for feature in categorical_columns:
+        df_features[feature] = df_features[feature].astype("category")
+
+    list_of_paths = []
+    shape_types = []
+    for _, group in list(df_paths.groupby("index")):
+        list_of_paths.append(group[["axis-0", "axis-1", "axis-2"]].values)
+        shape_types.append(group["shape-type"].values[0])
+
+    layer_paths = (
+        list_of_paths,
+        {
+            "name": "shapes_skeleton",
+            "shape_type": shape_types,
+            "features": df_features,
+            "edge_width": 0.25,
+            "blending": "translucent",
+        },
+        "shapes",
+    )
+
+    layer_blobs = (
+        imread(paths_data / Path("blobs.tif")),
+        {
+            "name": "binary blobs",
+            "opacity": 0.5,
+            "blending": "additive",
+        },
+        "labels",
+    )
+
+    return [layer_paths, layer_blobs]
+
+
+def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
+    import pandas as pd
+    from skimage.io import imread
+
+    path = Path(__file__).parent / "sample_data" / "tracking_data"
+    data = pd.read_csv(path / Path("tgmm-mini-tracks-layer-data.csv"))
+    features = pd.read_csv(
+        path / Path("tgmm-mini-spot.csv"),
+        skiprows=[1, 2],
+        low_memory=False,
+        encoding="utf-8",
+    )
+
+    categorical_columns = [
+        "Label",
+        "ID",
+        "Branch spot ID",
+        "Spot track ID",
+    ]
+    for feature in categorical_columns:
+        features[feature] = features[feature].astype("category")
+    tracking_label_image = imread(path / Path("tgmm-mini.tif"))
+
+    layer_data_tuple_tracks = (
+        data,
+        {
+            "name": "tgmm-mini-tracks",
+            "features": features,
+            "scale": [5, 1, 1],
+        },
+        "tracks",
+    )
+
+    layer_data_tuple_labels = (
+        tracking_label_image,
+        {
+            "name": "tgmm-mini-labels",
+            "features": features,
+            "scale": [5, 1, 1],
+        },
+        "labels",
+    )
+
+    return [layer_data_tuple_tracks, layer_data_tuple_labels]
+
+
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
-    import numpy as np
+    import napari
     import pandas as pd
     from skimage import io
 
@@ -16,22 +117,14 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         os.path.join(str(path), "**", "*.tif"), recursive=True
     )
     raw_images = [f for f in tif_files if "labels" not in f]
+    layers = []
 
-    spacing = 500
-    # calculate positions of images on grid
-    n_cols = np.sqrt(len(raw_images))
-    image_layers = []
-    labels_layers = []
-
-    for i, raw_image_filename in enumerate(raw_images):
+    for raw_image_filename in raw_images:
 
         label_filename = raw_image_filename.replace(".tif", "_labels.tif")
         feature_filename = raw_image_filename.replace(".tif", "_features.csv")
         image = io.imread(raw_image_filename)
         labels = io.imread(label_filename)
-
-        row = i // n_cols
-        col = i % n_cols
 
         features = pd.read_csv(feature_filename)
 
@@ -39,7 +132,6 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
             image,
             {
                 "name": Path(raw_image_filename).stem,
-                "translate": [spacing * col, spacing * row],
             },
             "image",
         )
@@ -48,13 +140,51 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
             labels,
             {
                 "name": Path(raw_image_filename).stem + "_labels",
-                "translate": [spacing * col, spacing * row],
                 "features": features,
             },
             "labels",
         )
 
-        image_layers.append(ldtuple_image)
-        labels_layers.append(ldtuple_labels)
+        layers.append(ldtuple_image)
+        layers.append(ldtuple_labels)
 
-    return image_layers + labels_layers
+    viewer = napari.current_viewer()
+    viewer.grid.enabled = True
+    viewer.grid.stride = 2
+
+    return layers
+
+
+def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
+    import numpy as np
+    import pandas as pd
+    from skimage import io
+
+    path = Path(__file__).parent / "sample_data" / "cells3d"
+
+    # load data
+    vertices = np.loadtxt(path / "vertices.txt")
+    faces = np.loadtxt(path / "faces.txt").astype(int)
+    hks = pd.read_csv(path / "signature.csv")
+    nuclei = io.imread(path / "nucleus.tif")
+
+    # create layer data tuples
+    layer_data_surface = (
+        (vertices, faces),
+        {
+            "name": "cells_3d_mitotic_nucleus_surface_curvatures",
+            "features": hks,
+        },
+        "surface",
+    )
+
+    layer_data_nuclei = (
+        nuclei,
+        {
+            "name": "cells_3d_nucleus",
+            "colormap": "gray",
+        },
+        "image",
+    )
+
+    return [layer_data_nuclei, layer_data_surface]

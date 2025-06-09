@@ -77,6 +77,11 @@ def test_initialization(make_napari_viewer, widget_config):
     # check that all features are in reduce_wdiget.feature_selection_widget
     assert len(feature_selection_items) == len(layer.features.columns)
 
+    # clear layers to make sure cleanup works
+    viewer.layers.clear()
+
+    assert widget.feature_selection_widget.count() == 0
+
 
 def test_layer_update(make_napari_viewer, widget_config):
     viewer = make_napari_viewer()
@@ -236,3 +241,13 @@ def test_algorithm_execution(make_napari_viewer, qtbot, widget_config):
             raise AssertionError(
                 f"Results not found in layer features for algorithm {algorithm}"
             )
+
+        # if a clustering algorithm is executed, assert that the resulting
+        # columns are of type "category"
+        if widget_config["widget_class"] == ClusteringWidget:
+            assert layer.features[col].dtype.name == "category"
+
+            # check that there are no -1 values in the clustering results
+            assert not any(
+                layer.features[col] == -1
+            ), f"-1 values found in clustering results for {algorithm}"
