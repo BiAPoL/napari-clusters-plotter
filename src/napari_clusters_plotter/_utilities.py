@@ -1,6 +1,7 @@
-import numpy as np
-import dask.array as da
 from typing import Union
+
+import dask.array as da
+import numpy as np
 from napari.layers import Image, Labels
 
 

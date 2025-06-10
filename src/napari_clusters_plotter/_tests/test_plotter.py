@@ -282,8 +282,8 @@ def create_multi_labels_layer():
 
 def create_multi_dask_labels_layers():
     import dask.array as da
-    from napari.layers import Labels
     import pandas as pd
+    from napari.layers import Labels
     from skimage import data, measure
 
     labels1 = measure.label(data.binary_blobs(length=64, n_dim=2))

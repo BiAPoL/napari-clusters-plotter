@@ -628,6 +628,7 @@ class PlotterWidget(BaseWidget):
         if isinstance(layer, napari.layers.Labels):
             # Use CyclicLabelColormap with N colors
             from napari.utils.colormaps.colormap_utils import label_colormap
+
             from ._utilities import _get_unique_values
 
             # check if is dask or numpy
@@ -720,6 +721,7 @@ class PlotterWidget(BaseWidget):
             layer.events.color_by()
         elif isinstance(layer, napari.layers.Labels):
             from napari.utils import DirectLabelColormap
+
             from ._utilities import _get_unique_values
 
             # Ensure the first color is transparent for the background
