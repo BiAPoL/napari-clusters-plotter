@@ -51,7 +51,7 @@ contributions:
   sample_data:
   - command: napari-clusters-plotter.bbbc_sample_data
     key: bbbc1
-    display_name: BBBC 1 dataset & segmentations
+    display_name: BBBC007 v1 dataset (images & labels)
   - command: napari-clusters-plotter.tgmm_mini_data
     key: tgmm_mini
     display_name: TGMM mini dataset (tracks and segmentations)
