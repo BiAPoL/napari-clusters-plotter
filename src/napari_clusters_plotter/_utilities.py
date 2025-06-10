@@ -1,9 +1,10 @@
 import numpy as np
 import dask.array as da
 from typing import Union
+from napari.layers import Image, Labels
 
 
-def _get_unique_values(array: Union[da.Array, np.ndarray]) -> np.ndarray:
+def _get_unique_values(layer: Union[Image, Labels]) -> np.ndarray:
     """
     Get unique values from a numpy or dask array.
 
@@ -17,10 +18,16 @@ def _get_unique_values(array: Union[da.Array, np.ndarray]) -> np.ndarray:
     np.ndarray
         Array of unique values.
     """
+    # Check if the layer is multiscale and extract the first scale data
+    # TODO: Discuss whether this is a smart thing to do....
+    if layer.multiscale:
+        data = layer.data[0]
+    else:
+        data = layer.data
 
-    if isinstance(array, np.ndarray):
-        unique_values = np.unique(array)
-    elif isinstance(array, da.Array):
-        unique_values = da.unique(array).compute()
+    if isinstance(data, np.ndarray):
+        unique_values = np.unique(data)
+    elif isinstance(data, da.Array):
+        unique_values = da.unique(data).compute()
 
     return unique_values

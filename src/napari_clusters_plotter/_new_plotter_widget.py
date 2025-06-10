@@ -631,7 +631,7 @@ class PlotterWidget(BaseWidget):
             from ._utilities import _get_unique_values
 
             # check if is dask or numpy
-            n_labels = _get_unique_values(layer.data).size - 1
+            n_labels = _get_unique_values(layer).size - 1
             return np.asarray(
                 label_colormap(n_labels).dict()["colors"]
             )  # rgba
@@ -724,7 +724,7 @@ class PlotterWidget(BaseWidget):
 
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-            color_dict = dict(zip(_get_unique_values(layer.data), colors))
+            color_dict = dict(zip(_get_unique_values(layer), colors))
             layer.colormap = DirectLabelColormap(color_dict=color_dict)
         layer.refresh()
 
