@@ -21,10 +21,7 @@ def _get_unique_values(layer: Union[Image, Labels]) -> np.ndarray:
     """
     # Check if the layer is multiscale and extract the first scale data
     # TODO: Discuss whether this is a smart thing to do....
-    if layer.multiscale:
-        data = layer.data[0]
-    else:
-        data = layer.data
+    data = layer.data[0] if layer.multiscale else layer.data
 
     if isinstance(data, np.ndarray):
         unique_values = np.unique(data)
