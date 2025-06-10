@@ -628,10 +628,10 @@ class PlotterWidget(BaseWidget):
         if isinstance(layer, napari.layers.Labels):
             # Use CyclicLabelColormap with N colors
             from napari.utils.colormaps.colormap_utils import label_colormap
+            from ._utilities import _get_unique_values
 
-            n_labels = (
-                np.unique(layer.data).size - 1
-            )  # unique labels (minus background: 0)
+            # check if is dask or numpy
+            n_labels = _get_unique_values(layer.data).size - 1
             return np.asarray(
                 label_colormap(n_labels).dict()["colors"]
             )  # rgba
@@ -719,11 +719,12 @@ class PlotterWidget(BaseWidget):
             layer._track_colors = colors
             layer.events.color_by()
         elif isinstance(layer, napari.layers.Labels):
+            from napari.utils import DirectLabelColormap
+            from ._utilities import _get_unique_values
+
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-            from napari.utils import DirectLabelColormap
-
-            color_dict = dict(zip(np.unique(layer.data), colors))
+            color_dict = dict(zip(_get_unique_values(layer.data), colors))
             layer.colormap = DirectLabelColormap(color_dict=color_dict)
         layer.refresh()
 
