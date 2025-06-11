@@ -128,7 +128,7 @@ def test_layer_update(make_napari_viewer, widget_config):
         for layer in possible_selection:
             for feature in widget.common_columns:
                 assert feature in collected_features.columns
-                assert layer.name in collected_features["layer"].values
+                assert layer.unique_id in collected_features["layer"].values
 
 
 def test_feature_update(make_napari_viewer, widget_config):
