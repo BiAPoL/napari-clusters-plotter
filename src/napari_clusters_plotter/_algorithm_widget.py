@@ -5,6 +5,7 @@ from magicgui import magic_factory
 from magicgui.widgets import Label
 from napari.layers import (
     Labels,
+    Layer,
     Points,
     Shapes,
     Surface,
@@ -86,8 +87,19 @@ class BaseWidget(QWidget):
         return [
             layer
             for layer in self.viewer.layers.selection
-            if type(layer) in self.input_layer_types
+            if self._is_supported_layer(layer)
         ]
+
+    def _is_supported_layer(self, layer: Layer) -> bool:
+        """
+        Check if the layer is of a supported type. Supported types are
+        Labels, Points, Shapes, Surface, Tracks, and Vectors as well as
+        any custom layer that inherits from these types.
+        """
+        return any(
+            isinstance(layer, layer_type)
+            for layer_type in self.input_layer_types
+        )
 
 
 class AlgorithmWidgetBase(BaseWidget):
