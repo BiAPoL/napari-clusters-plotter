@@ -5,12 +5,12 @@ from magicgui import magic_factory
 from magicgui.widgets import Label
 from napari.layers import (
     Labels,
+    Layer,
     Points,
     Shapes,
     Surface,
     Tracks,
     Vectors,
-    Layer
 )
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -89,7 +89,7 @@ class BaseWidget(QWidget):
             for layer in self.viewer.layers.selection
             if self._is_supported_layer(layer)
         ]
-    
+
     def _is_supported_layer(self, layer: Layer) -> bool:
         """
         Check if the layer is of a supported type. Supported types are
