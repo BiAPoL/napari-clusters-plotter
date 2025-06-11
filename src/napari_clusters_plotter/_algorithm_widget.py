@@ -10,6 +10,7 @@ from napari.layers import (
     Surface,
     Tracks,
     Vectors,
+    Layer
 )
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
@@ -89,7 +90,7 @@ class BaseWidget(QWidget):
             if self._is_supported_layer(layer)
         ]
     
-    def _is_supported_layer(self, layer: 'napari.layers.Layer') -> bool:
+    def _is_supported_layer(self, layer: Layer) -> bool:
         """
         Check if the layer is of a supported type. Supported types are
         Labels, Points, Shapes, Surface, Tracks, and Vectors as well as
