@@ -96,7 +96,10 @@ class BaseWidget(QWidget):
         Labels, Points, Shapes, Surface, Tracks, and Vectors as well as
         any custom layer that inherits from these types.
         """
-        return any(isinstance(layer, layer_type) for layer_type in self.input_layer_types)
+        return any(
+            isinstance(layer, layer_type)
+            for layer_type in self.input_layer_types
+        )
 
 
 class AlgorithmWidgetBase(BaseWidget):
