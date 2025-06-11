@@ -88,14 +88,17 @@ class BaseWidget(QWidget):
             for layer in self.viewer.layers.selection
             if self._is_supported_layer(layer)
         ]
-    
-    def _is_supported_layer(self, layer: 'napari.layers.Layer') -> bool:
+
+    def _is_supported_layer(self, layer: "napari.layers.Layer") -> bool:
         """
         Check if the layer is of a supported type. Supported types are
         Labels, Points, Shapes, Surface, Tracks, and Vectors as well as
         any custom layer that inherits from these types.
         """
-        return any(isinstance(layer, layer_type) for layer_type in self.input_layer_types)
+        return any(
+            isinstance(layer, layer_type)
+            for layer_type in self.input_layer_types
+        )
 
 
 class AlgorithmWidgetBase(BaseWidget):
