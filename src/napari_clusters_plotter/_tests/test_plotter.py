@@ -280,6 +280,40 @@ def create_multi_labels_layer():
     return labels1, labels2
 
 
+def create_multi_dask_labels_layers():
+    import dask.array as da
+    import pandas as pd
+    from napari.layers import Labels
+    from skimage import data, measure
+
+    labels1 = measure.label(data.binary_blobs(length=64, n_dim=2))
+    labels2 = measure.label(data.binary_blobs(length=64, n_dim=2))
+
+    # convert labels to dask arrays
+    labels1 = da.from_array(labels1, chunks=(32, 32))
+    labels2 = da.from_array(labels2, chunks=(32, 32))
+
+    features1 = pd.DataFrame(
+        {
+            "feature1": np.random.normal(size=labels1.max()),
+            "feature2": np.random.normal(size=labels1.max()),
+            "feature3": np.random.normal(size=labels1.max()),
+        }
+    )
+
+    features2 = pd.DataFrame(
+        {
+            "feature1": np.random.normal(size=labels2.max()),
+            "feature2": np.random.normal(size=labels2.max()),
+            "feature3": np.random.normal(size=labels2.max()),
+        }
+    )
+
+    labels1 = Labels(labels1, name="labels1", features=features1, scale=(1, 1))
+    labels2 = Labels(labels2, name="labels2", features=features2, scale=(1, 1))
+    return labels1, labels2
+
+
 def test_mixed_layers(make_napari_viewer):
     from napari_clusters_plotter import PlotterWidget
 
@@ -309,6 +343,7 @@ def test_mixed_layers(make_napari_viewer):
     [
         create_multi_point_layer,
         create_multi_labels_layer,
+        create_multi_dask_labels_layers,
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_shapes_layers,
@@ -376,6 +411,7 @@ def test_multiscale_plotter(make_napari_viewer):
     [
         create_multi_point_layer,
         create_multi_labels_layer,
+        create_multi_dask_labels_layers,
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_shapes_layers,
@@ -521,6 +557,8 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     "create_sample_layers",
     [
         create_multi_point_layer,
+        create_multi_labels_layer,
+        create_multi_dask_labels_layers,
         create_multi_vectors_layer,
         create_multi_surface_layer,
         create_multi_surface_layer2,
