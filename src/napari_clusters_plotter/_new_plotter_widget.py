@@ -142,7 +142,9 @@ class PlotterWidget(BaseWidget):
         features = self._get_features()
         hue_column = self.hue_axis
         if hue_column not in self.categorical_columns:
-            Warning('"Selected hue axis is not categorical, cannot export clusters.')
+            Warning(
+                '"Selected hue axis is not categorical, cannot export clusters.'
+            )
             return
 
         # get the layer to export from
@@ -150,9 +152,7 @@ class PlotterWidget(BaseWidget):
             features_subset = features[
                 features["layer"] == layer.unique_id
             ].reset_index()
-            indices = (
-                features_subset[hue_column].values == selected_cluster
-            )
+            indices = features_subset[hue_column].values == selected_cluster
             export_layer = _export_cluster_to_layer(
                 layer, indices, subcluster_index=selected_cluster
             )
@@ -823,7 +823,9 @@ def _export_cluster_to_layer(
     elif isinstance(layer, napari.layers.Shapes):
         new_shapes = [shape for shape, i in zip(layer.data, indices) if i]
         new_shape_types = np.asarray(layer.shape_type)[indices]
-        new_layer = napari.layers.Shapes(new_shapes, shape_type=new_shape_types)
+        new_layer = napari.layers.Shapes(
+            new_shapes, shape_type=new_shape_types
+        )
         new_layer.edge_width = np.asarray(layer.edge_width)[indices]
 
     elif isinstance(layer, napari.layers.Tracks):
