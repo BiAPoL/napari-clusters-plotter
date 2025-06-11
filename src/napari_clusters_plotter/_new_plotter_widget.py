@@ -689,7 +689,7 @@ class PlotterWidget(BaseWidget):
         for layer in self.layers_being_unselected:
             if (
                 layer in self.viewer.layers
-                and type(layer) in self.input_layer_types
+                and self._is_supported_layer(layer)
             ):
                 rgba_colors = self._generate_default_colors(layer)
                 self._set_layer_color(layer, rgba_colors)
