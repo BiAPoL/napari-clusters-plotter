@@ -435,11 +435,21 @@ def test_categorical_handling(make_napari_viewer, create_sample_layers):
     assert "MANUAL_CLUSTER_ID" in layer2.features.columns
 
     categorical_columns = plotter_widget.categorical_columns
-    assert (
-        len(categorical_columns) == 2
-    )  # should only be MANUAL_CLUSTER_ID and layer name
-    assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
-    assert categorical_columns[1] == "layer"
+
+    # check that the categorical columns are correct
+    if plotter_widget._is_selectable(layer2):
+        assert (
+            len(categorical_columns) == 3
+        )  # should only be MANUAL_CLUSTER_ID and layer name
+        assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
+        assert categorical_columns[1] == "SELECTED_DATA_LAYER_CLUSTER_ID"
+        assert categorical_columns[2] == "layer"
+    else:
+        assert (
+            len(categorical_columns) == 2
+        )  # should only be MANUAL_CLUSTER_ID and layer name
+        assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
+        assert categorical_columns[1] == "layer"
 
 
 def test_empty_layer_clean_up(make_napari_viewer, n_samples: int = 100):
