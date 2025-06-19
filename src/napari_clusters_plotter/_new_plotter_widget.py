@@ -529,7 +529,9 @@ class PlotterWidget(BaseWidget):
             if self._is_selectable(layer):
                 event = self._get_selection_event(layer)
                 self._update_layer_selected_data_feature(layer)
-                event.connect(lambda e: self._update_layer_selected_data_feature(layer))
+                event.connect(
+                    lambda e: self._update_layer_selected_data_feature(layer)
+                )
 
         self._update_feature_selection(None)
 
@@ -543,7 +545,9 @@ class PlotterWidget(BaseWidget):
         cluster = np.zeros(len(layer.features))
         cluster[list(selected_data)] = 1
         # set categorical to be selectable in "Hue" dropdown
-        layer.features["SELECTED_DATA_LAYER_CLUSTER_ID"] = pd.Categorical(cluster)
+        layer.features["SELECTED_DATA_LAYER_CLUSTER_ID"] = pd.Categorical(
+            cluster
+        )
         self.plot_needs_update.emit()
 
     def _clean_up(self):
@@ -791,7 +795,9 @@ class PlotterWidget(BaseWidget):
                 f"Layer type {type(layer)} is not supported for selection."
             )
 
-    def _get_selection_event(self, layer: napari.layers.Layer) -> napari.utils.events.Event:
+    def _get_selection_event(
+        self, layer: napari.layers.Layer
+    ) -> napari.utils.events.Event:
         """
         Get the selection event for the layer.
         """
