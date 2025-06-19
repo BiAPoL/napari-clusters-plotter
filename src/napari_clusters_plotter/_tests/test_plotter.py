@@ -593,3 +593,34 @@ def test_cluster_visibility_toggle(make_napari_viewer, create_sample_layers):
     plotter_widget._on_show_plot_overlay(state=False)
     plotter_widget._on_show_plot_overlay(state=True)
     plotter_widget._on_show_plot_overlay(state=False)
+
+def test_selected_data_point_layer(make_napari_viewer, n_samples: int = 100):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    _, layer2 = create_multi_point_layer(n_samples=n_samples)
+
+    # add layers to viewer
+    viewer.add_layer(layer2)
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    # select last layer and create a random selection on the layer
+    viewer.layers.selection.active = layer2
+    selection = np.random.randint(0, 2, len(layer2.data))
+    selection[0] = 1 # make sure that at least one point is selected
+    selection_args = np.argwhere(selection == 1).flatten()
+    layer2.selected_data = selection_args
+
+    assert "SELECTED_DATA_LAYER_CLUSTER_ID" in layer2.features.columns
+
+    # use SELECTED_DATA_LAYER_CLUSTER_ID as hue for layer2
+    viewer.layers.selection.active = layer2
+    plotter_widget._selectors["hue"].setCurrentText(
+        "SELECTED_DATA_LAYER_CLUSTER_ID"
+    )
+
+    assert np.all(
+        plotter_widget.plotting_widget.active_artist.color_indices
+        == selection
+    )
