@@ -1,5 +1,6 @@
 from enum import Enum, auto
 from pathlib import Path
+from typing import List
 
 import napari
 import numpy as np
@@ -43,6 +44,10 @@ class PlotterWidget(BaseWidget):
         super().__init__(napari_viewer)
         self._setup_ui(napari_viewer)
         self.layers_being_unselected = []
+        self.selectable_layer_types = [
+            napari.layers.Labels,
+            napari.layers.Points,
+        ]
         self._on_update_layer_selection(None)
         self._setup_callbacks()
 
@@ -509,7 +514,6 @@ class PlotterWidget(BaseWidget):
         if event is not None and len(event.removed) > 0:
             # remove the layers that are not in the selection anymore
             self.layers_being_unselected = list(event.removed)
-        self._update_feature_selection(None)
 
         for layer in self.layers:
             event_attr = getattr(layer.events, "features", None) or getattr(
@@ -521,6 +525,26 @@ class PlotterWidget(BaseWidget):
                 Warning(
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
+
+            if self._is_selectable(layer):
+                event = self._get_selection_event(layer)
+                self._update_layer_selected_data_feature(layer)
+                event.connect(lambda e: self._update_layer_selected_data_feature(layer))
+
+        self._update_feature_selection(None)
+
+    def _update_layer_selected_data_feature(
+        self, layer: napari.layers.Layer
+    ) -> None:
+        """
+        Update the layer selected_data to feature.
+        """
+        selected_data = self._get_selected_objects(layer)
+        cluster = np.zeros(len(layer.features))
+        cluster[list(selected_data)] = 1
+        # set categorical to be selectable in "Hue" dropdown
+        layer.features["LAYER_SELECTED_DATA_CLUSTER_ID"] = pd.Categorical(cluster)
+        self.plot_needs_update.emit()
 
     def _clean_up(self):
         """In case of empty layer selection"""
@@ -546,24 +570,6 @@ class PlotterWidget(BaseWidget):
             selector.blockSignals(True)
             selector.clear()
             selector.blockSignals(False)
-
-            # if layer is a Point Layer
-            if type(layer) is napari.layers.Points:
-                layer.selected_data.events.items_changed.connect(
-                    lambda selected_data: self._update_layer_selected_data_feature(
-                        layer, selected_data
-                    )
-                )
-
-    def _update_layer_selected_data_feature(
-        self, layer: napari.layers.Points, selected_data: np.ndarray
-    ) -> None:
-        """
-        Update the layer selected_data to feature.
-        """
-        cluster = np.zeros(layer.data.shape[0])
-        cluster[list(selected_data)] = 1
-        layer.features["LAYER_SELECTED_DATA_CLUSTER_ID"] = cluster
 
     def _update_feature_selection(
         self, event: napari.utils.events.Event
@@ -763,3 +769,37 @@ class PlotterWidget(BaseWidget):
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
         self.plot_needs_update.emit()
+
+    def _is_selectable(self, layer: napari.layers.Layer) -> bool:
+        """
+        Check if the layer is selectable.
+        """
+        if type(layer) in self.selectable_layer_types:
+            return True
+        return False
+
+    def _get_selected_objects(self, layer: napari.layers.Layer) -> List[int]:
+        """
+        Retrieve id of selected object on napari canvas"
+        """
+        if isinstance(layer, napari.layers.Points):
+            return list(layer.selected_data)
+        elif isinstance(layer, napari.layers.Labels):
+            return [layer.selected_label]
+        else:
+            raise TypeError(
+                f"Layer type {type(layer)} is not supported for selection."
+            )
+
+    def _get_selection_event(self, layer: napari.layers.Layer) -> napari.utils.events.Event:
+        """
+        Get the selection event for the layer.
+        """
+        if isinstance(layer, napari.layers.Points):
+            return layer.selected_data.events.items_changed
+        elif isinstance(layer, napari.layers.Labels):
+            return layer.events.selected_label
+        else:
+            raise TypeError(
+                f"Layer type {type(layer)} is not supported for selection events."
+            )
