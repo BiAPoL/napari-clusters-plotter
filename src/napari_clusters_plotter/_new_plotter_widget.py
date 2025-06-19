@@ -543,7 +543,7 @@ class PlotterWidget(BaseWidget):
         cluster = np.zeros(len(layer.features))
         cluster[list(selected_data)] = 1
         # set categorical to be selectable in "Hue" dropdown
-        layer.features["LAYER_SELECTED_DATA_CLUSTER_ID"] = pd.Categorical(cluster)
+        layer.features["SELECTED_DATA_LAYER_CLUSTER_ID"] = pd.Categorical(cluster)
         self.plot_needs_update.emit()
 
     def _clean_up(self):
