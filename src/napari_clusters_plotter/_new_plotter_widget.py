@@ -752,7 +752,9 @@ class PlotterWidget(BaseWidget):
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
             color_dict = dict(zip(_get_unique_values(layer), colors))
+            layer.events.selected_label.block()
             layer.colormap = DirectLabelColormap(color_dict=color_dict)
+            layer.events.selected_label.unblock()
         layer.refresh()
 
     def _reset(self):
