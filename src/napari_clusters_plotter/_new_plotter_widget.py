@@ -183,6 +183,10 @@ class PlotterWidget(BaseWidget):
             self._on_bin_auto_toggled
         )
 
+        self.plotting_widget.active_artist.highlighted_changed_signal.connect(
+            self._on_highlighted_changed
+        )
+
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
         Called when user finsihes drawing. Will change the hue combo box to the
@@ -745,3 +749,28 @@ class PlotterWidget(BaseWidget):
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
         self.plot_needs_update.emit()
+    
+    def _on_highlighted_changed(self, boolean_object_selected: bool):
+        """
+        Focus the viewer on the highlighted object in the layer.
+        """
+        if not np.any(boolean_object_selected):
+            print("No object selected, not focusing.")
+            return
+        features = self._get_features()
+        print(f"Highlighted object selected: {boolean_object_selected}")
+        features_sub = features.iloc[np.argwhere(boolean_object_selected).flatten()]
+        layer = features_sub["layer"].values[0]
+        print(f"Focusing on layer: {layer}")
+        _focus_object(self.viewer.layers[layer], boolean_object_selected)
+
+
+def _focus_object(layer, boolean_object_selected):
+    viewer = napari.current_viewer()
+    current_step = list(viewer.dims.current_step)
+    if isinstance(layer, napari.layers.Points):
+        center = layer.data[boolean_object_selected].squeeze()
+        current_step[0] = center[0]
+        viewer.camera.center = center[-3:]
+        viewer.dims.set_current_step(0,center[0])
+    
