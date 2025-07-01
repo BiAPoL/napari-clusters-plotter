@@ -77,6 +77,7 @@ def reduce_umap(
     data: pd.DataFrame,
     n_components: int = 2,
     n_neighbors: int = 30,
+    min_dist: float = 0.1,
     scale: bool = True,
 ) -> FunctionWorker[pd.DataFrame]:
     """
@@ -85,7 +86,11 @@ def reduce_umap(
 
     @thread_worker(progress=True)
     def _reduce_umap(
-        data: pd.DataFrame, n_components: int, n_neighbors: int, scale: bool
+        data: pd.DataFrame,
+        n_components: int,
+        n_neighbors: int,
+        min_dist: float,
+        scale: bool,
     ) -> pd.DataFrame:
         import umap
         from sklearn.preprocessing import StandardScaler
@@ -98,7 +103,11 @@ def reduce_umap(
         else:
             preprocessed = non_nan_data.values
 
-        reducer = umap.UMAP(n_components=n_components, n_neighbors=n_neighbors)
+        reducer = umap.UMAP(
+            n_components=n_components,
+            n_neighbors=n_neighbors,
+            min_dist=min_dist,
+        )
         reduced_data = reducer.fit_transform(preprocessed)
 
         # Add NaN rows back
@@ -107,7 +116,7 @@ def reduce_umap(
 
         return result
 
-    return _reduce_umap(data, n_components, n_neighbors, scale)
+    return _reduce_umap(data, n_components, n_neighbors, min_dist, scale)
 
 
 def cluster_kmeans(
