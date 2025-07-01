@@ -90,7 +90,7 @@ def reduce_umap(
         n_components: int,
         n_neighbors: int,
         min_dist: float,
-        scale: bool
+        scale: bool,
     ) -> pd.DataFrame:
         import umap
         from sklearn.preprocessing import StandardScaler
@@ -106,7 +106,8 @@ def reduce_umap(
         reducer = umap.UMAP(
             n_components=n_components,
             n_neighbors=n_neighbors,
-            min_dist=min_dist)
+            min_dist=min_dist,
+        )
         reduced_data = reducer.fit_transform(preprocessed)
 
         # Add NaN rows back
