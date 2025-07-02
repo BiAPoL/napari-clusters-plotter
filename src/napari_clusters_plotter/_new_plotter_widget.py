@@ -182,6 +182,10 @@ class PlotterWidget(BaseWidget):
             self._on_bin_auto_toggled
         )
 
+        self.control_widget.checkBox_frame_highlighting.toggled.connect(
+            self._on_frame_highlighting_toggled
+        )
+
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
         Called when user finsihes drawing. Will change the hue combo box to the
@@ -298,6 +302,9 @@ class PlotterWidget(BaseWidget):
         Called when the frame changes. Updates the alpha values of the points.
         """
 
+        if not self.frame_highlighting_activated:
+            return
+
         if "frame" in self._get_features().columns:
             current_step = self.viewer.dims.current_step[0]
             alpha = np.asarray(
@@ -358,8 +365,33 @@ class PlotterWidget(BaseWidget):
         self.control_widget.n_bins_box.setEnabled(not state)
         self.plot_needs_update.emit()
 
+    def _on_frame_highlighting_toggled(self):
+        """
+        Called when the frame highlighting checkbox is toggled.
+        Updates the visibility of the frame highlighting in the plot.
+        """
+        # do nothing for histogram2d
+        if self.plotting_widget.active_artist == "HISTOGRAM2D":
+            return
+        
+        if self.frame_highlighting_activated:
+            self._on_frame_changed(None)
+        else:
+            self.plotting_widget.active_artist.alpha = np.ones(
+                len(self._get_features()), dtype=float
+            )  # Reset alpha to 1 for all points
+
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
+
+    @property
+    def frame_highlighting_activated(self):
+        return self.control_widget.checkBox_frame_highlighting.isChecked()
+    
+    @frame_highlighting_activated.setter
+    def frame_highlighting(self, val: bool):
+        self.control_widget.checkBox_frame_highlighting.setChecked(val)
+
     @property
     def log_scale(self):
         return self.control_widget.log_scale_checkbutton.isChecked()
