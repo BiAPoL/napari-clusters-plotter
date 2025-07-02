@@ -36,7 +36,7 @@ Under the `Advanced Options` tab, you have access to some more customization opt
 Depending on which plot type is selected, some additional options are available:
 
 11. For `SCATTER` plot:
-    - Enable the time-frame highlighting. This make give out-of-frame points a different alpha and size, making them appear slightly more transparent and smaller. This is useful to visualize the current time frame in a time-series dataset. To make use of this, enusre that the measurements in the layer's `layer.features` dataframe contain a `frame` column, which is used to determine the current time frame.
+    - Enable the time-frame highlighting. This make give out-of-frame points a different alpha and size, making them appear slightly more transparent and smaller. This is useful to visualize the current time frame in a time-series dataset. To make use of this, ensure that the measurements in the layer's `layer.features` dataframe contain a `frame` column, which is used to determine the current time frame.
     - Change the size of the points in the scatter plot. This can be useful for better visibility of the points in the plot in case there are a large number of points.
 
 12. For `HISTOGRAM2D` plot:
