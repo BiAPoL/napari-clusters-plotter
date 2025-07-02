@@ -186,6 +186,10 @@ class PlotterWidget(BaseWidget):
             self._on_frame_highlighting_toggled
         )
 
+        self.control_widget.spinBox_point_size.valueChanged.connect(
+            self._on_point_size_changed
+        )
+
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
         Called when user finsihes drawing. Will change the hue combo box to the
@@ -310,11 +314,11 @@ class PlotterWidget(BaseWidget):
             alpha = np.asarray(
                 self._get_features()["frame"] == current_step, dtype=float
             )
-            size = np.ones(len(alpha)) * 50
+            size = np.ones(len(alpha)) * self.scatter_point_size
 
             index_out_of_frame = alpha == 0
             alpha[index_out_of_frame] = 0.25
-            size[index_out_of_frame] = 35
+            size[index_out_of_frame] = self.scatter_point_size * 0.5
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
 
@@ -371,7 +375,7 @@ class PlotterWidget(BaseWidget):
         Updates the visibility of the frame highlighting in the plot.
         """
         # do nothing for histogram2d
-        if self.plotting_widget.active_artist == "HISTOGRAM2D":
+        if self.plotting_type == "HISTOGRAM2D":
             return
         
         if self.frame_highlighting_activated:
@@ -381,8 +385,28 @@ class PlotterWidget(BaseWidget):
                 len(self._get_features()), dtype=float
             )  # Reset alpha to 1 for all points
 
+    def _on_point_size_changed(self):
+        """
+        Called when the point size is changed.
+        Updates the size of the points in the scatter plot.
+        """
+        
+        if self.plotting_type != "SCATTER":
+            return
+
+        self.plotting_widget.active_artist.size = self.scatter_point_size
+        self.plot_needs_update.emit()
+
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
+
+    @property
+    def scatter_point_size(self):
+        return self.control_widget.spinBox_point_size.value()
+    
+    @scatter_point_size.setter
+    def scatter_point_size(self, val: int):
+        self.control_widget.spinBox_point_size.setValue(val)
 
     @property
     def frame_highlighting_activated(self):
