@@ -555,6 +555,41 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
     plotter_widget.plotting_type = "SCATTER"
 
 
+# only points is enough here
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+    ],
+)
+def test_scatter_advanced_options(make_napari_viewer, create_sample_layers):
+    from napari_clusters_plotter import PlotterWidget
+    viewer = make_napari_viewer()
+    layer, layer2 = create_sample_layers()
+
+    # add layers to viewer
+    viewer.add_layer(layer)
+    viewer.add_layer(layer2)
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    plotter_widget.scatter_point_size = 10
+    assert np.all(plotter_widget.plotting_widget.active_artist.size == 10)
+
+    plotter_widget.frame_highlighting_activated = True
+    assert ~ np.all(
+        plotter_widget.plotting_widget.active_artist.alpha == 1
+    )
+
+    # select multiple layers and make sure that plot parameters are correct
+    viewer.layers.selection = (layer, layer2)
+    assert np.all(plotter_widget.plotting_widget.active_artist.size == 10)
+    assert ~ np.all(
+        plotter_widget.plotting_widget.active_artist.alpha == 1
+    )
+
+
+
 @pytest.mark.parametrize(
     "create_sample_layers",
     [
