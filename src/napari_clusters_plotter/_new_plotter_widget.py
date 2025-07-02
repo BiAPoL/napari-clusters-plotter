@@ -417,7 +417,7 @@ class PlotterWidget(BaseWidget):
         return self.control_widget.checkBox_frame_highlighting.isChecked()
     
     @frame_highlighting_activated.setter
-    def frame_highlighting(self, val: bool):
+    def frame_highlighting_activated(self, val: bool):
         self.control_widget.checkBox_frame_highlighting.setChecked(val)
 
     @property
