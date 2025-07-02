@@ -533,6 +533,9 @@ class PlotterWidget(BaseWidget):
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
+        # make sure we use the correct frame highlighting settings
+        self._on_frame_highlighting_toggled()
+
     def _clean_up(self):
         """In case of empty layer selection"""
 
