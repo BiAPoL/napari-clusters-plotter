@@ -510,8 +510,10 @@ def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
 
     # check that the dots in the plotter widget update alpha and size
     # to highlight out-of and in-frame data points
-    assert plotter_widget.plotting_widget.active_artist.alpha.min() == 0.25
-    assert plotter_widget.plotting_widget.active_artist.size.min() == 35
+    oof_size = plotter_widget.scatter_point_size * plotter_widget._out_of_frame_size_factor
+    oof_alpha = plotter_widget._out_of_frame_alpha
+    assert plotter_widget.plotting_widget.active_artist.alpha.min() == oof_alpha
+    assert plotter_widget.plotting_widget.active_artist.size.min() == oof_size
 
 
 @pytest.mark.parametrize(

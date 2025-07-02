@@ -45,6 +45,10 @@ class PlotterWidget(BaseWidget):
         self.layers_being_unselected = []
         self._on_update_layer_selection(None)
         self._setup_callbacks()
+        
+        # some default values
+        self._out_of_frame_alpha = 0.25
+        self._out_of_frame_size_factor = 0.5
 
         self.plot_needs_update.connect(self._replot)
 
@@ -317,8 +321,8 @@ class PlotterWidget(BaseWidget):
             size = np.ones(len(alpha)) * self.scatter_point_size
 
             index_out_of_frame = alpha == 0
-            alpha[index_out_of_frame] = 0.25
-            size[index_out_of_frame] = self.scatter_point_size * 0.5
+            alpha[index_out_of_frame] = self._out_of_frame_alpha
+            size[index_out_of_frame] = self.scatter_point_size * self._out_of_frame_size_factor
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
 
