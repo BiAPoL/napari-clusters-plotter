@@ -118,7 +118,6 @@ class PlotterWidget(BaseWidget):
         )
 
         # Setting Visibility Defaults
-        self.control_widget.cmap_container.setVisible(False)
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.additional_options_container.setVisible(False)
 
@@ -209,30 +208,6 @@ class PlotterWidget(BaseWidget):
 
         self.plot_needs_update.emit()
 
-    def _handle_advanced_options_widget_visibility(self):
-        """
-        Control visibility of overlay colormap box and log scale checkbox
-        based on the selected hue axis and active artist.
-        """
-        active_artist = self.plotting_widget.active_artist
-        # Control visibility of overlay colormap box and log scale checkbox
-        if self.hue_axis in self.categorical_columns:
-            self.control_widget.overlay_cmap_box.setEnabled(False)
-            self.control_widget.log_scale_checkbutton.setEnabled(False)
-            if isinstance(active_artist, Histogram2D):
-                # Enable if histogram to allow log scale of histogram itself
-                self.control_widget.log_scale_checkbutton.setEnabled(True)
-        else:
-            self.control_widget.overlay_cmap_box.setEnabled(True)
-            self.control_widget.log_scale_checkbutton.setEnabled(True)
-
-        if isinstance(active_artist, Histogram2D):
-            self.control_widget.cmap_container.setVisible(True)
-            self.control_widget.bins_settings_container.setVisible(True)
-        else:
-            self.control_widget.cmap_container.setVisible(False)
-            self.control_widget.bins_settings_container.setVisible(False)
-
     def _reset_axes_labels(self):
         """
         Clear the x and y axis labels in the plotting widget.
@@ -267,7 +242,6 @@ class PlotterWidget(BaseWidget):
         overlay_cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-        self._handle_advanced_options_widget_visibility()
         self._reset_axes_labels()
         active_artist = self.plotting_widget.active_artist
         active_artist.x_label_text = self.x_axis
@@ -347,11 +321,16 @@ class PlotterWidget(BaseWidget):
                 cat10_mod_cmap_first_transparent
             )
 
+            self.control_widget.scatter_settings_container.setVisible(False)
+            self.control_widget.bins_settings_container.setVisible(True)
+
         elif self.plotting_type == PlottingType.SCATTER.name:
             self.plotting_widget.active_artist = "SCATTER"
             self.plotting_widget.active_artist.overlay_colormap = (
                 cat10_mod_cmap
             )
+            self.control_widget.scatter_settings_container.setVisible(True)
+            self.control_widget.bins_settings_container.setVisible(False)
         self.plot_needs_update.emit()
 
     def _on_overlay_colormap_changed(self):
