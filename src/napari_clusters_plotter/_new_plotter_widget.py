@@ -395,6 +395,7 @@ class PlotterWidget(BaseWidget):
             self.plotting_widget.active_artist.alpha = np.ones(
                 len(self._get_features()), dtype=float
             )  # Reset alpha to 1 for all points
+            self.plotting_widget.active_artist.size = self.scatter_point_size  # Reset point size to default
 
     def _on_point_size_changed(self):
         """
