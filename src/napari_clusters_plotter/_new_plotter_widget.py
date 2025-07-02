@@ -281,6 +281,11 @@ class PlotterWidget(BaseWidget):
             active_artist.bins = self.bin_number
             active_artist.histogram_color_normalization_method = color_norm
 
+        else:
+            # make sure we use the correct frame highlighting settings
+            self._on_frame_highlighting_toggled()
+            self._on_point_size_changed()
+
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = overlay_cmap
         active_artist.color_indices = features[self.hue_axis].to_numpy()
@@ -558,9 +563,6 @@ class PlotterWidget(BaseWidget):
                 Warning(
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
-
-        # make sure we use the correct frame highlighting settings
-        self._on_frame_highlighting_toggled()
 
     def _clean_up(self):
         """In case of empty layer selection"""
