@@ -45,7 +45,7 @@ class PlotterWidget(BaseWidget):
         self.layers_being_unselected = []
         self._on_update_layer_selection(None)
         self._setup_callbacks()
-        
+
         # some default values
         self._out_of_frame_alpha = 0.25
         self._out_of_frame_size_factor = 0.5
@@ -327,7 +327,9 @@ class PlotterWidget(BaseWidget):
 
             index_out_of_frame = alpha == 0
             alpha[index_out_of_frame] = self._out_of_frame_alpha
-            size[index_out_of_frame] = self.scatter_point_size * self._out_of_frame_size_factor
+            size[index_out_of_frame] = (
+                self.scatter_point_size * self._out_of_frame_size_factor
+            )
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
 
@@ -386,7 +388,7 @@ class PlotterWidget(BaseWidget):
         # do nothing for histogram2d
         if self.plotting_type == "HISTOGRAM2D":
             return
-        
+
         if self.frame_highlighting_activated:
             self._on_frame_changed(None)
         else:
@@ -399,7 +401,7 @@ class PlotterWidget(BaseWidget):
         Called when the point size is changed.
         Updates the size of the points in the scatter plot.
         """
-        
+
         if self.plotting_type != "SCATTER":
             return
         self.plotting_widget.active_artist.size = self.scatter_point_size
@@ -410,7 +412,7 @@ class PlotterWidget(BaseWidget):
     @property
     def scatter_point_size(self):
         return self.control_widget.spinBox_point_size.value()
-    
+
     @scatter_point_size.setter
     def scatter_point_size(self, val: int):
         self.control_widget.spinBox_point_size.setValue(val)
@@ -418,7 +420,7 @@ class PlotterWidget(BaseWidget):
     @property
     def frame_highlighting_activated(self):
         return self.control_widget.checkBox_frame_highlighting.isChecked()
-    
+
     @frame_highlighting_activated.setter
     def frame_highlighting_activated(self, val: bool):
         self.control_widget.checkBox_frame_highlighting.setChecked(val)

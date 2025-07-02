@@ -510,9 +510,14 @@ def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
 
     # check that the dots in the plotter widget update alpha and size
     # to highlight out-of and in-frame data points
-    oof_size = plotter_widget.scatter_point_size * plotter_widget._out_of_frame_size_factor
+    oof_size = (
+        plotter_widget.scatter_point_size
+        * plotter_widget._out_of_frame_size_factor
+    )
     oof_alpha = plotter_widget._out_of_frame_alpha
-    assert plotter_widget.plotting_widget.active_artist.alpha.min() == oof_alpha
+    assert (
+        plotter_widget.plotting_widget.active_artist.alpha.min() == oof_alpha
+    )
     assert plotter_widget.plotting_widget.active_artist.size.min() == oof_size
 
 
@@ -564,6 +569,7 @@ def test_histogram_support(make_napari_viewer, create_sample_layers):
 )
 def test_scatter_advanced_options(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
+
     viewer = make_napari_viewer()
     layer, layer2 = create_sample_layers()
 
@@ -577,17 +583,12 @@ def test_scatter_advanced_options(make_napari_viewer, create_sample_layers):
     assert np.all(plotter_widget.plotting_widget.active_artist.size == 10)
 
     plotter_widget.frame_highlighting_activated = True
-    assert ~ np.all(
-        plotter_widget.plotting_widget.active_artist.alpha == 1
-    )
+    assert ~np.all(plotter_widget.plotting_widget.active_artist.alpha == 1)
 
     # select multiple layers and make sure that plot parameters are correct
     viewer.layers.selection = (layer, layer2)
     assert np.all(plotter_widget.plotting_widget.active_artist.size == 10)
-    assert ~ np.all(
-        plotter_widget.plotting_widget.active_artist.alpha == 1
-    )
-
+    assert ~np.all(plotter_widget.plotting_widget.active_artist.alpha == 1)
 
 
 @pytest.mark.parametrize(
