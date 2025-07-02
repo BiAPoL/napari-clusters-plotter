@@ -170,6 +170,9 @@
             <property name="text">
              <string>Activate frame highlighting</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="1" column="1">
