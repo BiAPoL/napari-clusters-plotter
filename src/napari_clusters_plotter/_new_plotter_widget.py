@@ -397,9 +397,7 @@ class PlotterWidget(BaseWidget):
         
         if self.plotting_type != "SCATTER":
             return
-
         self.plotting_widget.active_artist.size = self.scatter_point_size
-        self.plot_needs_update.emit()
 
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
