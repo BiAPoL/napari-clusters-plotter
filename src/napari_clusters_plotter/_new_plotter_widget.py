@@ -190,10 +190,6 @@ class PlotterWidget(BaseWidget):
             self._on_frame_highlighting_toggled
         )
 
-        self.control_widget.spinBox_point_size.valueChanged.connect(
-            self._on_point_size_changed
-        )
-
     def _on_finish_draw(self, color_indices: np.ndarray):
         """
         Called when user finsihes drawing. Will change the hue combo box to the
@@ -284,7 +280,6 @@ class PlotterWidget(BaseWidget):
         else:
             # make sure we use the correct frame highlighting settings
             self._on_frame_highlighting_toggled()
-            self._on_point_size_changed()
 
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = overlay_cmap
@@ -323,12 +318,13 @@ class PlotterWidget(BaseWidget):
             alpha = np.asarray(
                 self._get_features()["frame"] == current_step, dtype=float
             )
-            size = np.ones(len(alpha)) * self.scatter_point_size
+            default_size = self.plotting_widget.active_artist.default_size
+            size = np.ones(len(alpha)) * default_size
 
             index_out_of_frame = alpha == 0
             alpha[index_out_of_frame] = self._out_of_frame_alpha
             size[index_out_of_frame] = (
-                self.scatter_point_size * self._out_of_frame_size_factor
+                default_size * self._out_of_frame_size_factor
             )
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
@@ -392,33 +388,14 @@ class PlotterWidget(BaseWidget):
         if self.frame_highlighting_activated:
             self._on_frame_changed(None)
         else:
-            self.plotting_widget.active_artist.alpha = np.ones(
+            active_artist = self.plotting_widget.active_artist
+            active_artist.alpha = np.ones(
                 len(self._get_features()), dtype=float
             )  # Reset alpha to 1 for all points
-            self.plotting_widget.active_artist.size = (
-                self.scatter_point_size
-            )  # Reset point size to default
-
-    def _on_point_size_changed(self):
-        """
-        Called when the point size is changed.
-        Updates the size of the points in the scatter plot.
-        """
-
-        if self.plotting_type != "SCATTER":
-            return
-        self.plotting_widget.active_artist.size = self.scatter_point_size
+            active_artist.size = active_artist.default_size
 
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
-
-    @property
-    def scatter_point_size(self):
-        return self.control_widget.spinBox_point_size.value()
-
-    @scatter_point_size.setter
-    def scatter_point_size(self, val: int):
-        self.control_widget.spinBox_point_size.setValue(val)
 
     @property
     def frame_highlighting_activated(self):

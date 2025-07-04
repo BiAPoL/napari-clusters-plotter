@@ -511,7 +511,7 @@ def test_temporal_highlighting(make_napari_viewer, create_sample_layers):
     # check that the dots in the plotter widget update alpha and size
     # to highlight out-of and in-frame data points
     oof_size = (
-        plotter_widget.scatter_point_size
+        plotter_widget.plotting_widget.active_artist.default_size
         * plotter_widget._out_of_frame_size_factor
     )
     oof_alpha = plotter_widget._out_of_frame_alpha
@@ -579,16 +579,14 @@ def test_scatter_advanced_options(make_napari_viewer, create_sample_layers):
     plotter_widget = PlotterWidget(viewer)
     viewer.window.add_dock_widget(plotter_widget, area="right")
 
-    plotter_widget.scatter_point_size = 10
-    assert np.all(plotter_widget.plotting_widget.active_artist.size == 10)
-
     plotter_widget.frame_highlighting_activated = True
     assert ~np.all(plotter_widget.plotting_widget.active_artist.alpha == 1)
 
     # select multiple layers and make sure that plot parameters are correct
     viewer.layers.selection = (layer, layer2)
-    assert np.all(plotter_widget.plotting_widget.active_artist.size == 10)
-    assert ~np.all(plotter_widget.plotting_widget.active_artist.alpha == 1)
+    active_artist = plotter_widget.plotting_widget.active_artist
+    assert ~np.all(active_artist.size == active_artist.default_size)
+    assert ~np.all(active_artist.alpha == 1)
 
 
 @pytest.mark.parametrize(
