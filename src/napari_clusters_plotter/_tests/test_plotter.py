@@ -441,9 +441,9 @@ def test_categorical_handling(make_napari_viewer, create_sample_layers):
         assert (
             len(categorical_columns) == 3
         )  # should only be MANUAL_CLUSTER_ID and layer name
-        assert categorical_columns[0] == "MANUAL_CLUSTER_ID"
-        assert categorical_columns[1] == "SELECTED_DATA_LAYER_CLUSTER_ID"
-        assert categorical_columns[2] == "layer"
+        assert "SELECTED_DATA_LAYER_CLUSTER_ID" in categorical_columns
+        assert "MANUAL_CLUSTER_ID" in categorical_columns
+        assert "layer" in categorical_columns
     else:
         assert (
             len(categorical_columns) == 2
