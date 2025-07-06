@@ -92,13 +92,6 @@ class PlotterWidget(BaseWidget):
         )  # Start histogram colormap with viridis
         self.plotting_widget.active_artist = "SCATTER"
 
-        # Context menu
-        self.context_menu = QMenu(self.plotting_widget)
-        self.export_clusters = self.context_menu.addAction(
-            "Export selected cluster to new layer"
-        )
-        self.export_clusters.triggered.connect(self._on_export_clusters)
-
         # Add plot and options as widgets
         self.layout.addWidget(self.plotting_widget)
         self.layout.addWidget(self.control_widget)
@@ -218,6 +211,10 @@ class PlotterWidget(BaseWidget):
         )
         self.control_widget.auto_bins_checkbox.toggled.connect(
             self._on_bin_auto_toggled
+        )
+
+        self.control_widget.pushButton_export_layer.clicked.connect(
+            self._on_export_clusters
         )
 
     def _on_finish_draw(self, color_indices: np.ndarray):
@@ -788,7 +785,7 @@ class PlotterWidget(BaseWidget):
 
 def _export_cluster_to_layer(
     layer: "napari.layers.Layer",
-    indices: np.ndarray,
+    export_indices: np.ndarray,
     subcluster_index: int = None,
 ) -> "napari.layers.Layer":
     """
@@ -799,7 +796,7 @@ def _export_cluster_to_layer(
     layer : napari.layers.Layer
         The layer to export the cluster from.
 
-    indices : np.ndarray
+    export_indices : np.ndarray
         The indices of the cluster to export.
 
     subcluster_index : str
@@ -810,33 +807,51 @@ def _export_cluster_to_layer(
     napari.layers.Layer
         The new layer with the selected cluster.
     """
+    new_features = layer.features.iloc[export_indices].copy()
 
     if isinstance(layer, napari.layers.Labels):
+        from skimage.segmentation import relabel_sequential
         LUT = np.arange(layer.data.max() + 1)
-        LUT[1:][~indices] = 0
-        new_layer = napari.layers.Labels(LUT[layer.data])
+        LUT[1:][~export_indices] = 0
+        new_data = LUT[layer.data]
+        new_data, forward_map, _ = relabel_sequential(
+            new_data,
+        )
+        new_features['original_label'] = pd.Categorical(
+            forward_map.in_values[1:]
+        )
+        new_features['label'] = pd.Categorical(
+            forward_map.out_values[1:]
+        )
+
+        # # add forward and inverse maps to features
+        # new_features["original_label"] = pd.Series(
+        #     forward_map[layer.data[indices]]
+        # ).astype("category")
+
+        new_layer = napari.layers.Labels(new_data)
 
     elif isinstance(layer, napari.layers.Points):
-        new_layer = napari.layers.Points(layer.data[indices])
-        new_layer.size = layer.size[indices]
+        new_layer = napari.layers.Points(layer.data[export_indices])
+        new_layer.size = layer.size[export_indices]
 
     elif isinstance(layer, napari.layers.Shapes):
-        new_shapes = [shape for shape, i in zip(layer.data, indices) if i]
-        new_shape_types = np.asarray(layer.shape_type)[indices]
+        new_shapes = [shape for shape, i in zip(layer.data, export_indices) if i]
+        new_shape_types = np.asarray(layer.shape_type)[export_indices]
         new_layer = napari.layers.Shapes(
             new_shapes, shape_type=new_shape_types
         )
-        new_layer.edge_width = np.asarray(layer.edge_width)[indices]
+        new_layer.edge_width = np.asarray(layer.edge_width)[export_indices]
 
     elif isinstance(layer, napari.layers.Tracks):
-        new_tracks = layer.data[indices]
+        new_tracks = layer.data[export_indices]
         new_layer = napari.layers.Tracks(new_tracks)
 
     elif isinstance(layer, napari.layers.Surface):
-        new_vertices = layer.data[0][indices]
+        new_vertices = layer.data[0][export_indices]
         old_to_new_index = {
             old_idx: new_idx
-            for new_idx, old_idx in enumerate(np.where(indices)[0])
+            for new_idx, old_idx in enumerate(np.where(export_indices)[0])
         }
 
         # Vectorized update of faces using list comprehension
@@ -850,7 +865,7 @@ def _export_cluster_to_layer(
         )
 
     elif isinstance(layer, napari.layers.Vectors):
-        new_layer = napari.layers.Vectors(layer.data[indices])
+        new_layer = napari.layers.Vectors(layer.data[export_indices])
 
     else:
         return None
@@ -865,8 +880,6 @@ def _export_cluster_to_layer(
         new_layer.name = f"{layer.name} subcluster {subcluster_index}"
 
     # copy features to new layer if available and drop cluster column
-    new_layer.features = layer.features.iloc[indices].copy()
-    # if "cluster" in new_layer.features.columns:
-    #     new_layer.features.drop(columns=["cluster"], inplace=True)
+    new_layer.features = new_features
 
     return new_layer
