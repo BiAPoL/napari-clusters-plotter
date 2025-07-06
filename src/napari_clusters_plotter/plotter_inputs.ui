@@ -30,10 +30,24 @@
        <string>Plotting Options</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>y-axis</string>
+          <string>x-axis</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPushButton" name="pushButton_export_layer">
+         <property name="text">
+          <string>Export selection into new layer</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="reset_button">
+         <property name="text">
+          <string>Clear Manual Cluster Selection</string>
          </property>
         </widget>
        </item>
@@ -44,11 +58,18 @@
          </property>
         </widget>
        </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="y_axis_box"/>
+       </item>
        <item row="0" column="1">
         <widget class="QComboBox" name="x_axis_box"/>
        </item>
-       <item row="1" column="1">
-        <widget class="QComboBox" name="y_axis_box"/>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>y-axis</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="1">
         <widget class="QComboBox" name="hue_box">
@@ -57,20 +78,6 @@
          </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Feature used to color data&lt;/p&gt;&lt;p&gt;By default, &lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:14px; color:#ce9178;&quot;&gt;MANUAL_CLUSTER_ID&lt;/span&gt;, which displays manual selections.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>x-axis</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QPushButton" name="reset_button">
-         <property name="text">
-          <string>Clear Manual Cluster Selection</string>
          </property>
         </widget>
        </item>
