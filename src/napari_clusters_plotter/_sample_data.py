@@ -132,7 +132,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
 
     max_size = max([image.shape[0] for image in images])
 
-    for idx, (image, labels, features) in enumerate(
+    for idx, (image, label, feature) in enumerate(
         zip(images, labels, features)
     ):
 
@@ -156,11 +156,11 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         )
 
         ldtuple_labels = (
-            labels,
+            label,
             {
                 "name": Path(raw_images[idx]).stem + "_labels",
                 "translate": (translate_x, translate_y),
-                "features": features,
+                "features": feature,
             },
             "labels",
         )
