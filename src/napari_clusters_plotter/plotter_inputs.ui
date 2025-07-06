@@ -37,20 +37,6 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QPushButton" name="pushButton_export_layer">
-         <property name="text">
-          <string>Export selection into new layer</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="reset_button">
-         <property name="text">
-          <string>Clear Manual Cluster Selection</string>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_3">
          <property name="text">
@@ -78,6 +64,20 @@
          </property>
          <property name="toolTip">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Feature used to color data&lt;/p&gt;&lt;p&gt;By default, &lt;span style=&quot; font-family:'Consolas','Courier New','monospace'; font-size:14px; color:#ce9178;&quot;&gt;MANUAL_CLUSTER_ID&lt;/span&gt;, which displays manual selections.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPushButton" name="pushButton_export_layer">
+         <property name="text">
+          <string>Export selection into new layer</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPushButton" name="reset_button">
+         <property name="text">
+          <string>Clear Manual Cluster Selection</string>
          </property>
         </widget>
        </item>
