@@ -842,7 +842,6 @@ def _export_cluster_to_layer(
         new_layer = napari.layers.Shapes(
             new_shapes, shape_type=new_shape_types
         )
-        new_layer.edge_width = np.asarray(layer.edge_width)[export_indices]
 
     elif isinstance(layer, napari.layers.Tracks):
         new_tracks = layer.data[export_indices]
