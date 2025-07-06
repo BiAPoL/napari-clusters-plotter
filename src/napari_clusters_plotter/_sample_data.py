@@ -2,6 +2,7 @@ import glob
 import os
 from pathlib import Path
 from typing import List
+import numpy as np
 
 
 def skan_skeleton() -> List["LayerData"]:  # noqa: F821
@@ -117,21 +118,39 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         os.path.join(str(path), "**", "*.tif"), recursive=True
     )
     raw_images = [f for f in tif_files if "labels" not in f]
+
+    n_rows = np.ceil(np.sqrt(len(raw_images)))
+    n_cols = np.ceil(len(raw_images) / n_rows)
+
     layers = []
 
-    for raw_image_filename in raw_images:
+    images = [io.imread(f) for f in raw_images]
+    labels = [
+        io.imread(f.replace(".tif", "_labels.tif")) for f in raw_images
+    ]
+    features = [
+        pd.read_csv(f.replace(".tif", "_features.csv")) for f in raw_images
+    ]
 
-        label_filename = raw_image_filename.replace(".tif", "_labels.tif")
-        feature_filename = raw_image_filename.replace(".tif", "_features.csv")
-        image = io.imread(raw_image_filename)
-        labels = io.imread(label_filename)
+    max_size = max([image.shape[0] for image in images])
 
-        features = pd.read_csv(feature_filename)
+    for idx, (image, labels, features) in enumerate(zip(images, labels, features)):
+
+        translate_img_x = image.shape[0] / 2
+        translate_img_y = image.shape[1] / 2
+        
+        # calculate translate in grid
+        margin = 0.1 * image.shape[0]  # 10% margin
+        i_row = idx // n_cols
+        i_col = idx % n_cols
+        translate_x = i_row * (max_size + margin) - translate_img_x
+        translate_y = i_col * (max_size + margin) - translate_img_y
 
         ldtuple_image = (
             image,
             {
-                "name": Path(raw_image_filename).stem,
+                "name": Path(raw_images[idx]).stem,
+                "translate": (translate_x, translate_y),
             },
             "image",
         )
@@ -139,7 +158,8 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
         ldtuple_labels = (
             labels,
             {
-                "name": Path(raw_image_filename).stem + "_labels",
+                "name": Path(raw_images[idx]).stem + "_labels",
+                "translate": (translate_x, translate_y),
                 "features": features,
             },
             "labels",
@@ -147,10 +167,6 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
 
         layers.append(ldtuple_image)
         layers.append(ldtuple_labels)
-
-    viewer = napari.current_viewer()
-    viewer.grid.enabled = True
-    viewer.grid.stride = 2
 
     return layers
 
