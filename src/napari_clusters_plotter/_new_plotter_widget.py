@@ -17,7 +17,7 @@ from napari.utils.colormaps import ALL_COLORMAPS
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
-from qtpy.QtWidgets import QComboBox, QMenu, QVBoxLayout, QWidget
+from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
 
@@ -811,18 +811,17 @@ def _export_cluster_to_layer(
 
     if isinstance(layer, napari.layers.Labels):
         from skimage.segmentation import relabel_sequential
+
         LUT = np.arange(layer.data.max() + 1)
         LUT[1:][~export_indices] = 0
         new_data = LUT[layer.data]
         new_data, forward_map, _ = relabel_sequential(
             new_data,
         )
-        new_features['original_label'] = pd.Categorical(
+        new_features["original_label"] = pd.Categorical(
             forward_map.in_values[1:]
         )
-        new_features['label'] = pd.Categorical(
-            forward_map.out_values[1:]
-        )
+        new_features["label"] = pd.Categorical(forward_map.out_values[1:])
 
         # # add forward and inverse maps to features
         # new_features["original_label"] = pd.Series(
@@ -836,7 +835,9 @@ def _export_cluster_to_layer(
         new_layer.size = layer.size[export_indices]
 
     elif isinstance(layer, napari.layers.Shapes):
-        new_shapes = [shape for shape, i in zip(layer.data, export_indices) if i]
+        new_shapes = [
+            shape for shape, i in zip(layer.data, export_indices) if i
+        ]
         new_shape_types = np.asarray(layer.shape_type)[export_indices]
         new_layer = napari.layers.Shapes(
             new_shapes, shape_type=new_shape_types
