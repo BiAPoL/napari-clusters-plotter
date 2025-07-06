@@ -2,6 +2,7 @@ import glob
 import os
 from pathlib import Path
 from typing import List
+
 import numpy as np
 
 
@@ -107,7 +108,6 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
 
 
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
-    import napari
     import pandas as pd
     from skimage import io
 
@@ -125,20 +125,20 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     layers = []
 
     images = [io.imread(f) for f in raw_images]
-    labels = [
-        io.imread(f.replace(".tif", "_labels.tif")) for f in raw_images
-    ]
+    labels = [io.imread(f.replace(".tif", "_labels.tif")) for f in raw_images]
     features = [
         pd.read_csv(f.replace(".tif", "_features.csv")) for f in raw_images
     ]
 
     max_size = max([image.shape[0] for image in images])
 
-    for idx, (image, labels, features) in enumerate(zip(images, labels, features)):
+    for idx, (image, labels, features) in enumerate(
+        zip(images, labels, features)
+    ):
 
         translate_img_x = image.shape[0] / 2
         translate_img_y = image.shape[1] / 2
-        
+
         # calculate translate in grid
         margin = 0.1 * image.shape[0]  # 10% margin
         i_row = idx // n_cols
