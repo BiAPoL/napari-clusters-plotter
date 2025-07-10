@@ -627,15 +627,24 @@ class PlotterWidget(BaseWidget):
         """
         if isinstance(layer, napari.layers.Labels):
             # Use CyclicLabelColormap with N colors
-            from napari.utils.colormaps.colormap_utils import label_colormap
-
             from ._utilities import _get_unique_values
 
             # check if is dask or numpy
             n_labels = _get_unique_values(layer).size - 1
-            return np.asarray(
-                label_colormap(n_labels).dict()["colors"]
-            )  # rgba
+            if n_labels >= 2**16:
+                np.random.seed(42)  # For reproducibility
+                rgba = np.random.uniform(
+                    low=0, high=n_labels, size=(n_labels, 4),
+                )
+                rgba[:, 3] = 1.0  # Set alpha to 1 for all colors
+            else:
+                from napari.utils.colormaps.colormap_utils import (
+                    label_colormap
+                    )
+                rgba = np.asarray(
+                    label_colormap(n_labels).dict()["colors"]
+                )
+            return rgba
         else:
             # Default to white for other layer types
             default_color = np.array([[1, 1, 1, 1]])
