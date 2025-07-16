@@ -2,3 +2,7 @@ sphinx-inline-tabs
 sphinx-proof
 sphinx-examples
 jupyter-book
+matplotlib
+numpy
+PyQt5
+qtpy
