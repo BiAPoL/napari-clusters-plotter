@@ -822,12 +822,6 @@ def _export_cluster_to_layer(
             forward_map.in_values[1:]
         )
         new_features["label"] = pd.Categorical(forward_map.out_values[1:])
-
-        # # add forward and inverse maps to features
-        # new_features["original_label"] = pd.Series(
-        #     forward_map[layer.data[indices]]
-        # ).astype("category")
-
         new_layer = napari.layers.Labels(new_data)
 
     elif isinstance(layer, napari.layers.Points):
@@ -842,6 +836,8 @@ def _export_cluster_to_layer(
         new_layer = napari.layers.Shapes(
             new_shapes, shape_type=new_shape_types
         )
+        edge_widths = list(np.asarray(layer.edge_width)[export_indices])
+        new_layer.edge_width = edge_widths
 
     elif isinstance(layer, napari.layers.Tracks):
         new_tracks = layer.data[export_indices]
