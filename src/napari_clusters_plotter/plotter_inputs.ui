@@ -69,8 +69,11 @@
        </item>
        <item row="3" column="1">
         <widget class="QPushButton" name="pushButton_export_layer">
+         <property name="toolTip">
+          <string>The current class can be selected above the plot canvas</string>
+         </property>
          <property name="text">
-          <string>Export selection into new layer</string>
+          <string>Export current class into new layer</string>
          </property>
         </widget>
        </item>
