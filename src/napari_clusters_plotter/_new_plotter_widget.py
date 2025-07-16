@@ -634,16 +634,17 @@ class PlotterWidget(BaseWidget):
             if n_labels >= 2**16:
                 np.random.seed(42)  # For reproducibility
                 rgba = np.random.uniform(
-                    low=0, high=n_labels, size=(n_labels, 4),
+                    low=0,
+                    high=n_labels,
+                    size=(n_labels, 4),
                 )
                 rgba[:, 3] = 1.0  # Set alpha to 1 for all colors
             else:
                 from napari.utils.colormaps.colormap_utils import (
-                    label_colormap
-                    )
-                rgba = np.asarray(
-                    label_colormap(n_labels).dict()["colors"]
+                    label_colormap,
                 )
+
+                rgba = np.asarray(label_colormap(n_labels).dict()["colors"])
             return rgba
         else:
             # Default to white for other layer types
