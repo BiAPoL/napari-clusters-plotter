@@ -73,7 +73,7 @@
           <string>The current class can be selected above the plot canvas</string>
          </property>
          <property name="text">
-          <string>Export current class into new layer</string>
+          <string>Add current class as new layer</string>
          </property>
         </widget>
        </item>
