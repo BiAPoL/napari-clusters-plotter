@@ -22,6 +22,7 @@ The core functionality of the plugin is available to you directly upon opening i
 5. Canvas: Features will be visualized here
 6. What feature to plot on the x-axis and y-axis, respectively. The `Hue` dropdown controls the coloring of the data on the canvas, categorical features are highlighted in orange.
 7. Reset button: Resets all drawn clusters
+8. Copy button: Copies the currently selected objects according to selector **3** to a new layer. All respective features will be copied over to the new layer accordingly.
 
 ![Advanced settings](./imgs/plotter_overview3_annotated.png)
 
@@ -29,17 +30,17 @@ The core functionality of the plugin is available to you directly upon opening i
 
 Under the `Advanced Options` tab, you have access to some more customization options for the visualization:
 
-8. Change the colormap for the chosen overlay color. If a layer is colored by a non-categorical feature, this determines the colormap for the depiction. Only enabled if a non-categorical feature is selected in the `Hue` dropdown.
-9. Apply a log-scale to the chosen feature
-10. Switch plot type between `SCATTER` and `HISTOGRAM2D`
+9. Change the colormap for the chosen overlay color. If a layer is colored by a non-categorical feature, this determines the colormap for the depiction. Only enabled if a non-categorical feature is selected in the `Hue` dropdown.
+10. Apply a log-scale to the chosen feature
+11. Switch plot type between `SCATTER` and `HISTOGRAM2D`
 
 Depending on which plot type is selected, some additional options are available:
 
-11. For `SCATTER` plot:
+12. For `SCATTER` plot:
     - Enable the time-frame highlighting. This make give out-of-frame points a different alpha and size, making them appear slightly more transparent and smaller. This is useful to visualize the current time frame in a time-series dataset. To make use of this, ensure that the measurements in the layer's `layer.features` dataframe contain a `frame` column, which is used to determine the current time frame.
     - Change the size of the points in the scatter plot. This can be useful for better visibility of the points in the plot in case there are a large number of points.
 
-12. For `HISTOGRAM2D` plot:
+13. For `HISTOGRAM2D` plot:
     - Change the size of the bins (only enabled if `HISTOGRAM2D` is selected in 10.) Can be set to auto or a manual bin range can be set.
     - A different colormap for the histogram can be selected.
 
@@ -79,3 +80,27 @@ There are two things to keep in mind here:
 So far, the `Hue` selector was always set to `MANUAL_CLUSTER_ID`, which is by design a *categorical* column. However, the napari-clusters-plotter supports visualizing any feature as the `Hue` parameter. If this is done, the points are colored according to the selected feature and each point's color will be project on the respective object in the napari viewport. In essence, this creates feature maps for each feature you select:
 
 ![Selecting features as hue](./imgs/selecting_features1.gif)
+
+
+## Adding objects to new layer
+(widget:plotter:add_objects_to_layer)=
+
+If you want to copy selected objects to a new layer, you can use the `Add current class to new layer` button in the Plotter Widget. To use it, make sure you have a *categorical feature* selected in the `Hue` dropdown selector (i.e., `MANUAL_CLUSTER_ID`, which is generated upon drawing a selection). However, resulting cluster ids from a clustering operation (see [Clustering Widget](widget:clustering)) can also be used here. Generally, categorical features are highlighted in orange in the `Hue` dropdown selector:
+
+![Categorical features in hue selector](./imgs//categorical_features.png)
+
+Then, select the cluster id you want to copy to a new layer in the `Selected cluster index` selector (see above):
+
+![Selecting cluster id](./imgs/selecting_cluster_id.png)
+
+Finally, click the `Add current class as new layer` button.
+
+![Adding objects to a new layer](./imgs/copy_export_objects_function.gif)
+
+```{note}
+It is possible to export all *unselected objects* to a new layer, too. To do so, simply select zero as the `Selected cluster index`. This will copy all objects that are not part of any selection to a new layer.
+```
+
+```{note}
+Selecting a cluster id that is not present in the `Hue` column will result in nothing happening.
+```
