@@ -14,6 +14,7 @@ from nap_plot_tools.cmap import (
     cat10_mod_cmap_first_transparent,
 )
 from napari.utils.colormaps import ALL_COLORMAPS
+from napari.utils.notifications import show_info, show_warning
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
@@ -135,7 +136,7 @@ class PlotterWidget(BaseWidget):
         features = self._get_features()
         hue_column = self.hue_axis
         if hue_column not in self.categorical_columns:
-            Warning(
+            show_warning(
                 '"Selected hue axis is not categorical, cannot export clusters.'
             )
             return
@@ -146,6 +147,12 @@ class PlotterWidget(BaseWidget):
                 features["layer"] == layer.unique_id
             ].reset_index()
             indices = features_subset[hue_column].values == selected_cluster
+            if not np.any(indices):
+                show_info(
+                    "No data points found for selected cluster"
+                    f"{selected_cluster} in layer {layer.name}."
+                )
+                continue
             export_layer = _export_cluster_to_layer(
                 layer, indices, subcluster_index=selected_cluster
             )
@@ -554,7 +561,7 @@ class PlotterWidget(BaseWidget):
             if event_attr:
                 event_attr.connect(self._update_feature_selection)
             else:
-                Warning(
+                show_warning(
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
@@ -569,7 +576,7 @@ class PlotterWidget(BaseWidget):
             if event_attr:
                 event_attr.disconnect(self._update_feature_selection)
             else:
-                Warning(
+                show_warning(
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
