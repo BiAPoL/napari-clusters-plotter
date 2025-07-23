@@ -766,6 +766,8 @@ class PlotterWidget(BaseWidget):
 
 def _focus_object(layer, boolean_object_selected):
     viewer = napari.current_viewer()
+    default_zoom = _calculate_default_zoom(viewer)
+
     # Build affine matrix from rotate, scale, shear, translate
     rotate = layer.rotate
     scale = layer.scale
@@ -782,18 +784,41 @@ def _focus_object(layer, boolean_object_selected):
         # Convert to homogeneous coordinates by adding ones column
         n_points, n_dims = center.shape
         assert n_points == 1, "Only one point should be selected for focusing."
-        center_homogeneous = np.ones((n_points, n_dims + 1)) # single point highlighting
-        center_homogeneous[:, :n_dims] = center
+        center_homogeneous = np.ones((1, n_dims + 1)) # single point highlighting
+        center_homogeneous[0, :n_dims] = center
         # Apply the net affine transformation
         transformed_center_homogeneous = center_homogeneous @ affine_net.T
         # Extract the transformed coordinates (remove homogeneous coordinate)
-        transformed_center = transformed_center_homogeneous[:, :n_dims][0] # single point highlighting
+        transformed_center = transformed_center_homogeneous[0, :n_dims] # single point highlighting
         # Set the viewer's sliders and camera center
         viewer.dims.current_step = tuple(transformed_center)
         viewer.camera.center = transformed_center
+        viewer.camera.zoom = 4 * default_zoom  # Adjust zoom level
         # Set the selected data in the layer (only displays if single layer is selected)
         layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
-    
+    elif isinstance(layer, napari.layers.Labels):
+        # For Labels layer, we need to find the center of the selected label
+        label_index = np.nonzero(boolean_object_selected)[0][0]  # Get the first selected label index
+        print(label_index)
+        # Find the center of the selected label
+        selected_label = label_index + 1
+        label_mask = layer.data == selected_label
+        if np.any(label_mask):
+            center = np.mean(np.argwhere(label_mask), axis=0)
+            center = np.expand_dims(center, axis=0)
+            # Convert to homogeneous coordinates by adding ones column
+            n_dims = len(layer.data.shape)
+            transformed_center = _apply_affine_transform(center, n_dims, affine_net)
+            # Set the viewer's sliders and camera center
+            viewer.dims.current_step = tuple(transformed_center)
+            viewer.camera.center = transformed_center
+            viewer.camera.zoom = 4 * default_zoom  # Adjust zoom level
+            # Set the selected data in the layer (only displays if single layer is selected)
+            layer.selected_label = selected_label
+            # layer.show_selected_label = True
+        else:
+            print("No valid label selected, not focusing.")
+
 def _build_affine_matrix(rotate, scale, shear, translate):
     """
     Build an affine transformation matrix from individual components.
@@ -845,3 +870,39 @@ def _build_affine_matrix(rotate, scale, shear, translate):
     affine[:n_dims, -1] = translate
     
     return affine
+
+def _apply_affine_transform(coords, n_dims, affine_matrix):
+    """ Apply an affine transformation to coordinates.
+
+    Parameters
+    ----------
+    coords : np.ndarray
+        Coordinates to transform (shape: (n_points, n_dims)).
+    n_dims : int
+        Number of dimensions of the coordinates.
+    affine_matrix : np.ndarray
+        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)). 
+
+    Returns
+    -------
+    np.ndarray
+        Transformed coordinates (shape: (n_points, n_dims)).
+    """
+    coords_homogeneous = np.ones((1, n_dims + 1))
+    coords_homogeneous[0, :n_dims] = coords
+    transformed_coords_homogeneous = coords_homogeneous @ affine_matrix.T
+    return transformed_coords_homogeneous[0, :n_dims]
+
+def _calculate_default_zoom(viewer, margin: float = 0.05):
+    extent, scene_size, corner = viewer._get_scene_parameters()
+    scale_factor = viewer._get_scale_factor(margin)
+    if viewer.dims.ndisplay == 2:
+        default_zoom = viewer._get_2d_camera_zoom(
+            scene_size, scale_factor
+            )
+
+    elif viewer.dims.ndisplay == 3:
+        default_zoom = viewer._get_3d_camera_zoom(
+            extent, scale_factor
+            )
+    return default_zoom
