@@ -758,19 +758,90 @@ class PlotterWidget(BaseWidget):
             print("No object selected, not focusing.")
             return
         features = self._get_features()
-        print(f"Highlighted object selected: {boolean_object_selected}")
         features_sub = features.iloc[np.argwhere(boolean_object_selected).flatten()]
         layer = features_sub["layer"].values[0]
-        print(f"Focusing on layer: {layer}")
-        _focus_object(self.viewer.layers[layer], boolean_object_selected)
+        boolean_object_selected_in_layer = boolean_object_selected[features['layer']==layer]
+        _focus_object(self.viewer.layers[layer], boolean_object_selected_in_layer)
 
 
 def _focus_object(layer, boolean_object_selected):
     viewer = napari.current_viewer()
-    current_step = list(viewer.dims.current_step)
+    # Build affine matrix from rotate, scale, shear, translate
+    rotate = layer.rotate
+    scale = layer.scale
+    shear = layer.shear
+    translate = layer.translate
+    affine_2 = _build_affine_matrix(rotate, scale, shear, translate)
+
+    # Combine the two affine transformations
+    # The order matters: apply layer.affine first, then affine_2
+    affine_net = affine_2 @ layer.affine.affine_matrix
+
     if isinstance(layer, napari.layers.Points):
-        center = layer.data[boolean_object_selected].squeeze()
-        current_step[0] = center[0]
-        viewer.camera.center = center[-3:]
-        viewer.dims.set_current_step(0,center[0])
+        center = layer.data[boolean_object_selected]  # Shape: (n_points, n_dims)
+        # Convert to homogeneous coordinates by adding ones column
+        n_points, n_dims = center.shape
+        assert n_points == 1, "Only one point should be selected for focusing."
+        center_homogeneous = np.ones((n_points, n_dims + 1)) # single point highlighting
+        center_homogeneous[:, :n_dims] = center
+        # Apply the net affine transformation
+        transformed_center_homogeneous = center_homogeneous @ affine_net.T
+        # Extract the transformed coordinates (remove homogeneous coordinate)
+        transformed_center = transformed_center_homogeneous[:, :n_dims][0] # single point highlighting
+        # Set the viewer's sliders and camera center
+        viewer.dims.current_step = tuple(transformed_center)
+        viewer.camera.center = transformed_center
+        # Set the selected data in the layer (only displays if single layer is selected)
+        layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
     
+def _build_affine_matrix(rotate, scale, shear, translate):
+    """
+    Build an affine transformation matrix from individual components.
+    
+    Parameters
+    ----------
+    rotate : np.ndarray
+        Rotation matrix (n×n for n-dimensional data)
+    scale : np.ndarray
+        Scale vector (n×1 for n-dimensional data)
+    shear : np.ndarray
+        Shear parameters (upper triangular values, length = n*(n-1)/2)
+    translate : np.ndarray
+        Translation vector (n×1 for n-dimensional data)
+        
+    Returns
+    -------
+    np.ndarray
+        Affine transformation matrix ((n+1)×(n+1))
+    """
+    n_dims = len(scale)
+    
+    # Create the affine matrix
+    affine = np.eye(n_dims + 1)
+    
+    # Create scale matrix
+    scale_matrix = np.diag(scale)
+    
+    # Create shear matrix - generalized for any dimension
+    shear_matrix = np.eye(n_dims)
+    
+    # Fill upper triangular part with shear values
+    # The shear array contains values for all (i,j) pairs where i < j
+    shear_idx = 0
+    for i in range(n_dims):
+        for j in range(i + 1, n_dims):
+            if shear_idx < len(shear):
+                shear_matrix[i, j] = shear[shear_idx]
+                shear_idx += 1
+    
+    # Combine transformations: T * R * Sh * S
+    # The order matters: Scale first, then Shear, then Rotate
+    transform_matrix = rotate @ shear_matrix @ scale_matrix
+    
+    # Set the upper-left (n×n) block to the combined transformation
+    affine[:n_dims, :n_dims] = transform_matrix
+    
+    # Set the translation (last column, first n rows)
+    affine[:n_dims, -1] = translate
+    
+    return affine
