@@ -755,7 +755,9 @@ class PlotterWidget(BaseWidget):
         Focus the viewer on the highlighted object in the layer.
         """
         if not np.any(boolean_object_selected):
-            print("No object selected, not focusing.")
+            return
+        if np.count_nonzero(boolean_object_selected) > 1:
+            print("Focus only works for single object selection, not focusing.")
             return
         features = self._get_features()
         features_sub = features.iloc[np.argwhere(boolean_object_selected).flatten()]
@@ -763,61 +765,27 @@ class PlotterWidget(BaseWidget):
         boolean_object_selected_in_layer = boolean_object_selected[features['layer']==layer]
         _focus_object(self.viewer.layers[layer], boolean_object_selected_in_layer)
 
+def _apply_affine_transform(coords, n_dims, affine_matrix):
+    """ Apply an affine transformation to one point.
 
-def _focus_object(layer, boolean_object_selected):
-    viewer = napari.current_viewer()
-    default_zoom = _calculate_default_zoom(viewer)
+    Parameters
+    ----------
+    coords : np.ndarray
+        Coordinates to transform (shape: (1, n_dims)).
+    n_dims : int
+        Number of dimensions of the coordinates.
+    affine_matrix : np.ndarray
+        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)). 
 
-    # Build affine matrix from rotate, scale, shear, translate
-    rotate = layer.rotate
-    scale = layer.scale
-    shear = layer.shear
-    translate = layer.translate
-    affine_2 = _build_affine_matrix(rotate, scale, shear, translate)
-
-    # Combine the two affine transformations
-    # The order matters: apply layer.affine first, then affine_2
-    affine_net = affine_2 @ layer.affine.affine_matrix
-
-    if isinstance(layer, napari.layers.Points):
-        center = layer.data[boolean_object_selected]  # Shape: (n_points, n_dims)
-        # Convert to homogeneous coordinates by adding ones column
-        n_points, n_dims = center.shape
-        assert n_points == 1, "Only one point should be selected for focusing."
-        center_homogeneous = np.ones((1, n_dims + 1)) # single point highlighting
-        center_homogeneous[0, :n_dims] = center
-        # Apply the net affine transformation
-        transformed_center_homogeneous = center_homogeneous @ affine_net.T
-        # Extract the transformed coordinates (remove homogeneous coordinate)
-        transformed_center = transformed_center_homogeneous[0, :n_dims] # single point highlighting
-        # Set the viewer's sliders and camera center
-        viewer.dims.current_step = tuple(transformed_center)
-        viewer.camera.center = transformed_center
-        viewer.camera.zoom = 4 * default_zoom  # Adjust zoom level
-        # Set the selected data in the layer (only displays if single layer is selected)
-        layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
-    elif isinstance(layer, napari.layers.Labels):
-        # For Labels layer, we need to find the center of the selected label
-        label_index = np.nonzero(boolean_object_selected)[0][0]  # Get the first selected label index
-        print(label_index)
-        # Find the center of the selected label
-        selected_label = label_index + 1
-        label_mask = layer.data == selected_label
-        if np.any(label_mask):
-            center = np.mean(np.argwhere(label_mask), axis=0)
-            center = np.expand_dims(center, axis=0)
-            # Convert to homogeneous coordinates by adding ones column
-            n_dims = len(layer.data.shape)
-            transformed_center = _apply_affine_transform(center, n_dims, affine_net)
-            # Set the viewer's sliders and camera center
-            viewer.dims.current_step = tuple(transformed_center)
-            viewer.camera.center = transformed_center
-            viewer.camera.zoom = 4 * default_zoom  # Adjust zoom level
-            # Set the selected data in the layer (only displays if single layer is selected)
-            layer.selected_label = selected_label
-            # layer.show_selected_label = True
-        else:
-            print("No valid label selected, not focusing.")
+    Returns
+    -------
+    np.ndarray
+        Transformed coordinates (shape: (1, n_dims)).
+    """
+    coords_homogeneous = np.ones((1, n_dims + 1))
+    coords_homogeneous[0, :n_dims] = coords
+    transformed_coords_homogeneous = coords_homogeneous @ affine_matrix.T
+    return transformed_coords_homogeneous[0, :n_dims]
 
 def _build_affine_matrix(rotate, scale, shear, translate):
     """
@@ -840,16 +808,12 @@ def _build_affine_matrix(rotate, scale, shear, translate):
         Affine transformation matrix ((n+1)×(n+1))
     """
     n_dims = len(scale)
-    
     # Create the affine matrix
     affine = np.eye(n_dims + 1)
-    
     # Create scale matrix
     scale_matrix = np.diag(scale)
-    
-    # Create shear matrix - generalized for any dimension
+    # Create shear matrix
     shear_matrix = np.eye(n_dims)
-    
     # Fill upper triangular part with shear values
     # The shear array contains values for all (i,j) pairs where i < j
     shear_idx = 0
@@ -858,51 +822,97 @@ def _build_affine_matrix(rotate, scale, shear, translate):
             if shear_idx < len(shear):
                 shear_matrix[i, j] = shear[shear_idx]
                 shear_idx += 1
-    
     # Combine transformations: T * R * Sh * S
-    # The order matters: Scale first, then Shear, then Rotate
+    # Scale first, then Shear, then Rotate
     transform_matrix = rotate @ shear_matrix @ scale_matrix
-    
     # Set the upper-left (n×n) block to the combined transformation
     affine[:n_dims, :n_dims] = transform_matrix
-    
     # Set the translation (last column, first n rows)
     affine[:n_dims, -1] = translate
-    
     return affine
 
-def _apply_affine_transform(coords, n_dims, affine_matrix):
-    """ Apply an affine transformation to coordinates.
+def _focus_object(layer, boolean_object_selected):
+    """ Focus the viewer on the selected object in the layer.
 
     Parameters
     ----------
-    coords : np.ndarray
-        Coordinates to transform (shape: (n_points, n_dims)).
-    n_dims : int
-        Number of dimensions of the coordinates.
-    affine_matrix : np.ndarray
-        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)). 
-
-    Returns
-    -------
-    np.ndarray
-        Transformed coordinates (shape: (n_points, n_dims)).
+    layer : napari.layers.Layer
+        The layer containing the object to focus on.
+    boolean_object_selected : np.ndarray
+        Boolean array indicating which object is selected (shape: (n_objects,)).
     """
-    coords_homogeneous = np.ones((1, n_dims + 1))
-    coords_homogeneous[0, :n_dims] = coords
-    transformed_coords_homogeneous = coords_homogeneous @ affine_matrix.T
-    return transformed_coords_homogeneous[0, :n_dims]
+    viewer = napari.current_viewer()
+    # Build affine matrix from rotate, scale, shear, translate layer properties
+    rotate = layer.rotate
+    scale = layer.scale
+    shear = layer.shear
+    translate = layer.translate
+    affine_2 = _build_affine_matrix(rotate, scale, shear, translate)
+    # Combine the two affine transformations
+    affine_net = affine_2 @ layer.affine.affine_matrix
+
+    if isinstance(layer, napari.layers.Points):
+        center = layer.data[boolean_object_selected]
+        n_dims = center.shape[-1]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        _set_viewer_camera(viewer, transformed_center)
+        # Set the selected data in the layer (only displays if single layer is selected)
+        layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
+    elif isinstance(layer, napari.layers.Labels):
+        selected_label = np.nonzero(boolean_object_selected)[0][0] + 1
+        label_mask = layer.data == selected_label
+        center = np.mean(np.argwhere(label_mask), axis=0)
+        center = np.expand_dims(center, axis=0)
+        n_dims = len(layer.data.shape)
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        _set_viewer_camera(viewer, transformed_center)
+        # Set the selected data in the layer (only displays if single layer is selected)
+        layer.selected_label = selected_label
 
 def _calculate_default_zoom(viewer, margin: float = 0.05):
+    """ Calculate the default zoom level for the viewer based on the scene size and margin.
+     
+    Uses napari private methods to get the scene parameters and calculate the zoom level without applying it.
+    
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        The napari viewer instance.
+    margin : float, optional
+        Margin to apply around the scene, by default 0.05 (5%).
+        
+    Returns
+    -------
+    float
+        The default zoom level for the viewer with the current layers.
+    """
     extent, scene_size, corner = viewer._get_scene_parameters()
     scale_factor = viewer._get_scale_factor(margin)
     if viewer.dims.ndisplay == 2:
         default_zoom = viewer._get_2d_camera_zoom(
             scene_size, scale_factor
             )
-
     elif viewer.dims.ndisplay == 3:
         default_zoom = viewer._get_3d_camera_zoom(
             extent, scale_factor
             )
     return default_zoom
+
+def _set_viewer_camera(viewer, coords):
+    """ Set the viewer camera to focus on the given coordinates.
+    
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        The napari viewer instance.
+    coords : np.ndarray
+        The coordinates of a point to focus the camera on.
+    """
+    default_zoom = _calculate_default_zoom(viewer)
+    viewer.dims.current_step = tuple(coords)
+    viewer.camera.center = coords
+    viewer.camera.zoom = 4 * default_zoom
