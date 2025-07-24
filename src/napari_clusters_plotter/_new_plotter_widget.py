@@ -852,8 +852,8 @@ def _focus_object(layer, boolean_object_selected):
     affine_net = affine_2 @ layer.affine.affine_matrix
 
     if isinstance(layer, napari.layers.Points):
-        center = layer.data[boolean_object_selected]
-        n_dims = center.shape[-1]
+        center = layer.data[boolean_object_selected][0]
+        n_dims = len(layer.data.shape[-1])
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
@@ -864,7 +864,6 @@ def _focus_object(layer, boolean_object_selected):
         selected_label = np.nonzero(boolean_object_selected)[0][0] + 1
         label_mask = layer.data == selected_label
         center = np.mean(np.argwhere(label_mask), axis=0)
-        center = np.expand_dims(center, axis=0)
         n_dims = len(layer.data.shape)
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
@@ -872,6 +871,37 @@ def _focus_object(layer, boolean_object_selected):
         _set_viewer_camera(viewer, transformed_center)
         # Set the selected data in the layer (only displays if single layer is selected)
         layer.selected_label = selected_label
+    elif isinstance(layer, napari.layers.Surface):
+        center = layer.data[0][boolean_object_selected][0]
+        n_dims = layer.data[0].shape[-1]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        _set_viewer_camera(viewer, transformed_center)
+    elif isinstance(layer, napari.layers.Shapes):
+        selected_shape = layer.data[boolean_object_selected]
+        center = np.mean(selected_shape, axis=0)
+        n_dims = selected_shape.shape[-1]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        _set_viewer_camera(viewer, transformed_center)
+        layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
+    elif isinstance(layer, napari.layers.Tracks):
+        selected_track = layer.data[boolean_object_selected][0]
+        n_dims = layer.data.shape[-1] - 1 # exclude track ID dimension
+        if n_dims==3:
+            # 2D tracks
+            center = selected_track[-3:]  # last three dimensions are t, y, x
+        else:
+            # 3D tracks
+            center = selected_track[-4:]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        _set_viewer_camera(viewer, transformed_center)
+
+
 
 def _calculate_default_zoom(viewer, margin: float = 0.05):
     """ Calculate the default zoom level for the viewer based on the scene size and margin.
