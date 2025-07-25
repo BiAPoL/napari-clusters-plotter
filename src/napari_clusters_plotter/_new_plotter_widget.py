@@ -879,7 +879,7 @@ def _focus_object(layer, boolean_object_selected):
         )
         _set_viewer_camera(viewer, transformed_center)
     elif isinstance(layer, napari.layers.Shapes):
-        selected_shape = layer.data[boolean_object_selected]
+        selected_shape = layer.data[np.nonzero(boolean_object_selected)[0][0]] # needs integer index because data is a list of arrays
         center = np.mean(selected_shape, axis=0)
         n_dims = selected_shape.shape[-1]
         transformed_center = _apply_affine_transform(
