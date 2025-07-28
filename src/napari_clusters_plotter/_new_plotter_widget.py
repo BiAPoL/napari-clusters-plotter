@@ -14,6 +14,7 @@ from nap_plot_tools.cmap import (
     cat10_mod_cmap_first_transparent,
 )
 from napari.utils.colormaps import ALL_COLORMAPS
+from napari.utils.transforms import Affine
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
@@ -787,50 +788,6 @@ def _apply_affine_transform(coords, n_dims, affine_matrix):
     transformed_coords_homogeneous = coords_homogeneous @ affine_matrix.T
     return transformed_coords_homogeneous[0, :n_dims]
 
-def _build_affine_matrix(rotate, scale, shear, translate):
-    """
-    Build an affine transformation matrix from individual components.
-    
-    Parameters
-    ----------
-    rotate : np.ndarray
-        Rotation matrix (n×n for n-dimensional data)
-    scale : np.ndarray
-        Scale vector (n×1 for n-dimensional data)
-    shear : np.ndarray
-        Shear parameters (upper triangular values, length = n*(n-1)/2)
-    translate : np.ndarray
-        Translation vector (n×1 for n-dimensional data)
-        
-    Returns
-    -------
-    np.ndarray
-        Affine transformation matrix ((n+1)×(n+1))
-    """
-    n_dims = len(scale)
-    # Create the affine matrix
-    affine = np.eye(n_dims + 1)
-    # Create scale matrix
-    scale_matrix = np.diag(scale)
-    # Create shear matrix
-    shear_matrix = np.eye(n_dims)
-    # Fill upper triangular part with shear values
-    # The shear array contains values for all (i,j) pairs where i < j
-    shear_idx = 0
-    for i in range(n_dims):
-        for j in range(i + 1, n_dims):
-            if shear_idx < len(shear):
-                shear_matrix[i, j] = shear[shear_idx]
-                shear_idx += 1
-    # Combine transformations: T * R * Sh * S
-    # Scale first, then Shear, then Rotate
-    transform_matrix = rotate @ shear_matrix @ scale_matrix
-    # Set the upper-left (n×n) block to the combined transformation
-    affine[:n_dims, :n_dims] = transform_matrix
-    # Set the translation (last column, first n rows)
-    affine[:n_dims, -1] = translate
-    return affine
-
 def _focus_object(layer, boolean_object_selected):
     """ Focus the viewer on the selected object in the layer.
 
@@ -847,9 +804,15 @@ def _focus_object(layer, boolean_object_selected):
     scale = layer.scale
     shear = layer.shear
     translate = layer.translate
-    affine_2 = _build_affine_matrix(rotate, scale, shear, translate)
+    affine_data2physical = Affine(
+        rotate=rotate,
+        scale=scale,
+        shear=shear,
+        translate=translate,
+    ).affine_matrix
+    affine_physical2world = layer.affine.affine_matrix
     # Combine the two affine transformations
-    affine_net = affine_2 @ layer.affine.affine_matrix
+    affine_net = affine_data2physical @ affine_physical2world
 
     if isinstance(layer, napari.layers.Points):
         center = layer.data[boolean_object_selected][0]
