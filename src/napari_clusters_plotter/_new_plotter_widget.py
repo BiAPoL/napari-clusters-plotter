@@ -816,7 +816,7 @@ def _focus_object(layer, boolean_object_selected):
 
     if isinstance(layer, napari.layers.Points):
         center = layer.data[boolean_object_selected][0]
-        n_dims = len(layer.data.shape[-1])
+        n_dims = layer.data.shape[-1]
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
