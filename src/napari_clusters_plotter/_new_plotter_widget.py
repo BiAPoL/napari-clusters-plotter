@@ -801,7 +801,7 @@ class PlotterWidget(BaseWidget):
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
         self.plot_needs_update.emit()
-    
+
     def _on_highlighted_changed(self, boolean_object_selected: bool):
         """
         Focus the viewer on the highlighted object in the layer.
@@ -827,7 +827,7 @@ def _apply_affine_transform(coords, n_dims, affine_matrix):
     n_dims : int
         Number of dimensions of the coordinates.
     affine_matrix : np.ndarray
-        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)). 
+        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)).
 
     Returns
     -------
@@ -919,16 +919,16 @@ def _focus_object(layer, boolean_object_selected):
 # TODO: Optionally uncomment this and call it in _set_viewer_camera if we want to zoom-in on highlighted objects
 # def _calculate_default_zoom(viewer, margin: float = 0.05):
 #     """ Calculate the default zoom level for the viewer based on the scene size and margin.
-     
+
 #     Uses napari private methods to get the scene parameters and calculate the zoom level without applying it.
-    
+
 #     Parameters
 #     ----------
 #     viewer : napari.Viewer
 #         The napari viewer instance.
 #     margin : float, optional
 #         Margin to apply around the scene, by default 0.05 (5%).
-        
+
 #     Returns
 #     -------
 #     float
@@ -948,7 +948,7 @@ def _focus_object(layer, boolean_object_selected):
 
 def _set_viewer_camera(viewer, coords):
     """ Set the viewer camera to focus on the given coordinates.
-    
+
     Parameters
     ----------
     viewer : napari.Viewer
