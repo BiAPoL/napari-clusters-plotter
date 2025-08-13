@@ -14,8 +14,8 @@ from nap_plot_tools.cmap import (
     cat10_mod_cmap_first_transparent,
 )
 from napari.utils.colormaps import ALL_COLORMAPS
-from napari.utils.transforms import Affine
 from napari.utils.notifications import show_info, show_warning
+from napari.utils.transforms import Affine
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
