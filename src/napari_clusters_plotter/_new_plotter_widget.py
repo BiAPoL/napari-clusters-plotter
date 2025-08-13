@@ -223,6 +223,7 @@ class PlotterWidget(BaseWidget):
 
         self.plotting_widget.active_artist.highlighted_changed_signal.connect(
             self._on_highlighted_changed
+        )
         self.control_widget.pushButton_export_layer.clicked.connect(
             self._on_export_clusters
         )
@@ -809,16 +810,25 @@ class PlotterWidget(BaseWidget):
         if not np.any(boolean_object_selected):
             return
         if np.count_nonzero(boolean_object_selected) > 1:
-            print("Focus only works for single object selection, not focusing.")
+            print(
+                "Focus only works for single object selection, not focusing."
+            )
             return
         features = self._get_features()
-        features_sub = features.iloc[np.argwhere(boolean_object_selected).flatten()]
+        features_sub = features.iloc[
+            np.argwhere(boolean_object_selected).flatten()
+        ]
         layer = features_sub["layer"].values[0]
-        boolean_object_selected_in_layer = boolean_object_selected[features['layer']==layer]
-        _focus_object(self.viewer.layers[layer], boolean_object_selected_in_layer)
+        boolean_object_selected_in_layer = boolean_object_selected[
+            features["layer"] == layer
+        ]
+        _focus_object(
+            self.viewer.layers[layer], boolean_object_selected_in_layer
+        )
+
 
 def _apply_affine_transform(coords, n_dims, affine_matrix):
-    """ Apply an affine transformation to one point.
+    """Apply an affine transformation to one point.
 
     Parameters
     ----------
@@ -839,8 +849,9 @@ def _apply_affine_transform(coords, n_dims, affine_matrix):
     transformed_coords_homogeneous = coords_homogeneous @ affine_matrix.T
     return transformed_coords_homogeneous[0, :n_dims]
 
+
 def _focus_object(layer, boolean_object_selected):
-    """ Focus the viewer on the selected object in the layer.
+    """Focus the viewer on the selected object in the layer.
 
     Parameters
     ----------
@@ -873,7 +884,9 @@ def _focus_object(layer, boolean_object_selected):
         )
         _set_viewer_camera(viewer, transformed_center)
         # Set the selected data in the layer (only displays if single layer is selected)
-        layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
+        layer.selected_data = set(
+            np.argwhere(boolean_object_selected).flatten()
+        )
     elif isinstance(layer, napari.layers.Labels):
         selected_label = np.nonzero(boolean_object_selected)[0][0] + 1
         label_mask = layer.data == selected_label
@@ -893,18 +906,22 @@ def _focus_object(layer, boolean_object_selected):
         )
         _set_viewer_camera(viewer, transformed_center)
     elif isinstance(layer, napari.layers.Shapes):
-        selected_shape = layer.data[np.nonzero(boolean_object_selected)[0][0]] # needs integer index because data is a list of arrays
+        selected_shape = layer.data[
+            np.nonzero(boolean_object_selected)[0][0]
+        ]  # needs integer index because data is a list of arrays
         center = np.mean(selected_shape, axis=0)
         n_dims = selected_shape.shape[-1]
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
         _set_viewer_camera(viewer, transformed_center)
-        layer.selected_data = set(np.argwhere(boolean_object_selected).flatten())
+        layer.selected_data = set(
+            np.argwhere(boolean_object_selected).flatten()
+        )
     elif isinstance(layer, napari.layers.Tracks):
         selected_track = layer.data[boolean_object_selected][0]
-        n_dims = layer.data.shape[-1] - 1 # exclude track ID dimension
-        if n_dims==3:
+        n_dims = layer.data.shape[-1] - 1  # exclude track ID dimension
+        if n_dims == 3:
             # 2D tracks
             center = selected_track[-3:]  # last three dimensions are t, y, x
         else:
@@ -946,8 +963,9 @@ def _focus_object(layer, boolean_object_selected):
 #             )
 #     return default_zoom
 
+
 def _set_viewer_camera(viewer, coords):
-    """ Set the viewer camera to focus on the given coordinates.
+    """Set the viewer camera to focus on the given coordinates.
 
     Parameters
     ----------
