@@ -921,12 +921,7 @@ def _focus_object(layer, boolean_object_selected):
     elif isinstance(layer, napari.layers.Tracks):
         selected_track = layer.data[boolean_object_selected][0]
         n_dims = layer.data.shape[-1] - 1  # exclude track ID dimension
-        if n_dims == 3:
-            # 2D tracks
-            center = selected_track[-3:]  # last three dimensions are t, y, x
-        else:
-            # 3D tracks
-            center = selected_track[-4:]
+        center = selected_track[-3:] if n_dims == 3 else selected_track[-4:]
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
