@@ -38,3 +38,9 @@ In combination with the dimensionality reduction and clustering algorithms, this
 The drawing of the plotted data is triggered whenever the data in the `layer.features` attribute has been updated. This gives trise to a few cool use cases of the clusters plotter. One of them is the simple generation of feature maps directly on top of an existing layer:
 
 ![Feature map generation](./imgs/features_immediacy1.gif)
+
+## Copy selected objects to new layers
+
+In case you ever found yourself in the situation that you wanted to process or inspect an individual object from a layer separately from all the other objects without tedious image processing to pick out *just the right object*, you can now do this in the clusters plotter. Simply draw a selection in the canvas (using the `MANUAL_CLUSTER_ID`) as hue column or select any other categorical feature. Then use the cluster selector on the top of the canvas to select the object class you'd want to export and click the `Add current class as new layer button`!
+
+![Add selected objects to new layer](./imgs/copy_export_objects_function.gif)

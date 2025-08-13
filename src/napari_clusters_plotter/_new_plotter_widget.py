@@ -15,6 +15,7 @@ from nap_plot_tools.cmap import (
 )
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari.utils.transforms import Affine
+from napari.utils.notifications import show_info, show_warning
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
@@ -123,6 +124,42 @@ class PlotterWidget(BaseWidget):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.additional_options_container.setVisible(False)
 
+    def contextMenuEvent(self, event):
+        self.context_menu.exec_(event.globalPos())
+
+    def _on_export_clusters(self):
+        """
+        Export the selected cluster to a new layer.
+        """
+
+        # get currently selected cluster from plotting widget
+        selected_cluster = self.plotting_widget.class_spinbox.value
+        features = self._get_features()
+        hue_column = self.hue_axis
+        if hue_column not in self.categorical_columns:
+            show_warning(
+                '"Selected hue axis is not categorical, cannot export clusters.'
+            )
+            return
+
+        # get the layer to export from
+        for layer in self.layers:
+            features_subset = features[
+                features["layer"] == layer.unique_id
+            ].reset_index()
+            indices = features_subset[hue_column].values == selected_cluster
+            if not np.any(indices):
+                show_info(
+                    "No data points found for selected cluster"
+                    f"{selected_cluster} in layer {layer.name}."
+                )
+                continue
+            export_layer = _export_cluster_to_layer(
+                layer, indices, subcluster_index=selected_cluster
+            )
+            if export_layer is not None:
+                self.viewer.add_layer(export_layer)
+
     def _setup_callbacks(self):
         """
         Set up the callbacks for the widget.
@@ -186,6 +223,8 @@ class PlotterWidget(BaseWidget):
 
         self.plotting_widget.active_artist.highlighted_changed_signal.connect(
             self._on_highlighted_changed
+        self.control_widget.pushButton_export_layer.clicked.connect(
+            self._on_export_clusters
         )
 
     def _on_finish_draw(self, color_indices: np.ndarray):
@@ -202,7 +241,9 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         for layer in self.layers:
-            layer_indices = features[features["layer"] == layer.name].index
+            layer_indices = features[
+                features["layer"] == layer.unique_id
+            ].index
 
             # store latest cluster indeces in the features table
             layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
@@ -523,7 +564,7 @@ class PlotterWidget(BaseWidget):
             if event_attr:
                 event_attr.connect(self._update_feature_selection)
             else:
-                Warning(
+                show_warning(
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
@@ -538,7 +579,7 @@ class PlotterWidget(BaseWidget):
             if event_attr:
                 event_attr.disconnect(self._update_feature_selection)
             else:
-                Warning(
+                show_warning(
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
@@ -632,15 +673,25 @@ class PlotterWidget(BaseWidget):
         """
         if isinstance(layer, napari.layers.Labels):
             # Use CyclicLabelColormap with N colors
-            from napari.utils.colormaps.colormap_utils import label_colormap
-
             from ._utilities import _get_unique_values
 
             # check if is dask or numpy
             n_labels = _get_unique_values(layer).size - 1
-            return np.asarray(
-                label_colormap(n_labels).dict()["colors"]
-            )  # rgba
+            if n_labels >= 2**16:
+                np.random.seed(42)  # For reproducibility
+                rgba = np.random.uniform(
+                    low=0,
+                    high=n_labels,
+                    size=(n_labels, 4),
+                )
+                rgba[:, 3] = 1.0  # Set alpha to 1 for all colors
+            else:
+                from napari.utils.colormaps.colormap_utils import (
+                    label_colormap,
+                )
+
+                rgba = np.asarray(label_colormap(n_labels).dict()["colors"])
+            return rgba
         else:
             # Default to white for other layer types
             default_color = np.array([[1, 1, 1, 1]])
@@ -675,7 +726,7 @@ class PlotterWidget(BaseWidget):
                     active_artist.color_indices
                 )
                 layer_indices = features[
-                    features["layer"] == selected_layer.name
+                    features["layer"] == selected_layer.unique_id
                 ].index
                 self._set_layer_color(
                     selected_layer, rgba_colors[layer_indices]
@@ -739,7 +790,7 @@ class PlotterWidget(BaseWidget):
         if self.n_selected_layers == 0:
             return
 
-        for layer in self.viewer.layers.selection:
+        for layer in self.layers:
             if "MANUAL_CLUSTER_ID" in layer.features.columns:
                 layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
                     np.zeros(len(layer.features), dtype=np.int32)
@@ -750,7 +801,7 @@ class PlotterWidget(BaseWidget):
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
         self.plot_needs_update.emit()
-    
+
     def _on_highlighted_changed(self, boolean_object_selected: bool):
         """
         Focus the viewer on the highlighted object in the layer.
@@ -776,7 +827,7 @@ def _apply_affine_transform(coords, n_dims, affine_matrix):
     n_dims : int
         Number of dimensions of the coordinates.
     affine_matrix : np.ndarray
-        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)). 
+        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)).
 
     Returns
     -------
@@ -868,16 +919,16 @@ def _focus_object(layer, boolean_object_selected):
 # TODO: Optionally uncomment this and call it in _set_viewer_camera if we want to zoom-in on highlighted objects
 # def _calculate_default_zoom(viewer, margin: float = 0.05):
 #     """ Calculate the default zoom level for the viewer based on the scene size and margin.
-     
+
 #     Uses napari private methods to get the scene parameters and calculate the zoom level without applying it.
-    
+
 #     Parameters
 #     ----------
 #     viewer : napari.Viewer
 #         The napari viewer instance.
 #     margin : float, optional
 #         Margin to apply around the scene, by default 0.05 (5%).
-        
+
 #     Returns
 #     -------
 #     float
@@ -897,7 +948,7 @@ def _focus_object(layer, boolean_object_selected):
 
 def _set_viewer_camera(viewer, coords):
     """ Set the viewer camera to focus on the given coordinates.
-    
+
     Parameters
     ----------
     viewer : napari.Viewer
@@ -910,3 +961,101 @@ def _set_viewer_camera(viewer, coords):
     # Zooming-in on highlighted objects (optional, not implemented for now)
     # default_zoom = _calculate_default_zoom(viewer)
     # viewer.camera.zoom = 4 * default_zoom
+
+
+def _export_cluster_to_layer(
+    layer: "napari.layers.Layer",
+    export_indices: np.ndarray,
+    subcluster_index: int = None,
+) -> "napari.layers.Layer":
+    """
+    Export the selected cluster to a new layer.
+
+    Parameters
+    ----------
+    layer : napari.layers.Layer
+        The layer to export the cluster from.
+
+    export_indices : np.ndarray
+        The indices of the cluster to export.
+
+    subcluster_index : str
+        The name of the new layer. If not provided, the name of the layer will be used.
+
+    Returns
+    -------
+    napari.layers.Layer
+        The new layer with the selected cluster.
+    """
+    new_features = layer.features.iloc[export_indices].copy()
+
+    if isinstance(layer, napari.layers.Labels):
+        from skimage.segmentation import relabel_sequential
+
+        LUT = np.arange(layer.data.max() + 1)
+        LUT[1:][~export_indices] = 0
+        new_data = LUT[layer.data]
+        new_data, forward_map, _ = relabel_sequential(
+            new_data,
+        )
+        new_features["original_label"] = pd.Categorical(
+            forward_map.in_values[1:]
+        )
+        new_features["label"] = pd.Categorical(forward_map.out_values[1:])
+        new_layer = napari.layers.Labels(new_data)
+
+    elif isinstance(layer, napari.layers.Points):
+        new_layer = napari.layers.Points(layer.data[export_indices])
+        new_layer.size = layer.size[export_indices]
+
+    elif isinstance(layer, napari.layers.Shapes):
+        new_shapes = [
+            shape for shape, i in zip(layer.data, export_indices) if i
+        ]
+        new_shape_types = np.asarray(layer.shape_type)[export_indices]
+        new_layer = napari.layers.Shapes(
+            new_shapes, shape_type=new_shape_types
+        )
+        edge_widths = list(np.asarray(layer.edge_width)[export_indices])
+        new_layer.edge_width = edge_widths
+
+    elif isinstance(layer, napari.layers.Tracks):
+        new_tracks = layer.data[export_indices]
+        new_layer = napari.layers.Tracks(new_tracks)
+
+    elif isinstance(layer, napari.layers.Surface):
+        new_vertices = layer.data[0][export_indices]
+        old_to_new_index = {
+            old_idx: new_idx
+            for new_idx, old_idx in enumerate(np.where(export_indices)[0])
+        }
+
+        # Vectorized update of faces using list comprehension
+        new_faces = [
+            [old_to_new_index[vertex_idx] for vertex_idx in face]
+            for face in layer.data[1]
+            if all(vertex_idx in old_to_new_index for vertex_idx in face)
+        ]
+        new_layer = napari.layers.Surface(
+            (new_vertices, np.asarray(new_faces, dtype=np.int32)),
+        )
+
+    elif isinstance(layer, napari.layers.Vectors):
+        new_layer = napari.layers.Vectors(layer.data[export_indices])
+
+    else:
+        return None
+
+    new_layer.scale = layer.scale
+    new_layer.translate = layer.translate
+    new_layer.rotate = layer.rotate
+
+    if not subcluster_index:
+        new_layer.name = f"{layer.name} subcluster"
+    else:
+        new_layer.name = f"{layer.name} subcluster {subcluster_index}"
+
+    # copy features to new layer if available and drop cluster column
+    new_layer.features = new_features
+
+    return new_layer
