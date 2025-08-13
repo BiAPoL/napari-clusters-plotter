@@ -865,35 +865,35 @@ def _focus_object(layer, boolean_object_selected):
         _set_viewer_camera(viewer, transformed_center)
 
 
-
-def _calculate_default_zoom(viewer, margin: float = 0.05):
-    """ Calculate the default zoom level for the viewer based on the scene size and margin.
+# TODO: Optionally uncomment this and call it in _set_viewer_camera if we want to zoom-in on highlighted objects
+# def _calculate_default_zoom(viewer, margin: float = 0.05):
+#     """ Calculate the default zoom level for the viewer based on the scene size and margin.
      
-    Uses napari private methods to get the scene parameters and calculate the zoom level without applying it.
+#     Uses napari private methods to get the scene parameters and calculate the zoom level without applying it.
     
-    Parameters
-    ----------
-    viewer : napari.Viewer
-        The napari viewer instance.
-    margin : float, optional
-        Margin to apply around the scene, by default 0.05 (5%).
+#     Parameters
+#     ----------
+#     viewer : napari.Viewer
+#         The napari viewer instance.
+#     margin : float, optional
+#         Margin to apply around the scene, by default 0.05 (5%).
         
-    Returns
-    -------
-    float
-        The default zoom level for the viewer with the current layers.
-    """
-    extent, scene_size, corner = viewer._get_scene_parameters()
-    scale_factor = viewer._get_scale_factor(margin)
-    if viewer.dims.ndisplay == 2:
-        default_zoom = viewer._get_2d_camera_zoom(
-            scene_size, scale_factor
-            )
-    elif viewer.dims.ndisplay == 3:
-        default_zoom = viewer._get_3d_camera_zoom(
-            extent, scale_factor
-            )
-    return default_zoom
+#     Returns
+#     -------
+#     float
+#         The default zoom level for the viewer with the current layers.
+#     """
+#     extent, scene_size, corner = viewer._get_scene_parameters()
+#     scale_factor = viewer._get_scale_factor(margin)
+#     if viewer.dims.ndisplay == 2:
+#         default_zoom = viewer._get_2d_camera_zoom(
+#             scene_size, scale_factor
+#             )
+#     elif viewer.dims.ndisplay == 3:
+#         default_zoom = viewer._get_3d_camera_zoom(
+#             extent, scale_factor
+#             )
+#     return default_zoom
 
 def _set_viewer_camera(viewer, coords):
     """ Set the viewer camera to focus on the given coordinates.
@@ -905,7 +905,8 @@ def _set_viewer_camera(viewer, coords):
     coords : np.ndarray
         The coordinates of a point to focus the camera on.
     """
-    default_zoom = _calculate_default_zoom(viewer)
     viewer.dims.current_step = tuple(coords)
     viewer.camera.center = coords
-    viewer.camera.zoom = 4 * default_zoom
+    # Zooming-in on highlighted objects (optional, not implemented for now)
+    # default_zoom = _calculate_default_zoom(viewer)
+    # viewer.camera.zoom = 4 * default_zoom
