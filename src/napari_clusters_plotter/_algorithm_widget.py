@@ -39,7 +39,7 @@ class BaseWidget(QWidget):
             _features = layer.features[self.common_columns].copy()
 
             # Add layer name as a categorical column
-            _features["layer"] = layer.name
+            _features["layer"] = layer.unique_id
             _features["layer"] = _features["layer"].astype("category")
             features = pd.concat([features, _features], axis=0)
 
