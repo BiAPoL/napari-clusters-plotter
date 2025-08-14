@@ -62,7 +62,7 @@ class ClusteringWidget(AlgorithmWidgetBase):
 
             # add the columns to the features
             layer_feature_subset = features_clustered[
-                features_clustered["layer"] == layer.unique_id
+                features_clustered["layer"] == layer.name
             ]
             current_features[column_name] = layer_feature_subset[
                 column_name
@@ -114,7 +114,7 @@ class DimensionalityReductionWidget(AlgorithmWidgetBase):
             current_features = layer.features
             for column in column_names:
                 layer_feature_subset = result[
-                    result["layer"] == layer.unique_id
+                    result["layer"] == layer.name
                 ]
 
                 # add the columns to the features
