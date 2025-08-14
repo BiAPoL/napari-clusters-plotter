@@ -145,7 +145,7 @@ class PlotterWidget(BaseWidget):
         # get the layer to export from
         for layer in self.layers:
             features_subset = features[
-                features["layer"] == layer.unique_id
+                features["layer"] == layer.name
             ].reset_index()
             indices = features_subset[hue_column].values == selected_cluster
             if not np.any(indices):
@@ -243,7 +243,7 @@ class PlotterWidget(BaseWidget):
         features = self._get_features()
         for layer in self.layers:
             layer_indices = features[
-                features["layer"] == layer.unique_id
+                features["layer"] == layer.name
             ].index
 
             # store latest cluster indeces in the features table
@@ -727,7 +727,7 @@ class PlotterWidget(BaseWidget):
                     active_artist.color_indices
                 )
                 layer_indices = features[
-                    features["layer"] == selected_layer.unique_id
+                    features["layer"] == selected_layer.name
                 ].index
                 self._set_layer_color(
                     selected_layer, rgba_colors[layer_indices]
