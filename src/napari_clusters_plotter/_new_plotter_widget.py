@@ -810,8 +810,8 @@ class PlotterWidget(BaseWidget):
         if not np.any(boolean_object_selected):
             return
         if np.count_nonzero(boolean_object_selected) > 1:
-            print(
-                "Focus only works for single object selection, not focusing."
+            napari.utils.notifications.show_info(
+                "Multiple objects selected - only single objects can be highlighted."
             )
             return
         features = self._get_features()
