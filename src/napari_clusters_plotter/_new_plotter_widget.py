@@ -815,10 +815,7 @@ class PlotterWidget(BaseWidget):
             )
             return
         features = self._get_features()
-        features_sub = features.iloc[
-            np.argwhere(boolean_object_selected).flatten()
-        ]
-        layer = features_sub["layer"].values[0]
+        layer = features[boolean_object_selected]["layer"].values[0]
         boolean_object_selected_in_layer = boolean_object_selected[
             features["layer"] == layer
         ]
@@ -882,7 +879,7 @@ def _focus_object(layer, boolean_object_selected):
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
-        _set_viewer_camera(viewer, transformed_center)
+
         # Set the selected data in the layer (only displays if single layer is selected)
         layer.selected_data = set(
             np.argwhere(boolean_object_selected).flatten()
@@ -895,7 +892,6 @@ def _focus_object(layer, boolean_object_selected):
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
-        _set_viewer_camera(viewer, transformed_center)
         # Set the selected data in the layer (only displays if single layer is selected)
         layer.selected_label = selected_label
     elif isinstance(layer, napari.layers.Surface):
@@ -904,7 +900,6 @@ def _focus_object(layer, boolean_object_selected):
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
-        _set_viewer_camera(viewer, transformed_center)
     elif isinstance(layer, napari.layers.Shapes):
         selected_shape = layer.data[
             np.nonzero(boolean_object_selected)[0][0]
@@ -914,7 +909,6 @@ def _focus_object(layer, boolean_object_selected):
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
-        _set_viewer_camera(viewer, transformed_center)
         layer.selected_data = set(
             np.argwhere(boolean_object_selected).flatten()
         )
@@ -925,7 +919,8 @@ def _focus_object(layer, boolean_object_selected):
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
-        _set_viewer_camera(viewer, transformed_center)
+    
+    _set_viewer_camera(viewer, transformed_center)
 
 
 # TODO: Optionally uncomment this and call it in _set_viewer_camera if we want to zoom-in on highlighted objects
