@@ -21,7 +21,11 @@ from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
-from ._utilities import _is_selectable_layer, _get_selection_event, _get_selected_objects
+from ._utilities import (
+    _get_selected_objects,
+    _get_selection_event,
+    _is_selectable_layer,
+)
 
 
 class PlottingType(Enum):
@@ -588,9 +592,7 @@ class PlotterWidget(BaseWidget):
 
         # get copy of features table, modify and overwrite to trigger draw event
         features_table = layer.features
-        features_table["SELECTED_LAYER_CLUSTER_ID"] = pd.Categorical(
-            cluster
-        )
+        features_table["SELECTED_LAYER_CLUSTER_ID"] = pd.Categorical(cluster)
         layer.features = features_table
 
     def _clean_up(self):

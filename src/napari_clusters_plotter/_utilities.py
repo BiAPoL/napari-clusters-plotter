@@ -1,14 +1,14 @@
-from typing import Union, List
+from typing import List, Union
 
 import dask.array as da
 import numpy as np
-from napari.layers import Image, Labels, Points, Shapes, Layer
+from napari.layers import Image, Labels, Layer, Points, Shapes
 from napari.utils.events import Event
 
 _selectable_layers = [
     Labels,
     Points,
-# TODO: Shapes support is planned for future implementation; currently excluded from selectable layers due to incomplete support.
+    # TODO: Shapes support is planned for future implementation; currently excluded from selectable layers due to incomplete support.
 ]
 
 
@@ -64,9 +64,7 @@ def _get_selected_objects(layer: Layer) -> List[int]:
         return list(layer.selected_data)
 
 
-def _get_selection_event(
-    layer: Layer
-) -> Event:
+def _get_selection_event(layer: Layer) -> Event:
     """
     Get the selection event for the layer.
     """

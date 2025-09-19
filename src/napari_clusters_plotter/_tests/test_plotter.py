@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from napari.layers import Labels, Points, Shapes
-from typing import Sequence
 
 
 def create_points(n_samples=100, loc=5):
@@ -587,7 +586,6 @@ def test_multiscale_plotter(make_napari_viewer):
 )
 def test_categorical_handling(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
-    from napari_clusters_plotter._utilities import _is_selectable_layer
 
     viewer = make_napari_viewer()
     layer, layer2 = create_sample_layers()
@@ -755,10 +753,7 @@ def test_cluster_visibility_toggle(make_napari_viewer, create_sample_layers):
 
 @pytest.mark.parametrize(
     "create_sample_layers",
-    [
-        create_multi_point_layer,
-        create_multi_labels_layer
-    ],
+    [create_multi_point_layer, create_multi_labels_layer],
 )
 def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
@@ -795,6 +790,7 @@ def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
 
     assert np.array_equal(
         np.argwhere(
-            plotter_widget.plotting_widget.active_artist.color_indices).flatten(),
-            np.asarray([selection]).flatten()
+            plotter_widget.plotting_widget.active_artist.color_indices
+        ).flatten(),
+        np.asarray([selection]).flatten(),
     )
