@@ -8,7 +8,7 @@ from napari.utils.events import Event
 _selectable_layers = [
     Labels,
     Points,
-    Shapes
+#    Shapes
 ]
 
 
