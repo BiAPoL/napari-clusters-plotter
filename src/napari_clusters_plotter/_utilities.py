@@ -8,7 +8,7 @@ from napari.utils.events import Event
 _selectable_layers = [
     Labels,
     Points,
-#    Shapes
+# TODO: Shapes support is planned for future implementation; currently excluded from selectable layers due to incomplete support.
 ]
 
 
