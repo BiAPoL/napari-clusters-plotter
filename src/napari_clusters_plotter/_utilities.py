@@ -49,7 +49,7 @@ def _is_selectable_layer(layer: Layer) -> bool:
 
 def _get_selected_objects(layer: Layer) -> List[int]:
     """
-    Retrieve id of selected object on napari canvas"
+    Retrieve id of selected object on napari canvas
     """
     if not _is_selectable_layer(layer):
         raise TypeError(
