@@ -51,14 +51,17 @@ def _get_selected_objects(layer: Layer) -> List[int]:
     """
     Retrieve id of selected object on napari canvas"
     """
+    if not _is_selectable_layer(layer):
+        raise TypeError(
+            f"Layer type {type(layer)} is not supported for selection."
+        )
+
     if isinstance(layer, Points):
         return list(layer.selected_data)
     elif isinstance(layer, Labels):
         return [layer.selected_label]
-    else:
-        raise TypeError(
-            f"Layer type {type(layer)} is not supported for selection."
-        )
+    elif isinstance(layer, Shapes):
+        return list(layer.selected_data)
 
 
 def _get_selection_event(
@@ -67,11 +70,13 @@ def _get_selection_event(
     """
     Get the selection event for the layer.
     """
+    if not _is_selectable_layer(layer):
+        raise TypeError(
+            f"Layer type {type(layer)} is not supported for selection events."
+        )
     if isinstance(layer, Points):
         return layer.selected_data.events.items_changed
     elif isinstance(layer, Labels):
         return layer.events.selected_label
-    else:
-        raise TypeError(
-            f"Layer type {type(layer)} is not supported for selection events."
-        )
+    elif isinstance(layer, Shapes):
+        return layer.events.highlight
