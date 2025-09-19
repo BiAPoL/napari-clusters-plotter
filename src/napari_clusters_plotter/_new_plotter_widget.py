@@ -588,8 +588,6 @@ class PlotterWidget(BaseWidget):
             cluster
         )
         layer.features = features_table
-        
-
 
     def _clean_up(self):
         """In case of empty layer selection"""
