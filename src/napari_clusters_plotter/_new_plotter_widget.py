@@ -579,6 +579,9 @@ class PlotterWidget(BaseWidget):
         cluster = np.zeros(len(layer.features), dtype=np.uint64)
         cluster[list(selected_data)] = 1
 
+        if np.all(cluster == 0):
+            return
+
         # get copy of features table, modify and overwrite to trigger draw event
         features_table = layer.features
         features_table["SELECTED_LAYER_CLUSTER_ID"] = pd.Categorical(
