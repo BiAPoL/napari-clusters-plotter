@@ -772,14 +772,6 @@ class PlotterWidget(BaseWidget):
                 self._set_layer_color(layer, rgba_colors)
         self.layers_being_unselected = []
 
-    def is_selectable_layer(self, layer: napari.layers.Layer) -> bool:
-        """
-        Check if the layer is selectable.
-        """
-        if type(layer) in self.selectable_layer_types:
-            return True
-        return False
-
     def _set_layer_color(self, layer, colors):
         """
         Set colors for a specific layer based on its type.
