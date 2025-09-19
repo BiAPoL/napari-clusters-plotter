@@ -569,12 +569,16 @@ class PlotterWidget(BaseWidget):
             # connect selection event
             if _is_selectable_layer(layer):
                 selection_event = _get_selection_event(layer)
-                selection_event.connect(lambda e: self._update_selected_object_feature(layer))
+                selection_event.connect(self._update_selected_object_feature)
 
-    def _update_selected_object_feature(self, layer: napari.layers.Layer) -> None:
+    def _update_selected_object_feature(self) -> None:
         """
         Get the selected object from the layer and updates the entry in MANUAL_CLUSTER_ID
         """
+        # do nothing if more than one layer is selected
+        if len(self.layers) > 1:
+            return
+        layer = self.layers[0]
         selected_data = _get_selected_objects(layer)
         cluster = np.zeros(len(layer.features), dtype=np.uint64)
         cluster[list(selected_data)] = 1
