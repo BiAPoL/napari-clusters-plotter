@@ -1,8 +1,15 @@
-from typing import Union
+from typing import Union, List
 
 import dask.array as da
 import numpy as np
-from napari.layers import Image, Labels
+from napari.layers import Image, Labels, Points, Shapes, Layer
+from napari.utils.events import Event
+
+_selectable_layers = [
+    Labels,
+    Points,
+    Shapes
+]
 
 
 def _get_unique_values(layer: Union[Image, Labels]) -> np.ndarray:
@@ -29,3 +36,42 @@ def _get_unique_values(layer: Union[Image, Labels]) -> np.ndarray:
         unique_values = da.unique(data).compute()
 
     return unique_values
+
+
+def _is_selectable_layer(layer: Layer) -> bool:
+    """
+    Check if the layer is selectable.
+    """
+    if type(layer) in _selectable_layers:
+        return True
+    return False
+
+
+def _get_selected_objects(layer: Layer) -> List[int]:
+    """
+    Retrieve id of selected object on napari canvas"
+    """
+    if isinstance(layer, Points):
+        return list(layer.selected_data)
+    elif isinstance(layer, Labels):
+        return [layer.selected_label]
+    else:
+        raise TypeError(
+            f"Layer type {type(layer)} is not supported for selection."
+        )
+
+
+def _get_selection_event(
+    layer: Layer
+) -> Event:
+    """
+    Get the selection event for the layer.
+    """
+    if isinstance(layer, Points):
+        return layer.selected_data.events.items_changed
+    elif isinstance(layer, Labels):
+        return layer.events.selected_label
+    else:
+        raise TypeError(
+            f"Layer type {type(layer)} is not supported for selection events."
+        )
