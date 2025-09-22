@@ -772,7 +772,7 @@ def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
 
     event = _get_selection_event(layer2)
     if isinstance(layer2, Points):
-        selection = list([1, 2])
+        selection = [1, 2]
         layer2.selected_data = selection
         event.emit()
     elif isinstance(layer2, Labels):
