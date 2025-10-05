@@ -44,7 +44,3 @@ The drawing of the plotted data is triggered whenever the data in the `layer.fea
 In case you ever found yourself in the situation that you wanted to process or inspect an individual object from a layer separately from all the other objects without tedious image processing to pick out *just the right object*, you can now do this in the clusters plotter. Simply draw a selection in the canvas (using the `MANUAL_CLUSTER_ID`) as hue column or select any other categorical feature. Then use the cluster selector on the top of the canvas to select the object class you'd want to export and click the `Add current class as new layer button`!
 
 ![Add selected objects to new layer](./imgs/copy_export_objects_function.gif)
-
-## Bi-directional object selection
-
-*Geez, what's the matter with this cell*? Ever hoped you could just select an object on the napari canvas and introspect its properties? Just as it is possible to select objects in the napari-clusters-plotter interface and highlight them in the napari viewer, it is possible to do it the other way around. For `Labels`, `Points` and `Shapes` (Shapes: napari version >=0.6.5), you can select objects in the napari UI. A new categorical feature (`SELECTED_LAYER_CLUSTER_ID`) will be added to the `hue` dropdown that highlights all selected objects.
