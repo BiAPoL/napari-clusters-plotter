@@ -1,4 +1,5 @@
 from typing import List, Union
+from packaging.version import Version
 
 import dask.array as da
 import numpy as np
@@ -8,9 +9,8 @@ from napari.utils.events import Event
 _selectable_layers = [
     Labels,
     Points,
-    # TODO: Shapes support is planned for future implementation; currently excluded from selectable layers due to incomplete support.
+    Shapes
 ]
-
 
 def _get_unique_values(layer: Union[Image, Labels]) -> np.ndarray:
     """
@@ -77,4 +77,6 @@ def _get_selection_event(layer: Layer) -> Event:
     elif isinstance(layer, Labels):
         return layer.events.selected_label
     elif isinstance(layer, Shapes):
-        return layer.events.highlight
+        from napari import __version__
+        if Version(__version__) >= Version("0.6.5"):
+            return layer.selected_data.events.items_changed
