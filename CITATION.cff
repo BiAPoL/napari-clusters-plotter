@@ -10,12 +10,14 @@ authors:
   - given-names: Ryan
     family-names: Savill
   - given-names: Johannes
-    family-names: Müller
+    family-names: Soltwedel
   - given-names: Marcelo
     family-names: Zoccoler
   - given-names: Thorsten
     family-names: Wagner
     email: thorsten.wagner@mpi-dortmund.mpg.de
+  - given-names: Clement
+    family-names: Caporal
   - given-names: Robert
     family-names: Haase
     email: robert.haase@tu-dresden.de

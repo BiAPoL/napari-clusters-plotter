@@ -7,9 +7,10 @@ license = {file = "LICENSE"}
 authors = [
   {name = "Laura Zigutyte"},
   {name = "Ryan Savill"},
-  {name = "Johannes Soltwedel", email = "johannes_richard.soltwedel@tu-dresden.de"},
+  {name = "Johannes Soltwedel"},
   {name = "Marcelo Zoccoler"},
   {name = "Thorsten Wagner"},
+  {name = "Clement Caporal"},
   {name = "Robert Haase"}
 ]
 classifiers = [
