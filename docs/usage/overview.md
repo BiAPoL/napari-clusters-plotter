@@ -48,4 +48,3 @@ In case you ever found yourself in the situation that you wanted to process or i
 ## Bi-directional object selection
 
 *Geez, what's the matter with this cell*? Ever hoped you could just select an object on the napari canvas and introspect its properties? Just as it is possible to select objects in the napari-clusters-plotter interface and highlight them in the napari viewer, it is possible to do it the other way around. For `Labels`, `Points` and `Shapes` (Shapes: napari version >=0.6.5), you can select objects in the napari UI. A new categorical feature (`SELECTED_LAYER_CLUSTER_ID`) will be added to the `hue` dropdown that highlights all selected objects.
-
