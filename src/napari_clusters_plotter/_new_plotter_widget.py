@@ -573,10 +573,12 @@ class PlotterWidget(BaseWidget):
             # connect selection event
             if _is_selectable_layer(layer):
                 selection_event = _get_selection_event(layer)
-                
+
                 # not all napari versions support all selection events
                 if selection_event is not None:
-                    selection_event.connect(self._update_selected_object_feature)
+                    selection_event.connect(
+                        self._update_selected_object_feature
+                    )
 
     def _update_selected_object_feature(self) -> None:
         """

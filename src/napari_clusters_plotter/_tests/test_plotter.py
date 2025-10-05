@@ -753,9 +753,11 @@ def test_cluster_visibility_toggle(make_napari_viewer, create_sample_layers):
 
 @pytest.mark.parametrize(
     "create_sample_layers",
-    [create_multi_point_layer,
-     create_multi_labels_layer,
-     create_multi_shapes_layers],
+    [
+        create_multi_point_layer,
+        create_multi_labels_layer,
+        create_multi_shapes_layers,
+    ],
 )
 def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
