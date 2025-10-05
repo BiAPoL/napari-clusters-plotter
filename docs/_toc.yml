@@ -17,6 +17,7 @@ parts:
 - caption: Contributing
   chapters:
   - file: contributing/new_algorithm
+  - file: contributing/documentation
 - caption: API
   chapters:
   - file: api
