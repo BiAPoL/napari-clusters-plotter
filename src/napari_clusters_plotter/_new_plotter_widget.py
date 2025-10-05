@@ -128,9 +128,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.additional_options_container.setVisible(False)
 
-    def contextMenuEvent(self, event):
-        self.context_menu.exec_(event.globalPos())
-
     def _on_export_clusters(self):
         """
         Export the selected cluster to a new layer.
