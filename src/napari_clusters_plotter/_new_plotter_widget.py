@@ -22,6 +22,11 @@ from qtpy.QtGui import QColor
 from qtpy.QtWidgets import QComboBox, QVBoxLayout, QWidget
 
 from ._algorithm_widget import BaseWidget
+from ._utilities import (
+    _get_selected_objects,
+    _get_selection_event,
+    _is_selectable_layer,
+)
 
 
 class PlottingType(Enum):
@@ -123,9 +128,6 @@ class PlotterWidget(BaseWidget):
         self.control_widget.cmap_container.setVisible(False)
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.additional_options_container.setVisible(False)
-
-    def contextMenuEvent(self, event):
-        self.context_menu.exec_(event.globalPos())
 
     def _on_export_clusters(self):
         """
@@ -569,6 +571,36 @@ class PlotterWidget(BaseWidget):
                     f"Layer {layer.name} does not have events.features or events.properties"
                 )
 
+            # connect selection event
+            if _is_selectable_layer(layer):
+                selection_event = _get_selection_event(layer)
+
+                # not all napari versions support all selection events
+                if selection_event is not None:
+                    selection_event.connect(
+                        self._update_selected_object_feature
+                    )
+
+    def _update_selected_object_feature(self) -> None:
+        """
+        Get the selected object from the layer and updates the entry in MANUAL_CLUSTER_ID
+        """
+        # do nothing if more than one layer is selected
+        if len(self.layers) > 1:
+            return
+        layer = self.layers[0]
+        selected_data = _get_selected_objects(layer)
+        cluster = np.zeros(len(layer.features), dtype=np.uint64)
+        cluster[list(selected_data)] = 1
+
+        if np.all(cluster == 0):
+            return
+
+        # get copy of features table, modify and overwrite to trigger draw event
+        features_table = layer.features
+        features_table["SELECTED_LAYER_CLUSTER_ID"] = pd.Categorical(cluster)
+        layer.features = features_table
+
     def _clean_up(self):
         """In case of empty layer selection"""
 
@@ -781,7 +813,9 @@ class PlotterWidget(BaseWidget):
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
             color_dict = dict(zip(_get_unique_values(layer), colors))
+            layer.events.selected_label.block()
             layer.colormap = DirectLabelColormap(color_dict=color_dict)
+            layer.events.selected_label.unblock()
         layer.refresh()
 
     def _reset(self):

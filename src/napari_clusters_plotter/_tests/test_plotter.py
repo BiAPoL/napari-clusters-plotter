@@ -825,3 +825,50 @@ if __name__ == '__main__':
     import napari
 
     test_focus_object_on_highlighted_multi_selected_points_layers(napari.Viewer)
+@pytest.mark.parametrize(
+    "create_sample_layers",
+    [
+        create_multi_point_layer,
+        create_multi_labels_layer,
+        create_multi_shapes_layers,
+    ],
+)
+def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
+    from napari_clusters_plotter import PlotterWidget
+    from napari_clusters_plotter._utilities import _get_selection_event
+
+    viewer = make_napari_viewer()
+    _, layer2 = create_sample_layers()
+
+    # add layers to viewer
+    viewer.add_layer(layer2)
+    plotter_widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(plotter_widget, area="right")
+
+    # select last layer and create a random selection on the layer
+    viewer.layers.selection.active = layer2
+
+    event = _get_selection_event(layer2)
+    if type(layer2) in [Points, Shapes]:
+        selection = [1, 2]
+        layer2.selected_data = selection
+        event.emit()
+    elif isinstance(layer2, Labels):
+        selection = 1
+        layer2.selected_label = selection
+        event()
+
+    assert "SELECTED_LAYER_CLUSTER_ID" in layer2.features.columns
+
+    # use SELECTED_DATA_LAYER_CLUSTER_ID as hue for layer2
+    viewer.layers.selection.active = layer2
+    plotter_widget._selectors["hue"].setCurrentText(
+        "SELECTED_LAYER_CLUSTER_ID"
+    )
+
+    assert np.array_equal(
+        np.argwhere(
+            plotter_widget.plotting_widget.active_artist.color_indices
+        ).flatten(),
+        np.asarray([selection]).flatten(),
+    )
