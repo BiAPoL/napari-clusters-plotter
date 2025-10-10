@@ -244,9 +244,7 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         for layer in self.layers:
-            layer_indices = features[
-                features["layer"] == layer.name
-            ].index
+            layer_indices = features[features["layer"] == layer.name].index
 
             # store latest cluster indeces in the features table
             layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
@@ -953,7 +951,7 @@ def _focus_object(layer, boolean_object_selected):
         transformed_center = _apply_affine_transform(
             center, n_dims, affine_net
         )
-    
+
     _set_viewer_camera(viewer, transformed_center)
 
 

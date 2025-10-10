@@ -801,8 +801,12 @@ def test_focus_object_on_highlighted_multi_selected_points_layers(
     boolean_object_selected = np.zeros(
         len(layer.data) + len(layer2.data), dtype=bool
     )
-    boolean_object_selected[np.random.randint(0, len(boolean_object_selected))] = True
-    layer_name = widget._get_features()[boolean_object_selected]['layer'].values[0]
+    boolean_object_selected[
+        np.random.randint(0, len(boolean_object_selected))
+    ] = True
+    layer_name = widget._get_features()[boolean_object_selected][
+        "layer"
+    ].values[0]
     layer = viewer.layers[layer_name]
 
     # Set highlighted property
@@ -810,10 +814,12 @@ def test_focus_object_on_highlighted_multi_selected_points_layers(
 
     # Check that the viewer camera is centered on the selected point (considering layer translation)
     index_in_data = np.where(
-        boolean_object_selected[widget._get_features()['layer'] == layer_name]
+        boolean_object_selected[widget._get_features()["layer"] == layer_name]
     )[0][0]
     assert np.allclose(
-        np.asarray(viewer.camera.center), layer.data[index_in_data][-3:] + layer.translate[-3:], rtol=1e-5
+        np.asarray(viewer.camera.center),
+        layer.data[index_in_data][-3:] + layer.translate[-3:],
+        rtol=1e-5,
     )
     # Check that the viewer's current step is set to the selected point
     assert np.allclose(
@@ -821,10 +827,14 @@ def test_focus_object_on_highlighted_multi_selected_points_layers(
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import napari
 
-    test_focus_object_on_highlighted_multi_selected_points_layers(napari.Viewer)
+    test_focus_object_on_highlighted_multi_selected_points_layers(
+        napari.Viewer
+    )
+
+
 @pytest.mark.parametrize(
     "create_sample_layers",
     [
