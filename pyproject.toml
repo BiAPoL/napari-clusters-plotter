@@ -51,7 +51,7 @@ testing = [
     "pytest",  # https://docs.pytest.org/en/latest/contents.html
     "pytest-cov",  # https://pytest-cov.readthedocs.io/en/latest/
     "pytest-qt",  # https://pytest-qt.readthedocs.io/en/latest/
-    "napari",
+    "napari>=0.6.5",
     "pyqt5",
 ]
 
