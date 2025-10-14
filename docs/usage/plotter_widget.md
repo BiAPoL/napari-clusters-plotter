@@ -26,13 +26,23 @@ The core functionality of the plugin is available to you directly upon opening i
 
 ![Advanced settings](./imgs/plotter_overview3_annotated.png)
 
+![Advanced settings](./imgs/plotter_overview4_annotated.png)
+
 Under the `Advanced Options` tab, you have access to some more customization options for the visualization:
 
 9. Change the colormap for the chosen overlay color. If a layer is colored by a non-categorical feature, this determines the colormap for the depiction. Only enabled if a non-categorical feature is selected in the `Hue` dropdown.
 10. Apply a log-scale to the chosen feature
 11. Switch plot type between `SCATTER` and `HISTOGRAM2D`
-12. Colorap for 2D histogram (only enabled if `HISTOGRAM2D` is selected in 10.)
-13. Change the size of the bins (only enabled if `HISTOGRAM2D` is selected in 10.)
+
+Depending on which plot type is selected, some additional options are available:
+
+12. For `SCATTER` plot:
+    - Enable the time-frame highlighting. This make give out-of-frame points a different alpha and size, making them appear slightly more transparent and smaller. This is useful to visualize the current time frame in a time-series dataset. To make use of this, ensure that the measurements in the layer's `layer.features` dataframe contain a `frame` column, which is used to determine the current time frame.
+    - Change the size of the points in the scatter plot. This can be useful for better visibility of the points in the plot in case there are a large number of points.
+
+13. For `HISTOGRAM2D` plot:
+    - Change the size of the bins (only enabled if `HISTOGRAM2D` is selected in 10.) Can be set to auto or a manual bin range can be set.
+    - A different colormap for the histogram can be selected.
 
 ## Visualizing layer features
 
