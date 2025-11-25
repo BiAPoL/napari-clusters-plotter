@@ -11,9 +11,9 @@ from ._new_plotter_widget import PlotterWidget
 from ._sample_data import (
     bbbc_1_dataset,
     cells3d_curvatures,
+    granule_compression_vectors,
     skan_skeleton,
     tgmm_mini_dataset,
-    granule_compression_vectors
 )
 
 __all__ = [
