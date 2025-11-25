@@ -1,7 +1,7 @@
 The data in this folder has been made available under the Creative Commons Attribution 4.0 International (CC BY 4.0) license on Zenodo: https://zenodo.org/records/17668709
 It can be cited under the DOI: https://doi.org/10.5281/zenodo.17668708
 
-Citation: 
+Citation:
 @dataset{ando_2025_17668709,
   author       = {Andò, Edward},
   title        = {M2EA05 analysis results from spam},

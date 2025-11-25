@@ -207,19 +207,20 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
 
 
 def granule_compression_vectors() -> List["LayerData"]:  # noqa: F821
-    import pandas as pd
     import numpy as np
+    import pandas as pd
     from napari.utils import notifications
+
     path = Path(__file__).parent / "sample_data" / "compression_vectors"
 
     features = pd.read_csv(path / "granular_compression_test.csv")
-    features['iterations'] = features['iterations'].astype('category')
-    features['returnStatus'] = features['returnStatus'].astype('category')
-    features['Label'] = features['Label'].astype('category')
-    features.drop(columns=['PSCC'], inplace=True)
+    features["iterations"] = features["iterations"].astype("category")
+    features["returnStatus"] = features["returnStatus"].astype("category")
+    features["Label"] = features["Label"].astype("category")
+    features.drop(columns=["PSCC"], inplace=True)
 
-    points_4d = features[['frame', 'Zpos', 'Ypos', 'Xpos']].to_numpy()
-    vectors_4d = features[['frame', 'Zdisp', 'Ydisp', 'Xdisp']].to_numpy()
+    points_4d = features[["frame", "Zpos", "Ypos", "Xpos"]].to_numpy()
+    vectors_4d = features[["frame", "Zdisp", "Ydisp", "Xdisp"]].to_numpy()
     vectors_4d = np.stack([points_4d, vectors_4d], axis=1)
     vectors_4d[:, 1, 0] = 0
 
@@ -237,4 +238,3 @@ def granule_compression_vectors() -> List["LayerData"]:  # noqa: F821
     )
 
     return [layerdata_vectors]
-    
