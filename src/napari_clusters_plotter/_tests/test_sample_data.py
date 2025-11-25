@@ -3,7 +3,13 @@ import pytest
 
 @pytest.mark.parametrize(
     "sample_data_function",
-    ["bbbc1", "cells3d_curvatures", "tgmm_mini", "skan_skeleton", "granule_compression_vectors"],
+    [
+        "bbbc1",
+        "cells3d_curvatures",
+        "tgmm_mini",
+        "skan_skeleton",
+        "granule_compression_vectors",
+    ],
 )
 def test_bbbc_1_sample_data(make_napari_viewer, sample_data_function):
 
