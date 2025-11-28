@@ -17,9 +17,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  add-assets-to-release:
+    name: Add Sample Data Asset to Release
+    if: startsWith(github.ref, 'refs/tags/') # only run on tag pushes (releases)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create sample_data.zip
+        run: |
+          cd src/napari_clusters_plotter/sample_data
+          zip -r ../../../sample_data.zip . -x "*.git*"
+      - name: Upload Sample Data Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: sample_data.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
     name: ${{ matrix.platform }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.platform }}
+    needs: [add-assets-to-release] # Wait for assets to be uploaded
+    if: always() # Run tests even if no release assets (for PRs)
     strategy:
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest] # macos-latest (disabled, see related issue)
@@ -33,7 +52,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-            # these libraries enable testing on Qt on linux
+      # these libraries enable testing on Qt on linux
       - uses: tlambert03/setup-qt-libs@v1
 
       # strategy borrowed from vispy for installing opengl libs on windows
@@ -63,28 +82,47 @@ jobs:
       - name: Coverage
         uses: codecov/codecov-action@v3
 
-  deploy:
-    # this will run when you have tagged a commit,
-    # and requires that you have put your twine API key in your
-    # github secrets (see readme for details)
-    needs: [test]
+  build:
+    name: Build distribution 📦
+    needs: [test] # Wait for tests to pass
     runs-on: ubuntu-latest
-    if: contains(github.ref, 'tags')
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -U setuptools setuptools_scm wheel twine build
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          git tag
-          python -m build .
-          twine upload dist/*
+      - name: Install pypa/build
+        run: >-
+          python3 -m pip install build --user
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
+    if: startsWith(github.ref, 'refs/tags/') # only publish to PyPI on tag pushes
+    needs:
+      - test
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/napari-clusters-plotter/
+    permissions:
+      id-token: write # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

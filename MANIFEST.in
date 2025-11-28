@@ -2,7 +2,9 @@ include LICENSE
 include README.md
 include requirements.txt
 
-recursive-include src/napari-clusters-plotter/sample_data *
+# Include necessary plugin files and exclude sample data
+recursive-exclude src/napari_clusters_plotter/sample_data *
+include src/napari_clusters_plotter/sample_data/data_registry.txt
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

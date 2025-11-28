@@ -1,22 +1,81 @@
-import glob
 import os
+import zipfile
 from pathlib import Path
 from typing import List
 
 import numpy as np
+import pandas as pd
+import pooch
+from skimage import io
+
+from napari_clusters_plotter import __version__
+
+# parse version
+if "dev" in __version__:
+    from packaging.version import parse
+
+    major, minor, patch = parse(__version__).release
+    version = f"{major}.{minor}.{patch-1}"
+else:
+    version = __version__
+
+DATA_REGISTRY = pooch.create(
+    path=pooch.os_cache("napari-clusters-plotter"),
+    base_url=f"https://github.com/biapol/napari-clusters-plotter/releases/download/v{version}/",
+    registry={
+        "sample_data.zip": "sha256:d21889252cc439b32dacbfb2d4085057da1fe28e3c35f94fee1487804cfe9615"
+    },
+)
+
+
+def load_image(fname):
+    zip_path = DATA_REGISTRY.fetch("sample_data.zip")
+
+    # check if has been unzipped before
+    if not os.path.exists(zip_path.split(".zip")[0]):
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extractall(zip_path.split(".zip")[0])
+
+    fname = os.path.join(zip_path.split(".zip")[0], fname)
+    image = io.imread(fname)
+
+    return image
+
+
+def load_tabular(fname, **kwargs):
+    zip_path = DATA_REGISTRY.fetch("sample_data.zip")
+
+    # check if has been unzipped before
+    if not os.path.exists(zip_path.split(".zip")[0]):
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extractall(zip_path.split(".zip")[0])
+
+    fname = os.path.join(zip_path.split(".zip")[0], fname)
+    data = pd.read_csv(fname, **kwargs)
+    return data
+
+
+def load_registry():
+    zip_path = DATA_REGISTRY.fetch("sample_data.zip")
+
+    # check if has been unzipped before
+    if not os.path.exists(zip_path.split(".zip")[0]):
+        with zipfile.ZipFile(zip_path, "r") as z:
+            z.extractall(zip_path.split(".zip")[0])
+
+    fname = os.path.join(
+        zip_path.split(".zip")[0], "sample_data/data_registry.txt"
+    )
+    registry = pd.read_csv(fname, sep=": sha256:", header=None)
+    registry.columns = ["file", "hash"]
+    return registry
 
 
 def skan_skeleton() -> List["LayerData"]:  # noqa: F821
-    import pandas as pd
-    from skimage.io import imread
 
-    paths_data = Path(__file__).parent / "sample_data" / "shapes_skeleton"
-    df_paths = pd.read_csv(
-        paths_data / Path("all_paths.csv"),
-    )
-    df_features = pd.read_csv(
-        paths_data / Path("skeleton_features.csv"),
-        index_col="Unnamed: 0",  # Adjusted to match the CSV structure
+    df_paths = load_tabular("shapes_skeleton/all_paths.csv")
+    df_features = load_tabular(
+        "shapes_skeleton/skeleton_features.csv", index_col="Unnamed: 0"
     )
 
     # skeleton_id column should be categorical
@@ -49,7 +108,7 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
     )
 
     layer_blobs = (
-        imread(paths_data / Path("blobs.tif")),
+        load_image("shapes_skeleton/blobs.tif"),
         {
             "name": "binary blobs",
             "opacity": 0.5,
@@ -62,17 +121,14 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
 
 
 def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
-    import pandas as pd
-    from skimage.io import imread
 
-    path = Path(__file__).parent / "sample_data" / "tracking_data"
-    data = pd.read_csv(path / Path("tgmm-mini-tracks-layer-data.csv"))
-    features = pd.read_csv(
-        path / Path("tgmm-mini-spot.csv"),
+    features = load_tabular(
+        "tracking_data/tgmm-mini-spot.csv",
         skiprows=[1, 2],
         low_memory=False,
         encoding="utf-8",
     )
+    data = load_tabular("tracking_data/tgmm-mini-tracks-layer-data.csv")
 
     categorical_columns = [
         "Label",
@@ -82,7 +138,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
     ]
     for feature in categorical_columns:
         features[feature] = features[feature].astype("category")
-    tracking_label_image = imread(path / Path("tgmm-mini.tif"))
+    tracking_label_image = load_image("tracking_data/tgmm-mini.tif")
 
     layer_data_tuple_tracks = (
         data,
@@ -108,15 +164,15 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
 
 
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
-    import pandas as pd
-    from skimage import io
+    # read data registry file
+    registry = load_registry()
 
-    # get path of this file
-    path = Path(__file__).parent / "sample_data" / "BBBC007_v1_images"
-
-    tif_files = glob.glob(
-        os.path.join(str(path), "**", "*.tif"), recursive=True
-    )
+    registry_bbby1 = registry[
+        registry["file"].str.contains("BBBC007_v1_images")
+    ]
+    tif_files = registry_bbby1[registry_bbby1["file"].str.endswith(".tif")][
+        "file"
+    ].to_list()
     raw_images = [f for f in tif_files if "labels" not in f]
 
     n_rows = np.ceil(np.sqrt(len(raw_images)))
@@ -124,10 +180,10 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
 
     layers = []
 
-    images = [io.imread(f) for f in raw_images]
-    labels = [io.imread(f.replace(".tif", "_labels.tif")) for f in raw_images]
+    images = [load_image(f) for f in raw_images]
+    labels = [load_image(f.replace(".tif", "_labels.tif")) for f in raw_images]
     features = [
-        pd.read_csv(f.replace(".tif", "_features.csv")) for f in raw_images
+        load_tabular(f.replace(".tif", "_features.csv")) for f in raw_images
     ]
 
     max_size = max([image.shape[0] for image in images])
@@ -172,17 +228,16 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
 
 
 def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
-    import numpy as np
-    import pandas as pd
-    from skimage import io
-
-    path = Path(__file__).parent / "sample_data" / "cells3d"
-
-    # load data
-    vertices = np.loadtxt(path / "vertices.txt")
-    faces = np.loadtxt(path / "faces.txt").astype(int)
-    hks = pd.read_csv(path / "signature.csv")
-    nuclei = io.imread(path / "nucleus.tif")
+    vertices = load_tabular(
+        "cells3d/vertices.txt", sep=" ", header=None
+    ).to_numpy()
+    faces = (
+        load_tabular("cells3d/faces.txt", sep=" ", header=None)
+        .to_numpy()
+        .astype(int)
+    )
+    hks = load_tabular("cells3d/signature.csv")
+    nuclei = load_image("cells3d/nucleus.tif")
 
     # create layer data tuples
     layer_data_surface = (
@@ -208,12 +263,11 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
 
 def granule_compression_vectors() -> List["LayerData"]:  # noqa: F821
     import numpy as np
-    import pandas as pd
     from napari.utils import notifications
 
-    path = Path(__file__).parent / "sample_data" / "compression_vectors"
-
-    features = pd.read_csv(path / "granular_compression_test.csv")
+    features = load_tabular(
+        "compression_vectors/granular_compression_test.csv"
+    )
     features["iterations"] = features["iterations"].astype("category")
     features["returnStatus"] = features["returnStatus"].astype("category")
     features["Label"] = features["Label"].astype("category")
