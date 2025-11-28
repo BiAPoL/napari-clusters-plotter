@@ -17,9 +17,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  add-assets-to-release:
+    name: Add Sample Data Asset to Release
+    if: startsWith(github.ref, 'refs/tags/') # only run on tag pushes (releases)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create sample_data.zip
+        run: |
+          cd src/napari_clusters_plotter/sample_data
+          zip -r ../../../sample_data.zip . -x "*.git*"
+      - name: Upload Sample Data Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: sample_data.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
     name: ${{ matrix.platform }} py${{ matrix.python-version }}
     runs-on: ${{ matrix.platform }}
+    needs: [add-assets-to-release] # Wait for assets to be uploaded
+    if: always() # Run tests even if no release assets (for PRs)
     strategy:
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest] # macos-latest (disabled, see related issue)
@@ -65,6 +84,7 @@ jobs:
 
   build:
     name: Build distribution 📦
+    needs: [test] # Wait for tests to pass
     runs-on: ubuntu-latest
 
     steps:
@@ -89,6 +109,7 @@ jobs:
       Publish Python 🐍 distribution 📦 to PyPI
     if: startsWith(github.ref, 'refs/tags/') # only publish to PyPI on tag pushes
     needs:
+      - test
       - build
     runs-on: ubuntu-latest
     environment:
@@ -105,22 +126,3 @@ jobs:
           path: dist/
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
-  add-assets-to-release:
-    name: Add Sample Data Asset to Release
-    needs: [build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Create sample_data.zip
-        run: |
-          python src/napari_clusters_plotter/sample_data/create_sample_data_assets.py
-      - name: Upload Sample Data Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./src/napari_clusters_plotter/sample_data/sample_data.zip
-          asset_name: sample_data.zip
-          asset_content_type: application/zip
