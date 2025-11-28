@@ -11,6 +11,7 @@ from ._new_plotter_widget import PlotterWidget
 from ._sample_data import (
     bbbc_1_dataset,
     cells3d_curvatures,
+    granule_compression_vectors,
     skan_skeleton,
     tgmm_mini_dataset,
 )
@@ -23,4 +24,5 @@ __all__ = [
     "tgmm_mini_dataset",
     "cells3d_curvatures",
     "skan_skeleton",
+    "granule_compression_vectors",
 ]
