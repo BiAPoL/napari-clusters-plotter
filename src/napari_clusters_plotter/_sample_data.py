@@ -9,12 +9,6 @@ import zipfile
 from pathlib import Path
 from napari_clusters_plotter import __version__
 
-# Create the data registry
-registry = pd.read_csv(
-        Path(__file__).parent / "sample_data/data_registry.txt", sep=': sha256:', header=None
-    )
-registry.columns = ['file', 'hash']
-
 # parse version
 if 'dev' in __version__:
     from packaging.version import parse
@@ -26,7 +20,7 @@ else:
 DATA_REGISTRY = pooch.create(
     path=pooch.os_cache("napari-clusters-plotter"),
     base_url=f"https://github.com/biapol/napari-clusters-plotter/releases/download/v{version}/",
-    registry={"sample_data.zip": registry[registry['file'] == 'sample_data.zip']['hash'].values[0]},
+    registry={"sample_data.zip": "sha256:d21889252cc439b32dacbfb2d4085057da1fe28e3c35f94fee1487804cfe9615"},
 )
 
 def load_image(fname):
@@ -53,6 +47,19 @@ def load_tabular(fname, **kwargs):
     fname = os.path.join(zip_path.split(".zip")[0], fname)
     data = pd.read_csv(fname, **kwargs)
     return data
+
+def load_registry():
+    zip_path = DATA_REGISTRY.fetch("sample_data.zip")
+
+    # check if has been unzipped before
+    if not os.path.exists(zip_path.split(".zip")[0]):
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            z.extractall(zip_path.split(".zip")[0])
+
+    fname = os.path.join(zip_path.split(".zip")[0], "sample_data/data_registry.txt")
+    registry = pd.read_csv(fname, sep=': sha256:', header=None)
+    registry.columns = ['file', 'hash']
+    return registry
 
 def skan_skeleton() -> List["LayerData"]:  # noqa: F821
 
@@ -145,10 +152,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
 
 def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     # read data registry file
-    registry = pd.read_csv(
-        Path(__file__).parent / "sample_data/data_registry.txt", sep=': sha256:', header=None
-        )
-    registry.columns = ['file', 'hash']
+    registry = load_registry()
 
     registry_bbby1 = registry[registry['file'].str.contains("BBBC007_v1_images")]
     tif_files = registry_bbby1[registry_bbby1['file'].str.endswith(".tif")]['file'].to_list()
