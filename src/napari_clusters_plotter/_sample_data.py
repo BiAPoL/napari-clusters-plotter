@@ -1,17 +1,19 @@
-from pathlib import Path
-from typing import List
-from skimage import io
-import numpy as np
-import pandas as pd
-import pooch
 import os
 import zipfile
 from pathlib import Path
+from typing import List
+
+import numpy as np
+import pandas as pd
+import pooch
+from skimage import io
+
 from napari_clusters_plotter import __version__
 
 # parse version
-if 'dev' in __version__:
+if "dev" in __version__:
     from packaging.version import parse
+
     major, minor, patch = parse(__version__).release
     version = f"{major}.{minor}.{patch-1}"
 else:
@@ -20,15 +22,18 @@ else:
 DATA_REGISTRY = pooch.create(
     path=pooch.os_cache("napari-clusters-plotter"),
     base_url=f"https://github.com/biapol/napari-clusters-plotter/releases/download/v{version}/",
-    registry={"sample_data.zip": "sha256:d21889252cc439b32dacbfb2d4085057da1fe28e3c35f94fee1487804cfe9615"},
+    registry={
+        "sample_data.zip": "sha256:d21889252cc439b32dacbfb2d4085057da1fe28e3c35f94fee1487804cfe9615"
+    },
 )
+
 
 def load_image(fname):
     zip_path = DATA_REGISTRY.fetch("sample_data.zip")
 
     # check if has been unzipped before
     if not os.path.exists(zip_path.split(".zip")[0]):
-        with zipfile.ZipFile(zip_path, 'r') as z:
+        with zipfile.ZipFile(zip_path, "r") as z:
             z.extractall(zip_path.split(".zip")[0])
 
     fname = os.path.join(zip_path.split(".zip")[0], fname)
@@ -36,35 +41,42 @@ def load_image(fname):
 
     return image
 
+
 def load_tabular(fname, **kwargs):
     zip_path = DATA_REGISTRY.fetch("sample_data.zip")
 
     # check if has been unzipped before
     if not os.path.exists(zip_path.split(".zip")[0]):
-        with zipfile.ZipFile(zip_path, 'r') as z:
+        with zipfile.ZipFile(zip_path, "r") as z:
             z.extractall(zip_path.split(".zip")[0])
 
     fname = os.path.join(zip_path.split(".zip")[0], fname)
     data = pd.read_csv(fname, **kwargs)
     return data
 
+
 def load_registry():
     zip_path = DATA_REGISTRY.fetch("sample_data.zip")
 
     # check if has been unzipped before
     if not os.path.exists(zip_path.split(".zip")[0]):
-        with zipfile.ZipFile(zip_path, 'r') as z:
+        with zipfile.ZipFile(zip_path, "r") as z:
             z.extractall(zip_path.split(".zip")[0])
 
-    fname = os.path.join(zip_path.split(".zip")[0], "sample_data/data_registry.txt")
-    registry = pd.read_csv(fname, sep=': sha256:', header=None)
-    registry.columns = ['file', 'hash']
+    fname = os.path.join(
+        zip_path.split(".zip")[0], "sample_data/data_registry.txt"
+    )
+    registry = pd.read_csv(fname, sep=": sha256:", header=None)
+    registry.columns = ["file", "hash"]
     return registry
+
 
 def skan_skeleton() -> List["LayerData"]:  # noqa: F821
 
     df_paths = load_tabular("shapes_skeleton/all_paths.csv")
-    df_features = load_tabular("shapes_skeleton/skeleton_features.csv", index_col="Unnamed: 0")
+    df_features = load_tabular(
+        "shapes_skeleton/skeleton_features.csv", index_col="Unnamed: 0"
+    )
 
     # skeleton_id column should be categorical
     categorical_columns = [
@@ -109,12 +121,13 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
 
 
 def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
-    
+
     features = load_tabular(
         "tracking_data/tgmm-mini-spot.csv",
         skiprows=[1, 2],
         low_memory=False,
-        encoding="utf-8")
+        encoding="utf-8",
+    )
     data = load_tabular("tracking_data/tgmm-mini-tracks-layer-data.csv")
 
     categorical_columns = [
@@ -154,8 +167,12 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     # read data registry file
     registry = load_registry()
 
-    registry_bbby1 = registry[registry['file'].str.contains("BBBC007_v1_images")]
-    tif_files = registry_bbby1[registry_bbby1['file'].str.endswith(".tif")]['file'].to_list()
+    registry_bbby1 = registry[
+        registry["file"].str.contains("BBBC007_v1_images")
+    ]
+    tif_files = registry_bbby1[registry_bbby1["file"].str.endswith(".tif")][
+        "file"
+    ].to_list()
     raw_images = [f for f in tif_files if "labels" not in f]
 
     n_rows = np.ceil(np.sqrt(len(raw_images)))
@@ -211,8 +228,14 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
 
 
 def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
-    vertices = load_tabular("cells3d/vertices.txt", sep=' ', header=None).to_numpy()
-    faces = load_tabular("cells3d/faces.txt", sep=' ', header=None).to_numpy().astype(int)
+    vertices = load_tabular(
+        "cells3d/vertices.txt", sep=" ", header=None
+    ).to_numpy()
+    faces = (
+        load_tabular("cells3d/faces.txt", sep=" ", header=None)
+        .to_numpy()
+        .astype(int)
+    )
     hks = load_tabular("cells3d/signature.csv")
     nuclei = load_image("cells3d/nucleus.tif")
 
@@ -242,7 +265,9 @@ def granule_compression_vectors() -> List["LayerData"]:  # noqa: F821
     import numpy as np
     from napari.utils import notifications
 
-    features = load_tabular("compression_vectors/granular_compression_test.csv")
+    features = load_tabular(
+        "compression_vectors/granular_compression_test.csv"
+    )
     features["iterations"] = features["iterations"].astype("category")
     features["returnStatus"] = features["returnStatus"].astype("category")
     features["Label"] = features["Label"].astype("category")
