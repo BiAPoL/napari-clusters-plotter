@@ -15,6 +15,7 @@ from nap_plot_tools.cmap import (
 )
 from napari.utils.colormaps import ALL_COLORMAPS
 from napari.utils.notifications import show_info, show_warning
+from napari.utils.transforms import Affine
 from qtpy import uic
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QColor
@@ -146,7 +147,7 @@ class PlotterWidget(BaseWidget):
         # get the layer to export from
         for layer in self.layers:
             features_subset = features[
-                features["layer"] == layer.unique_id
+                features["layer"] == layer.name
             ].reset_index()
             indices = features_subset[hue_column].values == selected_cluster
             if not np.any(indices):
@@ -222,6 +223,9 @@ class PlotterWidget(BaseWidget):
             self._on_bin_auto_toggled
         )
 
+        self.plotting_widget.active_artist.highlighted_changed_signal.connect(
+            self._on_highlighted_changed
+        )
         self.control_widget.pushButton_export_layer.clicked.connect(
             self._on_export_clusters
         )
@@ -240,9 +244,7 @@ class PlotterWidget(BaseWidget):
 
         features = self._get_features()
         for layer in self.layers:
-            layer_indices = features[
-                features["layer"] == layer.unique_id
-            ].index
+            layer_indices = features[features["layer"] == layer.name].index
 
             # store latest cluster indeces in the features table
             layer.features["MANUAL_CLUSTER_ID"] = pd.Series(
@@ -755,7 +757,7 @@ class PlotterWidget(BaseWidget):
                     active_artist.color_indices
                 )
                 layer_indices = features[
-                    features["layer"] == selected_layer.unique_id
+                    features["layer"] == selected_layer.name
                 ].index
                 self._set_layer_color(
                     selected_layer, rgba_colors[layer_indices]
@@ -832,6 +834,173 @@ class PlotterWidget(BaseWidget):
         self._update_layer_colors(use_color_indices=False)
         self.control_widget.hue_box.setCurrentText("MANUAL_CLUSTER_ID")
         self.plot_needs_update.emit()
+
+    def _on_highlighted_changed(self, boolean_object_selected: bool):
+        """
+        Focus the viewer on the highlighted object in the layer.
+        """
+        if not np.any(boolean_object_selected):
+            return
+        if np.count_nonzero(boolean_object_selected) > 1:
+            napari.utils.notifications.show_info(
+                "Multiple objects selected - only single objects can be highlighted."
+            )
+            return
+        features = self._get_features()
+        layer = features[boolean_object_selected]["layer"].values[0]
+        boolean_object_selected_in_layer = boolean_object_selected[
+            features["layer"] == layer
+        ]
+        _focus_object(
+            self.viewer.layers[layer], boolean_object_selected_in_layer
+        )
+
+
+def _apply_affine_transform(coords, n_dims, affine_matrix):
+    """Apply an affine transformation to one point.
+
+    Parameters
+    ----------
+    coords : np.ndarray
+        Coordinates to transform (shape: (1, n_dims)).
+    n_dims : int
+        Number of dimensions of the coordinates.
+    affine_matrix : np.ndarray
+        Affine transformation matrix (shape: (n_dims + 1, n_dims + 1)).
+
+    Returns
+    -------
+    np.ndarray
+        Transformed coordinates (shape: (1, n_dims)).
+    """
+    coords_homogeneous = np.ones((1, n_dims + 1))
+    coords_homogeneous[0, :n_dims] = coords
+    transformed_coords_homogeneous = coords_homogeneous @ affine_matrix.T
+    return transformed_coords_homogeneous[0, :n_dims]
+
+
+def _focus_object(layer, boolean_object_selected):
+    """Focus the viewer on the selected object in the layer.
+
+    Parameters
+    ----------
+    layer : napari.layers.Layer
+        The layer containing the object to focus on.
+    boolean_object_selected : np.ndarray
+        Boolean array indicating which object is selected (shape: (n_objects,)).
+    """
+    viewer = napari.current_viewer()
+    # Build affine matrix from rotate, scale, shear, translate layer properties
+    rotate = layer.rotate
+    scale = layer.scale
+    shear = layer.shear
+    translate = layer.translate
+    affine_data2physical = Affine(
+        rotate=rotate,
+        scale=scale,
+        shear=shear,
+        translate=translate,
+    ).affine_matrix
+    affine_physical2world = layer.affine.affine_matrix
+    # Combine the two affine transformations
+    affine_net = affine_data2physical @ affine_physical2world
+
+    if isinstance(layer, napari.layers.Points):
+        center = layer.data[boolean_object_selected][0]
+        n_dims = layer.data.shape[-1]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+
+        # Set the selected data in the layer (only displays if single layer is selected)
+        layer.selected_data = set(
+            np.argwhere(boolean_object_selected).flatten()
+        )
+    elif isinstance(layer, napari.layers.Labels):
+        selected_label = np.nonzero(boolean_object_selected)[0][0] + 1
+        label_mask = layer.data == selected_label
+        center = np.mean(np.argwhere(label_mask), axis=0)
+        n_dims = len(layer.data.shape)
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        # Set the selected data in the layer (only displays if single layer is selected)
+        layer.selected_label = selected_label
+    elif isinstance(layer, napari.layers.Surface):
+        center = layer.data[0][boolean_object_selected][0]
+        n_dims = layer.data[0].shape[-1]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+    elif isinstance(layer, napari.layers.Shapes):
+        selected_shape = layer.data[
+            np.nonzero(boolean_object_selected)[0][0]
+        ]  # needs integer index because data is a list of arrays
+        center = np.mean(selected_shape, axis=0)
+        n_dims = selected_shape.shape[-1]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+        layer.selected_data = set(
+            np.argwhere(boolean_object_selected).flatten()
+        )
+    elif isinstance(layer, napari.layers.Tracks):
+        selected_track = layer.data[boolean_object_selected][0]
+        n_dims = layer.data.shape[-1] - 1  # exclude track ID dimension
+        center = selected_track[-3:] if n_dims == 3 else selected_track[-4:]
+        transformed_center = _apply_affine_transform(
+            center, n_dims, affine_net
+        )
+
+    _set_viewer_camera(viewer, transformed_center)
+
+
+# TODO: Optionally uncomment this and call it in _set_viewer_camera if we want to zoom-in on highlighted objects
+# def _calculate_default_zoom(viewer, margin: float = 0.05):
+#     """ Calculate the default zoom level for the viewer based on the scene size and margin.
+
+#     Uses napari private methods to get the scene parameters and calculate the zoom level without applying it.
+
+#     Parameters
+#     ----------
+#     viewer : napari.Viewer
+#         The napari viewer instance.
+#     margin : float, optional
+#         Margin to apply around the scene, by default 0.05 (5%).
+
+#     Returns
+#     -------
+#     float
+#         The default zoom level for the viewer with the current layers.
+#     """
+#     extent, scene_size, corner = viewer._get_scene_parameters()
+#     scale_factor = viewer._get_scale_factor(margin)
+#     if viewer.dims.ndisplay == 2:
+#         default_zoom = viewer._get_2d_camera_zoom(
+#             scene_size, scale_factor
+#             )
+#     elif viewer.dims.ndisplay == 3:
+#         default_zoom = viewer._get_3d_camera_zoom(
+#             extent, scale_factor
+#             )
+#     return default_zoom
+
+
+def _set_viewer_camera(viewer, coords):
+    """Set the viewer camera to focus on the given coordinates.
+
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        The napari viewer instance.
+    coords : np.ndarray
+        The coordinates of a point to focus the camera on.
+    """
+    viewer.dims.current_step = tuple(coords)
+    viewer.camera.center = coords
+    # Zooming-in on highlighted objects (optional, not implemented for now)
+    # default_zoom = _calculate_default_zoom(viewer)
+    # viewer.camera.zoom = 4 * default_zoom
 
 
 def _export_cluster_to_layer(

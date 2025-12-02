@@ -751,6 +751,90 @@ def test_cluster_visibility_toggle(make_napari_viewer, create_sample_layers):
     plotter_widget._on_show_plot_overlay(state=False)
 
 
+def test_focus_object_on_highlighted_single_selected_points_layer(
+    make_napari_viewer,
+):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    viewer.dims.ndisplay = 3
+    layer, _ = create_multi_point_layer()
+    viewer.add_layer(layer)
+    widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
+
+    # Simulate a boolean selection mask with a single True value
+    boolean_object_selected = np.zeros(len(layer.data), dtype=bool)
+    boolean_object_selected[3] = True
+
+    # Set highlighted property
+    widget.plotting_widget.active_artist.highlighted = boolean_object_selected
+
+    # Check that the viewer camera is centered on the selected point
+    np.testing.assert_allclose(
+        viewer.camera.center, layer.data[3][-3:], rtol=1e-5
+    )
+    # Check that the viewer's current step is set to the selected point
+    np.testing.assert_allclose(
+        viewer.dims.current_step[0], layer.data[3][0], rtol=1e-5
+    )
+
+
+def test_focus_object_on_highlighted_multi_selected_points_layers(
+    make_napari_viewer,
+):
+    from napari_clusters_plotter import PlotterWidget
+
+    viewer = make_napari_viewer()
+    viewer.dims.ndisplay = 3
+    layer, layer2 = create_multi_point_layer()
+    translate = np.array(
+        [0, 0, 2]
+    )  # translation vector from create_sample_layers
+    viewer.add_layer(layer)
+    viewer.add_layer(layer2)
+    widget = PlotterWidget(viewer)
+    viewer.window.add_dock_widget(widget, area="right")
+    viewer.layers.selection = {layer, layer2}  # select both layers
+
+    # Simulate a boolean selection mask with a single True value
+    boolean_object_selected = np.zeros(
+        len(layer.data) + len(layer2.data), dtype=bool
+    )
+    boolean_object_selected[
+        np.random.randint(0, len(boolean_object_selected))
+    ] = True
+    layer_name = widget._get_features()[boolean_object_selected][
+        "layer"
+    ].values[0]
+    layer = viewer.layers[layer_name]
+
+    # Set highlighted property
+    widget.plotting_widget.active_artist.highlighted = boolean_object_selected
+
+    # Check that the viewer camera is centered on the selected point (considering layer translation)
+    index_in_data = np.where(
+        boolean_object_selected[widget._get_features()["layer"] == layer_name]
+    )[0][0]
+    assert np.allclose(
+        np.asarray(viewer.camera.center),
+        layer.data[index_in_data][-3:] + layer.translate[-3:],
+        rtol=1e-5,
+    )
+    # Check that the viewer's current step is set to the selected point
+    assert np.allclose(
+        viewer.dims.current_step[0], layer.data[index_in_data][0], rtol=1e-5
+    )
+
+
+if __name__ == "__main__":
+    import napari
+
+    test_focus_object_on_highlighted_multi_selected_points_layers(
+        napari.Viewer
+    )
+
+
 @pytest.mark.parametrize(
     "create_sample_layers",
     [
