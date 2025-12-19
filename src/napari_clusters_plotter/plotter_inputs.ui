@@ -126,6 +126,26 @@
          </layout>
         </widget>
        </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QWidget" name="overlay_cmap_container" native="true">
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="overlay_cmap_box">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display a feature as colors over plotted data.&lt;/p&gt;&lt;p&gt;Use the eye button in the plotter controls to hide/show the overlay colors.&lt;/p&gt;&lt;p&gt;To enale this, select a non-categorical feature in the &lt;span style=&quot; font-weight:600;&quot;&gt;Hue&lt;/span&gt; Combobox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Overlay Colormap</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="4" column="0" colspan="2">
         <widget class="QWidget" name="plotting_type_container" native="true">
          <layout class="QGridLayout" name="gridLayout">
@@ -149,94 +169,19 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QWidget" name="overlay_cmap_container" native="true">
-         <layout class="QGridLayout" name="gridLayout_6">
-          <item row="1" column="1">
-           <widget class="QComboBox" name="overlay_cmap_box">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display a feature as colors over plotted data.&lt;/p&gt;&lt;p&gt;Use the eye button in the plotter controls to hide/show the overlay colors.&lt;/p&gt;&lt;p&gt;To enale this, select a non-categorical feature in the &lt;span style=&quot; font-weight:600;&quot;&gt;Hue&lt;/span&gt; Combobox.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_5">
-            <property name="text">
-             <string>Overlay Colormap</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item row="6" column="0" colspan="2">
-        <widget class="QWidget" name="bins_settings_container" native="true">
-         <property name="enabled">
-          <bool>true</bool>
+        <widget class="QGroupBox" name="scatter_settings_container">
+         <property name="title">
+          <string>Scatter controls</string>
          </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="text">
-             <string>Number of Bins</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QWidget" name="manual_bins_container" native="true">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout">
-             <item>
-              <widget class="QCheckBox" name="auto_bins_checkbox">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="text">
-                <string>Auto</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="n_bins_box">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="minimum">
-                <number>1</number>
-               </property>
-               <property name="maximum">
-                <number>10000</number>
-               </property>
-               <property name="value">
-                <number>20</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="QWidget" name="cmap_container" native="true">
-         <layout class="QGridLayout" name="gridLayout_7">
+         <layout class="QGridLayout" name="gridLayout_8">
           <item row="0" column="0">
-           <widget class="QLabel" name="label_8">
+           <widget class="QCheckBox" name="checkBox_frame_highlighting">
             <property name="text">
-             <string>Histogram Colormap</string>
+             <string>Activate frame highlighting</string>
             </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="histogram_cmap_box">
-            <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display the histogram data (not the colors overlay).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -244,30 +189,111 @@
         </widget>
        </item>
        <item row="7" column="0" colspan="2">
-        <widget class="QWidget" name="additional_options_container" native="true">
-         <property name="enabled">
-          <bool>false</bool>
+        <widget class="QGroupBox" name="bins_settings_container">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
-         <layout class="QGridLayout" name="gridLayout_5">
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_7">
+         <property name="title">
+          <string>Histogram controls</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="auto_bins_checkbox">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="text">
-             <string>Hide non-selected clusters</string>
+             <string>Auto</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QCheckBox" name="non_selected_checkbutton">
-            <property name="text">
-             <string/>
+          <item row="1" column="2">
+           <widget class="QComboBox" name="histogram_cmap_box">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Continuous colormap to display the histogram data (not the colors overlay).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QSpinBox" name="n_bins_box">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>10000</number>
+            </property>
+            <property name="value">
+             <number>20</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Histogram Colormap</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Number of Bins</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeType">
+             <enum>QSizePolicy::Minimum</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="additional_options_container" native="true">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_5">
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="non_selected_checkbutton">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Hide non-selected clusters</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
    <item>

@@ -52,6 +52,10 @@ class PlotterWidget(BaseWidget):
         self._on_update_layer_selection(None)
         self._setup_callbacks()
 
+        # some default values
+        self._out_of_frame_alpha = 0.25
+        self._out_of_frame_size_factor = 0.5
+
         self.plot_needs_update.connect(self._replot)
 
         # Colormap reference to be indexed like this:
@@ -124,7 +128,6 @@ class PlotterWidget(BaseWidget):
         )
 
         # Setting Visibility Defaults
-        self.control_widget.cmap_container.setVisible(False)
         self.control_widget.bins_settings_container.setVisible(False)
         self.control_widget.additional_options_container.setVisible(False)
 
@@ -222,6 +225,9 @@ class PlotterWidget(BaseWidget):
             self._on_bin_auto_toggled
         )
 
+        self.control_widget.checkBox_frame_highlighting.toggled.connect(
+            self._on_frame_highlighting_toggled
+        )
         self.control_widget.pushButton_export_layer.clicked.connect(
             self._on_export_clusters
         )
@@ -253,30 +259,6 @@ class PlotterWidget(BaseWidget):
             self.hue_axis = "MANUAL_CLUSTER_ID"
 
         self.plot_needs_update.emit()
-
-    def _handle_advanced_options_widget_visibility(self):
-        """
-        Control visibility of overlay colormap box and log scale checkbox
-        based on the selected hue axis and active artist.
-        """
-        active_artist = self.plotting_widget.active_artist
-        # Control visibility of overlay colormap box and log scale checkbox
-        if self.hue_axis in self.categorical_columns:
-            self.control_widget.overlay_cmap_box.setEnabled(False)
-            self.control_widget.log_scale_checkbutton.setEnabled(False)
-            if isinstance(active_artist, Histogram2D):
-                # Enable if histogram to allow log scale of histogram itself
-                self.control_widget.log_scale_checkbutton.setEnabled(True)
-        else:
-            self.control_widget.overlay_cmap_box.setEnabled(True)
-            self.control_widget.log_scale_checkbutton.setEnabled(True)
-
-        if isinstance(active_artist, Histogram2D):
-            self.control_widget.cmap_container.setVisible(True)
-            self.control_widget.bins_settings_container.setVisible(True)
-        else:
-            self.control_widget.cmap_container.setVisible(False)
-            self.control_widget.bins_settings_container.setVisible(False)
 
     def _reset_axes_labels(self):
         """
@@ -312,7 +294,6 @@ class PlotterWidget(BaseWidget):
         overlay_cmap = self.colormap_reference[
             (self.hue_axis in self.categorical_columns, self.plotting_type)
         ]
-        self._handle_advanced_options_widget_visibility()
         self._reset_axes_labels()
         active_artist = self.plotting_widget.active_artist
         active_artist.x_label_text = self.x_axis
@@ -339,6 +320,10 @@ class PlotterWidget(BaseWidget):
                 self.control_widget.n_bins_box.blockSignals(False)
             active_artist.bins = self.bin_number
             active_artist.histogram_color_normalization_method = color_norm
+
+        else:
+            # make sure we use the correct frame highlighting settings
+            self._on_frame_highlighting_toggled()
 
         # Then set color_indices and colormap properties in the active artist
         active_artist.overlay_colormap = overlay_cmap
@@ -369,16 +354,22 @@ class PlotterWidget(BaseWidget):
         Called when the frame changes. Updates the alpha values of the points.
         """
 
+        if not self.frame_highlighting_activated:
+            return
+
         if "frame" in self._get_features().columns:
             current_step = self.viewer.dims.current_step[0]
             alpha = np.asarray(
                 self._get_features()["frame"] == current_step, dtype=float
             )
-            size = np.ones(len(alpha)) * 50
+            default_size = self.plotting_widget.active_artist.default_size
+            size = np.ones(len(alpha)) * default_size
 
             index_out_of_frame = alpha == 0
-            alpha[index_out_of_frame] = 0.25
-            size[index_out_of_frame] = 35
+            alpha[index_out_of_frame] = self._out_of_frame_alpha
+            size[index_out_of_frame] = (
+                default_size * self._out_of_frame_size_factor
+            )
             self.plotting_widget.active_artist.alpha = alpha
             self.plotting_widget.active_artist.size = size
 
@@ -392,11 +383,16 @@ class PlotterWidget(BaseWidget):
                 cat10_mod_cmap_first_transparent
             )
 
+            self.control_widget.scatter_settings_container.setVisible(False)
+            self.control_widget.bins_settings_container.setVisible(True)
+
         elif self.plotting_type == PlottingType.SCATTER.name:
             self.plotting_widget.active_artist = "SCATTER"
             self.plotting_widget.active_artist.overlay_colormap = (
                 cat10_mod_cmap
             )
+            self.control_widget.scatter_settings_container.setVisible(True)
+            self.control_widget.bins_settings_container.setVisible(False)
         self.plot_needs_update.emit()
 
     def _on_overlay_colormap_changed(self):
@@ -424,8 +420,35 @@ class PlotterWidget(BaseWidget):
         self.control_widget.n_bins_box.setEnabled(not state)
         self.plot_needs_update.emit()
 
+    def _on_frame_highlighting_toggled(self):
+        """
+        Called when the frame highlighting checkbox is toggled.
+        Updates the visibility of the frame highlighting in the plot.
+        """
+        # do nothing for histogram2d
+        if self.plotting_type == "HISTOGRAM2D":
+            return
+
+        if self.frame_highlighting_activated:
+            self._on_frame_changed(None)
+        else:
+            active_artist = self.plotting_widget.active_artist
+            active_artist.alpha = np.ones(
+                len(self._get_features()), dtype=float
+            )  # Reset alpha to 1 for all points
+            active_artist.size = active_artist.default_size
+
     # Connecting the widgets to actual object variables:
     # using getters and setters for flexibility
+
+    @property
+    def frame_highlighting_activated(self):
+        return self.control_widget.checkBox_frame_highlighting.isChecked()
+
+    @frame_highlighting_activated.setter
+    def frame_highlighting_activated(self, val: bool):
+        self.control_widget.checkBox_frame_highlighting.setChecked(val)
+
     @property
     def log_scale(self):
         return self.control_widget.log_scale_checkbutton.isChecked()
