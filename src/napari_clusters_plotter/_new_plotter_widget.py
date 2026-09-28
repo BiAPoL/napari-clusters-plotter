@@ -889,6 +889,7 @@ def _export_cluster_to_layer(
         )
         edge_widths = list(np.asarray(layer.edge_width)[export_indices])
         new_layer.edge_width = edge_widths
+        new_layer.face_color = [0, 0, 0, 0]
 
     elif isinstance(layer, napari.layers.Tracks):
         new_tracks = layer.data[export_indices]
