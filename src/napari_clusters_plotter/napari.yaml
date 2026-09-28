@@ -26,6 +26,9 @@ contributions:
   - id: napari-clusters-plotter.skan_skeleton
     python_name: napari_clusters_plotter:skan_skeleton
     title: Load skan skeleton dataset
+  - id: napari-clusters-plotter.granule_compression_vectors
+    python_name: napari_clusters_plotter:granule_compression_vectors
+    title: Load granule compression vectors
 
   menus:
     napari/layers/visualize:
@@ -61,3 +64,6 @@ contributions:
   - command: napari-clusters-plotter.skan_skeleton
     key: skan_skeleton
     display_name: Skan skeleton dataset (labels and paths)
+  - command: napari-clusters-plotter.granule_compression_vectors
+    key: granule_compression_vectors
+    display_name: Granule compression vectors dataset
