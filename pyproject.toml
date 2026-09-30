@@ -33,7 +33,7 @@ dependencies = [
     "numpy",
     "magicgui",
     "qtpy",
-    "napari",
+    "napari>=0.7.0",
     "npe2",
     "scikit-learn",
     "pandas",

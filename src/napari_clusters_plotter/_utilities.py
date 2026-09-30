@@ -4,7 +4,6 @@ import dask.array as da
 import numpy as np
 from napari.layers import Image, Labels, Layer, Points, Shapes
 from napari.utils.events import Event
-from packaging.version import Version
 
 _selectable_layers = [Labels, Points, Shapes]
 
@@ -75,6 +74,4 @@ def _get_selection_event(layer: Layer) -> Event:
         return layer.events.selected_label
     elif isinstance(layer, Shapes):
         from napari import __version__
-
-        if Version(__version__) >= Version("0.6.5"):
-            return layer.selected_data.events.items_changed
+        return layer.selected_data.events.items_changed
