@@ -73,5 +73,4 @@ def _get_selection_event(layer: Layer) -> Event:
     elif isinstance(layer, Labels):
         return layer.events.selected_label
     elif isinstance(layer, Shapes):
-        from napari import __version__
         return layer.selected_data.events.items_changed

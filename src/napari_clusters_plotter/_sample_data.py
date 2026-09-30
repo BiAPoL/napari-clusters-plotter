@@ -133,7 +133,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     max_size = max([image.shape[0] for image in images])
 
     for idx, (image, label, feature) in enumerate(
-        zip(images, labels, features)
+        zip(images, labels, features, strict=False)
     ):
 
         translate_img_x = image.shape[0] / 2
