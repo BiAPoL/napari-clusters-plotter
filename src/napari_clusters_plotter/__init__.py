@@ -14,6 +14,7 @@ from ._sample_data import (
     granule_compression_vectors,
     skan_skeleton,
     tgmm_mini_dataset,
+    object_detection,
 )
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "cells3d_curvatures",
     "skan_skeleton",
     "granule_compression_vectors",
+    "object_detection",
 ]
