@@ -644,7 +644,9 @@ class PlotterWidget(BaseWidget):
         )
 
         for dim, current_value in zip(
-            ["x", "y", "hue"], [current_x, current_y, current_hue]
+            ["x", "y", "hue"],
+            [current_x, current_y, current_hue],
+            strict=False,
         ):
             # block selector changed signals until all items added
             selector = self._selectors[dim]
@@ -808,7 +810,9 @@ class PlotterWidget(BaseWidget):
 
             # Ensure the first color is transparent for the background
             colors = np.insert(colors, 0, [0, 0, 0, 0], axis=0)
-            color_dict = dict(zip(_get_unique_values(layer), colors))
+            color_dict = dict(
+                zip(_get_unique_values(layer), colors, strict=False)
+            )
             layer.events.selected_label.block()
             layer.colormap = DirectLabelColormap(color_dict=color_dict)
             layer.events.selected_label.unblock()
@@ -881,7 +885,9 @@ def _export_cluster_to_layer(
 
     elif isinstance(layer, napari.layers.Shapes):
         new_shapes = [
-            shape for shape, i in zip(layer.data, export_indices) if i
+            shape
+            for shape, i in zip(layer.data, export_indices, strict=False)
+            if i
         ]
         new_shape_types = np.asarray(layer.shape_type)[export_indices]
         new_layer = napari.layers.Shapes(

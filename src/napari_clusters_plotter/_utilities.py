@@ -1,15 +1,12 @@
-from typing import List, Union
-
 import dask.array as da
 import numpy as np
 from napari.layers import Image, Labels, Layer, Points, Shapes
 from napari.utils.events import Event
-from packaging.version import Version
 
 _selectable_layers = [Labels, Points, Shapes]
 
 
-def _get_unique_values(layer: Union[Image, Labels]) -> np.ndarray:
+def _get_unique_values(layer: Image | Labels) -> np.ndarray:
     """
     Get unique values from a numpy or dask array.
 
@@ -44,7 +41,7 @@ def _is_selectable_layer(layer: Layer) -> bool:
     return False
 
 
-def _get_selected_objects(layer: Layer) -> List[int]:
+def _get_selected_objects(layer: Layer) -> list[int] | None:
     """
     Retrieve id of selected object on napari canvas
     """
@@ -61,7 +58,7 @@ def _get_selected_objects(layer: Layer) -> List[int]:
         return list(layer.selected_data)
 
 
-def _get_selection_event(layer: Layer) -> Event:
+def _get_selection_event(layer: Layer) -> Event | None:
     """
     Get the selection event for the layer.
     """
@@ -74,7 +71,4 @@ def _get_selection_event(layer: Layer) -> Event:
     elif isinstance(layer, Labels):
         return layer.events.selected_label
     elif isinstance(layer, Shapes):
-        from napari import __version__
-
-        if Version(__version__) >= Version("0.6.5"):
-            return layer.selected_data.events.items_changed
+        return layer.selected_data.events.items_changed
