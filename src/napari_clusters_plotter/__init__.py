@@ -12,9 +12,9 @@ from ._sample_data import (
     bbbc_1_dataset,
     cells3d_curvatures,
     granule_compression_vectors,
+    object_detection,
     skan_skeleton,
     tgmm_mini_dataset,
-    object_detection,
 )
 
 __all__ = [

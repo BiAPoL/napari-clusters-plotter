@@ -4,17 +4,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-from skimage import data, measure
 
 if TYPE_CHECKING:
     from napari.types import LayerData
 
 
-
 def object_detection() -> list["LayerData"]:  # noqa: F821
-    from skimage import data, measure, filters
     import pandas as pd
-    
+    from skimage import data, filters, measure
+
     image = data.human_mitosis()
     labels = measure.label(image > filters.threshold_otsu(image))
 
@@ -22,27 +20,34 @@ def object_detection() -> list["LayerData"]:  # noqa: F821
         measure.regionprops_table(
             labels,
             intensity_image=image,
-            properties=['label', 'area', 'mean_intensity', 'bbox', 'perimeter', 'std_intensity']
-            )
+            properties=[
+                "label",
+                "area",
+                "mean_intensity",
+                "bbox",
+                "perimeter",
+                "std_intensity",
+            ],
         )
+    )
 
     # make label categorical
-    features['label'] = features['label'].astype('category')
-    bounding_boxes = features[['bbox-0', 'bbox-1', 'bbox-2', 'bbox-3']]
+    features["label"] = features["label"].astype("category")
+    bounding_boxes = features[["bbox-0", "bbox-1", "bbox-2", "bbox-3"]]
 
     # convert bboxes to shapes layer
     rectangles = []
     for _, group in bounding_boxes.iterrows():
-        min_row = float(group['bbox-0'])
-        min_col = float(group['bbox-1'])
-        max_row = float(group['bbox-2'])
-        max_col = float(group['bbox-3'])
+        min_row = float(group["bbox-0"])
+        min_col = float(group["bbox-1"])
+        max_row = float(group["bbox-2"])
+        max_col = float(group["bbox-3"])
 
         rect = [
             [min_row, min_col],
             [min_row, max_col],
             [max_row, max_col],
-            [max_row, min_col]
+            [max_row, min_col],
         ]
         rectangles.append(rect)
 
@@ -52,9 +57,9 @@ def object_detection() -> list["LayerData"]:  # noqa: F821
         {
             "name": "human_mitosis_shapes",
             "features": features,
-            "face_color": [0,0,0,0]
-            },
-        "shapes"
+            "face_color": [0, 0, 0, 0],
+        },
+        "shapes",
     )
     return [image, shapes]
 
