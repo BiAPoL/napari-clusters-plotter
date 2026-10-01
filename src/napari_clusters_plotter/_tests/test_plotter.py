@@ -845,7 +845,6 @@ if __name__ == "__main__":
 )
 def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
     from napari_clusters_plotter import PlotterWidget
-    from napari_clusters_plotter._utilities import _get_selection_event
 
     viewer = make_napari_viewer()
     _, layer2 = create_sample_layers()
@@ -858,15 +857,15 @@ def test_selected_data_point_layer(make_napari_viewer, create_sample_layers):
     # select last layer and create a random selection on the layer
     viewer.layers.selection.active = layer2
 
-    event = _get_selection_event(layer2)
     if type(layer2) in [Points, Shapes]:
         selection = [1, 2]
         layer2.selected_data = selection
-        event.emit()
     elif isinstance(layer2, Labels):
         selection = 1
+        # selected_label already defaults to 1, so assignment alone is a
+        # no-op and never fires events.selected_label; force it manually.
         layer2.selected_label = selection
-        event()
+        layer2.events.selected_label()
 
     assert "SELECTED_LAYER_CLUSTER_ID" in layer2.features.columns
 
