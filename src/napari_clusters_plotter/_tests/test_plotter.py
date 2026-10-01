@@ -788,9 +788,7 @@ def test_focus_object_on_highlighted_multi_selected_points_layers(
     viewer = make_napari_viewer()
     viewer.dims.ndisplay = 3
     layer, layer2 = create_multi_point_layer()
-    translate = np.array(
-        [0, 0, 2]
-    )  # translation vector from create_sample_layers
+
     viewer.add_layer(layer2)
     widget = PlotterWidget(viewer)
     viewer.window.add_dock_widget(widget, area="right")
