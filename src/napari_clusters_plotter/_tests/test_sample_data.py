@@ -9,6 +9,7 @@ import pytest
         "tgmm_mini",
         "skan_skeleton",
         "granule_compression_vectors",
+        "object_detection",
     ],
 )
 def test_bbbc_1_sample_data(make_napari_viewer, sample_data_function):
