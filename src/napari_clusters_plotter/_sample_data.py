@@ -1,12 +1,70 @@
 import glob
 import os
 from pathlib import Path
-from typing import List
+from typing import TYPE_CHECKING
 
 import numpy as np
 
+if TYPE_CHECKING:
+    from napari.types import LayerData
 
-def skan_skeleton() -> List["LayerData"]:  # noqa: F821
+
+def object_detection() -> list["LayerData"]:  # noqa: F821
+    import pandas as pd
+    from skimage import data, filters, measure
+
+    image = data.human_mitosis()
+    labels = measure.label(image > filters.threshold_otsu(image))
+
+    features = pd.DataFrame(
+        measure.regionprops_table(
+            labels,
+            intensity_image=image,
+            properties=[
+                "label",
+                "area",
+                "mean_intensity",
+                "bbox",
+                "perimeter",
+                "std_intensity",
+            ],
+        )
+    )
+
+    # make label categorical
+    features["label"] = features["label"].astype("category")
+    bounding_boxes = features[["bbox-0", "bbox-1", "bbox-2", "bbox-3"]]
+
+    # convert bboxes to shapes layer
+    rectangles = []
+    for _, group in bounding_boxes.iterrows():
+        min_row = float(group["bbox-0"])
+        min_col = float(group["bbox-1"])
+        max_row = float(group["bbox-2"])
+        max_col = float(group["bbox-3"])
+
+        rect = [
+            [min_row, min_col],
+            [min_row, max_col],
+            [max_row, max_col],
+            [max_row, min_col],
+        ]
+        rectangles.append(rect)
+
+    image = (image, {"name": "human_mitosis"}, "image")
+    shapes = (
+        rectangles,
+        {
+            "name": "human_mitosis_shapes",
+            "features": features,
+            "face_color": [0, 0, 0, 0],
+        },
+        "shapes",
+    )
+    return [image, shapes]
+
+
+def skan_skeleton() -> list["LayerData"]:  # noqa: F821
     import pandas as pd
     from skimage.io import imread
 
@@ -61,7 +119,7 @@ def skan_skeleton() -> List["LayerData"]:  # noqa: F821
     return [layer_paths, layer_blobs]
 
 
-def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
+def tgmm_mini_dataset() -> list["LayerData"]:  # noqa: F821
     import pandas as pd
     from skimage.io import imread
 
@@ -107,7 +165,7 @@ def tgmm_mini_dataset() -> List["LayerData"]:  # noqa: F821
     return [layer_data_tuple_tracks, layer_data_tuple_labels]
 
 
-def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
+def bbbc_1_dataset() -> list["LayerData"]:  # noqa: F821
     import pandas as pd
     from skimage import io
 
@@ -133,7 +191,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     max_size = max([image.shape[0] for image in images])
 
     for idx, (image, label, feature) in enumerate(
-        zip(images, labels, features)
+        zip(images, labels, features, strict=False)
     ):
 
         translate_img_x = image.shape[0] / 2
@@ -171,7 +229,7 @@ def bbbc_1_dataset() -> List["LayerData"]:  # noqa: F821
     return layers
 
 
-def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
+def cells3d_curvatures() -> list["LayerData"]:  # noqa: F821
     import numpy as np
     import pandas as pd
     from skimage import io
@@ -206,7 +264,7 @@ def cells3d_curvatures() -> List["LayerData"]:  # noqa: F821
     return [layer_data_nuclei, layer_data_surface]
 
 
-def granule_compression_vectors() -> List["LayerData"]:  # noqa: F821
+def granule_compression_vectors() -> list["LayerData"]:  # noqa: F821
     import numpy as np
     import pandas as pd
     from napari.utils import notifications
