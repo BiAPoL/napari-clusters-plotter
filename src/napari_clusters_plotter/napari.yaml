@@ -29,6 +29,9 @@ contributions:
   - id: napari-clusters-plotter.granule_compression_vectors
     python_name: napari_clusters_plotter:granule_compression_vectors
     title: Load granule compression vectors
+  - id: napari-clusters-plotter.object_detection
+    python_name: napari_clusters_plotter:object_detection
+    title: Load object detection sample data
 
   menus:
     napari/layers/visualize:
@@ -67,3 +70,6 @@ contributions:
   - command: napari-clusters-plotter.granule_compression_vectors
     key: granule_compression_vectors
     display_name: Granule compression vectors dataset
+  - command: napari-clusters-plotter.object_detection
+    key: object_detection
+    display_name: Object detection
